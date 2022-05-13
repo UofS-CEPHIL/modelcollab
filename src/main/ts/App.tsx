@@ -1,8 +1,9 @@
 import React from 'react';
+import Canvas from "./components/Canvas"
 
 function App() {
     return (
-        <div>Hello, World!</div>
+        <Canvas />
     );
 }
 
