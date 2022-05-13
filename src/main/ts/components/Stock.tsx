@@ -1,45 +1,81 @@
 import React, { FC, useState } from 'react';
+import { getDatabase, ref, set, onValue } from "firebase/database";
+import firebaseApp from "../firebase";
 
 const WIDTH_PX = 20;
 const HEIGHT_PX = 20;
+const DEFAULT_COLOR = "blue";
+const SELECTED_COLOR = "red";
+
+const makePath = (sessionId: string, componentId: string) =>
+    `components/${sessionId}/${componentId}/data`;
 
 interface Props {
-    x: number;
-    y: number;
-    color: string;
+    initx: number;
+    inity: number;
+    componentId: string;
+    sessionId: string;
 }
 
-interface State {
+interface SharedState {
     x: number;
     y: number;
-    color: string;
+    text: string;
+    initvalue: string;
 }
+
 
 const Stock: FC<Props> = (props: Props) => {
 
-    const [state, setState] = useState<State>(
+    const [sharedState, setSharedState] = useState<SharedState>(
         {
-            x: props.x,
-            y: props.y,
-            color: props.color
+            x: props.initx,
+            y: props.inity,
+            text: "",
+            initvalue: ""
         }
     );
 
-    const onDrag: React.DragEventHandler =
-        (event: React.DragEvent) => setState({ ...state, x: event.clientX, y: event.clientY });
+    const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
+        const newShared = { ...sharedState, x: event.clientX, y: event.clientY };
+        setSharedState(newShared);
+        set(
+            ref(
+                getDatabase(firebaseApp),
+                makePath(props.sessionId, props.componentId)
+            ),
+            newShared
+        );
+    }
+
+    onValue(
+        ref(
+            getDatabase(firebaseApp),
+            makePath(props.sessionId, props.componentId)
+        ),
+        (snapshot) => {
+            const data = snapshot.val();
+            if (
+                data
+                && data.x != sharedState.x
+                && data.y != sharedState.y
+            ) {
+                setSharedState({ ...sharedState, x: data.x, y: data.y });
+            }
+        }
+    );
 
     return (
         <div
             style={{
                 position: "absolute",
-                left: `${state.x}px`,
-                top: `${state.y}px`,
+                left: `${sharedState.x}px`,
+                top: `${sharedState.y}px`,
                 width: `${WIDTH_PX}px`,
                 height: `${HEIGHT_PX}px`,
-                background: state.color
+                background: DEFAULT_COLOR
             }}
             draggable="true"
-            onDrag={onDrag}
             onDragEnd={onDrag}
         />
     );
