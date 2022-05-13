@@ -10,6 +10,8 @@ interface Props {
 }
 
 interface State {
+    maxX: number;
+    maxY: number;
     x: number;
     y: number;
     color: string;
@@ -17,8 +19,12 @@ interface State {
 
 const Stock: FC<Props> = (props: Props) => {
 
+    
+
     const [state, setState] = useState<State>(
         {
+            maxX: props.x,
+            maxY: props.y,
             x: props.x,
             y: props.y,
             color: props.color

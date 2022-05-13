@@ -1,10 +1,16 @@
 import React, { FC, useState } from 'react';
 import Stock from "./Stock";
 
-const Canvas: FC<any> = () => {
+interface Props {
+    maxX: number;
+    maxY: number
+}
+
+const Canvas: FC<any> = ( props: Props ) => {
     return (
+        
         <div>
-            <Stock x={10} y={10} color={'red'} />
+            <Stock x={props.maxX} y={props.maxY} color={'red'} />
         </div>
     );
 }
