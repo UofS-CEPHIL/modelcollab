@@ -2,8 +2,6 @@ import React, { FC, useState } from 'react';
 
 const WIDTH_PX = 20;
 const HEIGHT_PX = 20;
-const SELECTED_COLOR = "blue";
-const DEFAULT_COLOR = "red";
 
 interface Props {
     x: number;

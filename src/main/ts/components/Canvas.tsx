@@ -1,11 +1,6 @@
 import React, { FC, useState } from 'react';
 import Stock from "./Stock";
 
-interface Point {
-    x: number;
-    y: number;
-}
-
 const Canvas: FC<any> = () => {
     return (
         <div>
