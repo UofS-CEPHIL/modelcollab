@@ -17,10 +17,9 @@ interface State {
     color: string;
 }
 
-const Stock: FC<Props> = (props: Props) => {
+const Stock: FC<Props> = (props) => {
 
     
-
     const [state, setState] = useState<State>(
         {
             maxX: props.x,
@@ -32,8 +31,17 @@ const Stock: FC<Props> = (props: Props) => {
     );
 
     const onDrag: React.DragEventHandler =
-        (event: React.DragEvent) => setState({ ...state, x: event.clientX, y: event.clientY });
+        (event: React.DragEvent) => {
+            let currentState: State = {...state};
 
+            if (event.clientY < currentState.maxY  ){
+                setState({ ...state, x: event.clientX, y: currentState.maxY });
+            }
+            else{
+                setState({ ...state, x: event.clientX, y: event.clientY });
+            }
+
+        }
     return (
         <div
             style={{
