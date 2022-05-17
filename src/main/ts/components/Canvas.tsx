@@ -2,6 +2,7 @@ import { FC } from 'react';
 import Stock from "./Stock";
 import IdGenerator from "../IdGenerator";
 import { User } from 'firebase/auth';
+import FirebaseDataModelImpl from '../data/FirebaseDataModelImpl';
 
 interface Props {
     user: User | null;
@@ -19,6 +20,7 @@ const Canvas: FC<Props> = (props: Props) => {
                 inity={10}
                 sessionId={props.sessionId}
                 componentId={idGenerator.generateComponentId().toString()}
+                firebaseDataModel={new FirebaseDataModelImpl()}
             />
         </div>
     );

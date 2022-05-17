@@ -1,29 +1,24 @@
 import React, { FC, useState } from 'react';
-import { getDatabase, ref, set, onValue } from "firebase/database";
-import firebaseApp from "../firebase";
+import FirebaseDataModel from '../data/FirebaseDataModel';
 
-const WIDTH_PX = 20;
-const HEIGHT_PX = 20;
-const DEFAULT_COLOR = "blue";
-const SELECTED_COLOR = "red";
+export const WIDTH_PX = 20;
+export const HEIGHT_PX = 20;
+export const DEFAULT_COLOR = "blue";
+export const SELECTED_COLOR = "red";
 
-const makePath = (sessionId: string, componentId: string) =>
-    `components/${sessionId}/${componentId}/data`;
-
-interface Props {
+export interface Props {
     initx: number;
     inity: number;
     componentId: string;
     sessionId: string;
+    firebaseDataModel: FirebaseDataModel;
 }
 
 interface SharedState {
     x: number;
     y: number;
     text: string;
-    initvalue: string;
 }
-
 
 const Stock: FC<Props> = (props: Props) => {
 
@@ -32,38 +27,20 @@ const Stock: FC<Props> = (props: Props) => {
             x: props.initx,
             y: props.inity,
             text: "",
-            initvalue: ""
         }
     );
 
     const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
         const newShared = { ...sharedState, x: event.clientX, y: event.clientY };
         setSharedState(newShared);
-        set(
-            ref(
-                getDatabase(firebaseApp),
-                makePath(props.sessionId, props.componentId)
-            ),
-            newShared
-        );
+        props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
     }
 
-    onValue(
-        ref(
-            getDatabase(firebaseApp),
-            makePath(props.sessionId, props.componentId)
-        ),
-        (snapshot) => {
-            const data = snapshot.val();
-            if (
-                data
-                && data.x != sharedState.x
-                && data.y != sharedState.y
-            ) {
-                setSharedState({ ...sharedState, x: data.x, y: data.y });
-            }
-        }
-    );
+    props.firebaseDataModel.subscribeToComponent(props.sessionId, props.componentId, (data) => {
+        let newData = data as SharedState;
+        setSharedState(newData);
+    });
+
 
     return (
         <div
@@ -77,6 +54,7 @@ const Stock: FC<Props> = (props: Props) => {
             }}
             draggable="true"
             onDragEnd={onDrag}
+            data-testid="stock-div"
         />
     );
 }
