@@ -1,60 +1,60 @@
 import React, { FC, useState } from 'react';
+import FirebaseDataModel from '../data/FirebaseDataModel';
 
-const WIDTH_PX = 20;
-const HEIGHT_PX = 20;
+export const WIDTH_PX = 20;
+export const HEIGHT_PX = 20;
+export const DEFAULT_COLOR = "blue";
+export const SELECTED_COLOR = "red";
 
-interface Props {
-    x: number;
-    y: number;
-    color: string;
+export interface Props {
+    initx: number;
+    inity: number;
+    componentId: string;
+    sessionId: string;
+    firebaseDataModel: FirebaseDataModel;
 }
 
-interface State {
-    maxX: number;
-    maxY: number;
+interface SharedState {
     x: number;
     y: number;
-    color: string;
+    text: string;
 }
 
 const Stock: FC<Props> = (props) => {
 
-    
-    const [state, setState] = useState<State>(
+    const [sharedState, setSharedState] = useState<SharedState>(
         {
-            maxX: props.x,
-            maxY: props.y,
-            x: props.x,
-            y: props.y,
-            color: props.color
+            x: props.initx,
+            y: props.inity,
+            text: "",
         }
     );
 
-    const onDrag: React.DragEventHandler =
-        (event: React.DragEvent) => {
-            let currentState: State = {...state};
+    const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
+        const newShared = { ...sharedState, x: event.clientX, y: event.clientY };
+        setSharedState(newShared);
+        props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
+    }
 
-            if (event.clientY < currentState.maxY  ){
-                setState({ ...state, x: event.clientX, y: currentState.maxY });
-            }
-            else{
-                setState({ ...state, x: event.clientX, y: event.clientY });
-            }
+    props.firebaseDataModel.subscribeToComponent(props.sessionId, props.componentId, (data) => {
+        let newData = data as SharedState;
+        setSharedState(newData);
+    });
 
-        }
+
     return (
         <div
             style={{
                 position: "absolute",
-                left: `${state.x}px`,
-                top: `${state.y}px`,
+                left: `${sharedState.x}px`,
+                top: `${sharedState.y}px`,
                 width: `${WIDTH_PX}px`,
                 height: `${HEIGHT_PX}px`,
-                background: state.color
+                background: DEFAULT_COLOR
             }}
             draggable="true"
-            onDrag={onDrag}
             onDragEnd={onDrag}
+            data-testid="stock-div"
         />
     );
 }

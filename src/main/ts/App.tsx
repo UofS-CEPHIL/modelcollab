@@ -1,36 +1,41 @@
-import React, { Fragment, useEffect, useRef, useState } from 'react';
-import Canvas from "./components/Canvas/Canvas"
-import Toolbar from "./components/Toolbar/Toolbar"
+import { useState } from "react";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
+import LoginScreen from "./components/screens/LoginScreen";
+import SimulationScreen from "./components/screens/SimulationScreen";
+import firebaseApp from "./firebase";
 
 function App() {
-    const divRef = useRef<HTMLDivElement>(null)
+    const [isSignedIn, setIsSignedIn] = useState<boolean>(false);
+    let user: User | null = null;
 
-    let DOMReact: DOMRect | undefined | null = divRef.current?.getClientRects().item(0)
-    
-    let maxX: number = -1
-    let maxY: number = 57
+    onAuthStateChanged(
+        getAuth(firebaseApp),
+        (user) => {
+            if (user) {
+                setIsSignedIn(true);
+                user = user;
+            }
+            else {
+                setIsSignedIn(false);
+                user = null;
+            }
+        });
 
-    //This one will be used as componentDidmount to update the position of the Canvas after it is rendered. TODO: figure if this is necessary or we can predefined the max position
-    useEffect(() => {
-        if (DOMReact !== undefined && DOMReact !== null ){
-            maxX = DOMReact.x
-            maxY = DOMReact.y
-        }
-    },[DOMReact]);
-
-    //by default mode will be move
-    const [mode, setMode] = useState<string>("Move");
-    
-    return (
-        <Fragment>
-            <Toolbar mode = {mode} setMode = {setMode} />
-
-            <div ref = {divRef}>
-                <Canvas mode = {mode} maxX = {maxX} maxY = {maxY}/>
-            </div>
-
-        </Fragment>
+    if (!isSignedIn) return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<LoginScreen />} />
+            </Routes>
+        </Router>
+    );
+    else return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<SimulationScreen user={user} />} />
+            </Routes>
+        </Router>
     );
 }
 

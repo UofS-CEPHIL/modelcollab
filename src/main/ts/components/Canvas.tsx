@@ -1,16 +1,28 @@
-import React, { FC, useState } from 'react';
+import { FC } from 'react';
 import Stock from "./Stock";
+import IdGenerator from "../IdGenerator";
+import { User } from 'firebase/auth';
+import FirebaseDataModelImpl from '../data/FirebaseDataModelImpl';
 
 interface Props {
-    maxX: number;
-    maxY: number
+    user: User | null;
+    sessionId: string;
 }
 
-const Canvas: FC<any> = ( props: Props ) => {
+const Canvas: FC<Props> = (props: Props) => {
+
+    const idGenerator = new IdGenerator();
+
     return (
         
         <div>
-            <Stock x={props.maxX} y={props.maxY} color={'red'} />
+            <Stock
+                initx={10}
+                inity={10}
+                sessionId={props.sessionId}
+                componentId={idGenerator.generateComponentId().toString()}
+                firebaseDataModel={new FirebaseDataModelImpl()}
+            />
         </div>
     );
 }
