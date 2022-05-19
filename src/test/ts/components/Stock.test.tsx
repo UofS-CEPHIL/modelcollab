@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent, createEvent, act } from "@testing-library/react";
 
-import Stock, { DEFAULT_COLOR, HEIGHT_PX, Props, WIDTH_PX } from "../../../main/ts/components/Stock";
+import Stock, { DEFAULT_COLOR, HEIGHT_PX, Props, WIDTH_PX } from "../../../main/ts/components/Canvas/Stock";
 import FirebaseDataModel from '../../../main/ts/data/FirebaseDataModel';
 
 

@@ -1,0 +1,7 @@
+.draggable_container{
+    position: relative;
+    width: 500px;
+    height: 500px;
+    overflow: auto;
+    border: 2px solid black;
+}

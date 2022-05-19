@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import FirebaseDataModel from '../data/FirebaseDataModel';
+import FirebaseDataModel from '../../data/FirebaseDataModel';
 
 export const WIDTH_PX = 20;
 export const HEIGHT_PX = 20;
@@ -31,14 +31,19 @@ const Stock: FC<Props> = (props) => {
     );
 
     const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
-        const newShared = { ...sharedState, x: event.clientX, y: event.clientY };
-        setSharedState(newShared);
-        props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
+
+        if (event.clientX > -1 && event.clientY > -1) {
+            const newShared = { ...sharedState, x: event.clientX, y: event.clientY };
+            setSharedState(newShared);
+            props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
+        }
     }
 
     props.firebaseDataModel.subscribeToComponent(props.sessionId, props.componentId, (data) => {
         let newData = data as SharedState;
-        setSharedState(newData);
+
+        if (newData.x !== sharedState.x && newData.y !== sharedState.y)
+            setSharedState(newData);
     });
 
 
@@ -52,10 +57,12 @@ const Stock: FC<Props> = (props) => {
                 height: `${HEIGHT_PX}px`,
                 background: DEFAULT_COLOR
             }}
+
             draggable="true"
             onDragEnd={onDrag}
             data-testid="stock-div"
         />
+
     );
 }
 
