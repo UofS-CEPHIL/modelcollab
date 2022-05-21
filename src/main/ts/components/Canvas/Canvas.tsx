@@ -12,11 +12,17 @@ interface Props {
 
 }
 interface Stock{
+    text: string;
     x: number;
     y: number;
-    // text: string;
-    componentId: string
 }
+
+interface StockwID{
+    stock: Stock
+    ID: string
+}
+
+
 
 const Canvas: FC<Props> = (props: Props) => {
 
@@ -24,22 +30,9 @@ const Canvas: FC<Props> = (props: Props) => {
 
 
     const idGenerator = new IdGenerator();
-    let ID: number = 7;
-    const [stocks, setStocks] = useState<Stock[]>(
-        [
-        {x:10,
-        y:10,
-        componentId:"1"
-        },
-        {x:10,
-        y:10,
-        componentId:"5"
-        },
-        {x:10,
-            y:10,
-            componentId:"6"
-            },
-    ]);
+
+
+    const [stockswID, setStockswID] = useState<StockwID[]>([]);
     
         const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
         event.preventDefault();
@@ -47,32 +40,58 @@ const Canvas: FC<Props> = (props: Props) => {
     }
 
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
-            Firebase.newComponents(props.sessionId, (data)=>{
-                console.log("new stock",data)
-            })
         if (props.mode === "Create"){
-            setStocks( [...stocks, {x: event.clientX, y:event.clientY, componentId: `${ID}`}])  
-            ID++
+
+            const componentID = idGenerator.generateComponentId()
+
+            const newStock: Stock =   {text: "",x: event.clientX, y:event.clientY}
+            const newStockwID: StockwID =  { stock : {text: "",x: event.clientX, y:event.clientY}, ID: `${componentID}`}
+
+            setStockswID( [...stockswID,newStockwID] )  
+            Firebase.updateComponent(props.sessionId, `${componentID}`, newStock);
+
         }
     }
 
 
-    // Firebase.newComponent(props.sessionId, (data)=>{
-    //     console.log("new stock",data)
+    Firebase.newComponents(props.sessionId, (ID, data)=>{
+        
+        if (ID){
+
+            let newStock = data as Stock;
+            let newStockwID: StockwID = { stock: newStock, ID: `${ID}` }
+
+            if( !stockswID.some(stockwID => stockwID.ID === newStockwID.ID)){
+                setStockswID([...stockswID,newStockwID])
+            }
+        }
+
+    })
+
+
+    // Firebase.renderComponents("1", (data) => {
+    //     if (data) {
+    //         let newStocks: StockwID[] = [];
+
+    //         for (const [key, value] of Object.entries(data)) {
+    //             let stock: StockwID = {stock: {x: value.data.x, y: value.data.y, text: value.data.text}, ID: key}
+    //             newStocks.push(stock)
+    //         }
+
+    //         if (JSON.stringify(newStocks) !== JSON.stringify(stockswID) )
+    //             setStockswID(newStocks)
+    //     }
     // })
 
-    // console.log("all components",Firebase.renderComponents(props.sessionId));
 
-
-    return (
-        
+    return ( 
         <div className = "draggable_container" onDragOver = {onDragOver} onClick = {onClick}>
-            { stocks.map( (stock)=>(
+            { stockswID.map( (stockwID)=>(
                 <Stock
-                    initx={stock.x}
-                    inity={stock.y} 
+                    initx={stockwID.stock.x}
+                    inity={stockwID.stock.y} 
                     sessionId={props.sessionId}
-                    componentId={stock.componentId}
+                    componentId={stockwID.ID}
                     firebaseDataModel={new FirebaseDataModelImpl()}
                 />
             ))

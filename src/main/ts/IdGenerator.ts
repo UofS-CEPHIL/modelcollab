@@ -4,12 +4,12 @@ export default class IdGenerator {
     // use, reserve it by adding an object for that ID filled with
     // arbitrary data (can we do this atomically? Otherwise could lead
     // to invalid state though unlikely). If it is in use, restart.
-
+    
     generateSessionId() {
         return 1;
     }
 
     generateComponentId() {
-        return 1;
+        return Math.floor(Math.random() * 100);
     }
 }

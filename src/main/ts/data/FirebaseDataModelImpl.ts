@@ -1,4 +1,4 @@
-import { getDatabase, ref, set, onValue, onChildAdded,get, child } from "firebase/database";
+import { getDatabase, ref, set, onValue, onChildAdded, get, child } from "firebase/database";
 import firebaseApp from "../firebase";
 
 import FirebaseDataModel from "./FirebaseDataModel";
@@ -19,6 +19,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
+
     subscribeToComponent(
         sessionId: string,
         componentId: string,
@@ -33,38 +34,28 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    // createComponent(sessionId: string, componentId: string, data: object) {
-    //     set(
-    //         ref(
-    //             getDatabase(firebaseApp),
-    //             this.makeComponentPath(sessionId, componentId)
-    //         ),
-    //         data
-    //     );
-    // }
-
-    newComponents ( sessionId: string , callback: (data: object) => void
-) {
+    newComponents (sessionId: string , callback: (key: unknown, data: Object) => void) {
         onChildAdded(
             ref(
                 getDatabase(firebaseApp),
-                `components/${sessionId}`
+                `components/${sessionId}/`
             ),
-            (snapshot) => { if (snapshot.val()) callback(snapshot.val()); }
+            (snapshot) => { if (snapshot.val()) callback( snapshot.key, snapshot.val().data );},
+         
         );
     }
 
-    // renderComponents(sessionId: string) {
+    renderComponents(sessionId: string, callback: (data: object) => void) {
 
-    //     get(child(ref(getDatabase()), `components/${sessionId}`)).then((snapshot) => {
-    //         if (snapshot.exists()) {
-    //           return(snapshot.val());
-    //         } else {
-    //           console.log("No data available");
-    //         }
-    //       }).catch((error) => {
-    //         console.error(error);
-    //       });
-    // }
+        get(child(ref(getDatabase(firebaseApp)), `components/${sessionId}`)).then((snapshot) => {
+            if (snapshot.exists()) {
+                callback(snapshot.val())
+            } else {
+              console.log("No data available");
+            }
+          }).catch((error) => {
+            console.error(error);
+          });    
+    }
 
 }

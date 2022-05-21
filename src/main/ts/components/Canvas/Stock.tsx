@@ -32,7 +32,7 @@ const Stock: FC<Props> = (props) => {
 
     const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
 
-        if (event.clientX > -1 && event.clientY > -1) {
+        if (event.clientX > -1 && event.clientY > -1){
             const newShared = { ...sharedState, x: event.clientX, y: event.clientY };
             setSharedState(newShared);
             props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
