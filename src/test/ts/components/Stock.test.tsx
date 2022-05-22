@@ -17,7 +17,9 @@ function renderStock(props: Partial<Props> = {}) {
         inity: 0,
         sessionId: SESSION_ID,
         componentId: COMPONENT_ID,
-        firebaseDataModel: { updateComponent: () => { }, subscribeToComponent: () => { } }
+        firebaseDataModel: { updateComponent: () => { }, subscribeToComponent: () => { } },
+        color: "Red",
+        text: ""
     };
     return render(<Stock {...defaultProps} {...props} />);
 }

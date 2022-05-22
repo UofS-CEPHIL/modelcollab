@@ -1,4 +1,4 @@
-import { getDatabase, ref, set, onValue, onChildAdded, get, child } from "firebase/database";
+import { getDatabase, ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved } from "firebase/database";
 import firebaseApp from "../firebase";
 
 import FirebaseDataModel from "./FirebaseDataModel";
@@ -19,6 +19,14 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
+    removeComponent(sessionId: string, componentId: string) {
+        remove(
+            ref(
+                getDatabase(firebaseApp),
+                this.makeComponentPath(sessionId, componentId)
+            )
+        );
+    }
 
     subscribeToComponent(
         sessionId: string,
@@ -34,7 +42,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    newComponents (sessionId: string , callback: (key: unknown, data: Object) => void) {
+    componentCreatedListener (sessionId: string , callback: (key: unknown, data: Object) => void) {
         onChildAdded(
             ref(
                 getDatabase(firebaseApp),
@@ -44,6 +52,21 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
          
         );
     }
+
+    componentRemovedListener (sessionId: string) {
+
+        onChildRemoved(
+            ref(
+                getDatabase(firebaseApp),
+                `components/${sessionId}/`
+            ),
+            (snapshot) => {
+                const deletedComponent = snapshot.val() ;
+                console.log('The stock with ID \'' + deletedComponent.x + '\' has been deleted');
+              });         
+
+    }
+    
 
     renderComponents(sessionId: string, callback: (data: object) => void) {
 

@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import Stock from "./Stock";
+import Stock, {DEFAULT_COLOR, SELECTED_COLOR, } from "./Stock";
 import IdGenerator from "../../IdGenerator";
 import { User } from 'firebase/auth';
 import FirebaseDataModelImpl from '../../data/FirebaseDataModelImpl';
@@ -11,6 +11,7 @@ interface Props {
     mode: string;
 
 }
+
 interface Stock{
     text: string;
     x: number;
@@ -33,15 +34,16 @@ const Canvas: FC<Props> = (props: Props) => {
 
 
     const [stockswID, setStockswID] = useState<StockwID[]>([]);
-    
-        const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
+    const [selected, setSelected] = useState<string>()
+
+    const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
         event.preventDefault();
         if (event.currentTarget.className === "draggable-container") return;
     }
 
-    const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
-        if (props.mode === "Create"){
+    const onClick: React.MouseEventHandler = (event: React.MouseEvent ) => {
 
+        if (props.mode === "Create"){
             const componentID = idGenerator.generateComponentId()
 
             const newStock: Stock =   {text: "",x: event.clientX, y:event.clientY}
@@ -49,15 +51,29 @@ const Canvas: FC<Props> = (props: Props) => {
 
             setStockswID( [...stockswID,newStockwID] )  
             Firebase.updateComponent(props.sessionId, `${componentID}`, newStock);
-
         }
+        else if (props.mode === "Move" && (event.target as Element).classList.item(2)?.localeCompare("Mui_Stock") === 0){
+            setSelected((event.target as Element).id)
+        }   
+        
+        else if (props.mode === "Delete"){
+            if ((event.target as Element).classList.item(2)?.localeCompare("Mui_Stock") === 0){
+                const id: string = (event.target as Element).id
+                const index: number = stockswID.findIndex(item => item.ID.localeCompare(id) === 0  )
+
+                let newStockwID: StockwID[] = [...stockswID]
+                newStockwID.splice(index,1)
+                setStockswID(newStockwID)
+                
+                Firebase.removeComponent(props.sessionId, (event.target as Element).id)
+            }
+        }
+
     }
 
 
-    Firebase.newComponents(props.sessionId, (ID, data)=>{
-        
+    Firebase.componentCreatedListener(props.sessionId, (ID, data)=>{
         if (ID){
-
             let newStock = data as Stock;
             let newStockwID: StockwID = { stock: newStock, ID: `${ID}` }
 
@@ -65,35 +81,38 @@ const Canvas: FC<Props> = (props: Props) => {
                 setStockswID([...stockswID,newStockwID])
             }
         }
-
     })
 
-
-    // Firebase.renderComponents("1", (data) => {
-    //     if (data) {
-    //         let newStocks: StockwID[] = [];
-
-    //         for (const [key, value] of Object.entries(data)) {
-    //             let stock: StockwID = {stock: {x: value.data.x, y: value.data.y, text: value.data.text}, ID: key}
-    //             newStocks.push(stock)
-    //         }
-
-    //         if (JSON.stringify(newStocks) !== JSON.stringify(stockswID) )
-    //             setStockswID(newStocks)
-    //     }
-    // })
-
+    Firebase.componentRemovedListener(props.sessionId)
 
     return ( 
         <div className = "draggable_container" onDragOver = {onDragOver} onClick = {onClick}>
-            { stockswID.map( (stockwID)=>(
-                <Stock
-                    initx={stockwID.stock.x}
-                    inity={stockwID.stock.y} 
-                    sessionId={props.sessionId}
-                    componentId={stockwID.ID}
-                    firebaseDataModel={new FirebaseDataModelImpl()}
-                />
+
+            { stockswID.map( (stockwID,i)=>(
+                
+                (selected && stockwID.ID.localeCompare(selected) === 0)
+                ?<div key={i}>
+                    <Stock
+                        initx={stockwID.stock.x}
+                        inity={stockwID.stock.y} 
+                        sessionId={props.sessionId}
+                        componentId={stockwID.ID}
+                        color = {SELECTED_COLOR}
+                        text = {stockwID.stock.text}
+                        firebaseDataModel={new FirebaseDataModelImpl()}
+                    />
+                </div>
+                :<div key={i}>
+                    <Stock
+                        initx={stockwID.stock.x}
+                        inity={stockwID.stock.y} 
+                        sessionId={props.sessionId}
+                        componentId={stockwID.ID}
+                        color = {DEFAULT_COLOR}
+                        text = {stockwID.stock.text}
+                        firebaseDataModel={new FirebaseDataModelImpl()}
+                    />
+                </div>
             ))
             }
         </div>
