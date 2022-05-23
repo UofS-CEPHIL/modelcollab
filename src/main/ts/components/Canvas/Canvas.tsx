@@ -34,7 +34,7 @@ const Canvas: FC<Props> = (props: Props) => {
 
 
     const [stockswID, setStockswID] = useState<StockwID[]>([]);
-    const [selected, setSelected] = useState<string>()
+    const [selected, setSelected] = useState<string | null>(null)
 
     const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
         event.preventDefault();
@@ -44,12 +44,14 @@ const Canvas: FC<Props> = (props: Props) => {
     const onClick: React.MouseEventHandler = (event: React.MouseEvent ) => {
 
         if (props.mode === "Create"){
+            setSelected(null)
             const componentID = idGenerator.generateComponentId()
-
             const newStock: Stock =   {text: "",x: event.clientX, y:event.clientY}
-            const newStockwID: StockwID =  { stock : {text: "",x: event.clientX, y:event.clientY}, ID: `${componentID}`}
 
-            setStockswID( [...stockswID,newStockwID] )  
+            // Thinking we might not need these commented-out lines because the Created-Listener will update the useState anyway
+            // const newStockwID: StockwID =  { stock : {text: "",x: event.clientX, y:event.clientY}, ID: `${componentID}`}
+            // setStockswID( [...stockswID,newStockwID] )  
+
             Firebase.updateComponent(props.sessionId, `${componentID}`, newStock);
         }
         else if (props.mode === "Move" && (event.target as Element).classList.item(2)?.localeCompare("Mui_Stock") === 0){
@@ -57,14 +59,8 @@ const Canvas: FC<Props> = (props: Props) => {
         }   
         
         else if (props.mode === "Delete"){
-            if ((event.target as Element).classList.item(2)?.localeCompare("Mui_Stock") === 0){
-                const id: string = (event.target as Element).id
-                const index: number = stockswID.findIndex(item => item.ID.localeCompare(id) === 0  )
-
-                let newStockwID: StockwID[] = [...stockswID]
-                newStockwID.splice(index,1)
-                setStockswID(newStockwID)
-                
+            setSelected(null)
+            if ((event.target as Element).classList.item(2)?.localeCompare("Mui_Stock") === 0){                
                 Firebase.removeComponent(props.sessionId, (event.target as Element).id)
             }
         }
@@ -74,23 +70,31 @@ const Canvas: FC<Props> = (props: Props) => {
 
     Firebase.componentCreatedListener(props.sessionId, (ID, data)=>{
         if (ID){
-            let newStock = data as Stock;
-            let newStockwID: StockwID = { stock: newStock, ID: `${ID}` }
-
-            if( !stockswID.some(stockwID => stockwID.ID === newStockwID.ID)){
+            if( !stockswID.some(stockwID => stockwID.ID === ID)){
+                let newStock = data as Stock;
+                let newStockwID: StockwID = { stock: newStock, ID: `${ID}` }
                 setStockswID([...stockswID,newStockwID])
             }
         }
     })
 
-    Firebase.componentRemovedListener(props.sessionId)
+    Firebase.componentRemovedListener(props.sessionId, (ID) => {
+        if (ID){
+            if( stockswID.some(stockwID => stockwID.ID === ID)){
+                const index: number = stockswID.findIndex(item => item.ID === ID )
+                let newStockwID: StockwID[] = [...stockswID]
+                newStockwID.splice(index,1)
+                setStockswID(newStockwID)
+            }
+        }
+    })
 
     return ( 
         <div className = "draggable_container" onDragOver = {onDragOver} onClick = {onClick}>
 
             { stockswID.map( (stockwID,i)=>(
                 
-                (selected && stockwID.ID.localeCompare(selected) === 0)
+                (selected && props.mode === "Move" && stockwID.ID === selected)
                 ?<div key={i}>
                     <Stock
                         initx={stockwID.stock.x}

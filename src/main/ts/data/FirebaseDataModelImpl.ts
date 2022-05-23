@@ -53,23 +53,18 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    componentRemovedListener (sessionId: string) {
-
+    componentRemovedListener (sessionId: string, callBack: (key: unknown) => void) {
         onChildRemoved(
             ref(
                 getDatabase(firebaseApp),
                 `components/${sessionId}/`
             ),
             (snapshot) => {
-                const deletedComponent = snapshot.val() ;
-                console.log('The stock with ID \'' + deletedComponent.x + '\' has been deleted');
+                callBack(snapshot.key)
               });         
-
     }
-    
 
     renderComponents(sessionId: string, callback: (data: object) => void) {
-
         get(child(ref(getDatabase(firebaseApp)), `components/${sessionId}`)).then((snapshot) => {
             if (snapshot.exists()) {
                 callback(snapshot.val())

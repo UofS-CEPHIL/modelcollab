@@ -34,7 +34,6 @@ const Stock: FC<Props> = (props) => {
         }
     );
     const [readOnly, setReadOnly] = useState<boolean>(true)
-    const [text, setText] = useState<string>(props.text)
 
     const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
 
@@ -51,21 +50,14 @@ const Stock: FC<Props> = (props) => {
         setReadOnly(false)
     }
 
-    
-
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setText(event.target.value)
-        console.log("handlechange")
+
+        const newShared = { ...sharedState, text: event.target.value };
+        props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
+
     };
 
-    const onBlur: () => void = () => {
-
-        if (text.localeCompare(sharedState.text) !== 0){
-            const newShared = { ...sharedState, text: text };
-            setSharedState(newShared);
-            props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
-        }
-        console.log("onblur")
+    const onBlur: React.FocusEventHandler = () => {
         setReadOnly(true)
     }
 
@@ -76,8 +68,7 @@ const Stock: FC<Props> = (props) => {
             setSharedState(newData);
 
         else if (newData.text.localeCompare(sharedState.text) !== 0){
-            // setText(newData.text)
-            console.log("sub")
+            setSharedState(newData)
         }
     });
 
@@ -91,24 +82,21 @@ const Stock: FC<Props> = (props) => {
                 top: `${sharedState.y}px`,
                 background: props.color,  
             }}
-            className = "stock"
             id={`${props.componentId}`}
-
             draggable="true"
             onDragEnd={onDrag}
             data-testid="stock-div"
         >
-        {/* <TextField className="Mui" id="outlined-basic" variant="outlined" /> */}
 
         <TextField id="outlined-basic"
-            value={text}
+            value={sharedState.text}
+            onChange = {handleChange}
+            onBlur = {onBlur}
+            onDoubleClick = {onDoubleClick}
             inputProps={{
-                onChange: handleChange,
-                onBlur: onBlur,
                 className: "Mui_Stock",
                 id: `${props.componentId}`,
                 readOnly: readOnly,
-                onDoubleClick: onDoubleClick
             }}
         />
         </div>
