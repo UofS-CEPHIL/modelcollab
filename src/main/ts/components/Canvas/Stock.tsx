@@ -38,12 +38,11 @@ const Stock: FC<Props> = (props) => {
     const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
 
         if (event.clientX > -1 && event.clientY > -1){
-
-            const newShared = { ...sharedState, x: event.clientX, y: event.clientY };
-            
+            const newShared = { ...sharedState, x: event.clientX, y: event.clientY };        
             setSharedState(newShared);
             props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
         }
+        
     }
 
     const onDoubleClick: React.MouseEventHandler = (event: React.MouseEvent) => {
@@ -51,10 +50,8 @@ const Stock: FC<Props> = (props) => {
     }
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-
         const newShared = { ...sharedState, text: event.target.value };
         props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
-
     };
 
     const onBlur: React.FocusEventHandler = () => {
@@ -64,12 +61,10 @@ const Stock: FC<Props> = (props) => {
     props.firebaseDataModel.subscribeToComponent(props.sessionId, props.componentId, (data) => {
         let newData = data as SharedState;
 
-        if (newData.x !== sharedState.x || newData.y !== sharedState.y)
-            setSharedState(newData);
-
-        else if (newData.text.localeCompare(sharedState.text) !== 0){
+        if (newData.x !== sharedState.x || newData.y !== sharedState.y || newData.text.localeCompare(sharedState.text) !== 0){
             setSharedState(newData)
         }
+        
     });
 
 
@@ -97,6 +92,7 @@ const Stock: FC<Props> = (props) => {
                 className: "Mui_Stock",
                 id: `${props.componentId}`,
                 readOnly: readOnly,
+                "data-testid": "stock-textfield-mui"
             }}
         />
         </div>

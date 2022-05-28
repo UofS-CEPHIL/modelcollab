@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, fireEvent, createEvent, act } from "@testing-library/react";
 
-import Stock, { DEFAULT_COLOR, HEIGHT_PX, Props, WIDTH_PX } from "../../../main/ts/components/Canvas/Stock";
+import Stock, { DEFAULT_COLOR, SELECTED_COLOR, HEIGHT_PX, Props, WIDTH_PX } from "../../../main/ts/components/Canvas/Stock";
 import FirebaseDataModel from '../../../main/ts/data/FirebaseDataModel';
-
 
 const X_VALUE: number = 100;
 const Y_VALUE: number = 200;
+const TEXT: string = "Hello World"
 const SESSION_ID: string = "0";
 const COMPONENT_ID: string = "0";
 
@@ -18,7 +18,7 @@ function renderStock(props: Partial<Props> = {}) {
         sessionId: SESSION_ID,
         componentId: COMPONENT_ID,
         firebaseDataModel: { updateComponent: () => { }, subscribeToComponent: () => { } },
-        color: "Red",
+        color: DEFAULT_COLOR,
         text: ""
     };
     return render(<Stock {...defaultProps} {...props} />);
@@ -35,9 +35,7 @@ describe("<Stock />", () => {
             position: "absolute",
             left: `${X_VALUE}px`,
             top: `${Y_VALUE}px`,
-            width: `${WIDTH_PX}px`,
-            height: `${HEIGHT_PX}px`,
-            background: DEFAULT_COLOR
+            background: `${DEFAULT_COLOR}`
         });
     });
 
@@ -50,12 +48,58 @@ describe("<Stock />", () => {
         const { findByTestId } = renderStock({ firebaseDataModel });
         const stock = await findByTestId("stock-div");
 
-        fireEvent.dragEnd(stock, new MouseEvent('dragend'));
+        fireEvent(stock, new MouseEvent("dragend",{ bubbles: true, cancelable: false, clientX: X_VALUE, clientY: Y_VALUE}))
 
         // not testing parameters because they are unexpectedly
         // undefined due to JSDom weirdness
         expect(updateFunction).toHaveBeenCalled();
     });
+
+    test("Should invoke callback when text changed", async () => {
+        const updateFunction = jest.fn();
+        const firebaseDataModel: FirebaseDataModel = {
+            subscribeToComponent: () => { },
+            updateComponent: updateFunction
+        };
+        const { findByTestId } = renderStock({ firebaseDataModel });
+        const stock_text = await findByTestId("stock-textfield-mui");
+
+        fireEvent.change(stock_text, {target: {value: 'a'}})
+
+        expect(updateFunction).toHaveBeenCalled();
+    });
+
+    test("Should invoke useState when double click to text", async () => {
+
+        const setStateMock = jest.fn();
+        const useStateMock: any = (useState: any) => [useState, setStateMock]
+
+        jest.spyOn(React, "useState").mockImplementation(useStateMock)
+
+        const { findByTestId } = renderStock();
+        const stock_text = await findByTestId("stock-textfield-mui")
+
+        fireEvent.doubleClick(stock_text, new MouseEvent("dblclick"))
+
+        jest.spyOn(React, "useState").mockRestore()
+        expect(setStateMock).toHaveBeenCalledWith(false)
+    })
+
+    test("Should invoke useState when click out of text", async () => {
+
+        const setStateMock = jest.fn();
+        const useStateMock: any = (useState: any) => [useState, setStateMock]
+
+        jest.spyOn(React, "useState").mockImplementation(useStateMock)
+
+        const { findByTestId } = renderStock();
+        const stock_text = await findByTestId("stock-textfield-mui")
+
+        fireEvent.blur(stock_text)
+
+        jest.spyOn(React, "useState").mockRestore()
+        expect(setStateMock).toHaveBeenCalledWith(true)
+    })
 
     test("Should subscribe to data model", async () => {
         const subFunction = jest.fn();
@@ -75,14 +119,28 @@ describe("<Stock />", () => {
         };
         const { findByTestId } = renderStock({ firebaseDataModel });
         const stock = await findByTestId("stock-div");
+
         act(() => subFunction.mock.lastCall[2]({ x: X_VALUE, y: Y_VALUE, text: "" }));
         expect(stock).toHaveStyle({
             position: "absolute",
             left: `${X_VALUE}px`,
             top: `${Y_VALUE}px`,
-            width: `${WIDTH_PX}px`,
-            height: `${HEIGHT_PX}px`,
             background: DEFAULT_COLOR
         });
     });
+
+    test("Should update text when database updates", async () => {
+        const subFunction = jest.fn();
+        const firebaseDataModel: FirebaseDataModel = {
+            subscribeToComponent: subFunction,
+            updateComponent: () => { }
+        };
+        const { getByTestId } = renderStock({ firebaseDataModel });
+        const stock_text = getByTestId("stock-textfield-mui") as HTMLInputElement;
+
+        act( () => subFunction.mock.lastCall[2]({x: X_VALUE, y: Y_VALUE, text: TEXT}));
+        expect(stock_text.value).toBe(`${TEXT}`)
+    });
+
+
 });
