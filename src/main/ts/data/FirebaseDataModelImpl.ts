@@ -18,16 +18,6 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             data
         );
     }
-
-    removeComponent(sessionId: string, componentId: string) {
-        remove(
-            ref(
-                getDatabase(firebaseApp),
-                this.makeComponentPath(sessionId, componentId)
-            )
-        );
-    }
-
     subscribeToComponent(
         sessionId: string,
         componentId: string,
@@ -41,7 +31,15 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             (snapshot) => { if (snapshot.val()) callback(snapshot.val()); }
         );
     }
-
+    
+    removeComponent(sessionId: string, componentId: string) {
+        remove(
+            ref(
+                getDatabase(firebaseApp),
+                this.makeComponentPath(sessionId, componentId)
+            )
+        );
+    }
     componentCreatedListener (sessionId: string , callback: (key: unknown, data: Object) => void) {
         onChildAdded(
             ref(

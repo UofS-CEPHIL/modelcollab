@@ -3,6 +3,7 @@ import React, { FC, useState } from 'react';
 import Canvas from '../Canvas/Canvas';
 import Toolbar from '../Toolbar/Toolbar'
 import IdGenerator from '../../IdGenerator';
+import FirebaseDataModelImpl from '../../data/FirebaseDataModelImpl';
 
 
 interface Props {
@@ -15,7 +16,7 @@ const SimulationScreen: FC<Props> = (props: Props) => {
         <React.Fragment>
             <Toolbar mode = {mode} setMode ={setMode}/>
 
-            <Canvas mode = {mode} user={props.user} sessionId={new IdGenerator().generateSessionId().toString()} />
+            <Canvas firebaseDataModel={new FirebaseDataModelImpl()} mode = {mode} user={props.user} sessionId={new IdGenerator().generateSessionId().toString()} />
 
         </React.Fragment>
     );

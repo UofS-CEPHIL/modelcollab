@@ -2,14 +2,14 @@ import React, { FC, useState } from 'react';
 import Stock, {DEFAULT_COLOR, SELECTED_COLOR, } from "./Stock";
 import IdGenerator from "../../IdGenerator";
 import { User } from 'firebase/auth';
-import FirebaseDataModelImpl from '../../data/FirebaseDataModelImpl';
+import FirebaseDataModel from '../../data/FirebaseDataModel';
 import "./Styles.css"
 
-interface Props {
+export interface Props {
+    firebaseDataModel: FirebaseDataModel;
     user: User | null;
     sessionId: string;
     mode: string;
-
 }
 
 interface Stock{
@@ -26,8 +26,6 @@ interface StockwID{
 
 
 const Canvas: FC<Props> = (props: Props) => {
-
-    const Firebase = new FirebaseDataModelImpl()
 
 
     const idGenerator = new IdGenerator();
@@ -52,23 +50,22 @@ const Canvas: FC<Props> = (props: Props) => {
             // const newStockwID: StockwID =  { stock : {text: "",x: event.clientX, y:event.clientY}, ID: `${componentID}`}
             // setStockswID( [...stockswID,newStockwID] )  
 
-            Firebase.updateComponent(props.sessionId, `${componentID}`, newStock);
+            props.firebaseDataModel.updateComponent(props.sessionId, `${componentID}`, newStock);
         }
-        else if (props.mode === "Move" && (event.target as Element).classList.item(2)?.localeCompare("Mui_Stock") === 0){
+        else if (props.mode === "Move" && (event.target as Element).className.split(" ").find(item => ["Mui_Stock"].indexOf(item) > -1)){
             setSelected((event.target as Element).id)
         }   
         
         else if (props.mode === "Delete"){
             setSelected(null)
-            if ((event.target as Element).classList.item(2)?.localeCompare("Mui_Stock") === 0){                
-                Firebase.removeComponent(props.sessionId, (event.target as Element).id)
+            if ((event.target as Element).className.split(" ").find(item => ["Mui_Stock"].indexOf(item) > -1)){                
+                props.firebaseDataModel.removeComponent(props.sessionId, (event.target as Element).id)
             }
         }
 
     }
 
-
-    Firebase.componentCreatedListener(props.sessionId, (ID, data)=>{
+    props.firebaseDataModel.componentCreatedListener(props.sessionId, (ID, data)=>{
         if (ID){
             if( !stockswID.some(stockwID => stockwID.ID === ID)){
                 let newStock = data as Stock;
@@ -78,7 +75,7 @@ const Canvas: FC<Props> = (props: Props) => {
         }
     })
 
-    Firebase.componentRemovedListener(props.sessionId, (ID) => {
+    props.firebaseDataModel.componentRemovedListener(props.sessionId, (ID) => {
         if (ID){
             if( stockswID.some(stockwID => stockwID.ID === ID)){
                 const index: number = stockswID.findIndex(item => item.ID === ID )
@@ -90,7 +87,7 @@ const Canvas: FC<Props> = (props: Props) => {
     })
 
     return ( 
-        <div className = "draggable_container" onDragOver = {onDragOver} onClick = {onClick}>
+        <div className = "draggable_container" onDragOver = {onDragOver} onClick = {onClick} data-testid = "canvas-div">
 
             { stockswID.map( (stockwID,i)=>(
                 
@@ -103,7 +100,8 @@ const Canvas: FC<Props> = (props: Props) => {
                         componentId={stockwID.ID}
                         color = {SELECTED_COLOR}
                         text = {stockwID.stock.text}
-                        firebaseDataModel={new FirebaseDataModelImpl()}
+                        firebaseDataModel={props.firebaseDataModel}
+                        data-testid = "stock-selected"
                     />
                 </div>
                 :<div key={i}>
@@ -114,7 +112,8 @@ const Canvas: FC<Props> = (props: Props) => {
                         componentId={stockwID.ID}
                         color = {DEFAULT_COLOR}
                         text = {stockwID.stock.text}
-                        firebaseDataModel={new FirebaseDataModelImpl()}
+                        firebaseDataModel={props.firebaseDataModel}
+                        data-testid = "stock-not_selected"
                     />
                 </div>
             ))

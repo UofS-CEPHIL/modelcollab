@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, fireEvent, createEvent, act } from "@testing-library/react";
 
-import Stock, { DEFAULT_COLOR, SELECTED_COLOR, HEIGHT_PX, Props, WIDTH_PX } from "../../../main/ts/components/Canvas/Stock";
-import FirebaseDataModel from '../../../main/ts/data/FirebaseDataModel';
+import Stock, { DEFAULT_COLOR, SELECTED_COLOR, HEIGHT_PX, Props, WIDTH_PX } from "../../../../main/ts/components/Canvas/Stock";
+import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
 
 const X_VALUE: number = 100;
 const Y_VALUE: number = 200;
@@ -17,7 +17,9 @@ function renderStock(props: Partial<Props> = {}) {
         inity: 0,
         sessionId: SESSION_ID,
         componentId: COMPONENT_ID,
-        firebaseDataModel: { updateComponent: () => { }, subscribeToComponent: () => { } },
+        firebaseDataModel: { updateComponent: () => { }, subscribeToComponent: () => { },             removeComponent: () => { },
+        componentCreatedListener: () => { },
+        componentRemovedListener: () => { } },
         color: DEFAULT_COLOR,
         text: ""
     };
@@ -43,9 +45,13 @@ describe("<Stock />", () => {
         const updateFunction = jest.fn();
         const firebaseDataModel: FirebaseDataModel = {
             subscribeToComponent: () => { },
-            updateComponent: updateFunction
+            updateComponent: updateFunction,
+            removeComponent: () => { },
+            componentCreatedListener: () => { },
+            componentRemovedListener: () => { }
+
         };
-        const { findByTestId } = renderStock({ firebaseDataModel });
+        const { findByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
         const stock = await findByTestId("stock-div");
 
         fireEvent(stock, new MouseEvent("dragend",{ bubbles: true, cancelable: false, clientX: X_VALUE, clientY: Y_VALUE}))
@@ -59,7 +65,10 @@ describe("<Stock />", () => {
         const updateFunction = jest.fn();
         const firebaseDataModel: FirebaseDataModel = {
             subscribeToComponent: () => { },
-            updateComponent: updateFunction
+            updateComponent: updateFunction,
+            removeComponent: () => { },
+            componentCreatedListener: () => { },
+            componentRemovedListener: () => { }
         };
         const { findByTestId } = renderStock({ firebaseDataModel });
         const stock_text = await findByTestId("stock-textfield-mui");
@@ -105,9 +114,12 @@ describe("<Stock />", () => {
         const subFunction = jest.fn();
         const firebaseDataModel: FirebaseDataModel = {
             subscribeToComponent: subFunction,
-            updateComponent: () => { }
+            updateComponent: () => { },
+            removeComponent: () => { },
+            componentCreatedListener: () => { },
+            componentRemovedListener: () => { }
         };
-        renderStock({ firebaseDataModel });
+        renderStock({ firebaseDataModel : firebaseDataModel });
         expect(subFunction).toHaveBeenCalledTimes(1);
     });
 
@@ -115,9 +127,12 @@ describe("<Stock />", () => {
         const subFunction = jest.fn();
         const firebaseDataModel: FirebaseDataModel = {
             subscribeToComponent: subFunction,
-            updateComponent: () => { }
+            updateComponent: () => { },
+            removeComponent: () => { },
+            componentCreatedListener: () => { },
+            componentRemovedListener: () => { }
         };
-        const { findByTestId } = renderStock({ firebaseDataModel });
+        const { findByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
         const stock = await findByTestId("stock-div");
 
         act(() => subFunction.mock.lastCall[2]({ x: X_VALUE, y: Y_VALUE, text: "" }));
@@ -133,9 +148,12 @@ describe("<Stock />", () => {
         const subFunction = jest.fn();
         const firebaseDataModel: FirebaseDataModel = {
             subscribeToComponent: subFunction,
-            updateComponent: () => { }
+            updateComponent: () => { },
+            removeComponent: () => { },
+            componentCreatedListener: () => { },
+            componentRemovedListener: () => { }
         };
-        const { getByTestId } = renderStock({ firebaseDataModel });
+        const { getByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
         const stock_text = getByTestId("stock-textfield-mui") as HTMLInputElement;
 
         act( () => subFunction.mock.lastCall[2]({x: X_VALUE, y: Y_VALUE, text: TEXT}));
