@@ -8,12 +8,6 @@ interface Props {
     setMode: React.Dispatch<React.SetStateAction<string>>
 }
 
-function a11yProps(index: number) {
-  return {
-    id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
-  };
-}
 
 export default function Toolbar( props : Props) {
   const [value, setValue] = React.useState(0);
@@ -38,9 +32,9 @@ export default function Toolbar( props : Props) {
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-          <Tab label="Move" {...a11yProps(0)} />
-          <Tab label="Create" {...a11yProps(1)} />
-          <Tab label="Delete" {...a11yProps(2)} />
+          <Tab label="Move"/>
+          <Tab label="Create"/>
+          <Tab label="Delete"/>
         </Tabs>
       </Box>
     </Box>

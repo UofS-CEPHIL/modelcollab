@@ -31,7 +31,7 @@ const Canvas: FC<Props> = (props: Props) => {
     const idGenerator = new IdGenerator();
 
 
-    const [stockswID, setStockswID] = useState<StockwID[]>([]);
+    const [stockswID, setStockswID] = React.useState<StockwID[]>([]);
     const [selected, setSelected] = useState<string | null>(null)
 
     const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
@@ -101,7 +101,6 @@ const Canvas: FC<Props> = (props: Props) => {
                         color = {SELECTED_COLOR}
                         text = {stockwID.stock.text}
                         firebaseDataModel={props.firebaseDataModel}
-                        data-testid = "stock-selected"
                     />
                 </div>
                 :<div key={i}>
@@ -113,7 +112,6 @@ const Canvas: FC<Props> = (props: Props) => {
                         color = {DEFAULT_COLOR}
                         text = {stockwID.stock.text}
                         firebaseDataModel={props.firebaseDataModel}
-                        data-testid = "stock-not_selected"
                     />
                 </div>
             ))
