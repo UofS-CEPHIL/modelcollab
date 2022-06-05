@@ -3,7 +3,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 
-interface Props {
+export interface Props {
     mode: string
     setMode: React.Dispatch<React.SetStateAction<string>>
 }
@@ -12,29 +12,35 @@ interface Props {
 export default function Toolbar( props : Props) {
   const [value, setValue] = React.useState(0);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
+  // This is the modifie handleChange used in Tabs. We can delete this once we know we dont need it
+  // const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  //   setValue(newValue);
+
+  //   if ((event.target as Element).textContent){
+  //       props.setMode(`${(event.target as Element).textContent}`) 
+  //   }
+  // };
+
+
+  const handleChange: React.MouseEventHandler = (event: React.MouseEvent) => {
+
+    if ( `${(event.target as Element).textContent}` === "Move")
+      setValue(0);
+    else if ( `${(event.target as Element).textContent}` === "Create")
+      setValue(1);
+    else
+      setValue(2)
     
-    switch (newValue){
-      case 0:
-        props.setMode("Move");
-        break;
-      case 1:
-        props.setMode("Create");
-        break;
-      case 2:
-        props.setMode("Delete");
-        break;
-    }
-  };
+    props.setMode(`${(event.target as Element).textContent}`)
+  }
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }} data-testid = 'toolbar-box'>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-          <Tab label="Move"/>
-          <Tab label="Create"/>
-          <Tab label="Delete"/>
+        <Tabs value={value} aria-label="basic tabs example" data-testid = 'toolbar-tabs'>
+          <Tab label="Move" value = {0} onClick = {handleChange}/>
+          <Tab label="Create" value = {1} onClick = {handleChange}/>
+          <Tab label="Delete" value = {2} onClick = {handleChange}/>
         </Tabs>
       </Box>
     </Box>
