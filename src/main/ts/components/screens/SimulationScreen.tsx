@@ -1,6 +1,7 @@
-import { User } from 'firebase/auth';
 import React, { FC, useState } from 'react';
-import Canvas from '../Canvas/Canvas';
+
+import { User } from 'firebase/auth';
+import Canvas, { Mode } from '../Canvas/Canvas';
 import Toolbar from '../Toolbar/Toolbar'
 import IdGenerator from '../../IdGenerator';
 import FirebaseDataModelImpl from '../../data/FirebaseDataModelImpl';
@@ -11,12 +12,16 @@ interface Props {
 }
 
 const SimulationScreen: FC<Props> = (props: Props) => {
-    const [mode, setMode] = useState<string>("Move")
+    const [mode, setMode] = useState<Mode>(Mode.MOVE)
     return (
         <React.Fragment>
-            <Toolbar mode = {mode} setMode ={setMode}/>
-
-            <Canvas firebaseDataModel={new FirebaseDataModelImpl()} mode = {mode} user={props.user} sessionId={new IdGenerator().generateSessionId().toString()} />
+            <Toolbar mode={mode} setMode={setMode} />
+            <Canvas
+                firebaseDataModel={new FirebaseDataModelImpl()}
+                mode={mode}
+                user={props.user}
+                sessionId={new IdGenerator().generateSessionId().toString()}
+            />
 
         </React.Fragment>
     );

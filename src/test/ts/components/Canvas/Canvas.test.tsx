@@ -1,37 +1,35 @@
-import React, { useState } from 'react';
-import { render, fireEvent, createEvent, act } from "@testing-library/react";
+import React from 'react';
+import { render, fireEvent, act } from "@testing-library/react";
 
-import Canvas, {Props} from "../../../../main/ts/components/Canvas/Canvas";
+import Canvas, { Props, Mode } from "../../../../main/ts/components/Canvas/Canvas";
 import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
 
-const SESSION_ID: string = "0";
-const MOVE: string =  "Move";
-const CREATE: string = "Create";
-const DELETE: string = "Delete";
-const X_VALUE: number = 100;
-const Y_VALUE: number = 200;
+const TEST_SESSION_ID: string = "0";
+const TEST_X_VALUE: number = 100;
+const TEST_Y_VALUE: number = 200;
 
 
 function renderCanvas(props: Partial<Props> = {}) {
     const defaultProps: Props = {
         user: null,
-        sessionId: SESSION_ID,
-        mode: MOVE,
-        firebaseDataModel: {updateComponent: () => { }, subscribeToComponent: () => { },             removeComponent: () => { },
-        componentCreatedListener: () => { },
-        componentRemovedListener: () => { } }
+        sessionId: TEST_SESSION_ID,
+        mode: Mode.MOVE,
+        firebaseDataModel: {
+            updateComponent: () => { }, subscribeToComponent: () => { }, removeComponent: () => { },
+            componentCreatedListener: () => { },
+            componentRemovedListener: () => { }
+        }
     };
     return render(<Canvas {...defaultProps} {...props} />);
 }
 
 describe("<Canvas />", () => {
 
-    test("should display Canvas with default setting", async () => {
-        const {findByTestId}  = renderCanvas();
+    test("Should display Canvas with default setting", async () => {
+        const { findByTestId } = renderCanvas();
         const canvas = await findByTestId("canvas-div");
 
-        expect(canvas).toHaveClass("draggable_container")
-
+        expect(canvas).toHaveClass("draggable_container");
     });
 
     test("Should invoke callback when on Create mode", async () => {
@@ -45,16 +43,18 @@ describe("<Canvas />", () => {
         };
 
         const setStateMock = jest.fn();
-        const useStateMock: any = (useState: any) => [useState,setStateMock]
-        jest.spyOn(React, "useState").mockImplementation(useStateMock)
+        const useStateMock: any = (useState: any) => [useState, setStateMock];
+        jest.spyOn(React, "useState").mockImplementation(useStateMock);
 
-        const { findByTestId } = renderCanvas({mode: CREATE, firebaseDataModel: firebaseDataModel});
-        const canvas = await findByTestId("canvas-div")
+        const { findByTestId } = renderCanvas(
+            { mode: Mode.CREATE, firebaseDataModel: firebaseDataModel }
+        );
+        const canvas = await findByTestId("canvas-div");
 
-        fireEvent.click(canvas)
-        jest.spyOn(React,"useState").mockRestore()
+        fireEvent.click(canvas);
+        jest.spyOn(React, "useState").mockRestore();
 
-        expect(setStateMock).toBeCalledWith(null)
+        expect(setStateMock).toBeCalledWith(null);
         expect(updateFunction).toHaveBeenCalled();
 
     });
@@ -62,44 +62,46 @@ describe("<Canvas />", () => {
     test("Should invoke useState when click on the text, when on mode Move", async () => {
 
         const setStateMock = jest.fn();
-        const useStateMock: any = (useState: any) => [useState,setStateMock]
+        const useStateMock: any = (useState: any) => [useState, setStateMock];
 
-        jest.spyOn(React, "useState").mockImplementation(useStateMock)
+        jest.spyOn(React, "useState").mockImplementation(useStateMock);
 
-        const {findByTestId} = renderCanvas({mode: MOVE});
-        const canvas = await findByTestId("canvas-div")
-        fireEvent.click(canvas, {target: {className: "Mui_Stock", id: "5"}})
+        const { findByTestId } = renderCanvas({ mode: Mode.MOVE });
+        const canvas = await findByTestId("canvas-div");
+        fireEvent.click(canvas, { target: { className: "Mui_Stock", id: "5" } });
 
-        jest.spyOn(React,"useState").mockRestore()
+        jest.spyOn(React, "useState").mockRestore();
 
-        expect(setStateMock).toBeCalledWith("5")
-    })
+        expect(setStateMock).toBeCalledWith("5");
+    });
 
     test("Should invoke callback when on Delete mode", async () => {
         const removeFunction = jest.fn();
 
         const firebaseDataModel: FirebaseDataModel = {
-            subscribeToComponent: () => {},
-            updateComponent: () => {},
+            subscribeToComponent: () => { },
+            updateComponent: () => { },
             removeComponent: removeFunction,
-            componentCreatedListener: () => {},
-            componentRemovedListener: () => {}
-        }
+            componentCreatedListener: () => { },
+            componentRemovedListener: () => { }
+        };
 
         const setStateMock = jest.fn();
-        const useStateMock: any = (useState: any) => [useState,setStateMock]
-        jest.spyOn(React, "useState").mockImplementation(useStateMock)
+        const useStateMock: any = (useState: any) => [useState, setStateMock];
+        jest.spyOn(React, "useState").mockImplementation(useStateMock);
 
-        const {findByTestId} = renderCanvas({mode: DELETE, firebaseDataModel: firebaseDataModel})
-        const canvas = await findByTestId("canvas-div")
+        const { findByTestId } = renderCanvas(
+            { mode: Mode.DELETE, firebaseDataModel: firebaseDataModel }
+        );
+        const canvas = await findByTestId("canvas-div");
 
-        fireEvent.click(canvas, {target: {className: "Mui_Stock"}}) 
+        fireEvent.click(canvas, { target: { className: "Mui_Stock" } });
 
-        jest.spyOn(React,"useState").mockRestore()
+        jest.spyOn(React, "useState").mockRestore();
 
-        expect(setStateMock).toBeCalledWith(null)
-        expect(removeFunction).toBeCalled()
-    })
+        expect(setStateMock).toBeCalledWith(null);
+        expect(removeFunction).toBeCalled();
+    });
 
     test("Should subscribe to data model", async () => {
         const stockCreatedFunction = jest.fn();
@@ -112,7 +114,7 @@ describe("<Canvas />", () => {
             componentCreatedListener: stockCreatedFunction,
             componentRemovedListener: stockRemovedFunction
         };
-        renderCanvas({ firebaseDataModel : firebaseDataModel });
+        renderCanvas({ firebaseDataModel: firebaseDataModel });
         expect(stockCreatedFunction).toHaveBeenCalledTimes(1);
         expect(stockRemovedFunction).toHaveBeenCalledTimes(1);
     });
@@ -122,7 +124,7 @@ describe("<Canvas />", () => {
         const stockCreatedFunction = jest.fn();
 
         const firebaseDataModel: FirebaseDataModel = {
-            subscribeToComponent: () => {},
+            subscribeToComponent: () => { },
             updateComponent: () => { },
             removeComponent: () => { },
             componentCreatedListener: stockCreatedFunction,
@@ -130,27 +132,29 @@ describe("<Canvas />", () => {
         };
 
         const setStateMock = jest.fn();
-        const useStateMock: any = (useState: any) => [useState,setStateMock]
+        const useStateMock: any = (useState: any) => [useState, setStateMock]
         jest.spyOn(React, "useState").mockImplementation(useStateMock)
 
-        const { findByTestId} = renderCanvas({firebaseDataModel: firebaseDataModel});
+        const { findByTestId } = renderCanvas({ firebaseDataModel: firebaseDataModel });
 
         const canvas = await findByTestId("canvas-div");
 
-        act( () => stockCreatedFunction.mock.lastCall[1](1,{x: X_VALUE, y: Y_VALUE, text: ""}))
+        act(() =>
+            stockCreatedFunction.mock.lastCall[1](1, { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "" })
+        );
 
-        jest.spyOn(React,"useState").mockRestore()
+        jest.spyOn(React, "useState").mockRestore();
 
-        expect(setStateMock).toBeCalledWith([ { stock: {x: X_VALUE, y: Y_VALUE, text: ""}, ID: "1" } ])
-
-
-    })
+        expect(setStateMock).toBeCalledWith(
+            [{ stock: { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "" }, id: "1" }]
+        );
+    });
 
     test("Should update Stock list useState when Stock is deleted on the database", async () => {
         const stockRemovedFunction = jest.fn();
 
         const firebaseDataModel: FirebaseDataModel = {
-            subscribeToComponent: () => {},
+            subscribeToComponent: () => { },
             updateComponent: () => { },
             removeComponent: () => { },
             componentCreatedListener: () => { },
@@ -158,15 +162,26 @@ describe("<Canvas />", () => {
         };
 
         const setStateMock = jest.fn();
-        const useStateMock: any = (useState: any) => [useState = [ { stock: {x: X_VALUE, y: Y_VALUE, text: ""}, ID: "1" } ],setStateMock]
-        jest.spyOn(React, "useState").mockImplementation(useStateMock)
+        const useStateMock: any = (useState: any) => [
+            useState = [
+                {
+                    stock: {
+                        x: TEST_X_VALUE,
+                        y: TEST_Y_VALUE,
+                        text: ""
+                    },
+                    id: "1"
+                }
+            ],
+            setStateMock
+        ];
 
-   
-        const {findByTestId} = renderCanvas({firebaseDataModel: firebaseDataModel});
+        jest.spyOn(React, "useState").mockImplementation(useStateMock);
+        const { findByTestId } = renderCanvas({ firebaseDataModel: firebaseDataModel });
 
         const canvas = await findByTestId("canvas-div");
-        
-        act( () => stockRemovedFunction.mock.lastCall[1]("1"))
+
+        act(() => stockRemovedFunction.mock.lastCall[1]("1"))
         expect(setStateMock).toBeCalledWith([])
     })
 })

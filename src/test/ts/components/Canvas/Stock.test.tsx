@@ -1,25 +1,30 @@
 import React from 'react';
-import { render, fireEvent, createEvent, act } from "@testing-library/react";
+import { render, fireEvent, act } from "@testing-library/react";
 
-import Stock, { DEFAULT_COLOR, SELECTED_COLOR, HEIGHT_PX, Props, WIDTH_PX } from "../../../../main/ts/components/Canvas/Stock";
+import Stock, { DEFAULT_COLOR, Props }
+    from "../../../../main/ts/components/Canvas/Stock";
 import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
 
-const X_VALUE: number = 100;
-const Y_VALUE: number = 200;
-const TEXT: string = "Hello World"
-const SESSION_ID: string = "0";
-const COMPONENT_ID: string = "0";
+const TEST_X_VALUE: number = 100;
+const TEST_Y_VALUE: number = 200;
+const TEST_TEXT: string = "Hello World"
+const TEST_SESSION_ID: string = "0";
+const TEST_COMPONENT_ID: string = "0";
 
 
 function renderStock(props: Partial<Props> = {}) {
     const defaultProps: Props = {
         initx: 0,
         inity: 0,
-        sessionId: SESSION_ID,
-        componentId: COMPONENT_ID,
-        firebaseDataModel: { updateComponent: () => { }, subscribeToComponent: () => { },             removeComponent: () => { },
-        componentCreatedListener: () => { },
-        componentRemovedListener: () => { } },
+        sessionId: TEST_SESSION_ID,
+        componentId: TEST_COMPONENT_ID,
+        firebaseDataModel: {
+            updateComponent: () => { },
+            subscribeToComponent: () => { },
+            removeComponent: () => { },
+            componentCreatedListener: () => { },
+            componentRemovedListener: () => { }
+        },
         color: DEFAULT_COLOR,
         text: ""
     };
@@ -29,14 +34,14 @@ function renderStock(props: Partial<Props> = {}) {
 
 describe("<Stock />", () => {
     test("Should display a stock with default settings", async () => {
-        const { findByTestId } = renderStock({ initx: X_VALUE, inity: Y_VALUE });
+        const { findByTestId } = renderStock({ initx: TEST_X_VALUE, inity: TEST_Y_VALUE });
         const stock = await findByTestId("stock-div");
 
         expect(stock).toHaveAttribute("draggable", "true");
         expect(stock).toHaveStyle({
             position: "absolute",
-            left: `${X_VALUE}px`,
-            top: `${Y_VALUE}px`,
+            left: `${TEST_X_VALUE}px`,
+            top: `${TEST_Y_VALUE}px`,
             background: `${DEFAULT_COLOR}`
         });
     });
@@ -54,7 +59,18 @@ describe("<Stock />", () => {
         const { findByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
         const stock = await findByTestId("stock-div");
 
-        fireEvent(stock, new MouseEvent("dragend",{ bubbles: true, cancelable: false, clientX: X_VALUE, clientY: Y_VALUE}))
+        fireEvent(
+            stock,
+            new MouseEvent(
+                "dragend",
+                {
+                    bubbles: true,
+                    cancelable: false,
+                    clientX: TEST_X_VALUE,
+                    clientY: TEST_Y_VALUE
+                }
+            )
+        );
 
         // not testing parameters because they are unexpectedly
         // undefined due to JSDom weirdness
@@ -73,8 +89,7 @@ describe("<Stock />", () => {
         const { findByTestId } = renderStock({ firebaseDataModel });
         const stock_text = await findByTestId("stock-textfield-mui");
 
-        fireEvent.change(stock_text, {target: {value: 'a'}})
-
+        fireEvent.change(stock_text, { target: { value: 'a' } })
         expect(updateFunction).toHaveBeenCalled();
     });
 
@@ -119,7 +134,7 @@ describe("<Stock />", () => {
             componentCreatedListener: () => { },
             componentRemovedListener: () => { }
         };
-        renderStock({ firebaseDataModel : firebaseDataModel });
+        renderStock({ firebaseDataModel: firebaseDataModel });
         expect(subFunction).toHaveBeenCalledTimes(1);
     });
 
@@ -135,11 +150,13 @@ describe("<Stock />", () => {
         const { findByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
         const stock = await findByTestId("stock-div");
 
-        act(() => subFunction.mock.lastCall[2]({ x: X_VALUE, y: Y_VALUE, text: "" }));
+        act(() =>
+            subFunction.mock.lastCall[2]({ x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "" })
+        );
         expect(stock).toHaveStyle({
             position: "absolute",
-            left: `${X_VALUE}px`,
-            top: `${Y_VALUE}px`,
+            left: `${TEST_X_VALUE}px`,
+            top: `${TEST_Y_VALUE}px`,
             background: DEFAULT_COLOR
         });
     });
@@ -156,9 +173,9 @@ describe("<Stock />", () => {
         const { getByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
         const stock_text = getByTestId("stock-textfield-mui") as HTMLInputElement;
 
-        act( () => subFunction.mock.lastCall[2]({x: X_VALUE, y: Y_VALUE, text: TEXT}));
-        expect(stock_text.value).toBe(`${TEXT}`)
+        act(() =>
+            subFunction.mock.lastCall[2]({ x: TEST_X_VALUE, y: TEST_Y_VALUE, text: TEST_TEXT })
+        );
+        expect(stock_text.value).toBe(`${TEST_TEXT}`)
     });
-
-
 });

@@ -33,20 +33,19 @@ const Stock: FC<Props> = (props) => {
             text: props.text,
         }
     );
-    const [readOnly, setReadOnly] = useState<boolean>(true)
+    const [readOnly, setReadOnly] = useState<boolean>(true);
 
     const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
 
-        if (event.clientX > -1 && event.clientY > -1){
-            const newShared = { ...sharedState, x: event.clientX, y: event.clientY };        
+        if (event.clientX > -1 && event.clientY > -1) {
+            const newShared = { ...sharedState, x: event.clientX, y: event.clientY };
             setSharedState(newShared);
             props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
         }
-        
     }
 
-    const onDoubleClick: React.MouseEventHandler = (event: React.MouseEvent) => {
-        setReadOnly(false)
+    const onDoubleClick: React.MouseEventHandler = (_: React.MouseEvent) => {
+        setReadOnly(false);
     }
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,46 +54,45 @@ const Stock: FC<Props> = (props) => {
     };
 
     const onBlur: React.FocusEventHandler = () => {
-        setReadOnly(true)
+        setReadOnly(true);
     }
 
     props.firebaseDataModel.subscribeToComponent(props.sessionId, props.componentId, (data) => {
         let newData = data as SharedState;
-
-        if (newData.x !== sharedState.x || newData.y !== sharedState.y || newData.text.localeCompare(sharedState.text) !== 0){
-            setSharedState(newData)
+        if (newData.x !== sharedState.x
+            || newData.y !== sharedState.y
+            || newData.text.localeCompare(sharedState.text) !== 0
+        ) {
+            setSharedState(newData);
         }
-        
     });
 
 
     return (
-
         <div
             style={{
                 position: "absolute",
                 left: `${sharedState.x}px`,
                 top: `${sharedState.y}px`,
-                background: props.color,  
+                background: props.color,
             }}
             id={`${props.componentId}`}
             draggable="true"
             onDragEnd={onDrag}
             data-testid="stock-div"
         >
-
-        <TextField id="outlined-basic"
-            value={sharedState.text}
-            onChange = {handleChange}
-            onBlur = {onBlur}
-            onDoubleClick = {onDoubleClick}
-            inputProps={{
-                className: "Mui_Stock",
-                id: `${props.componentId}`,
-                readOnly: readOnly,
-                "data-testid": "stock-textfield-mui"
-            }}
-        />
+            <TextField id="outlined-basic"
+                value={sharedState.text}
+                onChange={handleChange}
+                onBlur={onBlur}
+                onDoubleClick={onDoubleClick}
+                inputProps={{
+                    className: "Mui_Stock",
+                    id: `${props.componentId}`,
+                    readOnly: readOnly,
+                    "data-testid": "stock-textfield-mui"
+                }}
+            />
         </div>
 
     );
