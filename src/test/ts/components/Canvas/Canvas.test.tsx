@@ -16,8 +16,8 @@ function renderCanvas(props: Partial<Props> = {}) {
         mode: Mode.MOVE,
         firebaseDataModel: {
             updateComponent: () => { }, subscribeToComponent: () => { }, removeComponent: () => { },
-            componentCreatedListener: () => { },
-            componentRemovedListener: () => { }
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
         }
     };
     return render(<Canvas {...defaultProps} {...props} />);
@@ -38,8 +38,8 @@ describe("<Canvas />", () => {
             subscribeToComponent: () => { },
             updateComponent: updateFunction,
             removeComponent: () => { },
-            componentCreatedListener: () => { },
-            componentRemovedListener: () => { }
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
         };
 
         const setStateMock = jest.fn();
@@ -82,8 +82,8 @@ describe("<Canvas />", () => {
             subscribeToComponent: () => { },
             updateComponent: () => { },
             removeComponent: removeFunction,
-            componentCreatedListener: () => { },
-            componentRemovedListener: () => { }
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
         };
 
         const setStateMock = jest.fn();
@@ -111,8 +111,8 @@ describe("<Canvas />", () => {
             subscribeToComponent: () => { },
             updateComponent: () => { },
             removeComponent: () => { },
-            componentCreatedListener: stockCreatedFunction,
-            componentRemovedListener: stockRemovedFunction
+            registerComponentCreatedListener: stockCreatedFunction,
+            registerComponentRemovedListener: stockRemovedFunction
         };
         renderCanvas({ firebaseDataModel: firebaseDataModel });
         expect(stockCreatedFunction).toHaveBeenCalledTimes(1);
@@ -127,8 +127,8 @@ describe("<Canvas />", () => {
             subscribeToComponent: () => { },
             updateComponent: () => { },
             removeComponent: () => { },
-            componentCreatedListener: stockCreatedFunction,
-            componentRemovedListener: () => { }
+            registerComponentCreatedListener: stockCreatedFunction,
+            registerComponentRemovedListener: () => { }
         };
 
         const setStateMock = jest.fn();
@@ -157,8 +157,8 @@ describe("<Canvas />", () => {
             subscribeToComponent: () => { },
             updateComponent: () => { },
             removeComponent: () => { },
-            componentCreatedListener: () => { },
-            componentRemovedListener: stockRemovedFunction
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: stockRemovedFunction
         };
 
         const setStateMock = jest.fn();

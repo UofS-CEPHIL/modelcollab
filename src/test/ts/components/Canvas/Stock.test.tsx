@@ -22,8 +22,8 @@ function renderStock(props: Partial<Props> = {}) {
             updateComponent: () => { },
             subscribeToComponent: () => { },
             removeComponent: () => { },
-            componentCreatedListener: () => { },
-            componentRemovedListener: () => { }
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
         },
         color: DEFAULT_COLOR,
         text: ""
@@ -52,8 +52,8 @@ describe("<Stock />", () => {
             subscribeToComponent: () => { },
             updateComponent: updateFunction,
             removeComponent: () => { },
-            componentCreatedListener: () => { },
-            componentRemovedListener: () => { }
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
 
         };
         const { findByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
@@ -83,8 +83,8 @@ describe("<Stock />", () => {
             subscribeToComponent: () => { },
             updateComponent: updateFunction,
             removeComponent: () => { },
-            componentCreatedListener: () => { },
-            componentRemovedListener: () => { }
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
         };
         const { findByTestId } = renderStock({ firebaseDataModel });
         const stock_text = await findByTestId("stock-textfield-mui");
@@ -131,8 +131,8 @@ describe("<Stock />", () => {
             subscribeToComponent: subFunction,
             updateComponent: () => { },
             removeComponent: () => { },
-            componentCreatedListener: () => { },
-            componentRemovedListener: () => { }
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
         };
         renderStock({ firebaseDataModel: firebaseDataModel });
         expect(subFunction).toHaveBeenCalledTimes(1);
@@ -144,8 +144,8 @@ describe("<Stock />", () => {
             subscribeToComponent: subFunction,
             updateComponent: () => { },
             removeComponent: () => { },
-            componentCreatedListener: () => { },
-            componentRemovedListener: () => { }
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
         };
         const { findByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
         const stock = await findByTestId("stock-div");
@@ -167,8 +167,8 @@ describe("<Stock />", () => {
             subscribeToComponent: subFunction,
             updateComponent: () => { },
             removeComponent: () => { },
-            componentCreatedListener: () => { },
-            componentRemovedListener: () => { }
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
         };
         const { getByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
         const stock_text = getByTestId("stock-textfield-mui") as HTMLInputElement;
