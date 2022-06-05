@@ -31,7 +31,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             (snapshot) => { if (snapshot.val()) callback(snapshot.val()); }
         );
     }
-    
+
     removeComponent(sessionId: string, componentId: string) {
         remove(
             ref(
@@ -40,18 +40,18 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             )
         );
     }
-    componentCreatedListener (sessionId: string , callback: (key: unknown, data: Object) => void) {
+    registerComponentCreatedListener(sessionId: string, callback: (key: unknown, data: Object) => void) {
         onChildAdded(
             ref(
                 getDatabase(firebaseApp),
                 `components/${sessionId}/`
             ),
-            (snapshot) => { if (snapshot.val()) callback( snapshot.key, snapshot.val().data );},
-         
+            (snapshot) => { if (snapshot.val()) callback(snapshot.key, snapshot.val().data); },
+
         );
     }
 
-    componentRemovedListener (sessionId: string, callBack: (key: unknown) => void) {
+    registerComponentRemovedListener(sessionId: string, callBack: (key: unknown) => void) {
         onChildRemoved(
             ref(
                 getDatabase(firebaseApp),
@@ -59,7 +59,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             ),
             (snapshot) => {
                 callBack(snapshot.key)
-              });         
+            });
     }
 
     renderComponents(sessionId: string, callback: (data: object) => void) {
@@ -67,11 +67,11 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             if (snapshot.exists()) {
                 callback(snapshot.val())
             } else {
-              console.log("No data available");
+                console.log("No data available");
             }
-          }).catch((error) => {
+        }).catch((error) => {
             console.error(error);
-          });    
+        });
     }
 
 }

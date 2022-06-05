@@ -79,7 +79,7 @@ const Canvas: FC<Props> = (props: Props) => {
         }
     }
 
-    props.firebaseDataModel.componentCreatedListener(props.sessionId, (id, data) => {
+    props.firebaseDataModel.registerComponentCreatedListener(props.sessionId, (id, data) => {
         if (id) {
             if (!stockswID.some(stockwID => stockwID.id === id)) {
                 let newStock = data as Stock;
@@ -89,7 +89,7 @@ const Canvas: FC<Props> = (props: Props) => {
         }
     })
 
-    props.firebaseDataModel.componentRemovedListener(props.sessionId, (id) => {
+    props.firebaseDataModel.registerComponentRemovedListener(props.sessionId, (id) => {
         if (id) {
             if (stockswID.some(stockwID => stockwID.id === id)) {
                 const index: number = stockswID.findIndex(item => item.id === id);
