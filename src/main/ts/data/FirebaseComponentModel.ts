@@ -5,13 +5,13 @@ export enum ComponentType {
 
 export abstract class FirebaseDataComponent {
 
-    protected id: string;
+    private id: string;
 
     constructor(id: string) {
         this.id = id;
     }
 
-    getId(): string {
+    public getId(): string {
         return this.id;
     };
     abstract getType(): ComponentType;
@@ -43,9 +43,9 @@ const toStockComponentData: (d: any) => StockComponentData = (data: any) => {
 export class StockFirebaseComponent extends FirebaseDataComponent {
     private data: StockComponentData;
 
-    constructor(id: string, data: object) {
+    constructor(id: string, data: StockComponentData) {
         super(id);
-        this.data = toStockComponentData(data);
+        this.data = data;
     }
 
     getType(): ComponentType {
@@ -54,6 +54,10 @@ export class StockFirebaseComponent extends FirebaseDataComponent {
 
     getData(): StockComponentData {
         return this.data;
+    }
+
+    withData(d: StockComponentData): StockFirebaseComponent {
+        return new StockFirebaseComponent(this.getId(), d);
     }
 }
 
@@ -83,9 +87,9 @@ const toFlowComponentData: (d: any) => FlowComponentData = (data: any) => {
 export class FlowFirebaseComponent extends FirebaseDataComponent {
     private data: FlowComponentData;
 
-    constructor(id: string, data: object) {
+    constructor(id: string, data: FlowComponentData) {
         super(id);
-        this.data = toFlowComponentData(data);
+        this.data = data;
     }
 
     getType(): ComponentType {

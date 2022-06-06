@@ -1,11 +1,11 @@
 import { render, fireEvent } from "@testing-library/react";
 
-import { Mode } from "../../../../main/ts/components/Canvas/Canvas";
+import { UiMode } from "../../../../main/ts/components/Canvas/Mode";
 import Toolbar, { Props } from "../../../../main/ts/components/Toolbar/Toolbar";
 
 function renderToolbar(props: Partial<Props> = {}) {
     const defaultProps: Props = {
-        mode: Mode.MOVE,
+        mode: UiMode.MOVE,
         setMode: () => { }
     }
     return render(<Toolbar {...defaultProps} {...props} />);
@@ -33,7 +33,7 @@ describe("<Toolbar />", () => {
         expect(getByRole('tab', { selected: true })).toHaveTextContent('Move');
 
         fireEvent.click(tab, { target: { textContent: "Move" } });
-        expect(setMode).toBeCalledWith(Mode.MOVE);
+        expect(setMode).toBeCalledWith(UiMode.MOVE);
     })
 
     test("Should set to CREATE, when Create mode is selected", async () => {
@@ -45,7 +45,7 @@ describe("<Toolbar />", () => {
         const tab = getByRole('tab', { name: 'Create' });
 
         fireEvent.click(tab, { target: { textContent: "Create" } })
-        expect(setMode).toBeCalledWith(Mode.CREATE);
+        expect(setMode).toBeCalledWith(UiMode.CREATE);
     })
 
     test("Should set to DELETE, when Delete mode is selected", async () => {
@@ -57,6 +57,6 @@ describe("<Toolbar />", () => {
         const tab = getByRole('tab', { name: 'Delete' });
 
         fireEvent.click(tab, { target: { textContent: "Delete" } })
-        expect(setMode).toBeCalledWith(Mode.DELETE)
+        expect(setMode).toBeCalledWith(UiMode.DELETE)
     })
 })

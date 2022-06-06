@@ -1,5 +1,6 @@
 import TextField from '@mui/material/TextField';
 import React, { FC, useState } from 'react';
+import { FirebaseDataComponent, StockFirebaseComponent } from '../../data/FirebaseComponentModel';
 
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 
@@ -18,29 +19,25 @@ export interface Props {
     color: string
 }
 
-interface SharedState {
-    x: number;
-    y: number;
-    text: string;
-}
-
 const Stock: FC<Props> = (props) => {
 
-    const [sharedState, setSharedState] = useState<SharedState>(
-        {
+    const [sharedState, setSharedState] = useState<StockFirebaseComponent>(
+        new StockFirebaseComponent(props.componentId, {
             x: props.initx,
             y: props.inity,
             text: props.text,
-        }
+            initvalue: ""
+        })
     );
     const [readOnly, setReadOnly] = useState<boolean>(true);
 
     const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
 
         if (event.clientX > -1 && event.clientY > -1) {
-            const newShared = { ...sharedState, x: event.clientX, y: event.clientY };
-            setSharedState(newShared);
-            props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
+            const newData = { ...sharedState.getData(), x: event.clientX, y: event.clientY };
+            const newState: StockFirebaseComponent = sharedState.withData(newData);
+            setSharedState(newState);
+            props.firebaseDataModel.updateComponent(props.sessionId, newState);
         }
     }
 
@@ -49,46 +46,40 @@ const Stock: FC<Props> = (props) => {
     }
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newShared = { ...sharedState, text: event.target.value };
-        props.firebaseDataModel.updateComponent(props.sessionId, props.componentId, newShared);
+        const newData = { ...sharedState.getData(), text: event.target.value };
+        const newState: StockFirebaseComponent = sharedState.withData(newData);
+        props.firebaseDataModel.updateComponent(props.sessionId, newState);
     };
 
     const onBlur: React.FocusEventHandler = () => {
         setReadOnly(true);
     }
 
-    props.firebaseDataModel.subscribeToComponent(props.sessionId, props.componentId, (data) => {
-        let newData = data as SharedState;
-        if (newData.x !== sharedState.x
-            || newData.y !== sharedState.y
-            || newData.text.localeCompare(sharedState.text) !== 0
-        ) {
-            setSharedState(newData);
-        }
+    props.firebaseDataModel.subscribeToComponent(props.sessionId, props.componentId, (data: FirebaseDataComponent) => {
+        setSharedState(data as StockFirebaseComponent);
     });
-
 
     return (
         <div
             style={{
                 position: "absolute",
-                left: `${sharedState.x}px`,
-                top: `${sharedState.y}px`,
+                left: `${sharedState.getData().x}px`,
+                top: `${sharedState.getData().y}px`,
                 background: props.color,
             }}
-            id={`${props.componentId}`}
+            id={`${props.componentId} `}
             draggable="true"
             onDragEnd={onDrag}
             data-testid="stock-div"
         >
             <TextField id="outlined-basic"
-                value={sharedState.text}
+                value={sharedState.getData().text}
                 onChange={handleChange}
                 onBlur={onBlur}
                 onDoubleClick={onDoubleClick}
                 inputProps={{
                     className: "Mui_Stock",
-                    id: `${props.componentId}`,
+                    id: `${props.componentId} `,
                     readOnly: readOnly,
                     "data-testid": "stock-textfield-mui"
                 }}

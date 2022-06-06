@@ -5,19 +5,16 @@ import IdGenerator from "../../IdGenerator";
 import { User } from 'firebase/auth';
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import "./Styles.css"
+import { UiMode } from './Mode';
+import { StockFirebaseComponent } from '../../data/FirebaseComponentModel';
 
-export const enum Mode {
-    CREATE = "Create",
-    DELETE = "Delete",
-    MOVE = "Move"
-}
 
 export const modeFromString = (s: string) => {
     s = s.toUpperCase();
-    let out: Mode | null;
-    if (s === "CREATE") out = Mode.CREATE;
-    else if (s === "DELETE") out = Mode.DELETE;
-    else if (s === "MOVE") out = Mode.MOVE;
+    let out: UiMode | null;
+    if (s === "CREATE") out = UiMode.CREATE;
+    else if (s === "DELETE") out = UiMode.DELETE;
+    else if (s === "MOVE") out = UiMode.MOVE;
     else out = null;
     return out;
 };
@@ -26,18 +23,7 @@ export interface Props {
     firebaseDataModel: FirebaseDataModel;
     user: User | null;
     sessionId: string;
-    mode: Mode;
-}
-
-interface Stock {
-    text: string;
-    x: number;
-    y: number;
-}
-
-interface StockwID {
-    stock: Stock
-    id: string
+    mode: UiMode;
 }
 
 
@@ -45,7 +31,7 @@ const Canvas: FC<Props> = (props: Props) => {
 
     const idGenerator = new IdGenerator();
 
-    const [stockswID, setStockswID] = React.useState<StockwID[]>([]);
+    const [stocks, setStocks] = React.useState<StockFirebaseComponent[]>([]);
     const [selected, setSelected] = useState<string | null>(null);
 
     const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
@@ -54,13 +40,16 @@ const Canvas: FC<Props> = (props: Props) => {
     }
 
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
-        if (props.mode === Mode.CREATE) {
+        if (props.mode === UiMode.CREATE) {
             setSelected(null);
             const componentID = idGenerator.generateComponentId();
-            const newStock: Stock = { text: "", x: event.clientX, y: event.clientY };
-            props.firebaseDataModel.updateComponent(props.sessionId, `${componentID}`, newStock);
+            const newStock = new StockFirebaseComponent(
+                componentID.toString(),
+                { text: "", x: event.clientX, y: event.clientY, initvalue: "" }
+            );
+            props.firebaseDataModel.updateComponent(props.sessionId, newStock);
         }
-        else if (props.mode === Mode.MOVE
+        else if (props.mode === UiMode.MOVE
             && (event.target as Element).className
                 .split(" ")
                 .find(item => ["Mui_Stock"].indexOf(item) > -1)
@@ -68,7 +57,7 @@ const Canvas: FC<Props> = (props: Props) => {
             setSelected((event.target as Element).id);
         }
 
-        else if (props.mode === Mode.DELETE) {
+        else if (props.mode === UiMode.DELETE) {
             setSelected(null);
             if ((event.target as Element).className
                 .split(" ")
@@ -79,24 +68,17 @@ const Canvas: FC<Props> = (props: Props) => {
         }
     }
 
-    props.firebaseDataModel.registerComponentCreatedListener(props.sessionId, (id, data) => {
-        if (id) {
-            if (!stockswID.some(stockwID => stockwID.id === id)) {
-                let newStock = data as Stock;
-                let newStockwID: StockwID = { stock: newStock, id: `${id}` };
-                setStockswID([...stockswID, newStockwID]);
+    props.firebaseDataModel.registerComponentCreatedListener(props.sessionId, (stock) => {
+        if (stock) {
+            if (!stocks.some(s => s.getId() === stock.getId())) {
+                setStocks([...stocks, stock as StockFirebaseComponent]);
             }
         }
     })
 
     props.firebaseDataModel.registerComponentRemovedListener(props.sessionId, (id) => {
         if (id) {
-            if (stockswID.some(stockwID => stockwID.id === id)) {
-                const index: number = stockswID.findIndex(item => item.id === id);
-                let newStockwID: StockwID[] = [...stockswID];
-                newStockwID.splice(index, 1);
-                setStockswID(newStockwID);
-            }
+            setStocks(stocks.filter(stock => stock.getId() != id));
         }
     })
 
@@ -109,32 +91,33 @@ const Canvas: FC<Props> = (props: Props) => {
             style={{ "width": "100%", "height": "1000px" }}
         >
 
-            {stockswID.map((stockwID, i) => (
-
-                (selected && props.mode === Mode.MOVE && stockwID.id === selected)
-                    ? <div key={i}>
-                        <Stock
-                            initx={stockwID.stock.x}
-                            inity={stockwID.stock.y}
-                            sessionId={props.sessionId}
-                            componentId={stockwID.id}
-                            color={SELECTED_COLOR}
-                            text={stockwID.stock.text}
-                            firebaseDataModel={props.firebaseDataModel}
-                        />
-                    </div>
-                    : <div key={i}>
-                        <Stock
-                            initx={stockwID.stock.x}
-                            inity={stockwID.stock.y}
-                            sessionId={props.sessionId}
-                            componentId={stockwID.id}
-                            color={DEFAULT_COLOR}
-                            text={stockwID.stock.text}
-                            firebaseDataModel={props.firebaseDataModel}
-                        />
-                    </div>
-            ))}
+            {stocks.map((stock, i) => {
+                return (
+                    (selected && props.mode === UiMode.MOVE && stock.getId() === selected)
+                        ? <div key={i}>
+                            <Stock
+                                initx={stock.getData().x}
+                                inity={stock.getData().y}
+                                sessionId={props.sessionId}
+                                componentId={stock.getId()}
+                                color={SELECTED_COLOR}
+                                text={stock.getData().text}
+                                firebaseDataModel={props.firebaseDataModel}
+                            />
+                        </div>
+                        : <div key={i}>
+                            <Stock
+                                initx={stock.getData().x}
+                                inity={stock.getData().y}
+                                sessionId={props.sessionId}
+                                componentId={stock.getId()}
+                                color={DEFAULT_COLOR}
+                                text={stock.getData().text}
+                                firebaseDataModel={props.firebaseDataModel}
+                            />
+                        </div>
+                )
+            })}
         </div>
     );
 }

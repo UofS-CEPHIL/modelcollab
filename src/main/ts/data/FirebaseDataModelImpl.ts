@@ -1,5 +1,6 @@
 import { getDatabase, ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved } from "firebase/database";
 import firebaseApp from "../firebase";
+import { FirebaseDataComponent } from "./FirebaseComponentModel";
 
 import FirebaseDataModel from "./FirebaseDataModel";
 
@@ -9,19 +10,20 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         return `components/${sessionId}/${componentId}/data`;
     }
 
-    updateComponent(sessionId: string, componentId: string, data: object) {
+    updateComponent(sessionId: string, data: FirebaseDataComponent) {
         set(
             ref(
                 getDatabase(firebaseApp),
-                this.makeComponentPath(sessionId, componentId)
+                this.makeComponentPath(sessionId, data.getId())
             ),
             data
         );
     }
+
     subscribeToComponent(
         sessionId: string,
         componentId: string,
-        callback: (newData: object) => void
+        callback: (newData: FirebaseDataComponent) => void
     ) {
         onValue(
             ref(
@@ -40,7 +42,8 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             )
         );
     }
-    registerComponentCreatedListener(sessionId: string, callback: (key: unknown, data: Object) => void) {
+
+    registerComponentCreatedListener(sessionId: string, callback: (data: FirebaseDataComponent) => void) {
         onChildAdded(
             ref(
                 getDatabase(firebaseApp),

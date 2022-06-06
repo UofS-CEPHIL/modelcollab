@@ -4,6 +4,7 @@ import { render, fireEvent, act } from "@testing-library/react";
 import Stock, { DEFAULT_COLOR, Props }
     from "../../../../main/ts/components/Canvas/Stock";
 import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
+import { StockFirebaseComponent } from '../../../../main/ts/data/FirebaseComponentModel';
 
 const TEST_X_VALUE: number = 100;
 const TEST_Y_VALUE: number = 200;
@@ -34,7 +35,7 @@ function renderStock(props: Partial<Props> = {}) {
 
 describe("<Stock />", () => {
     test("Should display a stock with default settings", async () => {
-        const { findByTestId } = renderStock({ initx: TEST_X_VALUE, inity: TEST_Y_VALUE });
+        const { findByTestId } = renderStock({ initx: TEST_X_VALUE, inity: TEST_Y_VALUE, color: DEFAULT_COLOR });
         const stock = await findByTestId("stock-div");
 
         expect(stock).toHaveAttribute("draggable", "true");
@@ -151,7 +152,12 @@ describe("<Stock />", () => {
         const stock = await findByTestId("stock-div");
 
         act(() =>
-            subFunction.mock.lastCall[2]({ x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "" })
+            subFunction.mock.lastCall[2](
+                new StockFirebaseComponent(
+                    TEST_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                )
+            )
         );
         expect(stock).toHaveStyle({
             position: "absolute",
@@ -174,7 +180,12 @@ describe("<Stock />", () => {
         const stock_text = getByTestId("stock-textfield-mui") as HTMLInputElement;
 
         act(() =>
-            subFunction.mock.lastCall[2]({ x: TEST_X_VALUE, y: TEST_Y_VALUE, text: TEST_TEXT })
+            subFunction.mock.lastCall[2](
+                new StockFirebaseComponent(
+                    TEST_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: TEST_TEXT, initvalue: "" }
+                )
+            )
         );
         expect(stock_text.value).toBe(`${TEST_TEXT}`)
     });
