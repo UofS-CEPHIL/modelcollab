@@ -32,7 +32,6 @@ const Stock: FC<Props> = (props) => {
     const [readOnly, setReadOnly] = useState<boolean>(true);
 
     const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
-
         if (event.clientX > -1 && event.clientY > -1) {
             const newData = { ...sharedState.getData(), x: event.clientX, y: event.clientY };
             const newState: StockFirebaseComponent = sharedState.withData(newData);
@@ -48,6 +47,7 @@ const Stock: FC<Props> = (props) => {
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newData = { ...sharedState.getData(), text: event.target.value };
         const newState: StockFirebaseComponent = sharedState.withData(newData);
+        setSharedState(newState);
         props.firebaseDataModel.updateComponent(props.sessionId, newState);
     };
 
@@ -55,9 +55,14 @@ const Stock: FC<Props> = (props) => {
         setReadOnly(true);
     }
 
-    props.firebaseDataModel.subscribeToComponent(props.sessionId, props.componentId, (data: FirebaseDataComponent) => {
-        setSharedState(data as StockFirebaseComponent);
-    });
+    props.firebaseDataModel.subscribeToComponent(
+        props.sessionId,
+        props.componentId,
+        (data: FirebaseDataComponent) => {
+            if (!sharedState.equals(data))
+                setSharedState(data as StockFirebaseComponent);
+        }
+    );
 
     return (
         <div
@@ -79,7 +84,7 @@ const Stock: FC<Props> = (props) => {
                 onDoubleClick={onDoubleClick}
                 inputProps={{
                     className: "Mui_Stock",
-                    id: `${props.componentId} `,
+                    id: props.componentId,
                     readOnly: readOnly,
                     "data-testid": "stock-textfield-mui"
                 }}

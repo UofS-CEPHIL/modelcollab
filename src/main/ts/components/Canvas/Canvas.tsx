@@ -63,7 +63,8 @@ const Canvas: FC<Props> = (props: Props) => {
                 .split(" ")
                 .find(item => ["Mui_Stock"].indexOf(item) > -1)
             ) {
-                props.firebaseDataModel.removeComponent(props.sessionId, (event.target as Element).id);
+                const id = (event.target as Element).id
+                props.firebaseDataModel.removeComponent(props.sessionId, id);
             }
         }
     }
@@ -78,7 +79,7 @@ const Canvas: FC<Props> = (props: Props) => {
 
     props.firebaseDataModel.registerComponentRemovedListener(props.sessionId, (id) => {
         if (id) {
-            setStocks(stocks.filter(stock => stock.getId() != id));
+            setStocks(stocks.filter(stock => stock.getId() !== id));
         }
     })
 

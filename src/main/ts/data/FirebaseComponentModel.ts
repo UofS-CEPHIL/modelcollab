@@ -1,6 +1,6 @@
 export enum ComponentType {
-    STOCK,
-    FLOW
+    STOCK = "stock",
+    FLOW = "flow"
 }
 
 export abstract class FirebaseDataComponent {
@@ -14,6 +14,21 @@ export abstract class FirebaseDataComponent {
     public getId(): string {
         return this.id;
     };
+
+    public equals(other: FirebaseDataComponent) {
+        const isSameType: boolean = this.getType() === other.getType();
+        const isSameId: boolean = this.getId() === other.getId();
+        const isSameData: boolean = Object.keys(this.getData())
+            .filter(k => this.getData()[k] !== other.getData()[k])
+            .length === 0;
+
+        return isSameType && isSameId && isSameData;
+    }
+
+    public toString() {
+        return `FirebaseDataComponent: id = ${this.getId()}, data = ${Object.entries(this.getData())}`;
+    }
+
     abstract getType(): ComponentType;
     abstract getData(): any;
 }
@@ -28,16 +43,6 @@ export interface StockComponentData {
     // This should either be a number, or an equation in terms of only
     // parameters and stocks. Variables should be filled in on the frontend.
     initvalue: string;
-}
-
-const toStockComponentData: (d: any) => StockComponentData = (data: any) => {
-    const d: StockComponentData = {
-        x: Number(data.x),
-        y: Number(data.y),
-        text: String(data.text),
-        initvalue: String(data.initvalue)
-    };
-    return d;
 }
 
 export class StockFirebaseComponent extends FirebaseDataComponent {
@@ -59,6 +64,16 @@ export class StockFirebaseComponent extends FirebaseDataComponent {
     withData(d: StockComponentData): StockFirebaseComponent {
         return new StockFirebaseComponent(this.getId(), d);
     }
+
+    static toStockComponentData(data: any): StockComponentData {
+        const d: StockComponentData = {
+            x: Number(data.x),
+            y: Number(data.y),
+            text: String(data.text),
+            initvalue: String(data.initvalue)
+        };
+        return d;
+    }
 }
 
 //##################################### Flow #####################################
@@ -71,18 +86,6 @@ export interface FlowComponentData {
     //                            flow's equation depends on
     text: string;            // The text on screen
 }
-
-const toFlowComponentData: (d: any) => FlowComponentData = (data: any) => {
-    const d: FlowComponentData = {
-        from: String(data.from),
-        to: String(data.to),
-        text: String(data.text),
-        equation: String(data.equation),
-        dependsOn: data.dependsOn
-    };
-    return d;
-}
-
 
 export class FlowFirebaseComponent extends FirebaseDataComponent {
     private data: FlowComponentData;
@@ -99,4 +102,16 @@ export class FlowFirebaseComponent extends FirebaseDataComponent {
     getData(): FlowComponentData {
         return this.data;
     }
+
+    static toFlowComponentData: (d: any) => FlowComponentData = (data: any) => {
+        const d: FlowComponentData = {
+            from: String(data.from),
+            to: String(data.to),
+            text: String(data.text),
+            equation: String(data.equation),
+            dependsOn: data.dependsOn
+        };
+        return d;
+    }
+
 }
