@@ -1,0 +1,13 @@
+
+Modelcollab is an application that lets multiple users collaborate in
+real-time on creating simulation models. This is accomplished using a
+React/Typescript/Firebase frontend, and a backend which consists of a
+Typescript endpoint which fetches the simulation data from Firebase,
+interprets it into Julia code, then runs a Julia application to
+produce results for the model.
+
+At this time, models are not checked for correctness, and results are
+written directly into CSV and PNG files and stored on the server.
+
+React components for the front end are stored in the Components directory
+Code for the back end is stored in the Compute directory
