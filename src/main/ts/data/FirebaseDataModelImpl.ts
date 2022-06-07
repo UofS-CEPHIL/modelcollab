@@ -1,13 +1,51 @@
 import { getDatabase, ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved } from "firebase/database";
 import firebaseApp from "../firebase";
-import { FirebaseDataComponent } from "./FirebaseComponentModel";
+import { ComponentType, FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "./FirebaseComponentModel";
 
 import FirebaseDataModel from "./FirebaseDataModel";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
     private makeComponentPath(sessionId: string, componentId: string) {
-        return `components/${sessionId}/${componentId}/data`;
+        return `components/${sessionId}/${componentId}`;
+    }
+
+    private triggerCallback(
+        snapshot: any,
+        callback: (data: FirebaseDataComponent) => void
+    ) {
+        if (!snapshot || !snapshot.key || !snapshot.val()) return;
+        const data = snapshot.val().data;
+        const componentType = snapshot.val().type;
+        let component: FirebaseDataComponent;
+        switch (componentType) {
+            case ComponentType.STOCK.toString():
+                component = new StockFirebaseComponent(
+                    snapshot.key,
+                    {
+                        x: data.x as number,
+                        y: data.y as number,
+                        text: data.text as string,
+                        initvalue: data.initvalue as string
+                    }
+                );
+                break;
+            case ComponentType.FLOW.toString():
+                component = new FlowFirebaseComponent(
+                    snapshot.key,
+                    {
+                        from: data.from as string,
+                        to: data.to as string,
+                        equation: data.equation as string,
+                        text: data.text as string,
+                        dependsOn: data.dependsOn as string[]
+                    }
+                );
+                break;
+            default:
+                throw new Error("Unknown component type: " + componentType);
+        }
+        callback(component);
     }
 
     updateComponent(sessionId: string, data: FirebaseDataComponent) {
@@ -16,7 +54,10 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                 getDatabase(firebaseApp),
                 this.makeComponentPath(sessionId, data.getId())
             ),
-            data
+            {
+                type: data.getType().toString(),
+                data: data.getData()
+            }
         );
     }
 
@@ -30,7 +71,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                 getDatabase(firebaseApp),
                 this.makeComponentPath(sessionId, componentId)
             ),
-            (snapshot) => { if (snapshot.val()) callback(snapshot.val()); }
+            (x) => this.triggerCallback(x, callback)
         );
     }
 
@@ -49,20 +90,20 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                 getDatabase(firebaseApp),
                 `components/${sessionId}/`
             ),
-            (snapshot) => { if (snapshot.val()) callback(snapshot.key, snapshot.val().data); },
-
+            (x) => this.triggerCallback(x, callback)
         );
     }
 
-    registerComponentRemovedListener(sessionId: string, callBack: (key: unknown) => void) {
+    registerComponentRemovedListener(sessionId: string, callBack: (componentId: string) => void) {
         onChildRemoved(
             ref(
                 getDatabase(firebaseApp),
                 `components/${sessionId}/`
             ),
             (snapshot) => {
-                callBack(snapshot.key)
-            });
+                if (snapshot.key) callBack(snapshot.key);
+            }
+        );
     }
 
     renderComponents(sessionId: string, callback: (data: object) => void) {

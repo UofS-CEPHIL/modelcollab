@@ -78,7 +78,7 @@ const Canvas: FC<Props> = (props: Props) => {
 
     props.firebaseDataModel.registerComponentRemovedListener(props.sessionId, (id) => {
         if (id) {
-            setStocks(stocks.filter(stock => stock.getId() != id));
+            setStocks(stocks.filter(stock => stock.getId() !== id));
         }
     })
 
