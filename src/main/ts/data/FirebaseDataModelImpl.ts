@@ -76,10 +76,11 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     }
 
     removeComponent(sessionId: string, componentId: string) {
+        const componentPath = this.makeComponentPath(sessionId, componentId);
         remove(
             ref(
                 getDatabase(firebaseApp),
-                this.makeComponentPath(sessionId, componentId)
+                componentPath
             )
         );
     }

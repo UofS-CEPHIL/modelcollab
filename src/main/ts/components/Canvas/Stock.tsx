@@ -84,7 +84,7 @@ const Stock: FC<Props> = (props) => {
                 onDoubleClick={onDoubleClick}
                 inputProps={{
                     className: "Mui_Stock",
-                    id: `${props.componentId} `,
+                    id: props.componentId,
                     readOnly: readOnly,
                     "data-testid": "stock-textfield-mui"
                 }}
