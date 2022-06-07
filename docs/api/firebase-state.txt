@@ -1,0 +1,77 @@
+Model Collab
+API Documentation - firebase store
+V0.0.1
+Eric Redekopp
+2022/05/13
+
+This document describes the format of the firebase document that
+stores the UI's internal state. This is intended for Firebase RT
+Database and is to be stored as a single JSON document.
+
+
+################################# Main Format ##################################
+
+{
+
+    "sessions": {
+        "session-id": {
+            "component-ids": [
+                "component-id",
+                ...
+            ],
+            "results": {
+                "result-id": string, // UTC timestamp in ISO format
+                ...
+            }
+        },
+        ...
+    },
+
+    "components": {
+        "session-id": {
+            "component-id": {
+                "type": string,     // e.g. "stock"
+                "data": {}          // see below
+            },
+            ...
+        }
+    }
+    
+    "results": {
+        "result-id": {
+            // TBD
+        },
+        ...
+    }   
+
+}
+
+
+
+############################### Component Types ################################
+
+Each component type has its own "data" object used in the "components"
+list, which contains all the data specific to that object type.
+
+
+###### Stock #######
+
+{
+    "x": int,                // The x position of the stock on the canvas
+    "y": int,                // The y position of the stock on the canvas
+    "text": string,          // The text to be rendered on the stock
+    "initvalue": string      // The initial value of the stock
+                             //   (may be an equation, param, or var)
+}
+
+
+####### Flow #######
+
+{
+    "from": string,          // The component ID of the source stock
+    "to": string,            // The component ID of the destination stock
+    "text": string,          // The text to be rendered with this flow
+    "equation": string       // The equation for the flow rate
+    "dependsOn": [string]    // The IDs of the stocks on which this flow's
+                             //   equation depends
+}
