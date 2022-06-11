@@ -1,8 +1,10 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import { GoogleAuthProvider, getAuth, signInWithPopup } from "firebase/auth"
 import firebaseApp from '../../firebase';
 
 const LoginScreen: FC<any> = () => {
+
+    useEffect(() => { document.title = "ModelCollab" }, []);
 
     const onClickLoginButton = () => {
         const authProvider = new GoogleAuthProvider();
@@ -19,7 +21,7 @@ const LoginScreen: FC<any> = () => {
 
     return (
         <div>
-            <button onClick={onClickLoginButton}>
+            <button onClick={onClickLoginButton} id="login-button">
                 Sign in with Google
             </button>
         </div>

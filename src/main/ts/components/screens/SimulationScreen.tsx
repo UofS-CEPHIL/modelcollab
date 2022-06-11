@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 
 import { User } from 'firebase/auth';
 import Canvas from '../Canvas/Canvas';
@@ -13,7 +13,8 @@ interface Props {
 }
 
 const SimulationScreen: FC<Props> = (props: Props) => {
-    const [mode, setMode] = useState<UiMode>(UiMode.MOVE)
+    const [mode, setMode] = useState<UiMode>(UiMode.MOVE);
+    useEffect(() => { document.title = "ModelCollab" }, []);
     return (
         <React.Fragment>
             <Toolbar mode={mode} setMode={setMode} />
@@ -23,7 +24,6 @@ const SimulationScreen: FC<Props> = (props: Props) => {
                 user={props.user}
                 sessionId={new IdGenerator().generateSessionId().toString()}
             />
-
         </React.Fragment>
     );
 }
