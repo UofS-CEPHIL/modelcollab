@@ -21,7 +21,20 @@ function renderCanvas(props: Partial<Props> = {}) {
             subscribeToComponent: () => { },
             removeComponent: () => { },
             registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
+            registerComponentRemovedListener: () => { },
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         }
     };
     return render(<Canvas {...defaultProps} {...props} />);
@@ -43,7 +56,20 @@ describe("<Canvas />", () => {
             updateComponent: updateFunction,
             removeComponent: () => { },
             registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
+            registerComponentRemovedListener: () => { },
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         };
 
         const setStateMock = jest.fn();
@@ -87,7 +113,20 @@ describe("<Canvas />", () => {
             updateComponent: () => { },
             removeComponent: removeFunction,
             registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
+            registerComponentRemovedListener: () => { },
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         };
 
         const setStateMock = jest.fn();
@@ -116,7 +155,20 @@ describe("<Canvas />", () => {
             updateComponent: () => { },
             removeComponent: () => { },
             registerComponentCreatedListener: stockCreatedFunction,
-            registerComponentRemovedListener: stockRemovedFunction
+            registerComponentRemovedListener: stockRemovedFunction,
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         };
         renderCanvas({ firebaseDataModel: firebaseDataModel });
         expect(stockCreatedFunction).toHaveBeenCalledTimes(1);
@@ -132,7 +184,20 @@ describe("<Canvas />", () => {
             updateComponent: () => { },
             removeComponent: () => { },
             registerComponentCreatedListener: stockCreatedFunction,
-            registerComponentRemovedListener: () => { }
+            registerComponentRemovedListener: () => { },
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         };
 
         const setStateMock = jest.fn();
@@ -168,7 +233,20 @@ describe("<Canvas />", () => {
             updateComponent: () => { },
             removeComponent: () => { },
             registerComponentCreatedListener: stockAddedFunction,
-            registerComponentRemovedListener: stockRemovedFunction
+            registerComponentRemovedListener: stockRemovedFunction,
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         };
 
         const setStateMock = jest.fn();

@@ -1,7 +1,20 @@
-import { getDatabase, ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved } from "firebase/database";
+import {
+    ref,
+    set,
+    onValue,
+    onChildAdded,
+    get,
+    child,
+    remove,
+    onChildRemoved
+} from "firebase/database";
 import FirebaseManager from "../FirebaseManager";
-import { ComponentType, FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "./FirebaseComponentModel";
-
+import {
+    ComponentType,
+    FirebaseDataComponent,
+    FlowFirebaseComponent,
+    StockFirebaseComponent
+} from "./FirebaseComponentModel";
 import FirebaseDataModel from "./FirebaseDataModel";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
@@ -16,18 +29,14 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         return `components/${sessionId}/${componentId}`;
     }
 
-    private triggerCallback(
-        snapshot: any,
-        callback: (data: FirebaseDataComponent) => void
-    ) {
-        if (!snapshot || !snapshot.key || !snapshot.val()) return;
-        const data = snapshot.val().data;
-        const componentType = snapshot.val().type;
+    private createComponent(id: string, obj: any): FirebaseDataComponent {
+        const data = obj.data;
+        const componentType = obj.type;
         let component: FirebaseDataComponent;
         switch (componentType) {
             case ComponentType.STOCK.toString():
                 component = new StockFirebaseComponent(
-                    snapshot.key,
+                    id,
                     {
                         x: data.x as number,
                         y: data.y as number,
@@ -38,7 +47,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                 break;
             case ComponentType.FLOW.toString():
                 component = new FlowFirebaseComponent(
-                    snapshot.key,
+                    id,
                     {
                         from: data.from as string,
                         to: data.to as string,
@@ -51,6 +60,15 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             default:
                 throw new Error("Unknown component type: " + componentType);
         }
+        return component;
+    }
+
+    private triggerCallback(
+        snapshot: any,
+        callback: (data: FirebaseDataComponent) => void
+    ) {
+        if (!snapshot || !snapshot.key || !snapshot.val()) return;
+        const component = this.createComponent(snapshot.key, snapshot.val());
         callback(component);
     }
 
@@ -91,13 +109,58 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    registerComponentCreatedListener(sessionId: string, callback: (data: FirebaseDataComponent) => void) {
+    async getAllSessionIds() {
+        return await get(
+            ref(this.firebaseManager.getDb(), "/sessions"),
+        ).then(
+            snapshot => {
+                if (snapshot.exists()) {
+                    return snapshot.val().keys();
+                }
+                else {
+                    throw new Error("Unable to find session IDs");
+                }
+            }
+        );
+    }
+
+    async getAllComponentIds(sessionId: string) {
+        return (await get(
+            ref(this.firebaseManager.getDb(), `/components/${sessionId}`)
+        )).val().keys();
+    }
+
+    async getComponentData(
+        sessionId: string,
+        componentId: string
+    ): Promise<FirebaseDataComponent> {
+
+        const path: string = this.makeComponentPath(sessionId, componentId);
+        const snapshot = await get(
+            ref(
+                this.firebaseManager.getDb(),
+                path
+            )
+        );
+        if (!snapshot || !snapshot.key || !snapshot.val()) {
+            throw new Error("Unable to find component at path ${path}.");
+        }
+        return this.createComponent(
+            snapshot.key,
+            snapshot.val()
+        );
+    }
+
+    registerComponentCreatedListener(
+        sessionId: string,
+        callback: (data: FirebaseDataComponent) => void
+    ) {
         onChildAdded(
             ref(
                 this.firebaseManager.getDb(),
                 `components/${sessionId}/`
             ),
-            (x) => this.triggerCallback(x, callback)
+            x => this.triggerCallback(x, callback)
         );
     }
 

@@ -72,10 +72,11 @@ const Stock: FC<Props> = (props) => {
                 top: `${sharedState.getData().y}px`,
                 background: props.color,
             }}
-            id={`${props.componentId} `}
+            id={`${props.componentId}`}
             draggable="true"
             onDragEnd={onDrag}
             data-testid="stock-div"
+            className="stock-div"
         >
             <TextField id="outlined-basic"
                 value={sharedState.getData().text}

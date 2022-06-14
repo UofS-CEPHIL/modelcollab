@@ -87,6 +87,7 @@ const Canvas: FC<Props> = (props: Props) => {
             onDragOver={onDragOver}
             onClick={onClick}
             data-testid="canvas-div"
+            id="canvas-div"
             style={{ "width": "100%", "height": "1000px" }}
         >
 

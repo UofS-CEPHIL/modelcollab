@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import LoginScreen from "./components/screens/LoginScreen";
 import SimulationScreen from "./components/screens/SimulationScreen";
+import applicationConfig from "./config/applicationConfig";
 import FirebaseManager from "./FirebaseManager";
 
 function App() {

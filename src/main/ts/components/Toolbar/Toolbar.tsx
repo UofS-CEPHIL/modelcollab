@@ -28,10 +28,10 @@ export default function Toolbar(props: Props) {
     return (
         <Box sx={{ width: '100%' }} id={TOOLBAR_ID} data-testid={TOOLBAR_ID}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs'>
-                    <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} />
-                    <Tab label="Create" value={UiMode.CREATE} onClick={handleChange} />
-                    <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} />
+                <Tabs value={props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs' id='toolbar-tabs'>
+                    <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} id='move-tab' />
+                    <Tab label="Create" value={UiMode.CREATE} onClick={handleChange} id='create-tab' />
+                    <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} id='delete-tab' />
                 </Tabs>
             </Box>
         </Box>

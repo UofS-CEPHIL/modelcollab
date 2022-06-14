@@ -24,7 +24,20 @@ function renderStock(props: Partial<Props> = {}) {
             subscribeToComponent: () => { },
             removeComponent: () => { },
             registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
+            registerComponentRemovedListener: () => { },
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         },
         color: DEFAULT_COLOR,
         text: ""
@@ -54,7 +67,20 @@ describe("<Stock />", () => {
             updateComponent: updateFunction,
             removeComponent: () => { },
             registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
+            registerComponentRemovedListener: () => { },
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
 
         };
         const { findByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
@@ -85,7 +111,20 @@ describe("<Stock />", () => {
             updateComponent: updateFunction,
             removeComponent: () => { },
             registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
+            registerComponentRemovedListener: () => { },
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         };
         const { findByTestId } = renderStock({ firebaseDataModel });
         const stock_text = await findByTestId("stock-textfield-mui");
@@ -133,7 +172,20 @@ describe("<Stock />", () => {
             updateComponent: () => { },
             removeComponent: () => { },
             registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
+            registerComponentRemovedListener: () => { },
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         };
         renderStock({ firebaseDataModel: firebaseDataModel });
         expect(subFunction).toHaveBeenCalledTimes(1);
@@ -146,7 +198,20 @@ describe("<Stock />", () => {
             updateComponent: () => { },
             removeComponent: () => { },
             registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
+            registerComponentRemovedListener: () => { },
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         };
         const { findByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
         const stock = await findByTestId("stock-div");
@@ -174,7 +239,20 @@ describe("<Stock />", () => {
             updateComponent: () => { },
             removeComponent: () => { },
             registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
+            registerComponentRemovedListener: () => { },
+            getAllComponentIds: async (s: string) => { return [""] },
+            getAllSessionIds: async () => { return [""] },
+            getComponentData: async (s: string, c: string) => {
+                return new StockFirebaseComponent(
+                    "",
+                    {
+                        x: 0,
+                        y: 0,
+                        text: "",
+                        initvalue: ""
+                    }
+                );
+            }
         };
         const { getByTestId } = renderStock({ firebaseDataModel: firebaseDataModel });
         const stock_text = getByTestId("stock-textfield-mui") as HTMLInputElement;

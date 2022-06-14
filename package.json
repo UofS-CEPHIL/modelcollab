@@ -33,7 +33,8 @@
     "build": "react-scripts build",
     "test": "jest",
     "test:watch": "jest --watch",
-    "eject": "react-scripts eject"
+      "eject": "react-scripts eject",
+      "cleanjs": "find src -name '*.js' -type f -delete"
   },
   "eslintConfig": {
     "extends": [

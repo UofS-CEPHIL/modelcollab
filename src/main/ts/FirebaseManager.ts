@@ -1,14 +1,18 @@
 import { FirebaseApp, initializeApp } from "firebase/app";
 import { Auth, getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
-import { connectDatabaseEmulator, Database, getDatabase } from "firebase/database";
+import { getDatabase, Database, connectDatabaseEmulator } from "firebase/database";
 import { initializeTestEnvironment, RulesTestEnvironment } from "@firebase/rules-unit-testing";
 
 import firebaseConfig from "./config/firebaseConfig";
 import applicationConfig from "./config/applicationConfig";
 
+// TODO this should be split into 2 classes for production and dev
 export default class FirebaseManager {
 
-    private db: Database | null;
+    // DB needs to be `any` because of strange type incompatibility
+    // b/w @firebase/rules-unit-testing and actual firebase - firebase/dabase.
+    // This should be a Database type from either of those packages.
+    private db: any | null;
     private auth: Auth | null;
     private app: FirebaseApp | null;
     private testEnvironment: RulesTestEnvironment | null;
@@ -44,6 +48,7 @@ export default class FirebaseManager {
                 .testEnvironment
                 .unauthenticatedContext()
                 .database(firebaseConfig.databaseURL);
+            connectDatabaseEmulator(theManager.db, "localhost", 9000);
         }
         return theManager;
     }
@@ -54,14 +59,16 @@ export default class FirebaseManager {
     }
 
     public registerAuthChangedCallback(callback: (isSignedIn: boolean) => void) {
-        this.authStateChangedCallback = callback;
         if (this.isProduction()) {
-            if (!this.auth) throw new Error("Auth not configured.");
+            if (!this.auth)
+                throw new Error("Auth not configured.");
             onAuthStateChanged(
                 this.auth,
                 user => callback(user != null)
             );
+
         }
+        this.authStateChangedCallback = callback;
     }
 
     public login(): void {
@@ -77,12 +84,11 @@ export default class FirebaseManager {
                 });
         }
         else {
-            if (!this.authStateChangedCallback) throw new Error("No auth callback configured.");
             if (!this.testEnvironment) throw new Error("Test environment not configured.");
             const authContext = this.testEnvironment.authenticatedContext("owner");
             this.db = authContext.database(firebaseConfig.databaseURL);
             if (!this.db) throw new Error("Error creating database");
-            this.authStateChangedCallback(true);
+            if (this.authStateChangedCallback) this.authStateChangedCallback(true);
         }
     }
 
