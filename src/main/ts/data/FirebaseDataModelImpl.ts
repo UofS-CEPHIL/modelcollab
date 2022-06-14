@@ -1,10 +1,16 @@
 import { getDatabase, ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved } from "firebase/database";
-import firebaseApp from "../firebase";
+import FirebaseManager from "../FirebaseManager";
 import { ComponentType, FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "./FirebaseComponentModel";
 
 import FirebaseDataModel from "./FirebaseDataModel";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
+
+    private firebaseManager: FirebaseManager;
+
+    constructor(firebaseManager: FirebaseManager) {
+        this.firebaseManager = firebaseManager;
+    }
 
     private makeComponentPath(sessionId: string, componentId: string) {
         return `components/${sessionId}/${componentId}`;
@@ -51,7 +57,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     updateComponent(sessionId: string, data: FirebaseDataComponent) {
         set(
             ref(
-                getDatabase(firebaseApp),
+                this.firebaseManager.getDb(),
                 this.makeComponentPath(sessionId, data.getId())
             ),
             {
@@ -68,7 +74,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     ) {
         onValue(
             ref(
-                getDatabase(firebaseApp),
+                this.firebaseManager.getDb(),
                 this.makeComponentPath(sessionId, componentId)
             ),
             (x) => this.triggerCallback(x, callback)
@@ -79,7 +85,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         const componentPath = this.makeComponentPath(sessionId, componentId);
         remove(
             ref(
-                getDatabase(firebaseApp),
+                this.firebaseManager.getDb(),
                 componentPath
             )
         );
@@ -88,7 +94,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     registerComponentCreatedListener(sessionId: string, callback: (data: FirebaseDataComponent) => void) {
         onChildAdded(
             ref(
-                getDatabase(firebaseApp),
+                this.firebaseManager.getDb(),
                 `components/${sessionId}/`
             ),
             (x) => this.triggerCallback(x, callback)
@@ -98,7 +104,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     registerComponentRemovedListener(sessionId: string, callBack: (componentId: string) => void) {
         onChildRemoved(
             ref(
-                getDatabase(firebaseApp),
+                this.firebaseManager.getDb(),
                 `components/${sessionId}/`
             ),
             (snapshot) => {
@@ -108,7 +114,14 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     }
 
     renderComponents(sessionId: string, callback: (data: object) => void) {
-        get(child(ref(getDatabase(firebaseApp)), `components/${sessionId}`)).then((snapshot) => {
+        get(
+            child(
+                ref(
+                    this.firebaseManager.getDb()
+                ),
+                `components/${sessionId}`
+            )
+        ).then((snapshot) => {
             if (snapshot.exists()) {
                 callback(snapshot.val())
             } else {

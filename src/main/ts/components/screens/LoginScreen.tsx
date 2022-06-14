@@ -1,22 +1,18 @@
 import React, { FC, useEffect } from 'react';
-import { GoogleAuthProvider, getAuth, signInWithPopup } from "firebase/auth"
-import firebaseApp from '../../firebase';
+import applicationConfig from '../../config/applicationConfig';
+import FirebaseManager from '../../FirebaseManager';
 
-const LoginScreen: FC<any> = () => {
+interface Props {
+    firebaseManager: FirebaseManager;
+};
 
-    useEffect(() => { document.title = "ModelCollab" }, []);
+const LoginScreen: FC<any> = (props: Props) => {
+
+    useEffect(() => { document.title = applicationConfig.appName }, []);
 
     const onClickLoginButton = () => {
-        const authProvider = new GoogleAuthProvider();
-        const auth = getAuth(firebaseApp);
-        signInWithPopup(auth, authProvider)
-            .then(() => {
-                console.log("Successfully logged in.");
-            })
-            .catch((error) => {
-                console.error(error);
-                alert("Error signing in");
-            });
+        console.log(`fbm = ${props.firebaseManager}`)
+        props.firebaseManager.login();
     };
 
     return (

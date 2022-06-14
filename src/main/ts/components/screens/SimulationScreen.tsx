@@ -1,27 +1,27 @@
 import React, { FC, useState, useEffect } from 'react';
 
-import { User } from 'firebase/auth';
 import Canvas from '../Canvas/Canvas';
 import Toolbar from '../Toolbar/Toolbar'
 import IdGenerator from '../../IdGenerator';
 import FirebaseDataModelImpl from '../../data/FirebaseDataModelImpl';
 import { UiMode } from '../Canvas/Mode';
+import FirebaseManager from '../../FirebaseManager';
+import applicationConfig from '../../config/applicationConfig';
 
 
 interface Props {
-    user: User | null;
+    firebaseManager: FirebaseManager;
 }
 
 const SimulationScreen: FC<Props> = (props: Props) => {
     const [mode, setMode] = useState<UiMode>(UiMode.MOVE);
-    useEffect(() => { document.title = "ModelCollab" }, []);
+    useEffect(() => { document.title = applicationConfig.appName }, []);
     return (
         <React.Fragment>
             <Toolbar mode={mode} setMode={setMode} />
             <Canvas
-                firebaseDataModel={new FirebaseDataModelImpl()}
+                firebaseDataModel={new FirebaseDataModelImpl(props.firebaseManager)}
                 mode={mode}
-                user={props.user}
                 sessionId={new IdGenerator().generateSessionId().toString()}
             />
         </React.Fragment>

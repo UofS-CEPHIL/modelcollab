@@ -1,8 +1,0 @@
-
-Integration tests are performed by Selenium in a real environment,
-including a real Firebase RT Database. Before running the test, the
-database is cleared of all data (so make extra sure that there isn't
-anything important in the database referenced in your Firebase config
-file).
-
-You must have the Chromium driver on your path to run the tests.

@@ -2,7 +2,6 @@ import React, { FC, useState } from 'react';
 
 import Stock, { DEFAULT_COLOR, SELECTED_COLOR, } from "./Stock";
 import IdGenerator from "../../IdGenerator";
-import { User } from 'firebase/auth';
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import "./Styles.css"
 import { UiMode } from './Mode';
@@ -21,7 +20,6 @@ export const modeFromString = (s: string) => {
 
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
-    user: User | null;
     sessionId: string;
     mode: UiMode;
 }

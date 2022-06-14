@@ -11,3 +11,18 @@ written directly into CSV and PNG files and stored on the server.
 
 React components for the front end are stored in the Components directory
 Code for the back end is stored in the Compute directory
+
+
+
+############################## Firebase Emulators ##############################
+
+The tests are run using a simulated firebase environment. This
+requires you to install the firebase local emulator suite, and before
+running the tests you must authenticate with google using
+`firebase login`. Required emulators are 'auth' and 'database'
+
+The Firebase emulated environment will be used when
+applicationConfig.js has 'isProduction: false'.
+
+https://firebase.google.com/docs/rules/emulator-setup
+https://firebase.google.com/docs/rules/unit-tests
