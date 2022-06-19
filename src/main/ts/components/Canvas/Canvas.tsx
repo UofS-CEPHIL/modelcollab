@@ -70,46 +70,55 @@ const Canvas: FC<Props> = (props: Props) => {
         else if (props.mode === UiMode.DELETE) {
             setSelected(null);
             setSelectedStocks([]);
-            if ((event.target as Element).className
+
+            if (((event.target as Element).classList.toString() === "Flow-svg")
+              ||(event.target as Element).className
                 .split(" ")
                 .find(item => ["Mui_Stock"].indexOf(item) > -1)
             ) {
-                const id = (event.target as Element).id
+                const id = (event.target as Element).id;
                 props.firebaseDataModel.removeComponent(props.sessionId, id);
             }
+            
         }
 
         else if (props.mode === UiMode.FLOW){
             
-            let newTuple: string[] = selectedStocks;
-            setSelected(null);
+            if( (event.target as Element).className
+            .split(" ")
+            .find(item => ["Mui_Stock"].indexOf(item) > -1)
+            ) {
+            
+                let newTuple: string[] = selectedStocks;
+                setSelected(null);
 
-            if (selectedStocks.length === 0){
-                newTuple[0] = (event.target as Element).id;
-                setSelectedStocks(newTuple);
-            }
+                if (selectedStocks.length === 0){
+                    newTuple[0] = (event.target as Element).id;
+                    setSelectedStocks(newTuple);
+                }
 
-            else if (selectedStocks.length === 1){
-                newTuple[1] = (event.target as Element).id;
-                setSelectedStocks(newTuple);
+                else if (selectedStocks.length === 1){
+                    newTuple[1] = (event.target as Element).id;
+                    setSelectedStocks(newTuple);
 
-                const componentID = idGenerator.generateComponentId();
-                const newFlow = new FlowFirebaseComponent(
-                    componentID.toString(),
-                    { text: "", from: selectedStocks[0], to: selectedStocks[1], equation: "", dependsOn: []}
-                );
-                props.firebaseDataModel.updateComponent(props.sessionId, newFlow);
-            }
+                    const componentID = idGenerator.generateComponentId();
+                    const newFlow = new FlowFirebaseComponent(
+                        componentID.toString(),
+                        { text: "", from: selectedStocks[0], to: selectedStocks[1], equation: "", dependsOn: []}
+                    );
+                    props.firebaseDataModel.updateComponent(props.sessionId, newFlow);
+                }
 
-            else{
-                newTuple = [];
-                newTuple[0] = (event.target as Element).id;
-                setSelectedStocks(newTuple);
+                else{
+                    newTuple = [];
+                    newTuple[0] = (event.target as Element).id;
+                    setSelectedStocks(newTuple);
+                }
             }
         }
-
-
     }
+
+    
 
     props.firebaseDataModel.registerComponentCreatedListener(props.sessionId, (component) => {
         if (component) {
@@ -141,6 +150,23 @@ const Canvas: FC<Props> = (props: Props) => {
             data-testid="canvas-div"
             style={{ "width": "100%", "height": "1000px" }}
         >
+            {flows.map((flow, i) => {
+                return (
+                    <div key={i}>
+                        <Flow
+                                componentId = {flow.getId()}
+                                sessionId = {props.sessionId}
+                                text = {flow.getData().text}
+                                from = {flow.getData().from}
+                                to = {flow.getData().to}
+                                equation = {flow.getData().equation}      
+                                dependsOn = {flow.getData().dependsOn} 
+                                firebaseDataModel = {props.firebaseDataModel}
+                            />
+                    </div>
+                )
+            })} 
+            
             {stocks.map((stock, i) => {
                 return (
                     ( (selected && props.mode === UiMode.MOVE && selected === stock.getId()) 
@@ -170,22 +196,7 @@ const Canvas: FC<Props> = (props: Props) => {
                 )
             })}
  
-            {flows.map((flow, i) => {
-                return (
-                        <div key={i}>
-                            <Flow
-                                    componentId = {flow.getId()}
-                                    sessionId = {props.sessionId}
-                                    text = {flow.getData().text}
-                                    from = {flow.getData().from}
-                                    to = {flow.getData().to}
-                                    equation = {flow.getData().equation}      
-                                    dependsOn = {flow.getData().dependsOn}
-                                    firebaseDataModel = {props.firebaseDataModel}
-                            />
-                        </div>
-                )
-            })} 
+
         </div>
     );
 }

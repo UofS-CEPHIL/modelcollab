@@ -38,7 +38,7 @@ export interface flowLocal {
 
 const Flow: FC<Props> = (props) => {
 
-    const boundingBoxElementBuffer = 1;
+    const boundingBoxElementBuffer = 7;
     const arrow = new ArrowUtils();
 
 
@@ -129,9 +129,10 @@ const Flow: FC<Props> = (props) => {
                 width={sharedState.canvasWidth}
                 height={sharedState.canvasHeight}
                 style={{
-                    backgroundColor: "#fff",
+                    backgroundColor: "#eee",
                     transform: `translate(${sharedState.canvasXOffset}px, ${sharedState.canvasYOffset}px)`,
                 }}
+                className = "Flow-svg"
                 id = {props.componentId}
                 data-testid="flow-svg"
                 >
