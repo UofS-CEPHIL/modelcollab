@@ -82,7 +82,7 @@ describe("<Flow />", () => {
             registerComponentRemovedListener: () => { }
         };
         renderFlow({ firebaseDataModel: firebaseDataModel });
-        expect(subFunction).toHaveBeenCalledTimes(3);
+        expect(subFunction).toHaveBeenCalledTimes(2);
     });
 
     test("Should update position when database updates", async () => {

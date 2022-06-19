@@ -132,6 +132,7 @@ const Flow: FC<Props> = (props) => {
                     backgroundColor: "#fff",
                     transform: `translate(${sharedState.canvasXOffset}px, ${sharedState.canvasYOffset}px)`,
                 }}
+                id = {props.componentId}
                 data-testid="flow-svg"
                 >
                 <defs>

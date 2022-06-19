@@ -30,6 +30,7 @@ export default function Toolbar(props: Props) {
                     <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} />
                     <Tab label="Create" value={UiMode.CREATE} onClick={handleChange} />
                     <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} />
+                    <Tab label="Flow" value = {UiMode.FLOW} onClick={handleChange} />
                 </Tabs>
             </Box>
         </Box>
