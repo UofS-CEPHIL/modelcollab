@@ -73,6 +73,8 @@ const Flow: FC<Props> = (props) => {
             if ( stock.getId() === props.from && (stock.getData().x !== sharedState.startPoint.x || stock.getData().y !== sharedState.startPoint.y)){
                 const newStart: Point = {x: stock.getData().x, y: stock.getData().y};
 
+                // console.log("new start",newStart);
+                // console.log("parameter for start (existing start and end)",sharedState.startPoint,sharedState.endPoint);
                 const {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset} = arrow.calculateFlowComponents(newStart,sharedState.endPoint,boundingBoxElementBuffer)
                 
                 const newSharedState = {
@@ -84,13 +86,16 @@ const Flow: FC<Props> = (props) => {
                     canvasHeight: canvasHeight,
                     canvasXOffset: canvasXOffset,
                     canvasYOffset: canvasYOffset};
-                
+
+                // console.log("calculated start",p1,p4);
                 setSharedState(newSharedState);      
             }
 
             else if ( stock.getId() === props.to && (stock.getData().x !== sharedState.endPoint.x || stock.getData().y !== sharedState.endPoint.y)){
                 const newEnd: Point = {x: stock.getData().x, y: stock.getData().y};
 
+                // console.log("new end",newEnd);
+                // console.log("parameter for end (existing start and end)",sharedState.startPoint,sharedState.endPoint);
                 const {p1,p4, canvasWidth,canvasHeight,canvasXOffset,canvasYOffset} = arrow.calculateFlowComponents(sharedState.startPoint,newEnd,boundingBoxElementBuffer)
                 
                 const newSharedState = {
@@ -102,7 +107,9 @@ const Flow: FC<Props> = (props) => {
                     canvasHeight: canvasHeight,
                     canvasXOffset: canvasXOffset,
                     canvasYOffset: canvasYOffset};
-                
+                    
+
+                // console.log("calculated end",p1,p4);
                 setSharedState(newSharedState);  
             }
         }
@@ -122,14 +129,14 @@ const Flow: FC<Props> = (props) => {
     //     }
     // });
 
-
+    console.log(sharedState);
     return (
-        <div>
+        <div style = {{position: "absolute"}}>
             <svg
                 width={sharedState.canvasWidth}
                 height={sharedState.canvasHeight}
                 style={{
-                    backgroundColor: "#eee",
+                    backgroundColor: "transparent",
                     transform: `translate(${sharedState.canvasXOffset}px, ${sharedState.canvasYOffset}px)`,
                 }}
                 className = "Flow-svg"
@@ -153,7 +160,10 @@ const Flow: FC<Props> = (props) => {
                     markerEnd="url(#arrow)"
                 />
             </svg>
-        </div>);
+            
+        </div>
+    )
+        
 }
 
 export default Flow;
