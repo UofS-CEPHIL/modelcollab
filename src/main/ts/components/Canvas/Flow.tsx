@@ -2,7 +2,11 @@ import React, {FC} from 'react';
 import { ArrowUtils } from '../../utils/ArrowUtils';
 import { FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent, ComponentType } from '../../data/FirebaseComponentModel';
 import FirebaseDataModel from '../../data/FirebaseDataModel';
+import TextField from '@mui/material/TextField';
 
+
+export const FLOW_LABEL_DEFAULT_WIDTH = 70;
+export const FLOW_LABEL_DEFAULT_FONT_SIZE = 12;
 
 export interface Props{
     componentId: string,
@@ -32,6 +36,11 @@ export interface flowLocal {
 
     canvasXOffset: number,
     canvasYOffset: number,
+
+    absDx: number,
+    absDy: number,
+
+    labelPoint: Point,
     
     flow: FlowFirebaseComponent
 };
@@ -40,7 +49,9 @@ const Flow: FC<Props> = (props) => {
 
     const boundingBoxElementBuffer = 7;
     const arrow = new ArrowUtils();
+    // const label = new LabelUtils();
 
+    // const [readOnly, setReadOnly] = React.useState<boolean>(true);
 
     const [sharedState,setSharedState] = React.useState<flowLocal>({
         startPoint: {x:0,y:0},
@@ -55,13 +66,17 @@ const Flow: FC<Props> = (props) => {
         canvasXOffset: 0,
         canvasYOffset: 0,
 
+        absDx: 0,
+        absDy: 0,
+
+        labelPoint: {x:0,y:0},
 
         flow: new FlowFirebaseComponent(props.componentId, {
-            text: props.text,
             from: props.from,
             to: props.to,
-            dependsOn: props.dependsOn,
+            text: props.text,
             equation: props.equation,
+            dependsOn: props.dependsOn    
         })
     });
 
@@ -73,10 +88,8 @@ const Flow: FC<Props> = (props) => {
             if ( stock.getId() === props.from && (stock.getData().x !== sharedState.startPoint.x || stock.getData().y !== sharedState.startPoint.y)){
                 const newStart: Point = {x: stock.getData().x, y: stock.getData().y};
 
-                // console.log("new start",newStart);
-                // console.log("parameter for start (existing start and end)",sharedState.startPoint,sharedState.endPoint);
-                const {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset} = arrow.calculateFlowComponents(newStart,sharedState.endPoint,boundingBoxElementBuffer)
-                
+                const {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,absDy,absDx} = arrow.calculateArrowComponent(newStart,sharedState.endPoint,boundingBoxElementBuffer)
+                //const {x,y} = label.calculateLabelComponent
                 const newSharedState = {
                     ...sharedState, 
                     startPoint: newStart, 
@@ -85,18 +98,19 @@ const Flow: FC<Props> = (props) => {
                     canvasWidth: canvasWidth,
                     canvasHeight: canvasHeight,
                     canvasXOffset: canvasXOffset,
-                    canvasYOffset: canvasYOffset};
+                    canvasYOffset: canvasYOffset,
+                    absDy: absDy,
+                    absDx: absDx
+                };
 
-                // console.log("calculated start",p1,p4);
                 setSharedState(newSharedState);      
             }
 
             else if ( stock.getId() === props.to && (stock.getData().x !== sharedState.endPoint.x || stock.getData().y !== sharedState.endPoint.y)){
                 const newEnd: Point = {x: stock.getData().x, y: stock.getData().y};
 
-                // console.log("new end",newEnd);
-                // console.log("parameter for end (existing start and end)",sharedState.startPoint,sharedState.endPoint);
-                const {p1,p4, canvasWidth,canvasHeight,canvasXOffset,canvasYOffset} = arrow.calculateFlowComponents(sharedState.startPoint,newEnd,boundingBoxElementBuffer)
+
+                const {p1,p4, canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,absDy,absDx} = arrow.calculateArrowComponent(sharedState.startPoint,newEnd,boundingBoxElementBuffer)
                 
                 const newSharedState = {
                     ...sharedState, 
@@ -106,30 +120,41 @@ const Flow: FC<Props> = (props) => {
                     canvasWidth: canvasWidth,
                     canvasHeight: canvasHeight,
                     canvasXOffset: canvasXOffset,
-                    canvasYOffset: canvasYOffset};
+                    canvasYOffset: canvasYOffset,
+                    absDy: absDy,
+                    absDx: absDx
+                };
                     
-
-                // console.log("calculated end",p1,p4);
                 setSharedState(newSharedState);  
             }
         }
+        else if (data.getType() === ComponentType.FLOW){
+            
+            if(!sharedState.flow.equals(data)){
+                setSharedState({...sharedState, flow: data as FlowFirebaseComponent});
+            }
+        }
     }
+
+    // const onDoubleClick: React.MouseEventHandler = (_: React.MouseEvent) => {
+    //     setReadOnly(false);
+    // }
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+
+        const newData = { ...sharedState.flow.getData(), text: event.target.value };           
+        const newState: FlowFirebaseComponent = sharedState.flow.withData(newData);
+        props.firebaseDataModel.updateComponent(props.sessionId, newState);
+    };
+
+    // const onBlur: React.FocusEventHandler = () => {
+    //     setReadOnly(true);
+    // }
     
-
     props.firebaseDataModel.subscribeToComponent(props.sessionId, props.from, triggerCallback);
-
     props.firebaseDataModel.subscribeToComponent(props.sessionId, props.to, triggerCallback);
+    props.firebaseDataModel.subscribeToComponent(props.sessionId,props.componentId,triggerCallback);
 
-    // props.firebaseDataModel.subscribeToComponent(props.sessionId,props.componentId,(data: FirebaseDataComponent) => {
-    //     const flow = data as FlowFirebaseComponent;
-
-    //     if(!sharedState.flow.equals(flow)){
-    //         const newSharedState = {...sharedState, flow: flow};
-    //         setSharedState( newSharedState);
-    //     }
-    // });
-
-    console.log(sharedState);
     return (
         <div style = {{position: "absolute"}}>
             <svg
@@ -159,8 +184,24 @@ const Flow: FC<Props> = (props) => {
                     y2={sharedState.calculatedEndPoint.y}
                     markerEnd="url(#arrow)"
                 />
-            </svg>
-            
+            </svg>  
+
+            <div> 
+            <TextField id="outlined-basic"
+                    value={sharedState.flow.getData().text}
+                    onChange={handleChange}
+                    // onBlur={onBlur}
+                    // onDoubleClick={onDoubleClick}
+                    size="small"
+                    inputProps={{
+                        style: {fontSize: FLOW_LABEL_DEFAULT_FONT_SIZE, width:`${FLOW_LABEL_DEFAULT_WIDTH}px`},
+                        className: "Mui_Flow",
+                        id: props.componentId,
+                        // readOnly: readOnly,
+                        "data-testid": "flow-textfield-mui"
+                    }}
+            />
+            </div>       
         </div>
     )
         

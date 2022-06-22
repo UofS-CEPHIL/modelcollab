@@ -16,13 +16,35 @@ export abstract class FirebaseDataComponent {
     };
 
     public equals(other: FirebaseDataComponent) {
+
+        const compareArray: (arrOne: string[], arrTwo: string[]) => boolean = (arrOne,arrTwo) => {
+            
+            let result: boolean;
+            if (arrOne.length === 0 && arrTwo.length === 0){
+                result = true;
+            }
+            else{
+                result = arrOne.length === arrTwo.length &&
+                arrOne.every( function (element) {
+                    return arrTwo.includes(element);
+                });
+            }
+            return result;
+        };
+
         const isSameType: boolean = this.getType() === other.getType();
         const isSameId: boolean = this.getId() === other.getId();
         const isSameData: boolean = Object.keys(this.getData())
+            .filter(k => !Array.isArray(this.getData()[k]))
             .filter(k => this.getData()[k] !== other.getData()[k])
-            .length === 0;
+            .length === 0; 
 
-        return isSameType && isSameId && isSameData;
+        const isSameDataArray: boolean = Object.keys(this.getData())
+            .filter(k => Array.isArray(this.getData()[k]))
+            .filter(k => !compareArray(this.getData()[k],other.getData()[k]))
+            .length === 0; 
+    
+        return isSameType && isSameId && isSameData && isSameDataArray;
     }
 
     public toString() {
@@ -101,6 +123,10 @@ export class FlowFirebaseComponent extends FirebaseDataComponent {
 
     getData(): FlowComponentData {
         return this.data;
+    }
+
+    withData(d: FlowComponentData): FlowFirebaseComponent {
+        return new FlowFirebaseComponent(this.getId(), d);
     }
 
     static toFlowComponentData: (d: any) => FlowComponentData = (data: any) => {

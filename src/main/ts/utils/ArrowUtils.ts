@@ -91,8 +91,8 @@ export class ArrowUtils {
         return { canvasWidth, canvasHeight };
   };
 
-    calculateFlowComponents = (startPoint: Point, endPoint: Point, boundingBoxElementBuffer: number): 
-    {p1: Point, p4: Point, canvasWidth: number, canvasHeight: number, canvasXOffset: number, canvasYOffset: number} => {
+    calculateArrowComponent = (startPoint: Point, endPoint: Point, boundingBoxElementBuffer: number): 
+    {p1: Point, p4: Point, canvasWidth: number, canvasHeight: number, canvasXOffset: number, canvasYOffset: number, absDy: number, absDx: number } => {
         
         const {dy, dx, absDy, absDx} = this.calculateDeltas(startPoint, endPoint);
         const {p1,p4,boundingBoxBuffer} = this.calculateControlPointsWithBuffer(boundingBoxElementBuffer, absDx, absDy, dx, dy)    
@@ -100,7 +100,7 @@ export class ArrowUtils {
         const canvasXOffset = Math.min(startPoint.x, endPoint.x) - boundingBoxBuffer.horizontal; 
         const canvasYOffset = Math.min(startPoint.y, endPoint.y) - boundingBoxBuffer.vertical;
 
-        return {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset}
+        return {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset, absDy, absDx}
     }
   
 }

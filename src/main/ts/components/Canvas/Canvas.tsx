@@ -48,7 +48,6 @@ const Canvas: FC<Props> = (props: Props) => {
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
         if (props.mode === UiMode.CREATE) {
             setSelected(null);
-
             setSelectedStocks([]);
 
             const componentID = idGenerator.generateComponentId();
@@ -76,55 +75,56 @@ const Canvas: FC<Props> = (props: Props) => {
                 props.firebaseDataModel.removeComponent(props.sessionId, id);
             }
    
-            else if ((event.target as Element).className
+            else if (typeof ((event.target as Element).className) === "string" && 
+                (event.target as Element).className
                 .split(" ")
                 .find(item => ["Mui_Stock"].indexOf(item) > -1)
             ) {
                 const id = (event.target as Element).id;
                 props.firebaseDataModel.removeComponent(props.sessionId, id);
 
-                // const flow = flows.find(flow => flow.getData().from === id || flow.getData().to === id )         
+                // console.log("stock gone");
+
+                // const deletingFlows: FlowFirebaseComponent[] = flows.filter(flow => flow.getData().from === id || flow.getData().to === id )         
                 
-                // if(flow){
-                //     props.firebaseDataModel.removeComponent(props.sessionId, flow.getId());
+                // if(deletingFlows.length > 0 ){
+                //     deletingFlows.forEach(flow => {
+                //         props.firebaseDataModel.removeComponent(props.sessionId, flow.getId());
+                //         console.log("flow gone");
+
+                //     });
                 // }
 
             }
         }
 
         else if (props.mode === UiMode.FLOW){       
-            if( (event.target as Element).className
+            if( typeof (event.target as Element).className === "string" && (event.target as Element).className
             .split(" ")
             .find(item => ["Mui_Stock"].indexOf(item) > -1)
             ) {
-                if (selectedStocks.length === 0){
-                    setSelectedStocks([...selectedStocks,(event.target as Element).id]);
+                if (selectedStocks.length === 0 || selectedStocks.length > 1){
+                    setSelectedStocks([(event.target as Element).id]);
                 }
-
                 else if (selectedStocks.length === 1 && !selectedStocks.some(id => id === (event.target as Element).id)){
-
-                        console.log(selectedStocks);
                         const componentID = idGenerator.generateComponentId();
                         const newFlow = new FlowFirebaseComponent(
                             componentID.toString(),
-                            { text: "", from: selectedStocks[0], to:(event.target as Element).id , equation: "", dependsOn: []}
+                            { from: selectedStocks[0], to:(event.target as Element).id , text: "", equation: "", dependsOn: [""]}
                         );
-                        props.firebaseDataModel.updateComponent(props.sessionId, newFlow);
                         setSelectedStocks([...selectedStocks,(event.target as Element).id]);
+                        
+                        if (!flows.some(flow => flow.getData().from === newFlow.getData().from
+                        && flow.getData().to === newFlow.getData().to)){
+                            props.firebaseDataModel.updateComponent(props.sessionId, newFlow);
+                        }
                 }
-                else if (selectedStocks.length > 1){
-                    setSelectedStocks([(event.target as Element).id]);
-
-                }
-                
-
             }
         }
     
     }
 
     
-
     props.firebaseDataModel.registerComponentCreatedListener(props.sessionId, (component) => {
         if (component) {
                 if (component.getType() === ComponentType.STOCK && !stocks.some(s => s.getId() === component.getId())) {
@@ -142,9 +142,9 @@ const Canvas: FC<Props> = (props: Props) => {
             let found = false;
             setStocks(stocks.filter(stock => found = stock.getId() !== id));
 
+
             if (!found){
                 setFlows(flows.filter(flow => flow.getId() !== id));
-                console.log("flows trimmed",flows);
             }
         }
     })
