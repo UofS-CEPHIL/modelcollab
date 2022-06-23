@@ -6,7 +6,8 @@ import {
     get,
     child,
     remove,
-    onChildRemoved
+    onChildRemoved,
+    push
 } from "firebase/database";
 import FirebaseManager from "../FirebaseManager";
 import {
@@ -173,6 +174,14 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         }).catch((error) => {
             console.error(error);
         });
+    }
+
+    assignSessionId() {
+        const sessionIdNums = this.sessionIds.map((s: unknown) => s as number);
+        const newId = Math.max(...sessionIdNums) + 1;
+        const newIdRef = push(ref(this.firebaseManager.getDb(), this.SESSION_IDS_PATH));
+        set(newIdRef, newId);
+        return newId.toString();
     }
 
 }

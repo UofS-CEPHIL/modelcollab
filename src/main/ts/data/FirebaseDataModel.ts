@@ -31,4 +31,7 @@ export default interface FirebaseDataModel {
         sessionId: string,
         callBack: (componentId: string) => void
     ) => void;
+
+    // Assign a new session ID that is not already in use
+    assignSessionId: () => string;
 }

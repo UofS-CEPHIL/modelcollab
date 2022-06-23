@@ -1,9 +1,9 @@
 import { loginPageTestSuite } from "./loginPage";
 import { canvasPageTestSuite } from "./canvasPage";
 import FirebaseDataModel from "../../main/ts/data/FirebaseDataModel";
-import FirebaseDataModelImpl from "../../main/ts/data/FirebaseDataModelImpl";
+import FirebaseTestingDataModel from "../../main/ts/data/FirebaseTestingDataModelImpl";
 import FirebaseManager from "../../main/ts/FirebaseManager";
-import { StockFirebaseComponent } from "../../main/ts/data/FirebaseComponentModel";
+import FirebaseTestingDataModelImpl from "../../main/ts/data/FirebaseTestingDataModelImpl";
 
 export const selenium = require("selenium-webdriver");
 
@@ -144,7 +144,7 @@ async function setupFirebase(mgr: FirebaseManager): Promise<void> {
 
 async function doTests() {
 
-    const tests: ((driver: any, fbDm?: FirebaseDataModel) => Promise<string>)[] = [
+    const tests: ((driver: any, fbDm?: FirebaseTestingDataModel) => Promise<string>)[] = [
         // ...loginPageTestSuite,
         // ...canvasPageTestSuite
     ];
@@ -152,9 +152,15 @@ async function doTests() {
     const driver = await new selenium.Builder().forBrowser('chrome').build();
     const firebaseManager = await FirebaseManager.create();
     await setupFirebase(firebaseManager);
-    const firebaseDataModel = new FirebaseDataModelImpl(firebaseManager);
+    const firebaseDataModel = new FirebaseTestingDataModelImpl(firebaseManager, driver);
     await setupBrowser(driver);
     let message: string;
+
+    setTimeout(() => {
+        const sessions = firebaseDataModel.getSessionIds();
+        console.log(sessions);
+        firebaseDataModel.getComponents(sessions[0]).then(c => console.log(c));
+    }, 1000);
 
     for (const test of tests) {
         console.log("Running test: " + test.name);

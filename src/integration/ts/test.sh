@@ -1,2 +1,2 @@
 #!/bin/bash
-node doTests.js
+tsc doTests.ts && node doTests.js

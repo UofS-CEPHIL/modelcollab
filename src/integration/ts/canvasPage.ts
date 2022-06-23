@@ -1,5 +1,6 @@
-import { ComponentType, StockFirebaseComponent } from "../../main/ts/data/FirebaseComponentModel";
+import { ComponentType, FirebaseDataComponent, StockFirebaseComponent } from "../../main/ts/data/FirebaseComponentModel";
 import FirebaseDataModel from "../../main/ts/data/FirebaseDataModel";
+import FirebaseTestingDataModel from "../../main/ts/data/FirebaseTestingDataModel";
 import { clickElementWithOffset, dragElementByOffset, ensurePageHasTitle, searchForElementWithClassName, searchForElementWithId, selenium, SUCCESS_MESSAGE, verifyElementDoesNotExist } from "./doTests";
 
 const CANVAS_ID = "canvas-div";
@@ -14,14 +15,6 @@ const EVEN_MORE_TEXT = "asdfasd";
 
 const getStock = async (driver: any) =>
     await driver.findElement(selenium.By.className(STOCK_CLASSNAME));
-
-async function getAllComponentIdsForThisSession(dm: FirebaseDataModel) {
-    const sessions = await dm.getAllSessionIds();
-    if (sessions.length !== 1)
-        return "Expected one session but found ${sessions.length}";
-    const mySession = sessions[1];
-    return await dm.getAllComponentIds(mySession);
-}
 
 async function getSelectedToolbarTabId(driver: any): Promise<string | null> {
     try {
@@ -126,23 +119,19 @@ async function createStock(driver: any): Promise<string> {
     return await searchForElementWithClassName(driver, STOCK_CLASSNAME);
 }
 
-async function verifyFirebaseHasOneStock(_: any, dm?: FirebaseDataModel): Promise<string> {
+async function verifyFirebaseHasOneStock(_: any, dm?: FirebaseTestingDataModel): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
-    console.log("1")
-    const sessions = await dm.getAllSessionIds();
+    const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
         return "Expected one session but found ${sessions.length}";
-    const mySession = sessions[1];
-    console.log("2")
-    const myComponents = await getAllComponentIdsForThisSession(dm);
+    const mySession = sessions[0];
+    const myComponents = await dm.getComponents(mySession);
     if (!myComponents)
         return "Unable to find any components for session: " + mySession;
     if (myComponents.length !== 1)
         return "Expected one stock but found ${myComponents.length}";
-
-    console.log("3")
-    const myComponent = await dm.getComponentData(mySession, myComponents[0]);
+    const myComponent = myComponents[0];
     if (myComponent.getType() !== ComponentType.STOCK)
         return `Expected component to be Stock but was type: ${myComponent.getType()}`
 
@@ -162,24 +151,24 @@ async function moveStock(driver: any): Promise<string> {
     return dragElementByOffset(driver, OFFSET_PX, stock);
 }
 
-async function verifyLocationUpdatedInFirebase(driver: any, dm?: FirebaseDataModel): Promise<string> {
+async function verifyLocationUpdatedInFirebase(driver: any, dm?: FirebaseTestingDataModel): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
-    const sessions = await dm.getAllSessionIds();
+    const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
         return "Expected one session but found ${sessions.length}";
     const mySession = sessions[0];
-    const myComponents = await getAllComponentIdsForThisSession(dm);
+    const myComponents = await dm.getComponents(mySession);
     if (!myComponents)
         return "Unable to find any components for session: " + mySession;
     if (myComponents.length !== 1)
         return `Expected one stock but found ${myComponents.length}`;
+    const myComponent = myComponents[0];
 
     const myStock = await getStock(driver);
     const canvasTop = myStock.getCssValue("left");
     const canvasLeft = myStock.getCssValue("top");
 
-    const myComponent = await dm.getComponentData(mySession, myComponents[0]);
     if (myComponent.getData().x !== canvasLeft || myComponent.getData().y !== canvasTop)
         return `Expected stock to have position ${canvasLeft},${canvasTop} ` +
             `but found ${myComponent.getData().x},${myComponent.getData().y}`;
@@ -208,20 +197,22 @@ async function addTextToStock(driver: any): Promise<string> {
     return SUCCESS_MESSAGE;
 }
 
-async function verifyTextUpdatedInFirebase(_: any, dm?: FirebaseDataModel): Promise<string> {
+async function verifyTextUpdatedInFirebase(_: any, dm?: FirebaseTestingDataModel): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
-    const sessions = await dm.getAllSessionIds();
+    const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
         return "Expected one session but found ${sessions.length}";
     const mySession = sessions[0];
-    const myComponents = await getAllComponentIdsForThisSession(dm);
+    const myComponents = await dm.getComponents(mySession);
     if (!myComponents)
         return "Unable to find any components for session: " + mySession;
     if (myComponents.length !== 1)
-        return `Expected one stock but found ${myComponents.length}`;
+        return `Expected one component but found ${myComponents.length}`;
+    const myComponent = myComponents[0];
+    if (myComponent.getType() !== ComponentType.STOCK)
+        return `Expected component to be stock but was ${myComponent.getType()}`;
 
-    const myComponent = await dm.getComponentData(mySession, myComponents[0]);
     const myText = myComponent.getData().text;
     if (myText !== SOME_TEXT)
         return `Expected Firebase stock to have text ${SOME_TEXT} but found: ${myText}`;
@@ -229,10 +220,10 @@ async function verifyTextUpdatedInFirebase(_: any, dm?: FirebaseDataModel): Prom
     return SUCCESS_MESSAGE;
 }
 
-async function createSecondStockInFirebase(_: any, dm?: FirebaseDataModel): Promise<string> {
+async function createSecondStockInFirebase(_: any, dm?: FirebaseTestingDataModel): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
-    const sessions = await dm.getAllSessionIds();
+    const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
         return "Expected one session but found ${sessions.length}";
     const mySession = sessions[0];
@@ -280,7 +271,7 @@ async function verifyCorrectStockStillSelected(driver: any): Promise<string> {
 async function moveSecondStockInFirebase(_: any, dm?: FirebaseDataModel): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
-    const sessions = await dm.getAllSessionIds();
+    const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
         return "Expected one session but found ${sessions.length}";
     const mySession = sessions[0];
@@ -312,7 +303,7 @@ async function verifyStockMovedOnCanvas(driver: any): Promise<string> {
 async function editSecondStockTextInFirebase(_: any, dm?: FirebaseDataModel): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
-    const sessions = await dm.getAllSessionIds();
+    const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
         return "Expected one session but found ${sessions.length}";
     const mySession = sessions[0];
@@ -350,7 +341,7 @@ async function clickDeleteModeButton(driver: any): Promise<string> {
 async function deleteSecondStockFromFirebase(_: any, dm?: FirebaseDataModel): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
-    const sessions = await dm.getAllSessionIds();
+    const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
         return "Expected one session but found ${sessions.length}";
     const mySession = sessions[0];
@@ -378,10 +369,13 @@ async function deleteFirstStock(driver: any): Promise<string> {
     return SUCCESS_MESSAGE;
 }
 
-async function verifyFirstStockDeletedFromFirebase(_: any, dm?: FirebaseDataModel): Promise<string> {
+async function verifyFirstStockDeletedFromFirebase(_: any, dm?: FirebaseTestingDataModel): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
-    const stocks = await getAllComponentIdsForThisSession(dm);
+    if (dm.getSessionIds().length !== 1) {
+        return `Expected 1 session ID but found ${dm.getSessionIds().length}`
+    }
+    const stocks = await dm.getComponents(dm.getSessionIds()[0]);
     if (stocks.length > 0)
         return `Expected 0 stocks in Firebase after deleting but found ${stocks.length}`;
     return SUCCESS_MESSAGE;
@@ -392,7 +386,7 @@ async function verifyFirstStockDeletedFromFirebase(_: any, dm?: FirebaseDataMode
   This test will leave the Canvas in that same state.
  */
 export const canvasPageTestSuite:
-    ((driver: any, firebaseDm?: FirebaseDataModel) => Promise<string>)[] =
+    ((driver: any, firebaseDm?: FirebaseTestingDataModel) => Promise<string>)[] =
     [
         verifyPageHasCorrectTitle,
         verifyPageHasToolbar,

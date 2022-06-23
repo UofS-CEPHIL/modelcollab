@@ -4,7 +4,7 @@ import { FirebaseDataComponent } from "./FirebaseComponentModel";
 import FirebaseDataModelImpl from "./FirebaseDataModelImpl";
 import FirebaseTestingDataModel from "./FirebaseTestingDataModel";
 
-class FirebaseTestingDataModelImpl extends FirebaseDataModelImpl implements FirebaseTestingDataModel {
+export default class FirebaseTestingDataModelImpl extends FirebaseDataModelImpl implements FirebaseTestingDataModel {
 
     private readonly DEFAULT_WAIT_TIME_MS = 5000;
 
