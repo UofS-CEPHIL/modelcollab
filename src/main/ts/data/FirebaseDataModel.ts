@@ -18,16 +18,7 @@ export default interface FirebaseDataModel {
     removeComponent: (sessionId: string, componentId: string) => void;
 
     // Get IDs of all the currently active sessions
-    getAllSessionIds: () => Promise<string[]>;
-
-    // Get the IDs of all components for the session
-    getAllComponentIds: (sessionId: string) => Promise<string[]>;
-
-    // Get the data for a certain component only once
-    getComponentData: (
-        sessionId: string,
-        componentId: string
-    ) => Promise<FirebaseDataComponent>;
+    getSessionIds: () => string[];
 
     // Run the callback every time a new component is created in FB
     registerComponentCreatedListener: (

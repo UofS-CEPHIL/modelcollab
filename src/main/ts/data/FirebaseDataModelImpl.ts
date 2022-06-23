@@ -19,17 +19,35 @@ import FirebaseDataModel from "./FirebaseDataModel";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
-    private firebaseManager: FirebaseManager;
+    private readonly SESSION_IDS_PATH = "/sessionIds";
+
+    protected readonly firebaseManager: FirebaseManager;
+    private sessionIds: string[];
 
     constructor(firebaseManager: FirebaseManager) {
         this.firebaseManager = firebaseManager;
+        this.sessionIds = [];
+        this.subscribeToSessionIds();
+    }
+
+    private subscribeToSessionIds(): void {
+        const sessionsRef = ref(this.firebaseManager.getDb(), this.SESSION_IDS_PATH);
+        onChildAdded(
+            sessionsRef,
+            (data: any) => this.sessionIds.push(data.val() as string)
+        );
+        onChildRemoved(
+            sessionsRef,
+            (data: any) =>
+                this.sessionIds = this.sessionIds.filter((s: string) => s !== (data.val() as string))
+        );
     }
 
     private makeComponentPath(sessionId: string, componentId: string) {
         return `components/${sessionId}/${componentId}`;
     }
 
-    private createComponent(id: string, obj: any): FirebaseDataComponent {
+    protected createComponent(id: string, obj: any): FirebaseDataComponent {
         const data = obj.data;
         const componentType = obj.type;
         let component: FirebaseDataComponent;
@@ -72,6 +90,10 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         callback(component);
     }
 
+    getSessionIds(): string[] {
+        return [...this.sessionIds];
+    }
+
     updateComponent(sessionId: string, data: FirebaseDataComponent) {
         set(
             ref(
@@ -106,48 +128,6 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                 this.firebaseManager.getDb(),
                 componentPath
             )
-        );
-    }
-
-    async getAllSessionIds() {
-        return await get(
-            ref(this.firebaseManager.getDb(), "/sessions"),
-        ).then(
-            snapshot => {
-                if (snapshot.exists()) {
-                    return snapshot.val().keys();
-                }
-                else {
-                    throw new Error("Unable to find session IDs");
-                }
-            }
-        );
-    }
-
-    async getAllComponentIds(sessionId: string) {
-        return (await get(
-            ref(this.firebaseManager.getDb(), `/components/${sessionId}`)
-        )).val().keys();
-    }
-
-    async getComponentData(
-        sessionId: string,
-        componentId: string
-    ): Promise<FirebaseDataComponent> {
-
-        const path: string = this.makeComponentPath(sessionId, componentId);
-        const snapshot = await get(
-            ref(
-                this.firebaseManager.getDb(),
-                path
-            )
-        );
-        if (!snapshot || !snapshot.key || !snapshot.val()) {
-            throw new Error("Unable to find component at path ${path}.");
-        }
-        return this.createComponent(
-            snapshot.key,
-            snapshot.val()
         );
     }
 
