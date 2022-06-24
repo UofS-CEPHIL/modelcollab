@@ -3,10 +3,12 @@ import { ArrowUtils } from '../../utils/ArrowUtils';
 import { FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent, ComponentType } from '../../data/FirebaseComponentModel';
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import TextField from '@mui/material/TextField';
+import { LabelUtils } from '../../utils/LabelUtils';
 
 
-export const FLOW_LABEL_DEFAULT_WIDTH = 70;
+export const FLOW_LABEL_DEFAULT_WIDTH = 80;
 export const FLOW_LABEL_DEFAULT_FONT_SIZE = 12;
+export const FLOW_LABEL_DEFAULT_HEIGHT = 23;
 
 export interface Props{
     componentId: string,
@@ -37,9 +39,6 @@ export interface flowLocal {
     canvasXOffset: number,
     canvasYOffset: number,
 
-    absDx: number,
-    absDy: number,
-
     labelPoint: Point,
     
     flow: FlowFirebaseComponent
@@ -49,8 +48,9 @@ const Flow: FC<Props> = (props) => {
 
     const boundingBoxElementBuffer = 7;
     const arrow = new ArrowUtils();
-    // const label = new LabelUtils();
+    const label = new LabelUtils();
 
+    // const label = new LabelUtils();
     // const [readOnly, setReadOnly] = React.useState<boolean>(true);
 
     const [sharedState,setSharedState] = React.useState<flowLocal>({
@@ -66,8 +66,6 @@ const Flow: FC<Props> = (props) => {
         canvasXOffset: 0,
         canvasYOffset: 0,
 
-        absDx: 0,
-        absDy: 0,
 
         labelPoint: {x:0,y:0},
 
@@ -88,8 +86,9 @@ const Flow: FC<Props> = (props) => {
             if ( stock.getId() === props.from && (stock.getData().x !== sharedState.startPoint.x || stock.getData().y !== sharedState.startPoint.y)){
                 const newStart: Point = {x: stock.getData().x, y: stock.getData().y};
 
-                const {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,absDy,absDx} = arrow.calculateArrowComponent(newStart,sharedState.endPoint,boundingBoxElementBuffer)
-                //const {x,y} = label.calculateLabelComponent
+
+                const {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,dx,dy} = arrow.calculateArrowComponent(newStart,sharedState.endPoint,boundingBoxElementBuffer)
+                const {labelPoint} = label.calculateLabelComponent({dx,dy,canvasHeight,canvasWidth,canvasXOffset,canvasYOffset});
                 const newSharedState = {
                     ...sharedState, 
                     startPoint: newStart, 
@@ -99,8 +98,7 @@ const Flow: FC<Props> = (props) => {
                     canvasHeight: canvasHeight,
                     canvasXOffset: canvasXOffset,
                     canvasYOffset: canvasYOffset,
-                    absDy: absDy,
-                    absDx: absDx
+                    labelPoint: labelPoint
                 };
 
                 setSharedState(newSharedState);      
@@ -110,7 +108,9 @@ const Flow: FC<Props> = (props) => {
                 const newEnd: Point = {x: stock.getData().x, y: stock.getData().y};
 
 
-                const {p1,p4, canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,absDy,absDx} = arrow.calculateArrowComponent(sharedState.startPoint,newEnd,boundingBoxElementBuffer)
+                const {p1,p4, canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,dx,dy} = arrow.calculateArrowComponent(sharedState.startPoint,newEnd,boundingBoxElementBuffer)
+                const {labelPoint} = label.calculateLabelComponent({dx,dy,canvasHeight,canvasWidth,canvasXOffset,canvasYOffset});
+
                 
                 const newSharedState = {
                     ...sharedState, 
@@ -121,8 +121,7 @@ const Flow: FC<Props> = (props) => {
                     canvasHeight: canvasHeight,
                     canvasXOffset: canvasXOffset,
                     canvasYOffset: canvasYOffset,
-                    absDy: absDy,
-                    absDx: absDx
+                    labelPoint: labelPoint
                 };
                     
                 setSharedState(newSharedState);  
@@ -186,13 +185,19 @@ const Flow: FC<Props> = (props) => {
                 />
             </svg>  
 
-            <div> 
+            <div
+             style={{
+                position: "absolute",
+                left: `${sharedState.labelPoint.x}px`,
+                top: `${sharedState.labelPoint.y}px`,
+            }}> 
+                
             <TextField id="outlined-basic"
                     value={sharedState.flow.getData().text}
                     onChange={handleChange}
                     // onBlur={onBlur}
                     // onDoubleClick={onDoubleClick}
-                    size="small"
+                    size='small'
                     inputProps={{
                         style: {fontSize: FLOW_LABEL_DEFAULT_FONT_SIZE, width:`${FLOW_LABEL_DEFAULT_WIDTH}px`},
                         className: "Mui_Flow",

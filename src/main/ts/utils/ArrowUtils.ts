@@ -2,7 +2,7 @@ import {Point} from "../components/Canvas/Flow"
 
 //source: https://www.productboard.com/blog/how-we-implemented-svg-arrows-in-react-the-curvature-2-3/
 export class ArrowUtils {
-    calculateDeltas = (startPoint: Point, endPoint: Point): {dx: number, dy: number, absDx: number, absDy: number,} => {
+    calculateDeltas = (startPoint: Point, endPoint: Point): {dx: number, dy: number, absDx: number, absDy: number} => {
        
         const dx = endPoint.x - startPoint.x;
         const dy = endPoint.y - startPoint.y;
@@ -92,7 +92,7 @@ export class ArrowUtils {
   };
 
     calculateArrowComponent = (startPoint: Point, endPoint: Point, boundingBoxElementBuffer: number): 
-    {p1: Point, p4: Point, canvasWidth: number, canvasHeight: number, canvasXOffset: number, canvasYOffset: number, absDy: number, absDx: number } => {
+    {p1: Point, p4: Point, canvasWidth: number, canvasHeight: number, canvasXOffset: number, canvasYOffset: number, dy: number, dx: number } => {
         
         const {dy, dx, absDy, absDx} = this.calculateDeltas(startPoint, endPoint);
         const {p1,p4,boundingBoxBuffer} = this.calculateControlPointsWithBuffer(boundingBoxElementBuffer, absDx, absDy, dx, dy)    
@@ -100,7 +100,7 @@ export class ArrowUtils {
         const canvasXOffset = Math.min(startPoint.x, endPoint.x) - boundingBoxBuffer.horizontal; 
         const canvasYOffset = Math.min(startPoint.y, endPoint.y) - boundingBoxBuffer.vertical;
 
-        return {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset, absDy, absDx}
+        return {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset, dy, dx}
     }
   
 }

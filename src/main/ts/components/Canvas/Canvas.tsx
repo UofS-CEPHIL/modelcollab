@@ -35,9 +35,7 @@ const Canvas: FC<Props> = (props: Props) => {
 
     const [stocks, setStocks] = React.useState<StockFirebaseComponent[]>([]);
     const [selected, setSelected] = React.useState< string | null>(null);
-
     const [selectedStocks, setSelectedStocks] = React.useState<string[]>([]);
-    
     const [flows, setFlows] = React.useState<FlowFirebaseComponent[]>([]);
 
     const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
@@ -50,7 +48,8 @@ const Canvas: FC<Props> = (props: Props) => {
             setSelected(null);
             setSelectedStocks([]);
 
-            const componentID = idGenerator.generateComponentId();
+            const componentID = idGenerator.generateComponentId(stocks,flows);
+
             const newStock = new StockFirebaseComponent(
                 componentID.toString(),
                 { text: `${componentID}`, x: event.clientX, y: event.clientY, initvalue: "" }
@@ -81,20 +80,15 @@ const Canvas: FC<Props> = (props: Props) => {
                 .find(item => ["Mui_Stock"].indexOf(item) > -1)
             ) {
                 const id = (event.target as Element).id;
+
+                const removableFlows: FlowFirebaseComponent[] = flows.filter(flow => flow.getData().from === id || flow.getData().to === id )         
+                if(removableFlows.length > 0 ){
+                    removableFlows.forEach(flow => {
+                        props.firebaseDataModel.removeComponent(props.sessionId, flow.getId());
+                    });
+                }
+
                 props.firebaseDataModel.removeComponent(props.sessionId, id);
-
-                // console.log("stock gone");
-
-                // const deletingFlows: FlowFirebaseComponent[] = flows.filter(flow => flow.getData().from === id || flow.getData().to === id )         
-                
-                // if(deletingFlows.length > 0 ){
-                //     deletingFlows.forEach(flow => {
-                //         props.firebaseDataModel.removeComponent(props.sessionId, flow.getId());
-                //         console.log("flow gone");
-
-                //     });
-                // }
-
             }
         }
 
@@ -107,24 +101,27 @@ const Canvas: FC<Props> = (props: Props) => {
                     setSelectedStocks([(event.target as Element).id]);
                 }
                 else if (selectedStocks.length === 1 && !selectedStocks.some(id => id === (event.target as Element).id)){
-                        const componentID = idGenerator.generateComponentId();
-                        const newFlow = new FlowFirebaseComponent(
-                            componentID.toString(),
-                            { from: selectedStocks[0], to:(event.target as Element).id , text: "", equation: "", dependsOn: [""]}
-                        );
-                        setSelectedStocks([...selectedStocks,(event.target as Element).id]);
                         
-                        if (!flows.some(flow => flow.getData().from === newFlow.getData().from
-                        && flow.getData().to === newFlow.getData().to)){
-                            props.firebaseDataModel.updateComponent(props.sessionId, newFlow);
-                        }
+                    
+                    const componentID = idGenerator.generateComponentId(stocks,flows);
+  
+                    const newFlow = new FlowFirebaseComponent(
+                        componentID.toString(),
+                        { from: selectedStocks[0], to:(event.target as Element).id , text: "", equation: "", dependsOn: [""]}
+                        
+                        );
+                        
+                    setSelectedStocks([...selectedStocks,(event.target as Element).id]);
+                        
+                    if (!flows.some(flow => flow.getData().from === newFlow.getData().from && flow.getData().to === newFlow.getData().to)){
+                        props.firebaseDataModel.updateComponent(props.sessionId, newFlow);
+                    }
                 }
             }
         }
     
     }
 
-    
     props.firebaseDataModel.registerComponentCreatedListener(props.sessionId, (component) => {
         if (component) {
                 if (component.getType() === ComponentType.STOCK && !stocks.some(s => s.getId() === component.getId())) {
@@ -139,11 +136,9 @@ const Canvas: FC<Props> = (props: Props) => {
     props.firebaseDataModel.registerComponentRemovedListener(props.sessionId, (id) => {
 
         if (id) {
-            let found = false;
-            setStocks(stocks.filter(stock => found = stock.getId() !== id));
-
-
-            if (!found){
+            const newStocks = stocks.filter(stock => stock.getId() !== id)
+            setStocks(newStocks);
+            if (newStocks.length === 0){
                 setFlows(flows.filter(flow => flow.getId() !== id));
             }
         }
