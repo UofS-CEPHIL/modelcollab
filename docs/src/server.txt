@@ -1,0 +1,5 @@
+
+#################################### About #####################################
+
+The server module is the back end of the application. TODO write more
+later

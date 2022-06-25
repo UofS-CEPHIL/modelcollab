@@ -1,24 +1,54 @@
-import express from "express";
+import express, { Express } from "express";
 
-import applicationConfig from "./config/applicationConfig";
+import FirebaseManager from "database/build/FirebaseManager";
+import { FirebaseDataModel } from "database/build/data/FirebaseDataModel";
+import FirebaseDataModelImpl from "database/build/data/FirebaseDataModelImpl";
+import { createFirebaseDataComponent } from "database/build/data/FirebaseComponentModel";
+import ComputeModelTask from "./ComputeModelTask";
+
+class Server {
+
+    private readonly PORT = 8999;
+    private readonly SUCCESS_CODE = 200;
+
+    private components: any;
+
+    async serve(): Promise<void> {
+
+        await this.setupFirebase();
+
+        console.log("starting task")
+        await new ComputeModelTask([], {}).start();
+
+        // const app: Express = express();
+        // this.setupRoutes(app);
+        // app.listen(this.PORT, () => {
+        //     console.log("Server started.");
+        // });
+    }
+
+    private async setupFirebase(): Promise<void> {
+        const firebaseManager: FirebaseManager = await FirebaseManager.create();
+        firebaseManager.login();
+        const firebaseDM: FirebaseDataModel = new FirebaseDataModelImpl(firebaseManager);
+        firebaseDM.subscribeToAllComponents(
+            (snapshot: any) => this.components = snapshot.val()
+        );
+    }
+
+    private setupRoutes(app: Express) {
+        app.post("/compute/:sessionId", (req, res) => {
+            const createComponents = (cpts: any) =>
+                Object.keys(cpts).map(k => createFirebaseDataComponent(k, cpts[k]));
+
+            const sessionId = req.params.sessionId;
+            const componentObjs = createComponents(this.components[sessionId]);
+            // todo finish this
 
 
-export default class Server {
-
-    private components: object;
-    private sessions: object;
-
-    serve(): void {
-
-        const app = express();
-
-        // todo configure / subscribe to Firebase
-
-
-        // todo routes
-
-        app.listen(applicationConfig.port, () => {
-            console.log("Server started.");
+            res.sendStatus(this.SUCCESS_CODE);
         });
     }
 }
+
+export default Server;

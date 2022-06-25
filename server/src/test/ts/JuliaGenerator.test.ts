@@ -1,5 +1,5 @@
-import generateJulia from "../../../main/ts/compute/JuliaGenerator";
-import { FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "../../../main/ts/data/FirebaseComponentModel";
+import generateJulia from "./../../main/ts/compute/JuliaGenerator";
+import { FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "database/build/data/FirebaseComponentModel";
 
 
 const EXPECTED_INCLUDES = [
@@ -51,26 +51,26 @@ const fail = () => expect(0).toEqual(1);
 
 describe("generateJulia", () => {
 
+    const TEST_STOCKS: StockFirebaseComponent[] = [
+        createStock(S_STOCK_NAME, S_STARTING_VALUE),
+        createStock(E_STOCK_NAME, E_STARTING_VALUE),
+        createStock(I_STOCK_NAME, I_STARTING_VALUE),
+        createStock(R_STOCK_NAME, R_STARTING_VALUE),
+        createStock(HICU_STOCK_NAME, HICU_STARTING_VALUE),
+        createStock(HNICU_STOCK_NAME, HNICU_STARTING_VALUE)
+    ];
+    const EXPECTED_STOCK_NAMES = TEST_STOCKS.map(s => s.getId());
 
-
-    const TEST_STOCKS: { [id: string]: FirebaseDataComponent } = {};
-    TEST_STOCKS[S_STOCK_NAME] = createStock(S_STOCK_NAME, S_STARTING_VALUE);
-    TEST_STOCKS[E_STOCK_NAME] = createStock(E_STOCK_NAME, E_STARTING_VALUE);
-    TEST_STOCKS[I_STOCK_NAME] = createStock(I_STOCK_NAME, I_STARTING_VALUE);
-    TEST_STOCKS[R_STOCK_NAME] = createStock(R_STOCK_NAME, R_STARTING_VALUE);
-    TEST_STOCKS[HICU_STOCK_NAME] = createStock(HICU_STOCK_NAME, HICU_STARTING_VALUE);
-    TEST_STOCKS[HNICU_STOCK_NAME] = createStock(HNICU_STOCK_NAME, HNICU_STARTING_VALUE);
-    const EXPECTED_STOCK_NAMES = Object.keys(TEST_STOCKS);
-
-    const TEST_FLOWS: { [id: string]: FirebaseDataComponent } = {};
-    TEST_FLOWS[NEWINC_FLOW_NAME] = createFlow(NEWINC_FLOW_NAME, S_STOCK_NAME, E_STOCK_NAME, NEWINC_EQUATION, [I_STOCK_NAME, S_STOCK_NAME]);
-    TEST_FLOWS[NEWINF_FLOW_NAME] = createFlow(NEWINF_FLOW_NAME, E_STOCK_NAME, I_STOCK_NAME, NEWINF_EQUATION, [E_STOCK_NAME]);
-    TEST_FLOWS[NEWREC_FLOW_NAME] = createFlow(NEWREC_FLOW_NAME, I_STOCK_NAME, R_STOCK_NAME, NEWREC_EQUATION, [I_STOCK_NAME]);
-    TEST_FLOWS[WANIMM_FLOW_NAME] = createFlow(WANIMM_FLOW_NAME, R_STOCK_NAME, S_STOCK_NAME, WANIMM_EQUATION, [R_STOCK_NAME]);
-    TEST_FLOWS[HICUAD_FLOW_NAME] = createFlow(HICUAD_FLOW_NAME, I_STOCK_NAME, HICU_STOCK_NAME, HICUAD_EQUATION, [I_STOCK_NAME]);
-    TEST_FLOWS[HNICUA_FLOW_NAME] = createFlow(HNICUA_FLOW_NAME, I_STOCK_NAME, HNICU_STOCK_NAME, HNICUA_EQUATION, [I_STOCK_NAME]);
-    TEST_FLOWS[OUTICU_FLOW_NAME] = createFlow(OUTICU_FLOW_NAME, HICU_STOCK_NAME, HNICU_STOCK_NAME, OUTICU_EQUATION, [HICU_STOCK_NAME]);
-    TEST_FLOWS[RECOVH_FLOW_NAME] = createFlow(RECOVH_FLOW_NAME, HNICU_STOCK_NAME, R_STOCK_NAME, RECOVH_EQUATION, [HNICU_STOCK_NAME]);
+    const TEST_FLOWS: FlowFirebaseComponent[] = [
+        createFlow(NEWINC_FLOW_NAME, S_STOCK_NAME, E_STOCK_NAME, NEWINC_EQUATION, [I_STOCK_NAME, S_STOCK_NAME]),
+        createFlow(NEWINF_FLOW_NAME, E_STOCK_NAME, I_STOCK_NAME, NEWINF_EQUATION, [E_STOCK_NAME]),
+        createFlow(NEWREC_FLOW_NAME, I_STOCK_NAME, R_STOCK_NAME, NEWREC_EQUATION, [I_STOCK_NAME]),
+        createFlow(WANIMM_FLOW_NAME, R_STOCK_NAME, S_STOCK_NAME, WANIMM_EQUATION, [R_STOCK_NAME]),
+        createFlow(HICUAD_FLOW_NAME, I_STOCK_NAME, HICU_STOCK_NAME, HICUAD_EQUATION, [I_STOCK_NAME]),
+        createFlow(HNICUA_FLOW_NAME, I_STOCK_NAME, HNICU_STOCK_NAME, HNICUA_EQUATION, [I_STOCK_NAME]),
+        createFlow(OUTICU_FLOW_NAME, HICU_STOCK_NAME, HNICU_STOCK_NAME, OUTICU_EQUATION, [HICU_STOCK_NAME]),
+        createFlow(RECOVH_FLOW_NAME, HNICU_STOCK_NAME, R_STOCK_NAME, RECOVH_EQUATION, [HNICU_STOCK_NAME])
+    ];
 
     const TEST_COMPONENTS = { ...TEST_STOCKS, ...TEST_FLOWS };
 
@@ -93,7 +93,6 @@ describe("generateJulia", () => {
     };
 
     const resultString = generateJulia(TEST_COMPONENTS, TEST_PARAMS);
-    //console.log(resultString);
 
     test("Julia sample should have includes", async () => {
         const regex = /using (\.?[a-zA-Z][a-zA-Z0-9.]+);/g;
@@ -187,7 +186,9 @@ describe("generateJulia", () => {
             //   will possibly have to edit this if the above regex changes
             const pairs = matches[4].split(",").map(s => s.replaceAll("_", "").split("="));
             for (const [stockName, val] of pairs) {
-                expect(val).toEqual(TEST_STOCKS[stockName].getData().initvalue);
+                const testStock = TEST_STOCKS.find(s => s.getId() == stockName);
+                if (!testStock) fail();
+                else expect(val).toEqual(testStock.getData().initvalue);
             }
         }
     });

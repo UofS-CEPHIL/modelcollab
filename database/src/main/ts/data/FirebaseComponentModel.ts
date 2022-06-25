@@ -33,6 +33,44 @@ export abstract class FirebaseDataComponent {
     abstract getData(): any;
 }
 
+export function createFirebaseDataComponent(id: string, data: any) {
+    const componentType = data.type;
+    const dataVal = data.data;
+    let component: FirebaseDataComponent;
+
+    switch (componentType) {
+        case ComponentType.STOCK.toString():
+            component = new StockFirebaseComponent(
+                id,
+                {
+                    x: dataVal.x as number,
+                    y: dataVal.y as number,
+                    text: dataVal.text as string,
+                    initvalue: dataVal.initvalue as string
+                }
+            );
+            break;
+
+        case ComponentType.FLOW.toString():
+            component = new FlowFirebaseComponent(
+                id,
+                {
+                    from: dataVal.from as string,
+                    to: dataVal.to as string,
+                    equation: dataVal.equation as string,
+                    text: dataVal.text as string,
+                    dependsOn: dataVal.dependsOn as string[]
+                }
+            );
+            break;
+
+        default:
+            throw new Error("Unknown component type: " + componentType);
+    }
+
+    return component;
+}
+
 //#################################### Stock #####################################
 
 export interface StockComponentData {

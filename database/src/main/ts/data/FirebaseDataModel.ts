@@ -6,4 +6,5 @@ export interface FirebaseDataModel {
     removeComponent: (sessionId: string, componentId: string) => void;
     registerComponentCreatedListener: (sessionId: string, callback: (component: FirebaseDataComponent) => void) => void;
     registerComponentRemovedListener: (sessionId: string, callBack: (componentId: string) => void) => void;
+    subscribeToAllComponents: (callback: (components: object) => void) => void;
 }

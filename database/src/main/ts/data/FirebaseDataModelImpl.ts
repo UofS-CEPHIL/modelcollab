@@ -1,6 +1,6 @@
 import { getDatabase, ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved } from "firebase/database";
 import FirebaseManager from "../FirebaseManager";
-import { ComponentType, FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "./FirebaseComponentModel";
+import { ComponentType, createFirebaseDataComponent, FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "./FirebaseComponentModel";
 
 import { FirebaseDataModel } from "./FirebaseDataModel";
 
@@ -21,36 +21,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         callback: (data: FirebaseDataComponent) => void
     ) {
         if (!snapshot || !snapshot.key || !snapshot.val()) return;
-        const data = snapshot.val().data;
-        const componentType = snapshot.val().type;
-        let component: FirebaseDataComponent;
-        switch (componentType) {
-            case ComponentType.STOCK.toString():
-                component = new StockFirebaseComponent(
-                    snapshot.key,
-                    {
-                        x: data.x as number,
-                        y: data.y as number,
-                        text: data.text as string,
-                        initvalue: data.initvalue as string
-                    }
-                );
-                break;
-            case ComponentType.FLOW.toString():
-                component = new FlowFirebaseComponent(
-                    snapshot.key,
-                    {
-                        from: data.from as string,
-                        to: data.to as string,
-                        equation: data.equation as string,
-                        text: data.text as string,
-                        dependsOn: data.dependsOn as string[]
-                    }
-                );
-                break;
-            default:
-                throw new Error("Unknown component type: " + componentType);
-        }
+        const component = createFirebaseDataComponent(snapshot.key, snapshot.val());
         callback(component);
     }
 
@@ -78,6 +49,16 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                 this.makeComponentPath(sessionId, componentId)
             ),
             (x) => this.triggerCallback(x, callback)
+        );
+    }
+
+    subscribeToAllComponents(callback: (cpts: object) => void) {
+        onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                "/components"
+            ),
+            callback
         );
     }
 

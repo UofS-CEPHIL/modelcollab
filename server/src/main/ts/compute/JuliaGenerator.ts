@@ -1,37 +1,32 @@
-import { FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "../data/FirebaseComponentModel";
-
-interface ComponentDict {
-    [id: string]: FirebaseDataComponent
-}
+import { FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "database/build/data/FirebaseComponentModel";
 
 const IMPORT_LINE = "using .AlgebraicStockFlow; using Catlab; using Catlab.CategoricalAlgebra; " +
     "using LabelledArrays; using OrdinaryDiffEq; using Plots; using Catlab.Graphics; " +
     "using Catlab.Programs; using Catlab.Theories; using Catlab.WiringDiagrams";
 
-function splitStocksAndFlows(components: ComponentDict):
-    [{ [id: string]: StockFirebaseComponent }, { [id: string]: FlowFirebaseComponent }] {
+function splitStocksAndFlows(
+    components: FirebaseDataComponent[]
+): [StockFirebaseComponent[], FlowFirebaseComponent[]] {
 
-    let stocks: { [id: string]: StockFirebaseComponent } = {};
-    let flows: { [id: string]: FlowFirebaseComponent } = {};
-    for (const [key, value] of Object.entries(components)) {
-        if (value instanceof StockFirebaseComponent) {
-            stocks[key] = value;
+    let stocks: StockFirebaseComponent[] = [];
+    let flows: FlowFirebaseComponent[] = [];
+    for (const component of components) {
+        if (component instanceof StockFirebaseComponent) {
+            stocks.push(component as StockFirebaseComponent);
         }
-        else if (value instanceof FlowFirebaseComponent) {
-            flows[key] = value;
+        else if (component instanceof FlowFirebaseComponent) {
+            flows.push(component as FlowFirebaseComponent);
         }
     }
     return [stocks, flows];
 }
 
-const createJuliaVarName = (key: string) => {
-    return `_${key.toUpperCase()}`;
-}
+const createJuliaVarName = (key: string) => `_${key.toUpperCase()}`;
 
-const createJuliaVarNames = (components: ComponentDict) => {
+const createJuliaVarNames = (components: FirebaseDataComponent[]) => {
     let names: { [id: string]: string } = {};
-    for (const [key, _] of Object.entries(components)) {
-        names[key] = ":" + createJuliaVarName(key);
+    for (const component of components) {
+        names[component.getId()] = ":" + createJuliaVarName(component.getId());
     }
     return names;
 }
@@ -41,9 +36,7 @@ const createJuliaFlowFunctionBody = (
     stocksVarName: string,
     paramsVarName: string,
     timeVarName: string
-) => {
-    return `(${stocksVarName},${paramsVarName},${timeVarName}) -> ${data.getData().equation}`;
-}
+) => `(${stocksVarName},${paramsVarName},${timeVarName}) -> ${data.getData().equation}`;
 
 const createDependentsList = (
     stockVarNames: { [id: string]: string },
@@ -59,16 +52,15 @@ const createDependentsList = (
 }
 
 const generateStockFlowpCall = (
-    stocks: { [id: string]: StockFirebaseComponent },
-    flows: { [id: string]: FlowFirebaseComponent },
+    stocks: StockFirebaseComponent[],
+    flows: FlowFirebaseComponent[],
     componentNames: { [id: string]: string },
     modelName: string
 ) => {
     const lines: string[] = [];
-    for (const id of Object.keys(flows)) {
-        const flow = flows[id] as FlowFirebaseComponent;
+    for (const flow of flows) {
         const flowData = flow.getData();
-        const juliaFlowVarName = componentNames[id];
+        const juliaFlowVarName = componentNames[flow.getId()];
         const juliaFlowFuncBody = createJuliaFlowFunctionBody(flow, "u", "p", "t");
         const juliaFromVarName = componentNames[flowData.from];
         const juliaToVarName = componentNames[flowData.to];
@@ -93,9 +85,9 @@ const makeParamsLine = (parameters: object, vectorName: string) => {
     return `${vectorName} = LVector(${paramsString})`;
 }
 
-const makeStocksLine = (stocks: { [id: string]: StockFirebaseComponent }, vectorName: string) => {
-    const stocksString = Object.keys(stocks)
-        .map((k: string) => `${createJuliaVarName(k)}=${stocks[k].getData().initvalue}`)
+const makeStocksLine = (stocks: StockFirebaseComponent[], vectorName: string) => {
+    const stocksString = stocks
+        .map((s: StockFirebaseComponent) => `${createJuliaVarName(s.getId())}=${s.getData().initvalue}`)
         .join(",");
     return `${vectorName} = LVector(${stocksString})`;
 }
@@ -108,7 +100,7 @@ const makeSolutionLine = (apexName: string, paramsName: string, stocksName: stri
 }
 
 const generateJulia = (
-    components: ComponentDict,
+    components: FirebaseDataComponent[],
     parameters: any
 ) => {
     const [stocks, flows] = splitStocksAndFlows(components);

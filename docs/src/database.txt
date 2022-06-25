@@ -1,0 +1,37 @@
+
+#################################### About #####################################
+
+The database module provides an interface for interacting with the
+database and authentication. The FirebaseDataModel and FirebaseManager
+are the most important classes for accessing the database, and the
+FirebaseComponentModel contains classes representing all React
+components as they exist within the Firebase database.
+
+############################## Build Instructions ##############################
+
+npm run build
+
+This MUST be done after any code changes in order for those changes to
+be reflected in the actual code.
+
+
+############################## Firebase Emulators ##############################
+
+This project is configured for the Firebase local emulator
+suite.
+
+Install Instructions:
+
+    1. Download the Firebase using instructions at the links below. 
+    2. Authenticate with google on the CLI using `firebase login`.
+    3. Download the auth and database emulators.
+
+    https://firebase.google.com/docs/rules/emulator-setup
+    https://firebase.google.com/docs/rules/unit-tests
+
+Use instructions:
+
+    1. Ensure that FirebaseConfig.ts has useEmulators set to true.
+    1. Navigate to the `database` directory.
+    2. `firebase emulators:start`
+
