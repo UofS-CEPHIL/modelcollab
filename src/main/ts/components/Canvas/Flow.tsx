@@ -50,9 +50,6 @@ const Flow: FC<Props> = (props) => {
     const arrow = new ArrowUtils();
     const label = new LabelUtils();
 
-    // const label = new LabelUtils();
-    // const [readOnly, setReadOnly] = React.useState<boolean>(true);
-
     const [sharedState,setSharedState] = React.useState<flowLocal>({
         startPoint: {x:0,y:0},
         endPoint: {x:0,y:0},
@@ -65,7 +62,6 @@ const Flow: FC<Props> = (props) => {
         
         canvasXOffset: 0,
         canvasYOffset: 0,
-
 
         labelPoint: {x:0,y:0},
 
@@ -80,7 +76,7 @@ const Flow: FC<Props> = (props) => {
 
     const triggerCallback = (data: FirebaseDataComponent): void => {
 
-        if (data.getType() === ComponentType.STOCK){
+        if (data && data.getType() === ComponentType.STOCK){
             const stock = data as StockFirebaseComponent;
 
             if ( stock.getId() === props.from && (stock.getData().x !== sharedState.startPoint.x || stock.getData().y !== sharedState.startPoint.y)){
@@ -107,11 +103,9 @@ const Flow: FC<Props> = (props) => {
             else if ( stock.getId() === props.to && (stock.getData().x !== sharedState.endPoint.x || stock.getData().y !== sharedState.endPoint.y)){
                 const newEnd: Point = {x: stock.getData().x, y: stock.getData().y};
 
-
                 const {p1,p4, canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,dx,dy} = arrow.calculateArrowComponent(sharedState.startPoint,newEnd,boundingBoxElementBuffer)
                 const {labelPoint} = label.calculateLabelComponent({dx,dy,canvasHeight,canvasWidth,canvasXOffset,canvasYOffset});
 
-                
                 const newSharedState = {
                     ...sharedState, 
                     endPoint: newEnd,
@@ -127,7 +121,7 @@ const Flow: FC<Props> = (props) => {
                 setSharedState(newSharedState);  
             }
         }
-        else if (data.getType() === ComponentType.FLOW){
+        else if (data && data.getType() === ComponentType.FLOW){
             
             if(!sharedState.flow.equals(data)){
                 setSharedState({...sharedState, flow: data as FlowFirebaseComponent});
@@ -135,20 +129,11 @@ const Flow: FC<Props> = (props) => {
         }
     }
 
-    // const onDoubleClick: React.MouseEventHandler = (_: React.MouseEvent) => {
-    //     setReadOnly(false);
-    // }
-
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-
         const newData = { ...sharedState.flow.getData(), text: event.target.value };           
         const newState: FlowFirebaseComponent = sharedState.flow.withData(newData);
         props.firebaseDataModel.updateComponent(props.sessionId, newState);
     };
-
-    // const onBlur: React.FocusEventHandler = () => {
-    //     setReadOnly(true);
-    // }
     
     props.firebaseDataModel.subscribeToComponent(props.sessionId, props.from, triggerCallback);
     props.firebaseDataModel.subscribeToComponent(props.sessionId, props.to, triggerCallback);
@@ -186,23 +171,22 @@ const Flow: FC<Props> = (props) => {
             </svg>  
 
             <div
-             style={{
-                position: "absolute",
-                left: `${sharedState.labelPoint.x}px`,
-                top: `${sharedState.labelPoint.y}px`,
-            }}> 
+                style={{
+                    position: "absolute",
+                    left: `${sharedState.labelPoint.x}px`,
+                    top: `${sharedState.labelPoint.y}px`,
+                }}
+                data-testid="flow-text-div"
+            > 
                 
             <TextField id="outlined-basic"
                     value={sharedState.flow.getData().text}
                     onChange={handleChange}
-                    // onBlur={onBlur}
-                    // onDoubleClick={onDoubleClick}
                     size='small'
                     inputProps={{
                         style: {fontSize: FLOW_LABEL_DEFAULT_FONT_SIZE, width:`${FLOW_LABEL_DEFAULT_WIDTH}px`},
                         className: "Mui_Flow",
                         id: props.componentId,
-                        // readOnly: readOnly,
                         "data-testid": "flow-textfield-mui"
                     }}
             />

@@ -81,14 +81,12 @@ const Canvas: FC<Props> = (props: Props) => {
             ) {
                 const id = (event.target as Element).id;
 
-                const removableFlows: FlowFirebaseComponent[] = flows.filter(flow => flow.getData().from === id || flow.getData().to === id )         
-                if(removableFlows.length > 0 ){
-                    removableFlows.forEach(flow => {
+                flows.filter(flow => flow.getData().from === id || flow.getData().to === id )         
+                     .forEach(flow => {
                         props.firebaseDataModel.removeComponent(props.sessionId, flow.getId());
-                    });
-                }
-
-                props.firebaseDataModel.removeComponent(props.sessionId, id);
+                });
+                               
+                props.firebaseDataModel.removeComponent(props.sessionId, id);    
             }
         }
 
@@ -107,8 +105,7 @@ const Canvas: FC<Props> = (props: Props) => {
   
                     const newFlow = new FlowFirebaseComponent(
                         componentID.toString(),
-                        { from: selectedStocks[0], to:(event.target as Element).id , text: "", equation: "", dependsOn: [""]}
-                        
+                        { from: selectedStocks[0], to:(event.target as Element).id , text: "", equation: "", dependsOn: [""]}  
                         );
                         
                     setSelectedStocks([...selectedStocks,(event.target as Element).id]);
@@ -119,7 +116,6 @@ const Canvas: FC<Props> = (props: Props) => {
                 }
             }
         }
-    
     }
 
     props.firebaseDataModel.registerComponentCreatedListener(props.sessionId, (component) => {
@@ -138,6 +134,7 @@ const Canvas: FC<Props> = (props: Props) => {
         if (id) {
             const newStocks = stocks.filter(stock => stock.getId() !== id)
             setStocks(newStocks);
+            
             if (newStocks.length === 0){
                 setFlows(flows.filter(flow => flow.getId() !== id));
             }

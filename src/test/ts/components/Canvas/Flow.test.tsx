@@ -1,10 +1,8 @@
-
 import {fireEvent, render} from "@testing-library/react";
 import Flow, {Props} from "../../../../main/ts/components/Canvas/Flow";
 import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
 import { act } from 'react-dom/test-utils';
 import { StockFirebaseComponent,FlowFirebaseComponent } from '../../../../main/ts/data/FirebaseComponentModel';
-import React from "react";
 
 const TEST_COMPONENT_ID: string = "1";
 const TEST_SESSION_ID: string = "0";
@@ -50,10 +48,10 @@ describe("<Flow />", () => {
         const flowSVG = await findByTestId("flow-svg");
         const flowLINE = await findByTestId("flow-line");
         const flowARROWHEAD = await findByTestId("flow-arrowhead");
-
-
+        const flowTextDiv = await findByTestId("flow-text-div");
+  
         expect(flowSVG).toHaveStyle({
-            backgroundColor: "#fff",            
+            backgroundColor: "transparent",            
         });
 
         expect(flowSVG).toHaveAttribute("width","0");
@@ -70,6 +68,12 @@ describe("<Flow />", () => {
         expect(flowARROWHEAD).toHaveAttribute("refX","0");
         expect(flowARROWHEAD).toHaveAttribute("refY","3");
 
+        expect(flowTextDiv).toHaveStyle({
+            position: "absolute",
+            left: "0px",
+            top: "0px",
+        });
+
     });
 
     test("Should subcribe to data model", async () => {
@@ -82,7 +86,7 @@ describe("<Flow />", () => {
             registerComponentRemovedListener: () => { }
         };
         renderFlow({ firebaseDataModel: firebaseDataModel });
-        expect(subFunction).toHaveBeenCalledTimes(2);
+        expect(subFunction).toHaveBeenCalledTimes(3);
     });
 
     test("Should update position when database updates", async () => {
@@ -99,6 +103,7 @@ describe("<Flow />", () => {
         const { findByTestId } = renderFlow( { firebaseDataModel: firebaseDataModel });
         const flowLINE = await findByTestId("flow-line");
         const flowSVG = await findByTestId("flow-svg");
+        const flowTextDiv = await findByTestId("flow-text-div");
 
         act( () => 
             subFunction.mock.lastCall[2](
@@ -109,17 +114,23 @@ describe("<Flow />", () => {
             )
         );
 
-        expect(flowLINE).toHaveAttribute("x1", "101");
-        expect(flowLINE).toHaveAttribute("y1", "201");
-        expect(flowLINE).toHaveAttribute("x2", "1");
-        expect(flowLINE).toHaveAttribute("y2", "1");
+        expect(flowLINE).toHaveAttribute("x1", "107");
+        expect(flowLINE).toHaveAttribute("y1", "207");
+        expect(flowLINE).toHaveAttribute("x2", "7");
+        expect(flowLINE).toHaveAttribute("y2", "7");
 
-        expect(flowSVG).toHaveAttribute("width","102");
-        expect(flowSVG).toHaveAttribute("height","202");
+        expect(flowSVG).toHaveAttribute("width","114");
+        expect(flowSVG).toHaveAttribute("height","214");
 
         expect(flowSVG).toHaveStyle(
-            {"transform": "translate(-1px, -1px)"});
+            {"transform": "translate(-7px, -7px)"});
 
+        
+        expect(flowTextDiv).toHaveStyle({
+                position: "absolute",
+                left: "50px",
+                top: "100px",
+        });
 
         act( () => 
             subFunction.mock.lastCall[2](
@@ -130,45 +141,66 @@ describe("<Flow />", () => {
             )
         );
 
-        expect(flowLINE).toHaveAttribute("x2", "476");
-        expect(flowLINE).toHaveAttribute("y2", "1");
-        expect(flowLINE).toHaveAttribute("x1", "1");
-        expect(flowLINE).toHaveAttribute("y1", "56");
+        expect(flowLINE).toHaveAttribute("x2", "482");
+        expect(flowLINE).toHaveAttribute("y2", "7");
+        expect(flowLINE).toHaveAttribute("x1", "7");
+        expect(flowLINE).toHaveAttribute("y1", "62");
 
-        expect(flowSVG).toHaveAttribute("width","477");
-        expect(flowSVG).toHaveAttribute("height","57");
+        expect(flowSVG).toHaveAttribute("width","489");
+        expect(flowSVG).toHaveAttribute("height","69");
         expect(flowSVG).toHaveStyle(
-            {"transform": "translate(99px, 144px)"}
+            {"transform": "translate(93px, 138px)"}
         );
 
+        expect(flowTextDiv).toHaveStyle({
+            position: "absolute",
+            left: "257.5px",
+            top: "149.5px",
+        });
 
     })
 
-    // test("Should update text when database updates", async () => {
-    //     const subFunction = jest.fn();
-    //     const firebaseDataModel: FirebaseDataModel = {
-    //         subscribeToComponent: subFunction,
-    //         updateComponent: () => { },
-    //         removeComponent: () => { },
-    //         registerComponentCreatedListener: () => { },
-    //         registerComponentRemovedListener: () => { }
-    //     };
-    //     const { getByTestId } = renderFlow({ firebaseDataModel: firebaseDataModel });
-    //     const flow_text = getByTestId("flow-textfield-mui") as HTMLInputElement;
+    test("Should update text when database updates", async () => {
+        const subFunction = jest.fn();
+        const firebaseDataModel: FirebaseDataModel = {
+            subscribeToComponent: subFunction,
+            updateComponent: () => { },
+            removeComponent: () => { },
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
+        };
+        const { getByTestId } = renderFlow({ firebaseDataModel: firebaseDataModel });
+        const flow_text = getByTestId("flow-textfield-mui") as HTMLInputElement;
 
-    //     act(() =>
-    //         subFunction.mock.lastCall[2](
-    //             new FlowFirebaseComponent(
-    //                 TEST_COMPONENT_ID,
-    //                 { from: TEST_COMPONENT_FROM_ID, 
-    //                    to : TEST_COMPONENT_TO_ID,
-    //                    text: TEST_TEXT, 
-    //                    equation: "",
-    //                    dependsOn: []}
-    //             )
-    //         )
-    //     );
-    //     expect(flow_text).toBe(`${TEST_TEXT}`);
-    // });
+        act(() =>
+            subFunction.mock.lastCall[2](
+                new FlowFirebaseComponent(
+                    TEST_COMPONENT_ID,
+                    { from: TEST_COMPONENT_FROM_ID, 
+                       to : TEST_COMPONENT_TO_ID,
+                       text: TEST_TEXT, 
+                       equation: "",
+                       dependsOn: []}
+                )
+            )
+        );
+        expect(flow_text.value).toBe(`${TEST_TEXT}`);
+    });
+
+    test("Should invoke callback when text changed", async () => {
+        const updateFunction = jest.fn();
+        const firebaseDataModel: FirebaseDataModel = {
+            subscribeToComponent: () => { },
+            updateComponent: updateFunction,
+            removeComponent: () => { },
+            registerComponentCreatedListener: () => { },
+            registerComponentRemovedListener: () => { }
+        };
+        const { findByTestId } = renderFlow({ firebaseDataModel });
+        const flow_text = await findByTestId("flow-textfield-mui");
+
+        fireEvent.change(flow_text, { target: { value: 'a' } })
+        expect(updateFunction).toHaveBeenCalled();
+    });
 
 })
