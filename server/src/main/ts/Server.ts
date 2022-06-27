@@ -1,9 +1,9 @@
 import express, { Express } from "express";
 
-import FirebaseManager from "database/build/FirebaseManager";
-import { FirebaseDataModel } from "database/build/data/FirebaseDataModel";
-import FirebaseDataModelImpl from "database/build/data/FirebaseDataModelImpl";
-import { createFirebaseDataComponent } from "database/build/data/FirebaseComponentModel";
+import { FirebaseManager, FirebaseDataModel, FirebaseDataModelImpl, FirebaseComponentModel } from "database/build/export";
+// import { FirebaseDataModel } from "database/build/data/FirebaseDataModel";
+// import FirebaseDataModelImpl from "database/build/data/FirebaseDataModelImpl";
+// import { createFirebaseDataComponent } from "database/build/data/FirebaseComponentModel";
 import ComputeModelTask from "./ComputeModelTask";
 
 class Server {
@@ -13,12 +13,12 @@ class Server {
 
     private components: any;
 
-    async serve(): Promise<void> {
+    serve(): void {
 
-        await this.setupFirebase();
+        this.setupFirebase();
 
         console.log("starting task")
-        await new ComputeModelTask([], {}).start();
+        new ComputeModelTask([], {}).start();
 
         // const app: Express = express();
         // this.setupRoutes(app);
@@ -39,7 +39,8 @@ class Server {
     private setupRoutes(app: Express) {
         app.post("/compute/:sessionId", (req, res) => {
             const createComponents = (cpts: any) =>
-                Object.keys(cpts).map(k => createFirebaseDataComponent(k, cpts[k]));
+                Object.keys(cpts)
+                    .map(k => FirebaseComponentModel.createFirebaseDataComponent(k, cpts[k]));
 
             const sessionId = req.params.sessionId;
             const componentObjs = createComponents(this.components[sessionId]);

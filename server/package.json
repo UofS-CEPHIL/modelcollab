@@ -1,10 +1,11 @@
 {
   "name": "server",
-  "type": "module",
   "version": "0.0.1",
   "description": "The server which acts as the backend for Modelcollab",
   "main": "build/main/ts/main.js",
   "scripts": {
+    "start": "node build/main/ts/Main.js",
+    "build": "tsc",
     "test": "jest"
   },
   "author": "",
@@ -20,5 +21,6 @@
     "@types/node": "^18.0.0",
     "jest": "^28.1.1",
     "typescript": "^4.7.4"
-  }
+  },
+  "types": "build/src/main/ts/Main.d.ts"
 }

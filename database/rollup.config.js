@@ -9,7 +9,7 @@ export default {
   input: "src/main/ts/export.ts",
   output: [
     {
-      file: pkg.main,
+      file: "./build/export.js",
       format: "cjs",
       exports: "named",
       sourcemap: true
@@ -27,7 +27,9 @@ export default {
     typescript({
       rollupCommonJSResolveHack: true,
       exclude: "**/__tests__/**",
-      clean: true
+      clean: true,
+      rootDir: "src",
+      tsconfig: './tsconfig.json'
     }),
     commonjs({
       include: ["node_modules/**"],
