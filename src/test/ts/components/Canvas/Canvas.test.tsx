@@ -17,7 +17,6 @@ const TEST_Y_VALUE: number = 200;
 
 function renderCanvas(props: Partial<Props> = {}) {
     const defaultProps: Props = {
-        user: null,
         sessionId: TEST_SESSION_ID,
         mode: UiMode.MOVE,
         firebaseDataModel: {

@@ -10,6 +10,8 @@ export interface Props {
     setMode: React.Dispatch<React.SetStateAction<UiMode>>
 }
 
+export const TOOLBAR_ID: string = 'toolbar-box';
+
 export default function Toolbar(props: Props) {
     const handleChange: React.MouseEventHandler = (event: React.MouseEvent) => {
         const buttonText = (event.target as Element).textContent;
@@ -24,7 +26,7 @@ export default function Toolbar(props: Props) {
     };
 
     return (
-        <Box sx={{ width: '100%' }} data-testid='toolbar-box'>
+        <Box sx={{ width: '100%' }} id={TOOLBAR_ID} data-testid={TOOLBAR_ID}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs'>
                     <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} />

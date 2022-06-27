@@ -1,25 +1,23 @@
-import React, { FC } from 'react';
-import { GoogleAuthProvider, getAuth, signInWithPopup } from "firebase/auth"
-import firebaseApp from '../../firebase';
+import React, { FC, useEffect } from 'react';
+import applicationConfig from '../../config/applicationConfig';
+import FirebaseManager from '../../FirebaseManager';
 
-const LoginScreen: FC<any> = () => {
+interface Props {
+    firebaseManager: FirebaseManager;
+};
+
+const LoginScreen: FC<any> = (props: Props) => {
+
+    useEffect(() => { document.title = applicationConfig.appName }, []);
 
     const onClickLoginButton = () => {
-        const authProvider = new GoogleAuthProvider();
-        const auth = getAuth(firebaseApp);
-        signInWithPopup(auth, authProvider)
-            .then(() => {
-                console.log("Successfully logged in.");
-            })
-            .catch((error) => {
-                console.error(error);
-                alert("Error signing in");
-            });
+        console.log(`fbm = ${props.firebaseManager}`)
+        props.firebaseManager.login();
     };
 
     return (
         <div>
-            <button onClick={onClickLoginButton}>
+            <button onClick={onClickLoginButton} id="login-button">
                 Sign in with Google
             </button>
         </div>
