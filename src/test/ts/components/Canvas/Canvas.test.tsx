@@ -9,10 +9,8 @@ const TEST_SESSION_ID: string = "0";
 
 const TEST_STOCK_COMPONENT_ID: string = "1";
 const TEST_STOCK2_COMPONENT_ID: string = "2";
-const TEST_STOCK3_COMPONENT_ID: string = "3";
 
 const TEST_FLOW_COMPONENT_ID: string = "99";
-const TEST_FLOW2_COMPONENT_ID: string = "88";
 
 const TEST_X_VALUE: number = 100;
 const TEST_Y_VALUE: number = 200;
@@ -87,70 +85,24 @@ describe("<Canvas />", () => {
         expect(setStateMock).toBeCalledWith("5");
     });
 
-    test("Should invoke useState and callBack when click on Stocks to create new flows, when on mode Flow", async () => {
+    test("Should invoke useState when click on a stock, when on mode Flow", async () => {
 
         const setStateMock = jest.fn();
         const useStateMock: any = (useState: any) => [useState, setStateMock];
 
         jest.spyOn(React, "useState").mockImplementation(useStateMock);
 
-        const updateFunction = jest.fn();
-        const firebaseDataModel: FirebaseDataModel = {
-            subscribeToComponent: () => { },
-            updateComponent: updateFunction,
-            removeComponent: () => { },
-            registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
-        };
-
-        const { findByTestId } = renderCanvas({ mode: UiMode.FLOW, firebaseDataModel });
+        const { findByTestId } = renderCanvas({ mode: UiMode.FLOW});
         const canvas = await findByTestId("canvas-div");
         
         fireEvent.click(canvas, { target: { className: "Mui_Stock", id: "5" } });
-
-        jest.spyOn(React, "useState").mockRestore();
-
-        expect(setStateMock).toBeCalledWith(["5"]);
-
         fireEvent.click(canvas, { target: { className: "Mui_Stock", id: "6" }});
 
-        expect(setStateMock).toBeCalledWith(["6"]);
-        expect(updateFunction).toBeCalled();
-    });
-
-    test("Should invoke useState but not callBack when click on Stocks that would create existed flows, when on mode Flow", async () => {
-
-        const setStateMock = jest.fn();
-        const useStateMock: any = (useState: any) => [useState, setStateMock];
-
-        jest.spyOn(React, "useState").mockImplementation(useStateMock);
-
-        const updateFunction = jest.fn();
-        const firebaseDataModel: FirebaseDataModel = {
-            subscribeToComponent: () => { },
-            updateComponent: updateFunction,
-            removeComponent: () => { },
-            registerComponentCreatedListener: () => { },
-            registerComponentRemovedListener: () => { }
-        };
-
-        const { findByTestId } = renderCanvas({ mode: UiMode.FLOW, firebaseDataModel });
-        const canvas = await findByTestId("canvas-div");
-        
-        fireEvent.click(canvas, { target: { className: "Mui_Stock", id: "5" } });
-
         jest.spyOn(React, "useState").mockRestore();
 
         expect(setStateMock).toBeCalledWith(["5"]);
-
-        fireEvent.click(canvas, { target: { className: "Mui_Stock", id: "6" } });
-
         expect(setStateMock).toBeCalledWith(["6"]);
-        
-        fireEvent.click(canvas, { target: { className: "Mui_Stock", id: "5" } });
-        fireEvent.click(canvas, { target: { className: "Mui_Stock", id: "6" } });
 
-        expect(updateFunction).toBeCalledTimes(1);
     });
 
     test("Should invoke callback when on Delete mode", async () => {
@@ -284,10 +236,7 @@ describe("<Canvas />", () => {
         };
 
         const setStateMock = jest.fn();
-        const useStateMock: any = (useState: StockFirebaseComponent[]) => [
-            useState,
-            setStateMock
-        ];
+        const useStateMock: any = (useState: StockFirebaseComponent[]) => [useState, setStateMock];
 
         const spy = jest.spyOn(React, "useState").mockImplementation(useStateMock);
         const { findByTestId } = renderCanvas({ firebaseDataModel: firebaseDataModel });
@@ -297,6 +246,7 @@ describe("<Canvas />", () => {
                 { x: TEST_X_VALUE, y: TEST_Y_VALUE, initvalue: "", text: "" }
             )
         ));
+        
         spy.mockClear();  // Forget about adding the stock since we're testing deletion
 
         const canvas = await findByTestId("canvas-div");
@@ -338,104 +288,5 @@ describe("<Canvas />", () => {
         const canvas = await findByTestId("canvas-div");
         act(() => componentRemovedFunction.mock.lastCall[1](TEST_FLOW_COMPONENT_ID));
         expect(setStateMock).toBeCalledWith([]);
-    })
-
-    test("Should update Flow list useState when corresponding Stock is deleted on the database", async () => {
-        const removeFunction = jest.fn();
-        const componentAddedFunction = jest.fn();
-
-        const firebaseDataModel: FirebaseDataModel = {
-            subscribeToComponent: () => { },
-            updateComponent: () => { },
-            removeComponent: removeFunction,
-            registerComponentCreatedListener: componentAddedFunction,
-            registerComponentRemovedListener: () => { }
-        };
-
-        const setStateMock = jest.fn();
-        const useStateMock: any = (useState: any) => [useState, setStateMock];
-        jest.spyOn(React, "useState").mockImplementation(useStateMock);
-
-        const { findByTestId } = renderCanvas(
-            { mode: UiMode.DELETE, firebaseDataModel: firebaseDataModel }
-        );
-
-        const canvas = await findByTestId("canvas-div");  
-
-        act(() => {
-            componentAddedFunction.mock.lastCall[1](
-                new StockFirebaseComponent(
-                    TEST_STOCK_COMPONENT_ID,
-                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, initvalue: "", text: "" }
-        ))});
-
-        //     componentAddedFunction.mock.lastCall[1](
-        //         new StockFirebaseComponent(
-        //             TEST_STOCK2_COMPONENT_ID,
-        //             { x: TEST_X_VALUE, y: TEST_Y_VALUE, initvalue: "", text: "" }
-        //     ));
-        //     componentAddedFunction.mock.lastCall[1](
-        //         new StockFirebaseComponent(
-        //             TEST_STOCK3_COMPONENT_ID,
-        //             { x: TEST_X_VALUE, y: TEST_Y_VALUE, initvalue: "", text: "" }
-        //     ));
-        //     componentAddedFunction.mock.lastCall[1](
-        //         new FlowFirebaseComponent(
-        //             TEST_FLOW_COMPONENT_ID,
-        //             {from: TEST_STOCK2_COMPONENT_ID, to: TEST_STOCK3_COMPONENT_ID, text: "", dependsOn: [""], equation: "" }
-                
-        //     ));
-        //     componentAddedFunction.mock.lastCall[1](
-            //     new FlowFirebaseComponent(
-            //         TEST_FLOW2_COMPONENT_ID,
-            //         {from: TEST_STOCK2_COMPONENT_ID, to: TEST_STOCK3_COMPONENT_ID, text: "", dependsOn: [""], equation: "" }
-                
-            // ));
-        // });
-
-        // act(() => componentAddedFunction.mock.lastCall[1](
-        //     new StockFirebaseComponent(
-        //         TEST_STOCK2_COMPONENT_ID,
-        //         { x: TEST_X_VALUE, y: TEST_Y_VALUE, initvalue: "", text: "" }
-        //     )
-        // ));
-
-        // act(() => componentAddedFunction.mock.lastCall[1](
-        //     new StockFirebaseComponent(
-        //         TEST_STOCK3_COMPONENT_ID,
-        //         { x: TEST_X_VALUE, y: TEST_Y_VALUE, initvalue: "", text: "" }
-        //     )
-        // ));
-
-        // act(() => componentAddedFunction.mock.lastCall[1](
-        //     new FlowFirebaseComponent(
-        //         TEST_FLOW_COMPONENT_ID,
-        //         {from: TEST_STOCK_COMPONENT_ID, to: TEST_STOCK2_COMPONENT_ID, text: "", dependsOn: [""], equation: "" }
-        //     )
-        // ));
-
-        // act(() =>
-        // componentAddedFunction.mock.lastCall[1](
-        //     new FlowFirebaseComponent(
-        //         TEST_FLOW2_COMPONENT_ID,
-        //         {from: TEST_STOCK2_COMPONENT_ID, to: TEST_STOCK3_COMPONENT_ID, text: "", dependsOn: [""], equation: "" }
-        //     )
-        // ));
-
-        // const canvas = await findByTestId("canvas-div");
-
-        fireEvent.click(canvas, { target: { className: "Mui_Stock", id: TEST_STOCK2_COMPONENT_ID} });
-
-        // jest.spyOn(React, "useState").mockRestore();
-
-        // expect(setStateMock).toBeCalledWith(null);
-        // expect(setStateMock).toBeCalledWith([]);
-
-        // console.log("useState",setStateMock.mock.calls[]);
-        // console.log("remove",removeFunction.mock.);
-
-        // console.log(removeFunction.mock.);
-        expect(removeFunction).toBeCalledWith();
-
     })
 })

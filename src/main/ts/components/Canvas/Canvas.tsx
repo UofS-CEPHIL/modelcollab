@@ -99,14 +99,13 @@ const Canvas: FC<Props> = (props: Props) => {
                     setSelectedStocks([(event.target as Element).id]);
                 }
                 else if (selectedStocks.length === 1 && !selectedStocks.some(id => id === (event.target as Element).id)){
-                        
-                    
+                           
                     const componentID = idGenerator.generateComponentId(stocks,flows);
   
                     const newFlow = new FlowFirebaseComponent(
                         componentID.toString(),
                         { from: selectedStocks[0], to:(event.target as Element).id , text: "", equation: "", dependsOn: [""]}  
-                        );
+                    );
                         
                     setSelectedStocks([...selectedStocks,(event.target as Element).id]);
                         
