@@ -1,29 +1,30 @@
-import { FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "database/build/data/FirebaseComponentModel";
+import { FirebaseComponentModel } from "database/build/export";
 
-const IMPORT_LINE = "using .AlgebraicStockFlow; using Catlab; using Catlab.CategoricalAlgebra; " +
+const IMPORT_LINE = "include(\"./AlgebraicStockFlow.jl\"); using .AlgebraicStockFlow; " +
+    "using Catlab; using Catlab.CategoricalAlgebra; " +
     "using LabelledArrays; using OrdinaryDiffEq; using Plots; using Catlab.Graphics; " +
     "using Catlab.Programs; using Catlab.Theories; using Catlab.WiringDiagrams";
 
 function splitStocksAndFlows(
-    components: FirebaseDataComponent[]
-): [StockFirebaseComponent[], FlowFirebaseComponent[]] {
+    components: FirebaseComponentModel.FirebaseDataComponent[]
+): [FirebaseComponentModel.StockFirebaseComponent[], FirebaseComponentModel.FlowFirebaseComponent[]] {
 
-    let stocks: StockFirebaseComponent[] = [];
-    let flows: FlowFirebaseComponent[] = [];
+    let stocks: FirebaseComponentModel.StockFirebaseComponent[] = [];
+    let flows: FirebaseComponentModel.FlowFirebaseComponent[] = [];
     for (const component of components) {
-        if (component instanceof StockFirebaseComponent) {
-            stocks.push(component as StockFirebaseComponent);
+        if (component instanceof FirebaseComponentModel.StockFirebaseComponent) {
+            stocks.push(component as FirebaseComponentModel.StockFirebaseComponent);
         }
-        else if (component instanceof FlowFirebaseComponent) {
-            flows.push(component as FlowFirebaseComponent);
+        else if (component instanceof FirebaseComponentModel.FlowFirebaseComponent) {
+            flows.push(component as FirebaseComponentModel.FlowFirebaseComponent);
         }
     }
     return [stocks, flows];
 }
 
-const createJuliaVarName = (key: string) => `_${key.toUpperCase()}`;
+const createJuliaVarName = (key: string) => `${key.toUpperCase()}`;
 
-const createJuliaVarNames = (components: FirebaseDataComponent[]) => {
+const createJuliaVarNames = (components: FirebaseComponentModel.FirebaseDataComponent[]) => {
     let names: { [id: string]: string } = {};
     for (const component of components) {
         names[component.getId()] = ":" + createJuliaVarName(component.getId());
@@ -32,7 +33,7 @@ const createJuliaVarNames = (components: FirebaseDataComponent[]) => {
 }
 
 const createJuliaFlowFunctionBody = (
-    data: FlowFirebaseComponent,
+    data: FirebaseComponentModel.FlowFirebaseComponent,
     stocksVarName: string,
     paramsVarName: string,
     timeVarName: string
@@ -52,8 +53,8 @@ const createDependentsList = (
 }
 
 const generateStockFlowpCall = (
-    stocks: StockFirebaseComponent[],
-    flows: FlowFirebaseComponent[],
+    stocks: FirebaseComponentModel.StockFirebaseComponent[],
+    flows: FirebaseComponentModel.FlowFirebaseComponent[],
     componentNames: { [id: string]: string },
     modelName: string
 ) => {
@@ -85,22 +86,23 @@ const makeParamsLine = (parameters: object, vectorName: string) => {
     return `${vectorName} = LVector(${paramsString})`;
 }
 
-const makeStocksLine = (stocks: StockFirebaseComponent[], vectorName: string) => {
+const makeStocksLine = (stocks: FirebaseComponentModel.StockFirebaseComponent[], vectorName: string) => {
     const stocksString = stocks
-        .map((s: StockFirebaseComponent) => `${createJuliaVarName(s.getId())}=${s.getData().initvalue}`)
+        .map((s: FirebaseComponentModel.StockFirebaseComponent) => `${createJuliaVarName(s.getId())}=${s.getData().initvalue}`)
         .join(",");
     return `${vectorName} = LVector(${stocksString})`;
 }
 
 const makeSolutionLine = (apexName: string, paramsName: string, stocksName: string, startTime: Number, stopTime: Number) => {
     const probVarName = "prob";
+    const solVarName = "sol";
     const odeLine = `${probVarName} = ODEProblem(vectorfield(${apexName}),${stocksName},(${startTime},${stopTime}),${paramsName})`;
-    const solutionLine = `solve(${probVarName}, Tsit5(), abstol=1e-8)`;
+    const solutionLine = `${solVarName} = solve(${probVarName}, Tsit5(), abstol=1e-8)`;
     return `${odeLine}; ${solutionLine}`;
 }
 
 const generateJulia = (
-    components: FirebaseDataComponent[],
+    components: FirebaseComponentModel.FirebaseDataComponent[],
     parameters: any
 ) => {
     const [stocks, flows] = splitStocksAndFlows(components);
@@ -110,6 +112,7 @@ const generateJulia = (
     const apexModelName = modelName + "Apex";
     const paramsVectorName = "params";
     const initialStocksVectorName = "u0";
+
     const stockFlowPLine = generateStockFlowpCall(stocks, flows, componentNames, modelName);
     const stockVarList = Object.values(createJuliaVarNames(stocks)).map(v => `[${v}]`).join(", ")
     const openLine = `${openModelName} = Open(${modelName}, ${stockVarList})`;
@@ -118,7 +121,10 @@ const generateJulia = (
     const initStocksLine = makeStocksLine(stocks, initialStocksVectorName);
     const solutionLine = makeSolutionLine(apexModelName, paramsVectorName, initialStocksVectorName, parameters["startTime"], parameters["stopTime"]);
 
-    return [IMPORT_LINE, stockFlowPLine, openLine, apexLine, initParamsLine, initStocksLine, solutionLine].join("; ");
+    const saveFigureLine = 'plot(sol) ; savefig("/tmp/juliaPlot.png")';
+
+    return [IMPORT_LINE, stockFlowPLine, openLine, apexLine, initParamsLine, initStocksLine, solutionLine, saveFigureLine].join("; ");
 }
 
 export default generateJulia;
+

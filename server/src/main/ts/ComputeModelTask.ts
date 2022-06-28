@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import { FirebaseDataComponent } from "database/build/data/FirebaseComponentModel";
 
 import generateJulia from "./compute/JuliaGenerator";
+import applicationConfig from "./config/applicationConfig";
 
 export default class ComputeModelTask {
 
@@ -18,12 +19,18 @@ export default class ComputeModelTask {
     }
 
     async start(): Promise<void> {
-        // const juliaCode: string = generateJulia(this.components, this.parameters);
-        const juliaCode: string = "2 + 2";
-        const proc = spawn("julia", ["pipe", "inherit", "inherit"]);
+        const juliaCode: string = generateJulia(this.components, this.parameters);
+        console.log(juliaCode);
+        let proc = spawn(
+            "julia",
+            {
+                stdio: ["pipe", "inherit", "inherit"],
+                cwd: applicationConfig.algebraicStockFlowFilePath
+            }
+        );
         proc.stdin.write(juliaCode);
         proc.stdin.write("\n");
-        proc.stdin.write("\\q \n");
+        proc.stdin.write("exit()\n");
         proc.stdin.end();
     }
 
