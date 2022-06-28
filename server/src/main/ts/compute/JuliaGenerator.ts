@@ -121,7 +121,8 @@ const generateJulia = (
     const initStocksLine = makeStocksLine(stocks, initialStocksVectorName);
     const solutionLine = makeSolutionLine(apexModelName, paramsVectorName, initialStocksVectorName, parameters["startTime"], parameters["stopTime"]);
 
-    const saveFigureLine = 'plot(sol) ; savefig("/tmp/juliaPlot.png")';
+    const date: string = new Date().toISOString().slice(0, 16);
+    const saveFigureLine = `plot(sol) ; savefig("/tmp/juliaPlot_${date}.png")`;
 
     return [IMPORT_LINE, stockFlowPLine, openLine, apexLine, initParamsLine, initStocksLine, solutionLine, saveFigureLine].join("; ");
 }

@@ -18,10 +18,10 @@ class Server {
     private components: any;
 
     serve(): void {
-        FirebaseManager.create().then((m: FirebaseManager) => this.startServer(m));
+        FirebaseManager.create().then((m: FirebaseManager) => this.loginAndStart(m));
     }
 
-    private startServer(firebaseManager: FirebaseManager): void {
+    private loginAndStart(firebaseManager: FirebaseManager): void {
         const authChangedCallback = (isSignedIn: boolean) => {
             if (this.serverStarted) {
                 throw new Error("auth changed after server started");
@@ -33,21 +33,32 @@ class Server {
             firebaseDM.subscribeToAllComponents(
                 (snapshot: any) => this.components = snapshot.val()
             );
-            this.serverMain();
+            this.startServer();
         };
         firebaseManager.registerAuthChangedCallback(authChangedCallback);
         firebaseManager.login();
     }
 
-    private serverMain(): void {
-        if (this.serverStarted) {
-            throw new Error("called serverMain after server already started");
-        }
-        this.serverStarted = true;
-        console.log("Server started!");
+    private startServer(): void {
+        const app: Express = express();
+        app.post("/compute/:sessionId", (req, res) => {
+            // const createComponents = (cpts: any) =>
+            //     Object.keys(cpts)
+            //         .map(k => FirebaseComponentModel.createFirebaseDataComponent(k, cpts[k]));
 
+            // const sessionId = req.params.sessionId;
+            // const componentObjs = createComponents(this.components[sessionId]);
+            // // todo finish this
 
+            console.log("Running julia script...");
+            this.runJuliaHardCoded();
+            res.sendStatus(this.SUCCESS_CODE);
+        });
+        app.listen(this.PORT);
+        console.log(`Server listening on port ${this.PORT}`);
+    }
 
+    private runJuliaHardCoded() {
         const S_STOCK_NAME = "S";
         const S_STARTING_VALUE = "38010000.0";
         const E_STOCK_NAME = "E";
@@ -126,21 +137,6 @@ class Server {
         };
 
         new ComputeModelTask(TEST_COMPONENTS, TEST_PARAMS).start();
-    }
-
-    private setupRoutes(app: Express) {
-        app.post("/compute/:sessionId", (req, res) => {
-            const createComponents = (cpts: any) =>
-                Object.keys(cpts)
-                    .map(k => FirebaseComponentModel.createFirebaseDataComponent(k, cpts[k]));
-
-            const sessionId = req.params.sessionId;
-            const componentObjs = createComponents(this.components[sessionId]);
-            // todo finish this
-
-
-            res.sendStatus(this.SUCCESS_CODE);
-        });
     }
 }
 
