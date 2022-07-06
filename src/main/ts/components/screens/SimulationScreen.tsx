@@ -4,7 +4,7 @@ import Canvas from '../Canvas/Canvas';
 import Toolbar from '../Toolbar/Toolbar'
 import IdGenerator from '../../IdGenerator';
 import FirebaseDataModelImpl from '../../data/FirebaseDataModelImpl';
-import { UiMode } from '../Canvas/Mode';
+import { UiMode } from '../Canvas/Mode/Mode';
 import FirebaseManager from '../../FirebaseManager';
 import applicationConfig from '../../config/applicationConfig';
 

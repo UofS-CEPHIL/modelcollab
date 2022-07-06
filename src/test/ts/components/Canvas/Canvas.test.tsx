@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent, act } from "@testing-library/react";
 import Canvas, { Props } from "../../../../main/ts/components/Canvas/Canvas";
 import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
-import { UiMode } from '../../../../main/ts/components/Canvas/Mode';
+import { UiMode } from '../../../../main/ts/components/Canvas/Mode/Mode';
 import { FlowFirebaseComponent, StockFirebaseComponent } from '../../../../main/ts/data/FirebaseComponentModel';
 
 const TEST_SESSION_ID: string = "0";

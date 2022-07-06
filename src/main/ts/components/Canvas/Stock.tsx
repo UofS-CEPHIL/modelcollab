@@ -15,8 +15,9 @@ export interface Props {
     componentId: string;
     sessionId: string;
     firebaseDataModel: FirebaseDataModel;
-    text: string
-    color: string
+    text: string;
+    draggable:boolean;
+    color: string;
 }
 
 const Stock: FC<Props> = (props) => {
@@ -73,7 +74,7 @@ const Stock: FC<Props> = (props) => {
                 background: props.color,
             }}
             id={`${props.componentId} `}
-            draggable="true"
+            draggable={props.draggable}
             onDragEnd={onDrag}
             data-testid="stock-div"
         >
@@ -82,6 +83,7 @@ const Stock: FC<Props> = (props) => {
                 onChange={handleChange}
                 onBlur={onBlur}
                 onDoubleClick={onDoubleClick}
+                draggable={props.draggable}
                 inputProps={{
                     className: "Mui_Stock",
                     id: props.componentId,

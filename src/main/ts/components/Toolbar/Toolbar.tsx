@@ -3,7 +3,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import { modeFromString } from '../Canvas/Canvas';
-import { UiMode } from '../Canvas/Mode';
+import { UiMode } from '../Canvas/Mode/Mode';
 
 export interface Props {
     mode: UiMode,
@@ -33,6 +33,7 @@ export default function Toolbar(props: Props) {
                     <Tab label="Create" value={UiMode.CREATE} onClick={handleChange} />
                     <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} />
                     <Tab label="Flow" value = {UiMode.FLOW} onClick={handleChange} />
+                    <Tab label="Edit" value = {UiMode.EDIT} onClick={handleChange} />
                 </Tabs>
             </Box>
         </Box>

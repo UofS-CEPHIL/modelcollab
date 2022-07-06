@@ -1,3 +1,4 @@
+import { DataContainer } from "./data/DataContainer";
 import { FirebaseDataComponent} from "./data/FirebaseComponentModel";
 
 export default class IdGenerator {
@@ -11,28 +12,28 @@ export default class IdGenerator {
         return 1;
     }
 
-    generateComponentId(stocks: FirebaseDataComponent[], flows: FirebaseDataComponent[]) {
+    generateComponentId(data: DataContainer) {
 
         const compareID = ( componentID: FirebaseDataComponent, newComponentID: number): boolean => {
             return componentID.getId() === newComponentID.toString();
         }
 
         let componentID: number; 
-        let isUsed: boolean;       
+        let isUsed: boolean;   
         do {
-            componentID = Math.floor(Math.random() * 100);
+            componentID = Math.floor((Math.random() * 100)+1);
             isUsed = false;       
 
-            for (let i = 0; i < stocks.length; i++){
-                if (compareID(stocks[i],componentID)){
+            for (let i = 0; i < data.getStocks().length; i++){
+                if (compareID(data.getStocks()[i],componentID)){
                     isUsed = true;
                     break;
                 }
             }
 
             if (!isUsed){
-                for (let i = 0; i < flows.length; i++){
-                    if (compareID(flows[i],componentID)){
+                for (let i = 0; i < data.getFlows().length; i++){
+                    if (compareID(data.getFlows()[i],componentID)){
                         isUsed = true;
                         break;
                     }
