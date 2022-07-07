@@ -4,6 +4,8 @@ import FirebaseDataModel from "../../../data/FirebaseDataModel";
 import Flow from "../Flow";
 import "./Styles.css"
 import Stock, { DEFAULT_COLOR, SELECTED_COLOR } from "../Stock";
+import EditBox from "../EditBox";
+import { ComponentType, FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "../../../data/FirebaseComponentModel";
 
 export interface Props {
     data: DataContainer;
@@ -12,10 +14,11 @@ export interface Props {
 }
 
 
-const MoveMode: FC<Props> = (props: Props) => {
+const EditMode: FC<Props> = (props: Props) => {
    
-    const [selected, setSelected] = React.useState< string | null>(null);
-    
+    const [selected, setSelected] = React.useState<FirebaseDataComponent | null>(null);
+    const [open, setOpen] = React.useState<boolean>(false)
+
     const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
         event.preventDefault();
         if (event.currentTarget.className === "draggable-container") return;
@@ -24,13 +27,23 @@ const MoveMode: FC<Props> = (props: Props) => {
  
     
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
-        if (typeof ((event.target as Element).className) === "string" 
-        && (event.target as Element).className
-                                    .split(" ")
-                                    .find(item => ["Mui_Stock"].indexOf(item) > -1)) {
-            setSelected((event.target as Element).id)
+        if ( (event.target as Element).classList.toString() === "Flow-svg" ) {
+            const flow = props.data.getFlows().find(flow => flow.getId() === (event.target as Element).id);
+            if (flow){
+                setSelected(flow);
+                setOpen(true)
+            }
+        }
+        else if ( typeof ((event.target as Element).className) === "string" 
+                  && (event.target as Element).className.split(" ").find(item => ["Mui_Stock"].indexOf(item) > -1)){
+            const stock = props.data.getStocks().find(stock => stock.getId() === (event.target as Element).id);
+            if (stock){
+                setSelected(stock);
+                setOpen(true);
+            }
         }
     }
+    
 
     return (
         <div
@@ -59,7 +72,7 @@ const MoveMode: FC<Props> = (props: Props) => {
 
             {props.data.getStocks().map((stock, i) => {
                 return (
-                     (selected && selected === stock.getId()) 
+                     (selected && selected.getId() === stock.getId()) 
                         ? <div key={i}>
                             <Stock
                                 initx={stock.getData().x}
@@ -86,8 +99,16 @@ const MoveMode: FC<Props> = (props: Props) => {
                         </div>
                 )
             })}
+            { (open && selected)
+            && <EditBox 
+                    setOpen={setOpen}
+                    open = {open}
+                    component = {selected}
+                    sessionId = {props.sessionId}
+                    firebaseDataModel = {props.firebaseDataModel}
+                />}
         </div>
     )
 }
 
-export default MoveMode;
+export default EditMode;

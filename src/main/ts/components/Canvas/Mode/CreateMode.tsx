@@ -25,8 +25,6 @@ const CreateMode: FC<Props> = (props: Props) => {
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
 
         const componentID = idGenerator.generateComponentId(props.data);
-        
-
         const newStock = new StockFirebaseComponent(
             componentID.toString(),
             { text: "", x: event.clientX, y: event.clientY, initvalue: "" }

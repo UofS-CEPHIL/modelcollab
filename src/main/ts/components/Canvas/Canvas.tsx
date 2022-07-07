@@ -9,6 +9,7 @@ import MoveMode from './Mode/MoveMode';
 import CreateMode from './Mode/CreateMode';
 import DeleteMode from './Mode/DeleteMode';
 import FlowMode from './Mode/FlowMode';
+import EditMode from './Mode/EditMode';
 
 
 export const modeFromString = (s: string) => {
@@ -67,7 +68,16 @@ const Canvas: FC<Props> = (props: Props) => {
                             sessionId = {props.sessionId}
                             firebaseDataModel = {props.firebaseDataModel}
                         />    
-                    )                         
+                    ) 
+                    
+                case (modeFromString("EDIT")):
+                    return(
+                        <EditMode 
+                            data = {data}
+                            sessionId = {props.sessionId}
+                            firebaseDataModel = {props.firebaseDataModel}
+                        />    
+                    ) 
             }
     }
 
@@ -89,17 +99,23 @@ const Canvas: FC<Props> = (props: Props) => {
                 }
         }    
     })
+    
+    // const triggerCallBack = (id: string ) => {
+    //     if (data.getStocks().some(stock => stock.getId() === id)){
+    //         const newStocks = data.getStocks().filter(stock => stock.getId() !== id);
+    //         const newData = data.withStocks(newStocks);
+    //         setData(newData);
+    //     }
+    // }
 
     props.firebaseDataModel.registerComponentRemovedListener(props.sessionId, (id) => {
 
         if (id) {
-            if (data.getFlows().some(flow => flow.getId() === id)){
-                const newFlows = data.getFlows().filter(flow => flow.getId() !== id)
-                const newData = data.withFlows(newFlows);
-                setData(newData);
-            }
+            const newFlows = data.getFlows().filter(flow => flow.getId() !== id);
+            const newData = data.withFlows(newFlows);
+            setData(newData);
 
-            else if (data.getStocks().some(stock => stock.getId() === id)){
+            if (data.getStocks().some(stock => stock.getId() === id)){
                 const newStocks = data.getStocks().filter(stock => stock.getId() !== id);
                 const newData = data.withStocks(newStocks);
                 setData(newData);
