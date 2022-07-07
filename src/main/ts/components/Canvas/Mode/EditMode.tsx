@@ -27,6 +27,7 @@ const EditMode: FC<Props> = (props: Props) => {
  
     
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
+        console.log(event);
         if ( (event.target as Element).classList.toString() === "Flow-svg" ) {
             const flow = props.data.getFlows().find(flow => flow.getId() === (event.target as Element).id);
             if (flow){
@@ -49,7 +50,7 @@ const EditMode: FC<Props> = (props: Props) => {
         <div
             className="draggable_container"
             onDragOver={onDragOver}
-            data-testid="moveMode-div"
+            data-testid="editMode-div"
             style={{ "width": "100%", "height": "1000px" }}
             onClick={onClick}
         >

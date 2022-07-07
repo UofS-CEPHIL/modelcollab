@@ -32,56 +32,73 @@ export interface Props {
 
 
 const Canvas: FC<Props> = (props: Props) => {
-
-   
     const [data,setData] = React.useState<DataContainer>(new DataContainer());    
     const renderMode = (props: Props) => {
             switch(props.mode){
                 case (modeFromString("MOVE")):
                     return(
-                        <MoveMode 
-                            data = {data}
-                            sessionId = {props.sessionId}
-                            firebaseDataModel = {props.firebaseDataModel}
-                        />
+                        <div
+                            data-testid="canvas-moveMode-div"
+                        >
+                            <MoveMode 
+                                data-testid="move-mode"
+                                data = {data}
+                                sessionId = {props.sessionId}
+                                firebaseDataModel = {props.firebaseDataModel}
+                            />
+                        </div>
                     ) 
                 case (modeFromString("CREATE")):
                     return(
-                        <CreateMode 
-                            data = {data}
-                            sessionId = {props.sessionId}
-                            firebaseDataModel = {props.firebaseDataModel}
-                        />    
+                        <div
+                            data-testid="canvas-createMode-div"
+                        >
+                            <CreateMode 
+                                data = {data}
+                                sessionId = {props.sessionId}
+                                firebaseDataModel = {props.firebaseDataModel}
+                            />  
+                        </div>  
                     )
                 case (modeFromString("DELETE")):
                     return(
-                        <DeleteMode 
-                            data = {data}
-                            sessionId = {props.sessionId}
-                            firebaseDataModel = {props.firebaseDataModel}
-                        />    
+                        <div
+                            data-testid="canvas-deleteMode-div"
+                        >
+                            <DeleteMode 
+                                data = {data}
+                                sessionId = {props.sessionId}
+                                firebaseDataModel = {props.firebaseDataModel}
+                            />   
+                        </div> 
                     )  
                 case (modeFromString("FLOW")):
                     return(
+                        <div
+                            data-testid="canvas-flowMode-div"
+                        >
                         <FlowMode 
                             data = {data}
                             sessionId = {props.sessionId}
                             firebaseDataModel = {props.firebaseDataModel}
-                        />    
+                        />  
+                        </div>  
                     ) 
                     
                 case (modeFromString("EDIT")):
                     return(
-                        <EditMode 
-                            data = {data}
-                            sessionId = {props.sessionId}
-                            firebaseDataModel = {props.firebaseDataModel}
-                        />    
+                        <div
+                            data-testid="canvas-editMode-div"
+                        >
+                            <EditMode 
+                                data = {data}
+                                sessionId = {props.sessionId}
+                                firebaseDataModel = {props.firebaseDataModel}
+                            />    
+                        </div>
                     ) 
             }
     }
-
-
 
     props.firebaseDataModel.registerComponentCreatedListener(props.sessionId, (component) => {
         if (component) {
@@ -124,7 +141,9 @@ const Canvas: FC<Props> = (props: Props) => {
     })
 
     return (
-        <div>
+        <div 
+            data-testid="canvas-div"
+        >
             {renderMode(props)}       
         </div>
     );

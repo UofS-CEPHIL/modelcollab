@@ -4,7 +4,7 @@ import { FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent, C
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { Button, FormControl, Input, InputLabel, TextField } from '@mui/material';
+import { Button, TextField } from '@mui/material';
 
 export interface Props {
     open: boolean;
