@@ -33,7 +33,7 @@ function renderMoveMode(props: Partial<Props> = {}) {
 
 describe("<MoveMode />", () => {
 
-    test("Should display Canvas with default setting", async () => {
+    test("Should display Move Mode with default setting", async () => {
         const { findByTestId } = renderMoveMode();
         const moveMode = await findByTestId("moveMode-div");
 
@@ -45,7 +45,7 @@ describe("<MoveMode />", () => {
     });
 
 
-    test("Should invoke useState when click on the text, when on mode Move", async () => {
+    test("Should invoke useState when click on the text", async () => {
 
         const setStateMock = jest.fn();
         const useStateMock: any = (useState: any) => [useState, setStateMock];

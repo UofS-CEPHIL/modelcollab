@@ -47,7 +47,7 @@ const DeleteMode: FC<Props> = (props: Props) => {
         <div
             className="draggable_container"
             onDragOver={onDragOver}
-            data-testid="createMode-div"
+            data-testid="deleteMode-div"
             style={{ "width": "100%", "height": "1000px" }}
             onClick={onClick}
         >
