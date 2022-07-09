@@ -59,4 +59,29 @@ describe("<Toolbar />", () => {
         fireEvent.click(tab, { target: { textContent: "Delete" } })
         expect(setMode).toBeCalledWith(UiMode.DELETE)
     })
+
+    test("Should set Flow, when Flow mode is selected", async () => {
+        const setMode = jest.fn();
+        const { findByTestId, getByRole } = renderToolbar({ setMode: setMode })
+
+        const toolbartabs = await findByTestId("toolbar-tabs")
+
+        const tab = getByRole('tab', { name: 'Flow' });
+
+        fireEvent.click(tab, { target: { textContent: "Flow" } })
+        expect(setMode).toBeCalledWith(UiMode.FLOW)
+    })
+
+    test("Should set Edit, when Edit mode is selected", async () => {
+        const setMode = jest.fn();
+        const { findByTestId, getByRole } = renderToolbar({ setMode: setMode })
+
+        const toolbartabs = await findByTestId("toolbar-tabs")
+
+        const tab = getByRole('tab', { name: 'Edit' });
+
+        fireEvent.click(tab, { target: { textContent: "Edit" } })
+        expect(setMode).toBeCalledWith(UiMode.EDIT)
+    })
+ 
 })
