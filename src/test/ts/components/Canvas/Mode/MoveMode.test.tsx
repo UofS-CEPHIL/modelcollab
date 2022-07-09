@@ -1,17 +1,13 @@
 import React from 'react';
 import { render, fireEvent } from "@testing-library/react";
 import MoveMode, { Props } from "../../../../../main/ts/components/Canvas/Mode/MoveMode";
-import FirebaseDataModel from '../../../../../main/ts/data/FirebaseDataModel';
 import { StockFirebaseComponent } from '../../../../../main/ts/data/FirebaseComponentModel';
-import { UiMode } from '../../../../../main/ts/components/Canvas/Mode/Mode';
 import { DataContainer } from '../../../../../main/ts/data/DataContainer';
 
 const TEST_SESSION_ID: string = "0";
 
 const TEST_STOCK_COMPONENT_ID: string = "1";
 const TEST_STOCK2_COMPONENT_ID: string = "2";
-
-const TEST_FLOW_COMPONENT_ID: string = "99";
 
 const TEST_X_VALUE: number = 100;
 const TEST_Y_VALUE: number = 200;

@@ -11,15 +11,12 @@ const TEST_STOCK2_COMPONENT_ID: string = "2";
 const TEST_STOCK3_COMPONENT_ID: string = "3";
 const TEST_STOCK4_COMPONENT_ID: string = "4";
 
-
 const TEST_X_VALUE: number = 100;
 const TEST_Y_VALUE: number = 200;
 
 const TEST_FLOW_COMPONENT_ID: string = "99";
 const TEST_FLOW2_COMPONENT_ID: string = "88";
 const TEST_FLOW3_COMPONENT_ID: string = "77";
-
-
 
 function renderDeleteMode(props: Partial<Props> = {}) {
     const defaultProps: Props = {
@@ -36,7 +33,7 @@ function renderDeleteMode(props: Partial<Props> = {}) {
     return render(<DeleteMode {...defaultProps} {...props} />);
 }
 
-describe("<MoveMode />", () => {
+describe("<DeleteMode />", () => {
 
     test("Should display DeleteMode with default setting", async () => {
         const { findByTestId } = renderDeleteMode();

@@ -20,7 +20,7 @@ function renderCreateMode(props: Partial<Props> = {}) {
     return render(<CreateMode {...defaultProps} {...props} />);
 }
 
-describe("<MoveMode />", () => {
+describe("<CreateMode />", () => {
 
     test("Should display CreateMode with default setting", async () => {
         const { findByTestId } = renderCreateMode();
