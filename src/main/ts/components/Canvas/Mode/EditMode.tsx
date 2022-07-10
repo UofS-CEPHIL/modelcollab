@@ -5,7 +5,7 @@ import Flow from "../Flow";
 import "./Styles.css"
 import Stock, { DEFAULT_COLOR, SELECTED_COLOR } from "../Stock";
 import EditBox from "../EditBox";
-import { ComponentType, FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "../../../data/FirebaseComponentModel";
+import {FirebaseDataComponent } from "../../../data/FirebaseComponentModel";
 
 export interface Props {
     data: DataContainer;
@@ -24,10 +24,7 @@ const EditMode: FC<Props> = (props: Props) => {
         if (event.currentTarget.className === "draggable-container") return;
     }
 
- 
-    
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
-        console.log(event);
         if ( (event.target as Element).classList.toString() === "Flow-svg" ) {
             const flow = props.data.getFlows().find(flow => flow.getId() === (event.target as Element).id);
             if (flow){

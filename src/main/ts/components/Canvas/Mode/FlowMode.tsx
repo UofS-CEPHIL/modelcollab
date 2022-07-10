@@ -9,14 +9,14 @@ import Stock, { DEFAULT_COLOR, SELECTED_COLOR } from "../Stock";
 
 export interface Props {
     data: DataContainer;
+    selected: string[],
     sessionId: string;
     firebaseDataModel: FirebaseDataModel;
 }
 
-
 const FlowMode: FC<Props> = (props: Props) => {
     const idGenerator = new IdGenerator();
-    const [selected, setSelected] = React.useState<string[]>([]);
+    const [selected, setSelected] = React.useState<string[]>(props.selected);
 
     const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
         event.preventDefault();
@@ -28,12 +28,12 @@ const FlowMode: FC<Props> = (props: Props) => {
         .split(" ")
         .find(item => ["Mui_Stock"].indexOf(item) > -1)
         ) {
-            if (selected.length === 0 || selected.length > 1){
+            if (selected.length === 0 || selected.length > 1) {
                 setSelected([(event.target as Element).id]);
             }
+
             else if (selected.length === 1 && !selected.some(id => id === (event.target as Element).id)){
                        
-            
                 setSelected([...selected,(event.target as Element).id]);
                     
                 if (!props.data.getFlows().some(flow => flow.getData().from === selected[0] && flow.getData().to === (event.target as Element).id)){
@@ -52,7 +52,7 @@ const FlowMode: FC<Props> = (props: Props) => {
         <div
             className="draggable_container"
             onDragOver={onDragOver}
-            data-testid="createMode-div"
+            data-testid="flowMode-div"
             style={{ "width": "100%", "height": "1000px" }}
             onClick={onClick}
         >

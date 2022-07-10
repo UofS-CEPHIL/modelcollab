@@ -160,6 +160,7 @@ const Flow: FC<Props> = (props) => {
 
                 <line
                     data-testid="flow-line"
+                    className = "Flow-line"
                     stroke="#aaa"
                     strokeWidth={1}
                     x1={sharedState.calculatedStartPoint.x}

@@ -78,6 +78,7 @@ const Canvas: FC<Props> = (props: Props) => {
                             data-testid="canvas-flowMode-div"
                         >
                         <FlowMode 
+                            selected = {[]}
                             data = {data}
                             sessionId = {props.sessionId}
                             firebaseDataModel = {props.firebaseDataModel}

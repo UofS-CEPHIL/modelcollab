@@ -67,7 +67,7 @@ describe("<DeleteMode />", () => {
                         { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
                         ),
                 new StockFirebaseComponent(
-                        TEST_STOCK2_COMPONENT_ID,
+                        TEST_STOCK3_COMPONENT_ID,
                         { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
                         )
                 ],
@@ -142,7 +142,7 @@ describe("<DeleteMode />", () => {
 
     });
 
-    test("Should invoke removeComponent when delete Stocks that are connecting with Flows", async () => {
+    test("Should invoke removeComponent when delete Stock that are connecting to Flows", async () => {
         const removeFunction = jest.fn();
         const firebaseDataModel: FirebaseDataModel = {
             subscribeToComponent: () => { },
