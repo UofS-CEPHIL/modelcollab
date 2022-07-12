@@ -37,4 +37,9 @@ server:
     `database` module.
 
 
+#################################### Common ####################################
+
+All modules store their config as source code in the main source
+directory, usually in a folder called congfig in files called
+applicationConfig and firebaseConfig
 

@@ -1,11 +1,16 @@
 
 #################################### About #####################################
 
-The database module provides an interface for interacting with the
-database and authentication. The FirebaseDataModel and FirebaseManager
-are the most important classes for accessing the database, and the
-FirebaseComponentModel contains classes representing all React
-components as they exist within the Firebase database.
+The database module provides common interfaces and the Firebase
+database, mainly including wrappers for the database schema.
+
+This is its own separate module and is compiled and managed
+independently from the others. It must be recompiled separately when
+changes are made to it.
+
+Note that this does not contain all the required code for interacting
+with Firebase. Each service must independently manage its connection
+to Firebase while using this module to interact with the schema
 
 ############################## Build Instructions ##############################
 
@@ -31,7 +36,9 @@ Install Instructions:
 
 Use instructions:
 
-    1. Ensure that FirebaseConfig.ts has useEmulators set to true.
     1. Navigate to the `database` directory.
     2. `firebase emulators:start`
+    3. Ensure that FirebaseConfig.ts has useEmulators set to true
+       for all running services (e.g. on the backend server and
+       the web UI) and restart if necessary
 

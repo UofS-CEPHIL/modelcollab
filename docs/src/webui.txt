@@ -10,14 +10,15 @@ disappears and is replaced with a SimulationScreen. The simulation
 screen consists of various items found inside the Components
 directory.
 
-############################## Build Instructions ##############################
+
+#################################### Usage #####################################
 
 npm start
 
-    This compiles and starts the React server on localhost.
+    Compile and start the React server on localhost.
 
 
 npm test
 
-    This runs the Jest tests for the webui
+    Run the Jest test suite.
 
