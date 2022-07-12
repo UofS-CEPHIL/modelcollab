@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+import { DataContainer } from "./data/DataContainer";
+import { FirebaseDataComponent} from "./data/FirebaseComponentModel";
+
+>>>>>>> Long-branch
 export default class IdGenerator {
 
     // TODO: generate random number. If that number is not already in
@@ -9,7 +15,41 @@ export default class IdGenerator {
         return 1;
     }
 
+<<<<<<< HEAD
     generateComponentId() {
         return Math.floor(Math.random() * 100);
+=======
+    generateComponentId(data: DataContainer) {
+
+        const compareID = ( componentID: FirebaseDataComponent, newComponentID: number): boolean => {
+            return componentID.getId() === newComponentID.toString();
+        }
+
+        let componentID: number; 
+        let isUsed: boolean;   
+        do {
+            componentID = Math.floor((Math.random() * 100)+1);
+            isUsed = false;       
+
+            for (let i = 0; i < data.getStocks().length; i++){
+                if (compareID(data.getStocks()[i],componentID)){
+                    isUsed = true;
+                    break;
+                }
+            }
+
+            if (!isUsed){
+                for (let i = 0; i < data.getFlows().length; i++){
+                    if (compareID(data.getFlows()[i],componentID)){
+                        isUsed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        while( isUsed )
+        
+        return componentID;
+>>>>>>> Long-branch
     }
 }

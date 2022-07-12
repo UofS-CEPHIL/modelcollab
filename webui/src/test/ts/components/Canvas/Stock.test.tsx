@@ -18,6 +18,7 @@ function renderStock(props: Partial<Props> = {}) {
         initx: 0,
         inity: 0,
         sessionId: TEST_SESSION_ID,
+        draggable: true,
         componentId: TEST_COMPONENT_ID,
         firebaseDataModel: {
             updateComponent: () => { },
