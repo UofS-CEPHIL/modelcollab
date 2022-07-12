@@ -1,5 +1,5 @@
 import generateJulia from "./../../main/ts/compute/JuliaGenerator";
-import { FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "database/build/data/FirebaseComponentModel";
+import { FirebaseComponentModel as data } from "database/build/export";
 
 
 const EXPECTED_INCLUDES = [
@@ -36,14 +36,15 @@ const OUTICU_FLOW_NAME = "outICU";
 const OUTICU_EQUATION = "u.HICU/p.tICU";
 const RECOVH_FLOW_NAME = "recoveryH";
 const RECOVH_EQUATION = "u.HNICU/p.tH";
+const PARAMS_NAME = "PARAMS";
 
 
 const createStock = (id: string, initvalue: string) => {
-    return new StockFirebaseComponent(id, { x: 0, y: 0, text: "", initvalue: initvalue })
+    return new data.StockFirebaseComponent(id, { x: 0, y: 0, text: "", initvalue: initvalue })
 }
 
 const createFlow = (id: string, fromId: string, toId: string, equation: string, dependsOn: string[]) => {
-    return new FlowFirebaseComponent(id, { from: fromId, to: toId, equation: equation, dependsOn: dependsOn, text: "" });
+    return new data.FlowFirebaseComponent(id, { from: fromId, to: toId, equation: equation, dependsOn: dependsOn, text: "" });
 }
 
 const fail = () => expect(0).toEqual(1);
@@ -51,7 +52,7 @@ const fail = () => expect(0).toEqual(1);
 
 describe("generateJulia", () => {
 
-    const TEST_STOCKS: StockFirebaseComponent[] = [
+    const TEST_STOCKS: data.StockFirebaseComponent[] = [
         createStock(S_STOCK_NAME, S_STARTING_VALUE),
         createStock(E_STOCK_NAME, E_STARTING_VALUE),
         createStock(I_STOCK_NAME, I_STARTING_VALUE),
@@ -61,7 +62,7 @@ describe("generateJulia", () => {
     ];
     const EXPECTED_STOCK_NAMES = TEST_STOCKS.map(s => s.getId());
 
-    const TEST_FLOWS: FlowFirebaseComponent[] = [
+    const TEST_FLOWS: data.FlowFirebaseComponent[] = [
         createFlow(NEWINC_FLOW_NAME, S_STOCK_NAME, E_STOCK_NAME, NEWINC_EQUATION, [I_STOCK_NAME, S_STOCK_NAME]),
         createFlow(NEWINF_FLOW_NAME, E_STOCK_NAME, I_STOCK_NAME, NEWINF_EQUATION, [E_STOCK_NAME]),
         createFlow(NEWREC_FLOW_NAME, I_STOCK_NAME, R_STOCK_NAME, NEWREC_EQUATION, [I_STOCK_NAME]),
@@ -72,25 +73,30 @@ describe("generateJulia", () => {
         createFlow(RECOVH_FLOW_NAME, HNICU_STOCK_NAME, R_STOCK_NAME, RECOVH_EQUATION, [HNICU_STOCK_NAME])
     ];
 
-    const TEST_COMPONENTS = { ...TEST_STOCKS, ...TEST_FLOWS };
+    const TEST_COMPONENTS = [...TEST_STOCKS, ...TEST_FLOWS];
 
-    const TEST_PARAMS: { [paramName: string]: string } = {
-        'startTime': '0.0',
-        'stopTime': '300.0',
-        'B': '0.8',
-        'N': '3801001.0',
-        'tr': '12.22',
-        'tw': '2*365.0',
-        'fH': '0.002',
-        'fICU': '0.23',
-        'tICU': '6.0',
-        'tH': '12.0',
-        'rv': '0.01',
-        'eP': '0.6',
-        'eF': '0.85',
-        'ri': '0.207',
-        'ria': '0.138'
-    };
+    const TEST_PARAMS = new data.ParametersFirebaseComponent(
+        PARAMS_NAME,
+        {
+            'startTime': 0.0,
+            'stopTime': 300.0,
+            'params': {
+                'B': '0.8',
+                'N': '3801001.0',
+                'tr': '12.22',
+                'tw': '2*365.0',
+                'fH': '0.002',
+                'fICU': '0.23',
+                'tICU': '6.0',
+                'tH': '12.0',
+                'rv': '0.01',
+                'eP': '0.6',
+                'eF': '0.85',
+                'ri': '0.207',
+                'ria': '0.138'
+            }
+        }
+    );
 
     const resultString = generateJulia(TEST_COMPONENTS, TEST_PARAMS);
 
@@ -105,7 +111,6 @@ describe("generateJulia", () => {
     });
 
     test("Julia sample should make a valid invocation to StockAndFlowp", async () => {
-
         // Matches 'varname = StockAndFlowp((any number of stock names), (any number of flows));'
         const regex = /(\w+)( +)?=( +)?StockAndFlowp( +)?\(( +)?\((( +)?:(\w+),?( +)?)+( +)?\),( +)?\(( +)?(( +)?\(( +)?:(\w+)( +)?=>( +)?\(u( +)?,( +)?p( +)?,( +)?t( +)?\)( +)?->( +)?[^,]+,( +)?:(\w+)( +)?=>( +)?:(\w+)( +)?\)( +)?=>( +)?\(?(:\w+,?( +)?)+\)?( +)?,?)+\)( +)?;/;
         expect(regex.test(resultString)).toStrictEqual(true);
@@ -114,7 +119,7 @@ describe("generateJulia", () => {
     test("Julia sample should include correct entries for each stock in the StockAndFlowp invocation", async () => {
         // Matches a group of (:_<blah>, ...)
         const regex = new RegExp(
-            `\\w+( +)?=( +)?StockAndFlowp( +)?\\(( +)?\\(((( +)?:(\\w+),?( +)?)`
+            `\\w+( +)?=( +)?StockAndFlowp( +)?\\(( +)?\\(((( +)?:_(\\w+),?( +)?)`
             + `{${EXPECTED_STOCK_NAMES.length}})\\),`
         );
         let matches = resultString.match(regex);
@@ -122,7 +127,7 @@ describe("generateJulia", () => {
         else {
             // Magic number 5 = the index where the desired list lives for the above regex.
             //   will possibly have to edit this if the above regex changes
-            matches = matches[5].split(",").map(s => s.trim().substring(2)/* strip leading ':_' */);
+            matches = matches[5].split(",").map(s => s.trim().substring(2)/* strip leading ':' */);
             expect(matches.sort()).toStrictEqual(EXPECTED_STOCK_NAMES.sort());
         }
     });
@@ -142,9 +147,9 @@ describe("generateJulia", () => {
                 + `( +)?\\)( +)?=>( +)?${makeDependencyList(dependsOn)}( +)?,?`
             );
         };
-        for (const [id, flow] of Object.entries(TEST_FLOWS)) {
+        for (const flow of TEST_FLOWS) {
             const regex = createRegexForFlow(
-                id,
+                flow.getId(),
                 flow.getData().equation,
                 flow.getData().from,
                 flow.getData().to,
@@ -203,7 +208,7 @@ describe("generateJulia", () => {
             //   will possibly have to edit this if the above regex changes
             const pairs = matches[4].split(",").map(s => s.split("="));
             for (const [paramName, val] of pairs) {
-                expect(val).toEqual(TEST_PARAMS[paramName]);
+                expect(val).toEqual(TEST_PARAMS.getData().params[paramName]);
             }
         }
     });
@@ -211,7 +216,7 @@ describe("generateJulia", () => {
     test("Julia sample should include a line which solves the model as an ODE problem", async () => {
         // Matches lines from "In [14]" in this notebook
         // https://github.com/AlgebraicJulia/StockFlow.jl/blob/master/examples/primitive_schema_examples/Covid19_composition_model_in_paper.ipynb
-        const regex = /(\w+)( +)?=( +)?ODEProblem\(( +)?vectorfield\(( +)?\w+( +)?\)( +)?,( +)?\w+( +)?( +)?,( +)?\(( +)?([0-9.]+)( +)?,( +)?([0-9.]+)( +)?\)( +)?,( +)?params( +)?\)( +)?;( +)?solve\(( +)?(\w+)( +)?,( +)?Tsit5\(\)( +)?,( +)?abstol( +)?=( +)?1e-8( +)?\);?/;
+        const regex = /(\w+)( +)?=( +)?ODEProblem\(( +)?vectorfield\(( +)?\w+( +)?\)( +)?,( +)?\w+( +)?( +)?,( +)?\(( +)?([0-9.]+)( +)?,( +)?([0-9.]+)( +)?\)( +)?,( +)?params( +)?\)( +)?;( +)?(\w+( +)?=( +)?)?solve\(( +)?(\w+)( +)?,( +)?Tsit5\(\)( +)?,( +)?abstol( +)?=( +)?1e-8( +)?\);?/;
         let matches = resultString.match(regex);
         if (!matches) fail();
         else {
@@ -219,11 +224,11 @@ describe("generateJulia", () => {
             //  Possibly need to change these if the regex changes.
 
             // Assert that the ODE var name is correctly used in the solve() call
-            expect(matches[1]).toEqual(matches[24]);
+            expect(matches[1]).toEqual(matches[27]);
 
             // Assert that the start and stop times are correct
-            expect(matches[13]).toEqual(TEST_PARAMS["startTime"]);
-            expect(matches[16]).toEqual(TEST_PARAMS["stopTime"]);
+            expect(matches[13]).toEqual(TEST_PARAMS.getData().startTime.toString());
+            expect(matches[16]).toEqual(TEST_PARAMS.getData().stopTime.toString());
         }
     });
 
@@ -232,7 +237,11 @@ describe("generateJulia", () => {
         let i = 0;
         let line: string;
 
-        // Check that imports are first
+        // Check that we read from the local Julia file first
+        expect(resultStatements[i]).toMatch("include(\"./AlgebraicStockFlow.jl\")");
+        i++;
+
+        // Check that imports are next
         do {
             line = resultStatements[i];
             expect(line.startsWith("using ")).toStrictEqual(true);
@@ -264,11 +273,17 @@ describe("generateJulia", () => {
         const odeRegex = /ODEProblem\(/;
         expect(odeRegex.test(resultStatements[i++])).toStrictEqual(true);
 
-        // Lastly, solve it
+        // Solve it
         const solveRegex = /solve\(/;
         expect(solveRegex.test(resultStatements[i++])).toStrictEqual(true);
 
-        // TODO add behaviour that exports the data somehow
+        // Save the figure
+        const plotRegex = /plot\(( +)?\w+( +)?\)/;
+        expect(plotRegex.test(resultStatements[i++])).toStrictEqual(true);
+
+        // Save the figure
+        const saveRegex = /savefig\(\".+\.png\"\)/;
+        expect(saveRegex.test(resultStatements[i++])).toStrictEqual(true);
 
         // Should be no more code
         expect(i).toEqual(resultStatements.length);

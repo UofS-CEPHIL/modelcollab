@@ -1,8 +1,10 @@
 export enum ComponentType {
     STOCK = "stock",
-    FLOW = "flow"
+    FLOW = "flow",
+    PARAMETERS = "parameters"
 }
 
+// Represents all components as they are represented inside Firebase
 export abstract class FirebaseDataComponent {
 
     private id: string;
@@ -32,6 +34,9 @@ export abstract class FirebaseDataComponent {
     abstract getType(): ComponentType;
     abstract getData(): any;
 }
+
+// Represents any object that acts as the "data" field for any FirebaseDataComponent
+export interface FirebaseDataObject { };
 
 export function createFirebaseDataComponent(id: string, data: any) {
     const componentType = data.type;
@@ -64,6 +69,17 @@ export function createFirebaseDataComponent(id: string, data: any) {
             );
             break;
 
+        case ComponentType.PARAMETERS.toString():
+            component = new ParametersFirebaseComponent(
+                id,
+                {
+                    startTime: dataVal.startTime as number,
+                    stopTime: dataVal.stopTime as number,
+                    params: dataVal.params
+                }
+            )
+            break;
+
         default:
             throw new Error("Unknown component type: " + componentType);
     }
@@ -71,9 +87,36 @@ export function createFirebaseDataComponent(id: string, data: any) {
     return component;
 }
 
+//################################## Parameters ##################################
+
+export interface ParametersComponentData extends FirebaseDataObject {
+    startTime: number;
+    stopTime: number;
+    params: {
+        [paramName: string]: string;
+    };
+}
+
+export class ParametersFirebaseComponent extends FirebaseDataComponent {
+    private data: ParametersComponentData;
+
+    constructor(id: string, data: ParametersComponentData) {
+        super(id);
+        this.data = data;
+    }
+
+    getType(): ComponentType {
+        return ComponentType.PARAMETERS;
+    }
+
+    getData(): ParametersComponentData {
+        return this.data;
+    }
+}
+
 //#################################### Stock #####################################
 
-export interface StockComponentData {
+export interface StockComponentData extends FirebaseDataObject {
     x: number;              // x position on screen
     y: number;              // y position on screen
     text: string;           // text on screen
@@ -116,7 +159,7 @@ export class StockFirebaseComponent extends FirebaseDataComponent {
 
 //##################################### Flow #####################################
 
-export interface FlowComponentData {
+export interface FlowComponentData extends FirebaseDataObject {
     from: string;            // ID of the source of this flow
     to: string;              // ID of the sink of this flow
     equation: string;        // The equation for the flow rate
@@ -151,5 +194,4 @@ export class FlowFirebaseComponent extends FirebaseDataComponent {
         };
         return d;
     }
-
 }

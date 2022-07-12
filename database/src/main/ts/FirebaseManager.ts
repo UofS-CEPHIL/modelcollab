@@ -1,51 +1,38 @@
-import { FirebaseApp, initializeApp } from "firebase/app";
-import { Auth, getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
-import { Database, getDatabase } from "firebase/database";
-import { initializeTestEnvironment, RulesTestEnvironment } from "@firebase/rules-unit-testing";
+import {
+    FirebaseApp,
+    initializeApp
+} from "firebase/app";
+import {
+    Auth,
+    getAuth,
+    GoogleAuthProvider,
+    onAuthStateChanged,
+    signInWithPopup,
+} from "firebase/auth";
+import {
+    connectDatabaseEmulator,
+    Database,
+    getDatabase
+} from "firebase/database";
 
 import firebaseConfig from "./FirebaseConfig";
 
 export default class FirebaseManager {
 
-    // db is any becuase there are different types of DB between the
-    // real and testing Firebase repos
-    private db: any | null;
-    private auth: Auth | null;
-    private app: FirebaseApp | null;
-    private testEnvironment: RulesTestEnvironment | null;
+    private db: Database;
+    private auth: Auth;
+    private app: FirebaseApp;
     private authStateChangedCallback: ((isSignedIn: boolean) => void) | null;
 
     private constructor() {
-        this.db = null;
-        this.auth = null;
-        this.app = null;
-        this.testEnvironment = null;
+        this.app = initializeApp(firebaseConfig);
+        this.auth = getAuth(this.app);
+        this.db = getDatabase(this.app);
         this.authStateChangedCallback = null;
     }
 
     public static async create(): Promise<FirebaseManager> {
         const theManager = new FirebaseManager();
-        if (!firebaseConfig.useEmulators) {
-            theManager.testEnvironment = null;
-            theManager.app = initializeApp(firebaseConfig);
-            theManager.auth = getAuth(theManager.app);
-            theManager.db = getDatabase(theManager.app);
-        }
-        else {
-            theManager.app = null;
-            theManager.auth = null;
-            theManager.testEnvironment = await initializeTestEnvironment({
-                projectId: "modelcollab",
-                database: {
-                    host: "localhost",
-                    port: 9000
-                }
-            });
-            theManager.db = theManager
-                .testEnvironment
-                .unauthenticatedContext()
-                .database(firebaseConfig.databaseURL);
-        }
         return theManager;
     }
 
@@ -56,17 +43,15 @@ export default class FirebaseManager {
 
     public registerAuthChangedCallback(callback: (isSignedIn: boolean) => void) {
         this.authStateChangedCallback = callback;
-        if (this.isProduction()) {
-            if (!this.auth) throw new Error("Auth not configured.");
-            onAuthStateChanged(
-                this.auth,
-                user => callback(user != null)
-            );
-        }
+        if (!this.auth) throw new Error("Auth not configured.");
+        onAuthStateChanged(
+            this.auth,
+            user => callback(user != null)
+        );
     }
 
     public login(): void {
-        if (this.isProduction()) {
+        if (!firebaseConfig.useEmulators) {
             if (!this.auth) throw new Error("Auth not configured.");
             const provider = new GoogleAuthProvider();
             signInWithPopup(this.auth, provider)
@@ -78,17 +63,9 @@ export default class FirebaseManager {
                 });
         }
         else {
-            if (!this.authStateChangedCallback) throw new Error("No auth callback configured.");
-            if (!this.testEnvironment) throw new Error("Test environment not configured.");
-            const authContext = this.testEnvironment.authenticatedContext("owner");
-            this.db = authContext.database(firebaseConfig.databaseURL);
-            if (!this.db) throw new Error("Error creating database");
-            this.authStateChangedCallback(true);
+            connectDatabaseEmulator(this.db, "127.0.0.1", 9000);
+            if (this.authStateChangedCallback)
+                this.authStateChangedCallback(true);
         }
     }
-
-    private isProduction(): boolean {
-        return this.testEnvironment === null;
-    }
-
 }

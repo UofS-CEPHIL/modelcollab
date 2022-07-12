@@ -1,25 +1,27 @@
 import { spawn } from "node:child_process";
 
-import { FirebaseDataComponent } from "database/build/data/FirebaseComponentModel";
+import { FirebaseComponentModel as data } from "database/build/export";
 
 import generateJulia from "./compute/JuliaGenerator";
 import applicationConfig from "./config/applicationConfig";
 
 export default class ComputeModelTask {
 
-    private readonly components: FirebaseDataComponent[];
-    private readonly parameters: { [name: string]: string };
+    private readonly components: data.FirebaseDataComponent[];
+    private readonly parameters: data.ParametersFirebaseComponent;
 
-    constructor(
-        components: FirebaseDataComponent[],
-        parameters: { [name: string]: string }
-    ) {
-        this.components = components;
-        this.parameters = parameters;
+    constructor(components: data.FirebaseDataComponent[]) {
+        this.parameters = components.find(
+            (c: data.FirebaseDataComponent) => c.getType() === data.ComponentType.PARAMETERS
+        ) as data.ParametersFirebaseComponent;
+        this.components = components.filter(
+            (c: data.FirebaseDataComponent) => c.getType() !== data.ComponentType.PARAMETERS
+        );
     }
 
     async start(): Promise<void> {
         const juliaCode: string = generateJulia(this.components, this.parameters);
+        console.log(juliaCode.split(';'));
         let proc = spawn(
             "julia",
             {
@@ -32,5 +34,4 @@ export default class ComputeModelTask {
         proc.stdin.write("exit()\n");
         proc.stdin.end();
     }
-
 }

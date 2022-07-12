@@ -1,4 +1,4 @@
-import { getDatabase, ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved } from "firebase/database";
+import { getDatabase, ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved, DataSnapshot } from "firebase/database";
 import FirebaseManager from "../FirebaseManager";
 import { ComponentType, createFirebaseDataComponent, FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "./FirebaseComponentModel";
 
@@ -17,7 +17,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     }
 
     private triggerCallback(
-        snapshot: any,
+        snapshot: DataSnapshot,
         callback: (data: FirebaseDataComponent) => void
     ) {
         if (!snapshot || !snapshot.key || !snapshot.val()) return;
@@ -52,11 +52,11 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    subscribeToAllComponents(callback: (cpts: object) => void) {
+    subscribeToAllComponents(callback: (snapshot: DataSnapshot) => void) {
         onValue(
             ref(
                 this.firebaseManager.getDb(),
-                "/components"
+                "components"
             ),
             callback
         );
@@ -88,13 +88,14 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                 this.firebaseManager.getDb(),
                 `components/${sessionId}/`
             ),
-            (snapshot) => {
+            (snapshot: DataSnapshot) => {
                 if (snapshot.key) callBack(snapshot.key);
             }
         );
     }
 
     renderComponents(sessionId: string, callback: (data: object) => void) {
+        // todo replace this with the async version below
         get(
             child(
                 ref(
@@ -102,7 +103,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                 ),
                 `components/${sessionId}`
             )
-        ).then((snapshot) => {
+        ).then((snapshot: DataSnapshot) => {
             if (snapshot.exists()) {
                 callback(snapshot.val())
             } else {
@@ -111,6 +112,37 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         }).catch((error) => {
             console.error(error);
         });
+    }
+
+    async getComponentsOnce(sessionId: string): Promise<FirebaseDataComponent[]> {
+        function makeComponentsFromSnapshot(snap: DataSnapshot) {
+            if (!snap.exists()) return [];
+            const components = snap.val();
+            return Object.keys(components).map(
+                (k: string) => createFirebaseDataComponent(k, components[k])
+            );
+        }
+
+        // return new Promise((res, rej) =>
+        //     onValue(
+        //         ref(
+        //             this.firebaseManager.getDb(),
+        //             `components/${sessionId}`
+        //         ),
+        //         s => res(makeComponentsFromSnapshot(s)),
+        //         err => rej(err),
+        //         { onlyOnce: true }
+        //     )
+        // );
+        console.log("Getting snapshot");
+        const snap: DataSnapshot = await get(
+            ref(
+                this.firebaseManager.getDb(),
+                `components/${sessionId}`
+            )
+        );
+        console.log("Got snapshot.");
+        return makeComponentsFromSnapshot(snap);
     }
 
 }

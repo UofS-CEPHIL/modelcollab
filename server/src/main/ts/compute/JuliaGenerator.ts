@@ -22,7 +22,7 @@ function splitStocksAndFlows(
     return [stocks, flows];
 }
 
-const createJuliaVarName = (key: string) => `${key.toUpperCase()}`;
+const createJuliaVarName = (key: string) => `_${key.toUpperCase()}`;
 
 const createJuliaVarNames = (components: FirebaseComponentModel.FirebaseDataComponent[]) => {
     let names: { [id: string]: string } = {};
@@ -103,7 +103,7 @@ const makeSolutionLine = (apexName: string, paramsName: string, stocksName: stri
 
 const generateJulia = (
     components: FirebaseComponentModel.FirebaseDataComponent[],
-    parameters: any
+    parameters: FirebaseComponentModel.ParametersFirebaseComponent
 ) => {
     const [stocks, flows] = splitStocksAndFlows(components);
     const componentNames = createJuliaVarNames(components);
@@ -111,15 +111,26 @@ const generateJulia = (
     const openModelName = modelName + "Open";
     const apexModelName = modelName + "Apex";
     const paramsVectorName = "params";
+    const paramValues = {
+        startTime: parameters.getData().startTime,
+        stopTime: parameters.getData().stopTime,
+        ...parameters.getData().params
+    };
     const initialStocksVectorName = "u0";
 
     const stockFlowPLine = generateStockFlowpCall(stocks, flows, componentNames, modelName);
     const stockVarList = Object.values(createJuliaVarNames(stocks)).map(v => `[${v}]`).join(", ")
     const openLine = `${openModelName} = Open(${modelName}, ${stockVarList})`;
     const apexLine = `${apexModelName} = apex(${openModelName})`;
-    const initParamsLine = makeParamsLine(parameters, paramsVectorName);
+    const initParamsLine = makeParamsLine(paramValues, paramsVectorName);
     const initStocksLine = makeStocksLine(stocks, initialStocksVectorName);
-    const solutionLine = makeSolutionLine(apexModelName, paramsVectorName, initialStocksVectorName, parameters["startTime"], parameters["stopTime"]);
+    const solutionLine = makeSolutionLine(
+        apexModelName,
+        paramsVectorName,
+        initialStocksVectorName,
+        parameters.getData().startTime,
+        parameters.getData().stopTime
+    );
 
     const date: string = new Date().toISOString().slice(0, 16);
     const saveFigureLine = `plot(sol) ; savefig("/tmp/juliaPlot_${date}.png")`;

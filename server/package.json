@@ -4,7 +4,7 @@
   "description": "The server which acts as the backend for Modelcollab",
   "main": "build/main/ts/main.js",
   "scripts": {
-    "start": "node build/main/ts/Main.js",
+    "start": "tsc && node build/main/ts/Main.js",
     "build": "tsc",
     "test": "jest"
   },
@@ -12,6 +12,7 @@
   "dependencies": {
     "database": "file:../database",
     "express": "^4.18.1",
+    "firebase": "^9.9.0",
     "webpack": "^5.73.0"
   },
   "devDependencies": {

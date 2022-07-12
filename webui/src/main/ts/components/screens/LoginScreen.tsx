@@ -11,7 +11,6 @@ const LoginScreen: FC<any> = (props: Props) => {
     useEffect(() => { document.title = "ModelCollab" }, []);
 
     const onClickLoginButton = () => {
-        console.log(`fbm = ${props.firebaseManager}`)
         props.firebaseManager.login();
     };
 

@@ -13,7 +13,7 @@ function App() {
     useEffect(() => {
         FirebaseManager.create().then((mgr: FirebaseManager) => {
             setFirebaseManager(mgr);
-            mgr.registerAuthChangedCallback(signedIn => setIsSignedIn(signedIn));
+            mgr.registerAuthChangedCallback(setIsSignedIn);
         });
     }, []);
 

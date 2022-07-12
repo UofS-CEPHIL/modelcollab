@@ -8,6 +8,8 @@ interface FirebaseConfig {
     appId: string;
 
     useEmulators: boolean;
+    emulatorHost: string;
+    emulatorPort: number;
 }
 
 const firebaseConfig: FirebaseConfig = {
@@ -19,7 +21,9 @@ const firebaseConfig: FirebaseConfig = {
     messagingSenderId: "388145787482",
     appId: "1:388145787482:web:39438739d24000e034de63",
 
-    useEmulators: true
+    useEmulators: true,
+    emulatorHost: "127.0.0.1",
+    emulatorPort: 9000
 };
 
 export default firebaseConfig;
