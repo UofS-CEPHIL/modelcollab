@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { DataContainer } from "../../../data/DataContainer";
-import { FlowFirebaseComponent } from "../../../data/FirebaseComponentModel";
+import { FirebaseComponentModel as schema } from "database/build/export";
 import FirebaseDataModel from "../../../data/FirebaseDataModel";
 import IdGenerator from "../../../IdGenerator";
 import Flow from "../Flow";
@@ -24,24 +24,24 @@ const FlowMode: FC<Props> = (props: Props) => {
     }
 
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
-        if( typeof (event.target as Element).className === "string" && (event.target as Element).className
-        .split(" ")
-        .find(item => ["Mui_Stock"].indexOf(item) > -1)
+        if (typeof (event.target as Element).className === "string" && (event.target as Element).className
+            .split(" ")
+            .find(item => ["Mui_Stock"].indexOf(item) > -1)
         ) {
             if (selected.length === 0 || selected.length > 1) {
                 setSelected([(event.target as Element).id]);
             }
 
-            else if (selected.length === 1 && !selected.some(id => id === (event.target as Element).id)){
-                       
-                setSelected([...selected,(event.target as Element).id]);
-                    
-                if (!props.data.getFlows().some(flow => flow.getData().from === selected[0] && flow.getData().to === (event.target as Element).id)){
+            else if (selected.length === 1 && !selected.some(id => id === (event.target as Element).id)) {
+
+                setSelected([...selected, (event.target as Element).id]);
+
+                if (!props.data.getFlows().some(flow => flow.getData().from === selected[0] && flow.getData().to === (event.target as Element).id)) {
                     const componentID = idGenerator.generateComponentId(props.data);
-                
-                    const newFlow = new FlowFirebaseComponent(
+
+                    const newFlow = new schema.FlowFirebaseComponent(
                         componentID.toString(),
-                        { from: selected[0], to: (event.target as Element).id, text: "", equation: "", dependsOn: [""]}  
+                        { from: selected[0], to: (event.target as Element).id, text: "", equation: "", dependsOn: [""] }
                     );
                     props.firebaseDataModel.updateComponent(props.sessionId, newFlow);
                 }
@@ -60,22 +60,22 @@ const FlowMode: FC<Props> = (props: Props) => {
                 return (
                     <div key={i}>
                         <Flow
-                                componentId = {flow.getId()}
-                                sessionId = {props.sessionId}
-                                text = {flow.getData().text}
-                                from = {flow.getData().from}
-                                to = {flow.getData().to}
-                                equation = {flow.getData().equation}      
-                                dependsOn = {flow.getData().dependsOn} 
-                                firebaseDataModel = {props.firebaseDataModel}
-                            />
+                            componentId={flow.getId()}
+                            sessionId={props.sessionId}
+                            text={flow.getData().text}
+                            from={flow.getData().from}
+                            to={flow.getData().to}
+                            equation={flow.getData().equation}
+                            dependsOn={flow.getData().dependsOn}
+                            firebaseDataModel={props.firebaseDataModel}
+                        />
                     </div>
                 )
             })}
 
-                {props.data.getStocks().map((stock, i) => {
+            {props.data.getStocks().map((stock, i) => {
                 return (
-                     (selected.some(id => id === stock.getId())) 
+                    (selected.some(id => id === stock.getId()))
                         ? <div key={i}>
                             <Stock
                                 initx={stock.getData().x}
@@ -101,7 +101,7 @@ const FlowMode: FC<Props> = (props: Props) => {
                             />
                         </div>
                 )
-            })} 
+            })}
         </div>
     )
 }

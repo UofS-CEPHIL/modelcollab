@@ -21,7 +21,6 @@ export default class ComputeModelTask {
 
     async start(): Promise<void> {
         const juliaCode: string = generateJulia(this.components, this.parameters);
-        console.log(juliaCode.split(';'));
         let proc = spawn(
             "julia",
             {

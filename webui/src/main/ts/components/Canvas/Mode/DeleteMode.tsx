@@ -21,26 +21,26 @@ const DeleteMode: FC<Props> = (props: Props) => {
 
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
 
-        if ((event.target as Element).classList.toString() === "Flow-svg"){
+        if ((event.target as Element).classList.toString() === "Flow-svg") {
             const id = (event.target as Element).id;
-            
+
             props.firebaseDataModel.removeComponent(props.sessionId, id);
         }
 
-        else if (typeof ((event.target as Element).className) === "string" && 
+        else if (typeof ((event.target as Element).className) === "string" &&
             (event.target as Element).className
-            .split(" ")
-            .find(item => ["Mui_Stock"].indexOf(item) > -1)
+                .split(" ")
+                .find(item => ["Mui_Stock"].indexOf(item) > -1)
         ) {
             const id = (event.target as Element).id;
 
-            
-            props.data.getFlows().filter(flow => flow.getData().from === id || flow.getData().to === id )         
-                                 .forEach(flow => {props.firebaseDataModel.removeComponent(props.sessionId, flow.getId())});
-                           
-            props.firebaseDataModel.removeComponent(props.sessionId, id);    
+
+            props.data.getFlows().filter(flow => flow.getData().from === id || flow.getData().to === id)
+                .forEach(flow => { props.firebaseDataModel.removeComponent(props.sessionId, flow.getId()) });
+
+            props.firebaseDataModel.removeComponent(props.sessionId, id);
         }
-        
+
     }
 
     return (
@@ -55,33 +55,33 @@ const DeleteMode: FC<Props> = (props: Props) => {
                 return (
                     <div key={i}>
                         <Flow
-                                componentId = {flow.getId()}
-                                sessionId = {props.sessionId}
-                                text = {flow.getData().text}
-                                from = {flow.getData().from}
-                                to = {flow.getData().to}
-                                equation = {flow.getData().equation}      
-                                dependsOn = {flow.getData().dependsOn} 
-                                firebaseDataModel = {props.firebaseDataModel}
-                            />
+                            componentId={flow.getId()}
+                            sessionId={props.sessionId}
+                            text={flow.getData().text}
+                            from={flow.getData().from}
+                            to={flow.getData().to}
+                            equation={flow.getData().equation}
+                            dependsOn={flow.getData().dependsOn}
+                            firebaseDataModel={props.firebaseDataModel}
+                        />
                     </div>
                 )
             })}
 
             {props.data.getStocks().map((stock, i) => {
-                return ( 
-                        <div key={i}>
-                            <Stock
-                                initx={stock.getData().x}
-                                inity={stock.getData().y}
-                                sessionId={props.sessionId}
-                                componentId={stock.getId()}
-                                color={DEFAULT_COLOR}
-                                draggable={false}
-                                text={stock.getData().text}
-                                firebaseDataModel={props.firebaseDataModel}
-                            />
-                        </div>
+                return (
+                    <div key={i}>
+                        <Stock
+                            initx={stock.getData().x}
+                            inity={stock.getData().y}
+                            sessionId={props.sessionId}
+                            componentId={stock.getId()}
+                            color={DEFAULT_COLOR}
+                            draggable={false}
+                            text={stock.getData().text}
+                            firebaseDataModel={props.firebaseDataModel}
+                        />
+                    </div>
                 )
             })}
         </div>

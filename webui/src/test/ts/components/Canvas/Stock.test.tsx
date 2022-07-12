@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, fireEvent, act } from "@testing-library/react";
 
-import { FirebaseDataModel } from 'database/build/data/FirebaseDataModel';
-import { StockFirebaseComponent } from 'database/build/data/FirebaseComponentModel';
+import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
+import { FirebaseComponentModel as schema } from 'database/build/export';
 
 import Stock, { DEFAULT_COLOR, Props } from "../../../../main/ts/components/Canvas/Stock";
 
@@ -154,7 +154,7 @@ describe("<Stock />", () => {
 
         act(() =>
             subFunction.mock.lastCall[2](
-                new StockFirebaseComponent(
+                new schema.StockFirebaseComponent(
                     TEST_COMPONENT_ID,
                     { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
                 )
@@ -182,7 +182,7 @@ describe("<Stock />", () => {
 
         act(() =>
             subFunction.mock.lastCall[2](
-                new StockFirebaseComponent(
+                new schema.StockFirebaseComponent(
                     TEST_COMPONENT_ID,
                     { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: TEST_TEXT, initvalue: "" }
                 )

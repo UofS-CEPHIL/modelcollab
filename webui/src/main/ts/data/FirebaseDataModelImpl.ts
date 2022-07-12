@@ -1,8 +1,8 @@
-import { getDatabase, ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved, DataSnapshot } from "firebase/database";
+import { ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved, DataSnapshot } from "firebase/database";
 import FirebaseManager from "../FirebaseManager";
-import { ComponentType, createFirebaseDataComponent, FirebaseDataComponent, FlowFirebaseComponent, StockFirebaseComponent } from "./FirebaseComponentModel";
+import { FirebaseComponentModel as schema } from "database/build/export";
 
-import { FirebaseDataModel } from "./FirebaseDataModel";
+import FirebaseDataModel from "./FirebaseDataModel";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
@@ -18,14 +18,14 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
     private triggerCallback(
         snapshot: DataSnapshot,
-        callback: (data: FirebaseDataComponent) => void
+        callback: (data: schema.FirebaseDataComponent) => void
     ) {
         if (!snapshot || !snapshot.key || !snapshot.val()) return;
-        const component = createFirebaseDataComponent(snapshot.key, snapshot.val());
+        const component = schema.createFirebaseDataComponent(snapshot.key, snapshot.val());
         callback(component);
     }
 
-    updateComponent(sessionId: string, data: FirebaseDataComponent) {
+    updateComponent(sessionId: string, data: schema.FirebaseDataComponent) {
         set(
             ref(
                 this.firebaseManager.getDb(),
@@ -41,7 +41,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     subscribeToComponent(
         sessionId: string,
         componentId: string,
-        callback: (newData: FirebaseDataComponent) => void
+        callback: (newData: schema.FirebaseDataComponent) => void
     ) {
         onValue(
             ref(
@@ -72,7 +72,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    registerComponentCreatedListener(sessionId: string, callback: (data: FirebaseDataComponent) => void) {
+    registerComponentCreatedListener(sessionId: string, callback: (data: schema.FirebaseDataComponent) => void) {
         onChildAdded(
             ref(
                 this.firebaseManager.getDb(),
@@ -109,17 +109,17 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             } else {
                 console.log("No data available");
             }
-        }).catch((error) => {
+        }).catch((error: Error) => {
             console.error(error);
         });
     }
 
-    async getComponentsOnce(sessionId: string): Promise<FirebaseDataComponent[]> {
+    async getComponentsOnce(sessionId: string): Promise<schema.FirebaseDataComponent[]> {
         function makeComponentsFromSnapshot(snap: DataSnapshot) {
             if (!snap.exists()) return [];
             const components = snap.val();
             return Object.keys(components).map(
-                (k: string) => createFirebaseDataComponent(k, components[k])
+                (k: string) => schema.createFirebaseDataComponent(k, components[k])
             );
         }
 

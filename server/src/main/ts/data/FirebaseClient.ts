@@ -1,4 +1,3 @@
-import { FirebaseDataComponent } from "database/build/data/FirebaseComponentModel";
 import { FirebaseComponentModel, FirebaseSchema } from "database/build/export";
 import { initializeApp } from "firebase/app";
 import { connectDatabaseEmulator, Database, getDatabase, ref, get } from "firebase/database";
@@ -21,7 +20,7 @@ export class FirebaseClient {
         }
     }
 
-    async getComponents(sessionId: string): Promise<FirebaseDataComponent[]> {
+    async getComponents(sessionId: string): Promise<FirebaseComponentModel.FirebaseDataComponent[]> {
         const components = await get(
             ref(
                 this.db,

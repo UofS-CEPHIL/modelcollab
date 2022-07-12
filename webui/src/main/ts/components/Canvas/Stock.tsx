@@ -1,8 +1,8 @@
 import TextField from '@mui/material/TextField';
 import React, { FC, useState } from 'react';
 
-import { FirebaseDataComponent, StockFirebaseComponent } from 'database/build/data/FirebaseComponentModel';
-import { FirebaseDataModel } from 'database/build/data/FirebaseDataModel';
+import { FirebaseComponentModel as datamodel } from 'database/build/export';
+import FirebaseDataModel from '../../data/FirebaseDataModel';
 
 export const WIDTH_PX = 20;
 export const HEIGHT_PX = 20;
@@ -16,14 +16,14 @@ export interface Props {
     sessionId: string;
     firebaseDataModel: FirebaseDataModel;
     text: string;
-    draggable:boolean;
+    draggable: boolean;
     color: string;
 }
 
 const Stock: FC<Props> = (props) => {
 
-    const [sharedState, setSharedState] = useState<StockFirebaseComponent>(
-        new StockFirebaseComponent(props.componentId, {
+    const [sharedState, setSharedState] = useState<datamodel.StockFirebaseComponent>(
+        new datamodel.StockFirebaseComponent(props.componentId, {
             x: props.initx,
             y: props.inity,
             text: props.text,
@@ -35,7 +35,7 @@ const Stock: FC<Props> = (props) => {
     const onDrag: React.DragEventHandler = (event: React.DragEvent) => {
         if (event.clientX > -1 && event.clientY > -1) {
             const newData = { ...sharedState.getData(), x: event.clientX, y: event.clientY };
-            const newState: StockFirebaseComponent = sharedState.withData(newData);
+            const newState: datamodel.StockFirebaseComponent = sharedState.withData(newData);
             setSharedState(newState);
             props.firebaseDataModel.updateComponent(props.sessionId, newState);
         }
@@ -47,7 +47,7 @@ const Stock: FC<Props> = (props) => {
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newData = { ...sharedState.getData(), text: event.target.value };
-        const newState: StockFirebaseComponent = sharedState.withData(newData);
+        const newState: datamodel.StockFirebaseComponent = sharedState.withData(newData);
         setSharedState(newState);
         props.firebaseDataModel.updateComponent(props.sessionId, newState);
     };
@@ -59,9 +59,9 @@ const Stock: FC<Props> = (props) => {
     props.firebaseDataModel.subscribeToComponent(
         props.sessionId,
         props.componentId,
-        (data: FirebaseDataComponent) => {
+        (data: datamodel.FirebaseDataComponent) => {
             if (!sharedState.equals(data))
-                setSharedState(data as StockFirebaseComponent);
+                setSharedState(data as datamodel.StockFirebaseComponent);
         }
     );
 

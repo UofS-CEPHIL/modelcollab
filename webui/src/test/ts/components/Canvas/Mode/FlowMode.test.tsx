@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from "@testing-library/react";
 import FlowMode, { Props } from "../../../../../main/ts/components/Canvas/Mode/FlowMode";
-import { FlowFirebaseComponent, StockFirebaseComponent } from '../../../../../main/ts/data/FirebaseComponentModel';
+import { FirebaseComponentModel as schema } from 'database/build/export';
 import { DataContainer } from '../../../../../main/ts/data/DataContainer';
 import FirebaseDataModel from '../../../../../main/ts/data/FirebaseDataModel';
 
@@ -63,24 +63,26 @@ describe("<FlowMode />", () => {
         };
 
         const { findByTestId } = renderFlowMode(
-            { data: new DataContainer([], 
-                [new StockFirebaseComponent(
+            {
+                data: new DataContainer([],
+                    [new schema.StockFirebaseComponent(
                         TEST_STOCK_COMPONENT_ID,
                         { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
+                    ),
+                    new schema.StockFirebaseComponent(
                         TEST_STOCK2_COMPONENT_ID,
                         { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                ],
-                []), 
-            firebaseDataModel,
-            selected: [TEST_STOCK_COMPONENT_ID] });
+                    ),
+                    ],
+                    []),
+                firebaseDataModel,
+                selected: [TEST_STOCK_COMPONENT_ID]
+            });
 
         const flowMode = await findByTestId("flowMode-div");
-    
-        fireEvent.click(flowMode, { target: { className: "Mui_Stock", id: TEST_STOCK2_COMPONENT_ID }});
-        expect(setStateMock).toBeCalledWith([TEST_STOCK_COMPONENT_ID,TEST_STOCK2_COMPONENT_ID]);
+
+        fireEvent.click(flowMode, { target: { className: "Mui_Stock", id: TEST_STOCK2_COMPONENT_ID } });
+        expect(setStateMock).toBeCalledWith([TEST_STOCK_COMPONENT_ID, TEST_STOCK2_COMPONENT_ID]);
         expect(updateFunction).toBeCalledTimes(1);
         jest.spyOn(React, "useState").mockRestore();
 
@@ -103,37 +105,39 @@ describe("<FlowMode />", () => {
         };
 
         const { findByTestId } = renderFlowMode(
-            { data: new DataContainer([], 
-                [new StockFirebaseComponent(
+            {
+                data: new DataContainer([],
+                    [new schema.StockFirebaseComponent(
                         TEST_STOCK_COMPONENT_ID,
                         { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
+                    ),
+                    new schema.StockFirebaseComponent(
                         TEST_STOCK2_COMPONENT_ID,
                         { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
+                    ),
+                    new schema.StockFirebaseComponent(
                         TEST_STOCK3_COMPONENT_ID,
                         { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                ],
-                [
-                new FlowFirebaseComponent(
-                    TEST_FLOW_COMPONENT_ID,
-                    { to: TEST_STOCK2_COMPONENT_ID, from: TEST_STOCK_COMPONENT_ID, dependsOn: [""], text: "", equation:"" }
                     ),
-                new FlowFirebaseComponent(
-                    TEST_FLOW2_COMPONENT_ID,
-                    { to: TEST_STOCK2_COMPONENT_ID, from: TEST_STOCK3_COMPONENT_ID, dependsOn: [""], text: "", equation:"" }
-                    )                
-                ]), 
-            firebaseDataModel,
-            selected: [TEST_STOCK_COMPONENT_ID] });
+                    ],
+                    [
+                        new schema.FlowFirebaseComponent(
+                            TEST_FLOW_COMPONENT_ID,
+                            { to: TEST_STOCK2_COMPONENT_ID, from: TEST_STOCK_COMPONENT_ID, dependsOn: [""], text: "", equation: "" }
+                        ),
+                        new schema.FlowFirebaseComponent(
+                            TEST_FLOW2_COMPONENT_ID,
+                            { to: TEST_STOCK2_COMPONENT_ID, from: TEST_STOCK3_COMPONENT_ID, dependsOn: [""], text: "", equation: "" }
+                        )
+                    ]),
+                firebaseDataModel,
+                selected: [TEST_STOCK_COMPONENT_ID]
+            });
 
         const flowMode = await findByTestId("flowMode-div");
-    
-        fireEvent.click(flowMode, { target: { className: "Mui_Stock", id: TEST_STOCK2_COMPONENT_ID }});
-        expect(setStateMock).toBeCalledWith([TEST_STOCK_COMPONENT_ID,TEST_STOCK2_COMPONENT_ID]);
+
+        fireEvent.click(flowMode, { target: { className: "Mui_Stock", id: TEST_STOCK2_COMPONENT_ID } });
+        expect(setStateMock).toBeCalledWith([TEST_STOCK_COMPONENT_ID, TEST_STOCK2_COMPONENT_ID]);
         expect(updateFunction).toBeCalledTimes(0);
         jest.spyOn(React, "useState").mockRestore();
 

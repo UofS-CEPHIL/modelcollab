@@ -5,7 +5,7 @@ import Flow from "../Flow";
 import "./Styles.css"
 import Stock, { DEFAULT_COLOR, SELECTED_COLOR } from "../Stock";
 import EditBox from "../EditBox";
-import {FirebaseDataComponent } from "../../../data/FirebaseComponentModel";
+import { FirebaseComponentModel as schema } from "database/build/export";
 
 export interface Props {
     data: DataContainer;
@@ -15,8 +15,8 @@ export interface Props {
 
 
 const EditMode: FC<Props> = (props: Props) => {
-   
-    const [selected, setSelected] = React.useState<FirebaseDataComponent | null>(null);
+
+    const [selected, setSelected] = React.useState<schema.FirebaseDataComponent | null>(null);
     const [open, setOpen] = React.useState<boolean>(false)
 
     const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
@@ -25,23 +25,23 @@ const EditMode: FC<Props> = (props: Props) => {
     }
 
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
-        if ( (event.target as Element).classList.toString() === "Flow-svg" ) {
+        if ((event.target as Element).classList.toString() === "Flow-svg") {
             const flow = props.data.getFlows().find(flow => flow.getId() === (event.target as Element).id);
-            if (flow){
+            if (flow) {
                 setSelected(flow);
                 setOpen(true)
             }
         }
-        else if ( typeof ((event.target as Element).className) === "string" 
-                  && (event.target as Element).className.split(" ").find(item => ["Mui_Stock"].indexOf(item) > -1)){
+        else if (typeof ((event.target as Element).className) === "string"
+            && (event.target as Element).className.split(" ").find(item => ["Mui_Stock"].indexOf(item) > -1)) {
             const stock = props.data.getStocks().find(stock => stock.getId() === (event.target as Element).id);
-            if (stock){
+            if (stock) {
                 setSelected(stock);
                 setOpen(true);
             }
         }
     }
-    
+
 
     return (
         <div
@@ -55,22 +55,22 @@ const EditMode: FC<Props> = (props: Props) => {
                 return (
                     <div key={i}>
                         <Flow
-                                componentId = {flow.getId()}
-                                sessionId = {props.sessionId}
-                                text = {flow.getData().text}
-                                from = {flow.getData().from}
-                                to = {flow.getData().to}
-                                equation = {flow.getData().equation}      
-                                dependsOn = {flow.getData().dependsOn} 
-                                firebaseDataModel = {props.firebaseDataModel}
-                            />
+                            componentId={flow.getId()}
+                            sessionId={props.sessionId}
+                            text={flow.getData().text}
+                            from={flow.getData().from}
+                            to={flow.getData().to}
+                            equation={flow.getData().equation}
+                            dependsOn={flow.getData().dependsOn}
+                            firebaseDataModel={props.firebaseDataModel}
+                        />
                     </div>
                 )
             })}
 
             {props.data.getStocks().map((stock, i) => {
                 return (
-                     (selected && selected.getId() === stock.getId()) 
+                    (selected && selected.getId() === stock.getId())
                         ? <div key={i}>
                             <Stock
                                 initx={stock.getData().x}
@@ -97,13 +97,13 @@ const EditMode: FC<Props> = (props: Props) => {
                         </div>
                 )
             })}
-            { (open && selected)
-            && <EditBox 
+            {(open && selected)
+                && <EditBox
                     setOpen={setOpen}
-                    open = {open}
-                    component = {selected}
-                    sessionId = {props.sessionId}
-                    firebaseDataModel = {props.firebaseDataModel}
+                    open={open}
+                    component={selected}
+                    sessionId={props.sessionId}
+                    firebaseDataModel={props.firebaseDataModel}
                 />}
         </div>
     )

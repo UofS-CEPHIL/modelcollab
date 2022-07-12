@@ -17,6 +17,7 @@
     "@types/node": "^16.11.35",
     "firebase": "^9.8.1",
     "jest": "^28.1.0",
+    "rollup": "^2.76.0",
     "ts-jest": "^28.0.2",
     "typescript": "^4.6.4"
   },

@@ -1,28 +1,23 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import FirebaseManager from "database/build/FirebaseManager";
-
+import FirebaseManager from "./FirebaseManager";
 import LoginScreen from "./components/screens/LoginScreen";
 import SimulationScreen from "./components/screens/SimulationScreen";
 
+const firebaseManager = new FirebaseManager();
+
 function App() {
-    const [firebaseManager, setFirebaseManager] = useState<FirebaseManager | null>(null);
     const [isSignedIn, setIsSignedIn] = useState<boolean>(false);
+    console.log("register authcallback")
+    firebaseManager.registerAuthChangedCallback(
+        b => {
+            setIsSignedIn(b);
+            console.log("authcallback " + b)
+        }
+    );
 
-    useEffect(() => {
-        FirebaseManager.create().then((mgr: FirebaseManager) => {
-            setFirebaseManager(mgr);
-            mgr.registerAuthChangedCallback(setIsSignedIn);
-        });
-    }, []);
-
-    if (!firebaseManager) {
-        return (
-            <div />
-        );
-    }
-    else if (!isSignedIn) {
+    if (!isSignedIn) {
         return (
             <Router>
                 <Routes>

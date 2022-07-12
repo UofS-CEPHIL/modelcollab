@@ -1,8 +1,8 @@
-import {fireEvent, render} from "@testing-library/react";
-import Flow, {Props} from "../../../../main/ts/components/Canvas/Flow";
+import { fireEvent, render } from "@testing-library/react";
+import Flow, { Props } from "../../../../main/ts/components/Canvas/Flow";
 import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
 import { act } from 'react-dom/test-utils';
-import { StockFirebaseComponent,FlowFirebaseComponent } from '../../../../main/ts/data/FirebaseComponentModel';
+import { FirebaseComponentModel as schema } from 'database/build/export';
 
 const TEST_COMPONENT_ID: string = "1";
 const TEST_SESSION_ID: string = "0";
@@ -43,30 +43,30 @@ function renderFlow(props: Partial<Props> = {}) {
 
 describe("<Flow />", () => {
     test("Should display Flow with default settings", async () => {
-        const {findByTestId} = renderFlow();
+        const { findByTestId } = renderFlow();
 
         const flowSVG = await findByTestId("flow-svg");
         const flowLINE = await findByTestId("flow-line");
         const flowARROWHEAD = await findByTestId("flow-arrowhead");
         const flowTextDiv = await findByTestId("flow-text-div");
-  
+
         expect(flowSVG).toHaveStyle({
-            backgroundColor: "transparent",            
+            backgroundColor: "transparent",
         });
 
-        expect(flowSVG).toHaveAttribute("width","0");
-        expect(flowSVG).toHaveAttribute("height","0");
+        expect(flowSVG).toHaveAttribute("width", "0");
+        expect(flowSVG).toHaveAttribute("height", "0");
 
-        expect(flowLINE).toHaveAttribute("stroke","#aaa");
+        expect(flowLINE).toHaveAttribute("stroke", "#aaa");
         expect(flowLINE).toHaveAttribute("x1", "0");
         expect(flowLINE).toHaveAttribute("y1", "0");
         expect(flowLINE).toHaveAttribute("x2", "0");
         expect(flowLINE).toHaveAttribute("y2", "0");
 
-        expect(flowARROWHEAD).toHaveAttribute("markerWidth","10");
-        expect(flowARROWHEAD).toHaveAttribute("markerHeight","10");
-        expect(flowARROWHEAD).toHaveAttribute("refX","0");
-        expect(flowARROWHEAD).toHaveAttribute("refY","3");
+        expect(flowARROWHEAD).toHaveAttribute("markerWidth", "10");
+        expect(flowARROWHEAD).toHaveAttribute("markerHeight", "10");
+        expect(flowARROWHEAD).toHaveAttribute("refX", "0");
+        expect(flowARROWHEAD).toHaveAttribute("refY", "3");
 
         expect(flowTextDiv).toHaveStyle({
             position: "absolute",
@@ -99,15 +99,15 @@ describe("<Flow />", () => {
             registerComponentRemovedListener: () => { }
 
         };
-        
-        const { findByTestId } = renderFlow( { firebaseDataModel: firebaseDataModel });
+
+        const { findByTestId } = renderFlow({ firebaseDataModel: firebaseDataModel });
         const flowLINE = await findByTestId("flow-line");
         const flowSVG = await findByTestId("flow-svg");
         const flowTextDiv = await findByTestId("flow-text-div");
 
-        act( () => 
+        act(() =>
             subFunction.mock.lastCall[2](
-                new StockFirebaseComponent(
+                new schema.StockFirebaseComponent(
                     TEST_COMPONENT_FROM_ID,
                     { x: TEST_X1_VALUE, y: TEST_Y1_VALUE, text: "", initvalue: "" }
                 )
@@ -119,22 +119,22 @@ describe("<Flow />", () => {
         expect(flowLINE).toHaveAttribute("x2", "7");
         expect(flowLINE).toHaveAttribute("y2", "7");
 
-        expect(flowSVG).toHaveAttribute("width","114");
-        expect(flowSVG).toHaveAttribute("height","214");
+        expect(flowSVG).toHaveAttribute("width", "114");
+        expect(flowSVG).toHaveAttribute("height", "214");
 
         expect(flowSVG).toHaveStyle(
-            {"transform": "translate(-7px, -7px)"});
+            { "transform": "translate(-7px, -7px)" });
 
-        
+
         expect(flowTextDiv).toHaveStyle({
-                position: "absolute",
-                left: "50px",
-                top: "100px",
+            position: "absolute",
+            left: "50px",
+            top: "100px",
         });
 
-        act( () => 
+        act(() =>
             subFunction.mock.lastCall[2](
-                new StockFirebaseComponent(
+                new schema.StockFirebaseComponent(
                     TEST_COMPONENT_TO_ID,
                     { x: TEST_X2_VALUE, y: TEST_Y2_VALUE, text: "", initvalue: "" }
                 )
@@ -146,10 +146,10 @@ describe("<Flow />", () => {
         expect(flowLINE).toHaveAttribute("x1", "7");
         expect(flowLINE).toHaveAttribute("y1", "62");
 
-        expect(flowSVG).toHaveAttribute("width","489");
-        expect(flowSVG).toHaveAttribute("height","69");
+        expect(flowSVG).toHaveAttribute("width", "489");
+        expect(flowSVG).toHaveAttribute("height", "69");
         expect(flowSVG).toHaveStyle(
-            {"transform": "translate(93px, 138px)"}
+            { "transform": "translate(93px, 138px)" }
         );
 
         expect(flowTextDiv).toHaveStyle({
@@ -158,7 +158,7 @@ describe("<Flow />", () => {
             top: "149.5px",
         });
 
-    })
+    });
 
     test("Should update text when database updates", async () => {
         const subFunction = jest.fn();
@@ -174,13 +174,15 @@ describe("<Flow />", () => {
 
         act(() =>
             subFunction.mock.lastCall[2](
-                new FlowFirebaseComponent(
+                new schema.FlowFirebaseComponent(
                     TEST_COMPONENT_ID,
-                    { from: TEST_COMPONENT_FROM_ID, 
-                       to : TEST_COMPONENT_TO_ID,
-                       text: TEST_TEXT, 
-                       equation: "",
-                       dependsOn: []}
+                    {
+                        from: TEST_COMPONENT_FROM_ID,
+                        to: TEST_COMPONENT_TO_ID,
+                        text: TEST_TEXT,
+                        equation: "",
+                        dependsOn: []
+                    }
                 )
             )
         );
@@ -203,4 +205,4 @@ describe("<Flow />", () => {
         expect(updateFunction).toHaveBeenCalled();
     });
 
-})
+});

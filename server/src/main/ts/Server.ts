@@ -5,11 +5,8 @@ import ComputeModelTask from "./ComputeModelTask";
 import applicationConfig from "./config/applicationConfig";
 import firebaseConfig from "./FirebaseConfig";
 
-import { initializeApp } from "firebase/app";
-import { connectDatabaseEmulator, getDatabase, onValue, ref, set } from "firebase/database";
 import { FirebaseClient } from "./data/FirebaseClient";
-import { FirebaseDataComponent, createFirebaseDataComponent } from "database/build/data/FirebaseComponentModel";
-import { FirebaseComponentModel } from "database/build/export";
+import { FirebaseComponentModel as data } from "database/build/export";
 
 class Server {
 
@@ -38,11 +35,7 @@ class Server {
     }
 
     private async computeModel(sessionId: string, res: Response): Promise<void> {
-        console.log("computeModel");
-        const components: FirebaseDataComponent[] = await this.fbClient.getComponents(sessionId);
-        console.log(components);
-
-        // TODO hook this the rest of the way up and try it out after stuffing the database with data
+        const components: data.FirebaseDataComponent[] = await this.fbClient.getComponents(sessionId);
 
         new ComputeModelTask(components).start();
 

@@ -1,10 +1,6 @@
 import { render, fireEvent } from "@testing-library/react";
 
-<<<<<<< HEAD
-import { UiMode } from "../../../../main/ts/components/Canvas/UiMode";
-=======
-import { UiMode } from "../../../../main/ts/components/Canvas/Mode/Mode";
->>>>>>> Long-branch
+import { UiMode } from "../../../../main/ts/components/Canvas/Mode/UiMode";
 import Toolbar, { Props } from "../../../../main/ts/components/Toolbar/Toolbar";
 
 function renderToolbar(props: Partial<Props> = {}) {
@@ -38,7 +34,7 @@ describe("<Toolbar />", () => {
 
         fireEvent.click(tab, { target: { textContent: "Move" } });
         expect(setMode).toBeCalledWith(UiMode.MOVE);
-    })
+    });
 
     test("Should set to CREATE, when Create mode is selected", async () => {
         const setMode = jest.fn();
@@ -50,7 +46,7 @@ describe("<Toolbar />", () => {
 
         fireEvent.click(tab, { target: { textContent: "Create" } })
         expect(setMode).toBeCalledWith(UiMode.CREATE);
-    })
+    });
 
     test("Should set to DELETE, when Delete mode is selected", async () => {
         const setMode = jest.fn();
@@ -62,7 +58,7 @@ describe("<Toolbar />", () => {
 
         fireEvent.click(tab, { target: { textContent: "Delete" } })
         expect(setMode).toBeCalledWith(UiMode.DELETE)
-    })
+    });
 
     test("Should set Flow, when Flow mode is selected", async () => {
         const setMode = jest.fn();
@@ -74,7 +70,7 @@ describe("<Toolbar />", () => {
 
         fireEvent.click(tab, { target: { textContent: "Flow" } })
         expect(setMode).toBeCalledWith(UiMode.FLOW)
-    })
+    });
 
     test("Should set Edit, when Edit mode is selected", async () => {
         const setMode = jest.fn();
@@ -86,6 +82,6 @@ describe("<Toolbar />", () => {
 
         fireEvent.click(tab, { target: { textContent: "Edit" } })
         expect(setMode).toBeCalledWith(UiMode.EDIT)
-    })
- 
-})
+    });
+
+});

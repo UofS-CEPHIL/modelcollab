@@ -1,45 +1,49 @@
-import { FlowFirebaseComponent, StockFirebaseComponent } from "./FirebaseComponentModel";
+import { FirebaseComponentModel as schema } from "database/build/export";
 
-export class DataContainer{
-    private stocks: StockFirebaseComponent[];
-    private flows: FlowFirebaseComponent[];
+export class DataContainer {
+    private stocks: schema.StockFirebaseComponent[];
+    private flows: schema.FlowFirebaseComponent[];
     private IDs: string[];
 
-    constructor(IDs: string[]=[],stocks: StockFirebaseComponent[]=[], flows: FlowFirebaseComponent[]=[] ){
+    constructor(
+        IDs: string[] = [],
+        stocks: schema.StockFirebaseComponent[] = [],
+        flows: schema.FlowFirebaseComponent[] = []
+    ) {
         this.IDs = IDs;
         this.stocks = stocks;
         this.flows = flows;
     }
 
-    public getIDs(): string[]{
+    public getIDs(): string[] {
         return this.IDs;
     }
 
-    public setIDs(IDs: string[]){
+    public setIDs(IDs: string[]) {
         this.IDs = IDs;
     }
 
-    public getStocks(): StockFirebaseComponent[]{
+    public getStocks(): schema.StockFirebaseComponent[] {
         return this.stocks;
     }
 
-    public getFlows(): FlowFirebaseComponent[]{
+    public getFlows(): schema.FlowFirebaseComponent[] {
         return this.flows;
     }
 
-    public setStocks(newStocks: StockFirebaseComponent[]): void {
+    public setStocks(newStocks: schema.StockFirebaseComponent[]): void {
         this.stocks = newStocks;
-    } 
+    }
 
-    public setFlows(newFlows: FlowFirebaseComponent[]){
+    public setFlows(newFlows: schema.FlowFirebaseComponent[]) {
         this.flows = newFlows
     }
 
-    public withStocks(newStocks: StockFirebaseComponent[]): DataContainer {
+    public withStocks(newStocks: schema.StockFirebaseComponent[]): DataContainer {
         return new DataContainer(this.getIDs(), newStocks, this.getFlows())
     }
 
-    public withFlows(newFlows: FlowFirebaseComponent[]): DataContainer {
+    public withFlows(newFlows: schema.FlowFirebaseComponent[]): DataContainer {
         return new DataContainer(this.getIDs(), this.getStocks(), newFlows)
     }
 }   

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from "@testing-library/react";
 import MoveMode, { Props } from "../../../../../main/ts/components/Canvas/Mode/MoveMode";
-import { StockFirebaseComponent } from '../../../../../main/ts/data/FirebaseComponentModel';
+import { FirebaseComponentModel as schema } from "database/build/export";
 import { DataContainer } from '../../../../../main/ts/data/DataContainer';
 
 const TEST_SESSION_ID: string = "0";
@@ -49,15 +49,17 @@ describe("<MoveMode />", () => {
         jest.spyOn(React, "useState").mockImplementation(useStateMock);
 
         const { findByTestId } = renderMoveMode(
-            { data: new DataContainer([], 
-                                      [new StockFirebaseComponent(
-                                            TEST_STOCK_COMPONENT_ID,
-                                            { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                                            ),
-                                        new StockFirebaseComponent(
-                                            TEST_STOCK2_COMPONENT_ID,
-                                            { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                                        )])});
+            {
+                data: new DataContainer([],
+                    [new schema.StockFirebaseComponent(
+                        TEST_STOCK_COMPONENT_ID,
+                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                    ),
+                    new schema.StockFirebaseComponent(
+                        TEST_STOCK2_COMPONENT_ID,
+                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                    )])
+            });
 
         const moveMode = await findByTestId("moveMode-div");
         fireEvent.click(moveMode, { target: { className: "Mui_Stock", id: "5" } });
@@ -69,6 +71,6 @@ describe("<MoveMode />", () => {
         fireEvent.click(moveMode, { target: { className: "Mui_Stock", id: TEST_STOCK2_COMPONENT_ID } });
         expect(setStateMock).toBeCalledWith(TEST_STOCK2_COMPONENT_ID);
 
-        jest.spyOn(React, "useState").mockRestore();                                        
+        jest.spyOn(React, "useState").mockRestore();
     });
 });

@@ -9,4 +9,8 @@ export default class FirebaseSchema {
         return this.makeAllComponentsForSessionPath(sessionId) + `/${componentId}`;
     }
 
+    static makeSessionIdsPath() {
+        return "/session-ids";
+    }
+
 }

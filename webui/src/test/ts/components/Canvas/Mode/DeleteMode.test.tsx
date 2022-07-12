@@ -2,7 +2,7 @@ import { render, fireEvent } from "@testing-library/react";
 import DeleteMode, { Props } from "../../../../../main/ts/components/Canvas/Mode/DeleteMode";
 import FirebaseDataModel from '../../../../../main/ts/data/FirebaseDataModel';
 import { DataContainer } from '../../../../../main/ts/data/DataContainer';
-import { FlowFirebaseComponent, StockFirebaseComponent } from "../../../../../main/ts/data/FirebaseComponentModel";
+import { FirebaseComponentModel as schema } from "database/build/export";
 
 const TEST_SESSION_ID: string = "0";
 
@@ -57,40 +57,41 @@ describe("<DeleteMode />", () => {
         };
 
         const { findByTestId } = renderDeleteMode({
-            data: new DataContainer([], 
-                [new StockFirebaseComponent(
-                        TEST_STOCK_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
-                        TEST_STOCK2_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
-                        TEST_STOCK3_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        )
+            data: new DataContainer([],
+                [new schema.StockFirebaseComponent(
+                    TEST_STOCK_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                ),
+                new schema.StockFirebaseComponent(
+                    TEST_STOCK2_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                ),
+                new schema.StockFirebaseComponent(
+                    TEST_STOCK3_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                )
                 ],
-                [new FlowFirebaseComponent(
-                        TEST_FLOW_COMPONENT_ID,
-                        { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation:"" }
-                        ),
-                new FlowFirebaseComponent(
-                        TEST_FLOW2_COMPONENT_ID,
-                        { to: TEST_STOCK2_COMPONENT_ID, from: TEST_STOCK3_COMPONENT_ID, dependsOn: [""], text: "", equation:"" }
-                        )
+                [new schema.FlowFirebaseComponent(
+                    TEST_FLOW_COMPONENT_ID,
+                    { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation: "" }
+                ),
+                new schema.FlowFirebaseComponent(
+                    TEST_FLOW2_COMPONENT_ID,
+                    { to: TEST_STOCK2_COMPONENT_ID, from: TEST_STOCK3_COMPONENT_ID, dependsOn: [""], text: "", equation: "" }
+                )
                 ]),
-            firebaseDataModel: firebaseDataModel});
-        
+            firebaseDataModel: firebaseDataModel
+        });
+
         const deleteMode = await findByTestId("deleteMode-div");
 
-        fireEvent.click(deleteMode, { target: { classList: "Flow-svg", id: TEST_FLOW_COMPONENT_ID} });     
+        fireEvent.click(deleteMode, { target: { classList: "Flow-svg", id: TEST_FLOW_COMPONENT_ID } });
         expect(removeFunction).toHaveBeenCalledTimes(1);
-        expect(removeFunction).toHaveBeenCalledWith("0",TEST_FLOW_COMPONENT_ID);
-        
-        fireEvent.click(deleteMode, { target: { classList: "Flow-svg", id: TEST_FLOW2_COMPONENT_ID} });
+        expect(removeFunction).toHaveBeenCalledWith("0", TEST_FLOW_COMPONENT_ID);
+
+        fireEvent.click(deleteMode, { target: { classList: "Flow-svg", id: TEST_FLOW2_COMPONENT_ID } });
         expect(removeFunction).toHaveBeenCalledTimes(2);
-        expect(removeFunction).toHaveBeenCalledWith("0",TEST_FLOW2_COMPONENT_ID);
+        expect(removeFunction).toHaveBeenCalledWith("0", TEST_FLOW2_COMPONENT_ID);
 
     });
 
@@ -105,40 +106,41 @@ describe("<DeleteMode />", () => {
         };
 
         const { findByTestId } = renderDeleteMode({
-            data: new DataContainer([], 
-                [new StockFirebaseComponent(
-                        TEST_STOCK_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
-                        TEST_STOCK2_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
-                        TEST_STOCK3_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
-                        TEST_STOCK4_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
+            data: new DataContainer([],
+                [new schema.StockFirebaseComponent(
+                    TEST_STOCK_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                ),
+                new schema.StockFirebaseComponent(
+                    TEST_STOCK2_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                ),
+                new schema.StockFirebaseComponent(
+                    TEST_STOCK3_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                ),
+                new schema.StockFirebaseComponent(
+                    TEST_STOCK4_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                ),
                 ],
-                [new FlowFirebaseComponent(
-                        TEST_FLOW_COMPONENT_ID,
-                        { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation:"" }
-                        ),
+                [new schema.FlowFirebaseComponent(
+                    TEST_FLOW_COMPONENT_ID,
+                    { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation: "" }
+                ),
                 ]),
-            firebaseDataModel: firebaseDataModel});
-        
+            firebaseDataModel: firebaseDataModel
+        });
+
         const deleteMode = await findByTestId("deleteMode-div");
-        
+
         fireEvent.click(deleteMode, { target: { className: "Mui_Stock", id: TEST_STOCK3_COMPONENT_ID } });
         expect(removeFunction).toHaveBeenCalledTimes(1);
-        expect(removeFunction).toHaveBeenCalledWith("0",TEST_STOCK3_COMPONENT_ID);
+        expect(removeFunction).toHaveBeenCalledWith("0", TEST_STOCK3_COMPONENT_ID);
 
         fireEvent.click(deleteMode, { target: { className: "Mui_Stock", id: TEST_STOCK4_COMPONENT_ID } });
         expect(removeFunction).toHaveBeenCalledTimes(2);
-        expect(removeFunction).toHaveBeenCalledWith("0",TEST_STOCK4_COMPONENT_ID);
+        expect(removeFunction).toHaveBeenCalledWith("0", TEST_STOCK4_COMPONENT_ID);
 
     });
 
@@ -153,46 +155,47 @@ describe("<DeleteMode />", () => {
         };
 
         const { findByTestId } = renderDeleteMode({
-            data: new DataContainer([], 
-                [new StockFirebaseComponent(
-                        TEST_STOCK_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
-                        TEST_STOCK2_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
-                        TEST_STOCK3_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
-                new StockFirebaseComponent(
-                        TEST_STOCK4_COMPONENT_ID,
-                        { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
-                        ),
+            data: new DataContainer([],
+                [new schema.StockFirebaseComponent(
+                    TEST_STOCK_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                ),
+                new schema.StockFirebaseComponent(
+                    TEST_STOCK2_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                ),
+                new schema.StockFirebaseComponent(
+                    TEST_STOCK3_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                ),
+                new schema.StockFirebaseComponent(
+                    TEST_STOCK4_COMPONENT_ID,
+                    { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" }
+                ),
                 ],
-                [new FlowFirebaseComponent(
-                        TEST_FLOW_COMPONENT_ID,
-                        { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation:"" }
-                        ),
-                new FlowFirebaseComponent(
-                        TEST_FLOW2_COMPONENT_ID,
-                        { to: TEST_STOCK2_COMPONENT_ID, from: TEST_STOCK3_COMPONENT_ID, dependsOn: [""], text: "", equation:"" }
-                        ),
-                new FlowFirebaseComponent(
-                        TEST_FLOW3_COMPONENT_ID,
-                        { to: TEST_STOCK2_COMPONENT_ID, from: TEST_STOCK4_COMPONENT_ID, dependsOn: [""], text: "", equation:"" }
-                        )
+                [new schema.FlowFirebaseComponent(
+                    TEST_FLOW_COMPONENT_ID,
+                    { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation: "" }
+                ),
+                new schema.FlowFirebaseComponent(
+                    TEST_FLOW2_COMPONENT_ID,
+                    { to: TEST_STOCK2_COMPONENT_ID, from: TEST_STOCK3_COMPONENT_ID, dependsOn: [""], text: "", equation: "" }
+                ),
+                new schema.FlowFirebaseComponent(
+                    TEST_FLOW3_COMPONENT_ID,
+                    { to: TEST_STOCK2_COMPONENT_ID, from: TEST_STOCK4_COMPONENT_ID, dependsOn: [""], text: "", equation: "" }
+                )
                 ]),
-            firebaseDataModel: firebaseDataModel});
-        
+            firebaseDataModel: firebaseDataModel
+        });
+
         const deleteMode = await findByTestId("deleteMode-div");
-        
+
         fireEvent.click(deleteMode, { target: { className: "Mui_Stock", id: TEST_STOCK2_COMPONENT_ID } });
         expect(removeFunction).toHaveBeenCalledTimes(4);
-        expect(removeFunction).toHaveBeenCalledWith("0",TEST_STOCK2_COMPONENT_ID);
-        expect(removeFunction).toHaveBeenCalledWith("0",TEST_FLOW_COMPONENT_ID);
-        expect(removeFunction).toHaveBeenCalledWith("0",TEST_FLOW2_COMPONENT_ID);
-        expect(removeFunction).toHaveBeenCalledWith("0",TEST_FLOW3_COMPONENT_ID);
+        expect(removeFunction).toHaveBeenCalledWith("0", TEST_STOCK2_COMPONENT_ID);
+        expect(removeFunction).toHaveBeenCalledWith("0", TEST_FLOW_COMPONENT_ID);
+        expect(removeFunction).toHaveBeenCalledWith("0", TEST_FLOW2_COMPONENT_ID);
+        expect(removeFunction).toHaveBeenCalledWith("0", TEST_FLOW3_COMPONENT_ID);
     });
 });
