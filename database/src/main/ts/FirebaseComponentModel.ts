@@ -160,7 +160,10 @@ export class StockFirebaseComponent extends FirebaseDataComponent {
 
     dataEquals(other: any) {
         const d = this.getData();
-        return other.x == d.x && other.y == d.y && other.text == d.text && other.initvalue == d.initvalue;
+        return other.getData().x == d.x && 
+               other.getData().y == d.y && 
+               other.getData().text == d.text && 
+               other.getData().initvalue == d.initvalue;
     }
 
     withData(d: StockComponentData): StockFirebaseComponent {
@@ -209,12 +212,11 @@ export class FlowFirebaseComponent extends FirebaseDataComponent {
         const d = this.getData();
         const dependEquals: boolean = true;
 
-
         return dependEquals
-            && other.from == d.from
-            && other.to == d.to
-            && other.equation == d.equation
-            && other.text == d.text;
+            && other.getData().from === d.from
+            && other.getData().to === d.to
+            && other.getData().equation === d.equation
+            && other.getData().text === d.text;
     }
 
     withData(d: FlowComponentData) {

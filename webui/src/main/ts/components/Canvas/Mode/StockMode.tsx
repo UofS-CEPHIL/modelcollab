@@ -30,13 +30,13 @@ const CreateMode: FC<Props> = (props: Props) => {
             { text: "", x: event.clientX, y: event.clientY, initvalue: "" }
         );
         props.firebaseDataModel.updateComponent(props.sessionId, newStock);
-
+        
     }
     return (
         <div
             className="draggable_container"
             onDragOver={onDragOver}
-            data-testid="createMode-div"
+            data-testid="stockMode-div"
             style={{ "width": "100%", "height": "1000px" }}
             onClick={onClick}
         >
@@ -44,33 +44,33 @@ const CreateMode: FC<Props> = (props: Props) => {
                 return (
                     <div key={i}>
                         <Flow
-                            componentId={flow.getId()}
-                            sessionId={props.sessionId}
-                            text={flow.getData().text}
-                            from={flow.getData().from}
-                            to={flow.getData().to}
-                            equation={flow.getData().equation}
-                            dependsOn={flow.getData().dependsOn}
-                            firebaseDataModel={props.firebaseDataModel}
-                        />
+                                componentId = {flow.getId()}
+                                sessionId = {props.sessionId}
+                                text = {flow.getData().text}
+                                from = {flow.getData().from}
+                                to = {flow.getData().to}
+                                equation = {flow.getData().equation}      
+                                dependsOn = {flow.getData().dependsOn} 
+                                firebaseDataModel = {props.firebaseDataModel}
+                            />
                     </div>
                 )
             })}
 
             {props.data.getStocks().map((stock, i) => {
-                return (
-                    <div key={i}>
-                        <Stock
-                            initx={stock.getData().x}
-                            inity={stock.getData().y}
-                            sessionId={props.sessionId}
-                            componentId={stock.getId()}
-                            color={DEFAULT_COLOR}
-                            draggable={false}
-                            text={stock.getData().text}
-                            firebaseDataModel={props.firebaseDataModel}
-                        />
-                    </div>
+                return ( 
+                        <div key={i}>
+                            <Stock
+                                initx={stock.getData().x}
+                                inity={stock.getData().y}
+                                sessionId={props.sessionId}
+                                componentId={stock.getId()}
+                                color={DEFAULT_COLOR}
+                                draggable={false}
+                                text={stock.getData().text}
+                                firebaseDataModel={props.firebaseDataModel}
+                            />
+                        </div>
                 )
             })}
         </div>

@@ -77,12 +77,9 @@ const Flow: FC<Props> = (props) => {
 
     const triggerCallback = (data: schema.FirebaseDataComponent): void => {
 
-        console.log("callback");
         if (data && data.getType() === schema.ComponentType.STOCK) {
             const stock = data as schema.StockFirebaseComponent;
-            console.log("stock");
             if (stock.getId() === props.from && (stock.getData().x !== sharedState.startPoint.x || stock.getData().y !== sharedState.startPoint.y)) {
-                console.log(`from: ${stock.getData()} - sharedState = ${sharedState}`);
                 const newStart: Point = { x: stock.getData().x, y: stock.getData().y };
 
                 const { p1, p4, canvasWidth, canvasHeight, canvasXOffset, canvasYOffset, dx, dy } = arrow.calculateArrowComponent(newStart, sharedState.endPoint, BOUNDING_BOX_ELEMENT_BUFFER)
@@ -103,7 +100,6 @@ const Flow: FC<Props> = (props) => {
             }
 
             else if (stock.getId() === props.to && (stock.getData().x !== sharedState.endPoint.x || stock.getData().y !== sharedState.endPoint.y)) {
-                console.log(`to: ${stock.getData()} - sharedState = ${sharedState}`);
                 const newEnd: Point = { x: stock.getData().x, y: stock.getData().y };
 
                 const { p1, p4, canvasWidth, canvasHeight, canvasXOffset, canvasYOffset, dx, dy } = arrow.calculateArrowComponent(sharedState.startPoint, newEnd, BOUNDING_BOX_ELEMENT_BUFFER)
@@ -125,7 +121,7 @@ const Flow: FC<Props> = (props) => {
             }
         }
         else if (data && data.getType() === schema.ComponentType.FLOW) {
-            console.log(`flow: ${data.getData()}`);
+            // console.log(`flow: ${data.getData()}`);
             if (!sharedState.flow.equals(data)) {
                 setSharedState({ ...sharedState, flow: data as schema.FlowFirebaseComponent });
             }
@@ -186,8 +182,6 @@ const Flow: FC<Props> = (props) => {
                     x2={sharedState.calculatedEndPoint.x}
                     y2={sharedState.calculatedEndPoint.y}
                 />
-
-
 
             </svg>
 

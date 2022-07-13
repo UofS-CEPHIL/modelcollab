@@ -1,7 +1,14 @@
 import {Point} from "../components/Canvas/Flow"
 
+import { HEIGHT_PX, WIDTH_PX } from '../components/Canvas/Stock';
+
 //source: https://www.productboard.com/blog/how-we-implemented-svg-arrows-in-react-the-curvature-2-3/
 export class ArrowUtils {
+
+    linearEquation(coefficient:number,x :number, constant: number = 0){
+        return Math.abs((coefficient*x + constant))
+    }
+
     calculateDeltas = (startPoint: Point, endPoint: Point): {dx: number, dy: number, absDx: number, absDy: number} => {
        
         const dx = endPoint.x - startPoint.x;
@@ -93,12 +100,54 @@ export class ArrowUtils {
 
     calculateArrowComponent = (startPoint: Point, endPoint: Point, boundingBoxElementBuffer: number): 
     {p1: Point, p4: Point, canvasWidth: number, canvasHeight: number, canvasXOffset: number, canvasYOffset: number, dy: number, dx: number } => {
-        
-        const {dy, dx, absDy, absDx} = this.calculateDeltas(startPoint, endPoint);
+           
+        let localEndPoint: Point;
+        const startCenterPoint: Point = {x : startPoint.x + (WIDTH_PX/2), y: startPoint.y + (HEIGHT_PX/2) }
+
+        // const startCenterPoint: Point = {x : startPoint.x , y: startPoint.y  }
+        // console.log(startPoint,endPoint)
+        if ( ((startPoint.x >= endPoint.x && startPoint.x <= (endPoint.x + WIDTH_PX)) || (startPoint.x + WIDTH_PX >= endPoint.x && startPoint.x + WIDTH_PX<= (endPoint.x + WIDTH_PX)) )
+            && startCenterPoint.y < endPoint.y){
+
+            localEndPoint = {x: endPoint.x + (WIDTH_PX/2), y: endPoint.y - boundingBoxElementBuffer}
+        }
+
+        else if( ((startPoint.x >= endPoint.x && startPoint.x <= (endPoint.x + WIDTH_PX)) || (startPoint.x + WIDTH_PX >= endPoint.x && startPoint.x + WIDTH_PX<= (endPoint.x + WIDTH_PX)) )
+            && startCenterPoint.y > endPoint.y){
+            localEndPoint = {x: endPoint.x + (WIDTH_PX/2), y: endPoint.y + (HEIGHT_PX) + boundingBoxElementBuffer + 15} 
+        }
+
+        else if ( ( (startPoint.y >= endPoint.y && startPoint.y <= endPoint.y + HEIGHT_PX) || (startPoint.y + HEIGHT_PX>= endPoint.y && startPoint.y +HEIGHT_PX <= endPoint.y + HEIGHT_PX) )
+            && startCenterPoint.x < endPoint.x){
+            localEndPoint = {x: endPoint.x - boundingBoxElementBuffer , y: endPoint.y + (HEIGHT_PX/2)}
+        }
+
+        else if (( (startPoint.y >= endPoint.y && startPoint.y <= endPoint.y + HEIGHT_PX) || (startPoint.y + HEIGHT_PX>= endPoint.y && startPoint.y +HEIGHT_PX <= endPoint.y + HEIGHT_PX) )
+            && startCenterPoint.x > endPoint.x){
+            localEndPoint = {x: endPoint.x + WIDTH_PX + boundingBoxElementBuffer, y: endPoint.y + (HEIGHT_PX/2)}
+        }
+
+        //special cases
+        else if (startCenterPoint.x > endPoint.x && startCenterPoint.y < endPoint.y){
+            localEndPoint = {x: endPoint.x + WIDTH_PX , y: endPoint.y - boundingBoxElementBuffer}
+        }
+
+        else if (startCenterPoint.x > endPoint.x && startCenterPoint.y > endPoint.y){
+            localEndPoint = {x: endPoint.x + WIDTH_PX + boundingBoxElementBuffer, y: endPoint.y + HEIGHT_PX}
+        }
+
+        else if (startCenterPoint.x < endPoint.x && startCenterPoint.y > endPoint.y){
+            localEndPoint = {x: endPoint.x - boundingBoxElementBuffer , y: endPoint.y + HEIGHT_PX}
+        }
+        else{
+            localEndPoint = {x: endPoint.x, y: endPoint.y - boundingBoxElementBuffer}
+        }
+
+        const {dy, dx, absDy, absDx} = this.calculateDeltas(startCenterPoint, localEndPoint);
         const {p1,p4,boundingBoxBuffer} = this.calculateControlPointsWithBuffer(boundingBoxElementBuffer, absDx, absDy, dx, dy)    
-        const { canvasWidth, canvasHeight } = this.calculateCanvasDimensions(absDx, absDy, boundingBoxBuffer);
-        const canvasXOffset = Math.min(startPoint.x, endPoint.x) - boundingBoxBuffer.horizontal; 
-        const canvasYOffset = Math.min(startPoint.y, endPoint.y) - boundingBoxBuffer.vertical;
+        const {canvasWidth, canvasHeight } = this.calculateCanvasDimensions(absDx, absDy, boundingBoxBuffer);
+        const canvasXOffset = Math.min(startCenterPoint.x, localEndPoint.x) - boundingBoxBuffer.horizontal; 
+        const canvasYOffset = Math.min(startCenterPoint.y, localEndPoint.y) - boundingBoxBuffer.vertical;
 
         return {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset, dy, dx}
     }

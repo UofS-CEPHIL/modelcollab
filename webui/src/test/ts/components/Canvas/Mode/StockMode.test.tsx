@@ -1,11 +1,11 @@
 import { render, fireEvent } from "@testing-library/react";
-import CreateMode, { Props } from "../../../../../main/ts/components/Canvas/Mode/CreateMode";
+import StockMode, { Props } from "../../../../../main/ts/components/Canvas/Mode/StockMode";
 import FirebaseDataModel from '../../../../../main/ts/data/FirebaseDataModel';
 import { DataContainer } from '../../../../../main/ts/data/DataContainer';
 
 const TEST_SESSION_ID: string = "0";
 
-function renderCreateMode(props: Partial<Props> = {}) {
+function renderStockMode(props: Partial<Props> = {}) {
     const defaultProps: Props = {
         data: new DataContainer(),
         sessionId: TEST_SESSION_ID,
@@ -17,17 +17,17 @@ function renderCreateMode(props: Partial<Props> = {}) {
             registerComponentRemovedListener: () => { }
         }
     };
-    return render(<CreateMode {...defaultProps} {...props} />);
+    return render(<StockMode {...defaultProps} {...props} />);
 }
 
-describe("<CreateMode />", () => {
+describe("<StockMode />", () => {
 
-    test("Should display CreateMode with default setting", async () => {
-        const { findByTestId } = renderCreateMode();
-        const createMode = await findByTestId("createMode-div");
+    test("Should display StockMode with default setting", async () => {
+        const { findByTestId } = renderStockMode();
+        const stockMode = await findByTestId("stockMode-div");
 
-        expect(createMode).toHaveClass("draggable_container");
-        expect(createMode).toHaveStyle({
+        expect(stockMode).toHaveClass("draggable_container");
+        expect(stockMode).toHaveStyle({
             width: "100%",
             height: "1000px",
         });
@@ -44,10 +44,10 @@ describe("<CreateMode />", () => {
             registerComponentRemovedListener: () => { }
         };
 
-        const { findByTestId } = renderCreateMode({firebaseDataModel: firebaseDataModel});
+        const { findByTestId } = renderStockMode({firebaseDataModel: firebaseDataModel});
         
-        const createMode = await findByTestId("createMode-div");
-        fireEvent.click(createMode);
+        const stockMode = await findByTestId("stockMode-div");
+        fireEvent.click(stockMode);
         
         expect(updateFunction).toHaveBeenCalledTimes(1);
     });

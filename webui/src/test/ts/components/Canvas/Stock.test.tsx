@@ -44,7 +44,7 @@ describe("<Stock />", () => {
             position: "absolute",
             left: `${TEST_X_VALUE}px`,
             top: `${TEST_Y_VALUE}px`,
-            background: `${DEFAULT_COLOR}`
+            border: `4px solid ${DEFAULT_COLOR}`
         });
     });
 
@@ -164,7 +164,7 @@ describe("<Stock />", () => {
             position: "absolute",
             left: `${TEST_X_VALUE}px`,
             top: `${TEST_Y_VALUE}px`,
-            background: DEFAULT_COLOR
+            border: `4px solid ${DEFAULT_COLOR}`
         });
     });
 

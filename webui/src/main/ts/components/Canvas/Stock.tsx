@@ -60,8 +60,9 @@ const Stock: FC<Props> = (props) => {
         props.sessionId,
         props.componentId,
         (data: datamodel.FirebaseDataComponent) => {
-            if (!sharedState.equals(data))
+            if (!sharedState.equals(data)){
                 setSharedState(data as datamodel.StockFirebaseComponent);
+            }
         }
     );
 

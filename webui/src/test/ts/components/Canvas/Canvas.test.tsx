@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, act } from "@testing-library/react";
-
 import Canvas, { Props } from "../../../../main/ts/components/Canvas/Canvas";
 import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
 import { UiMode } from '../../../../main/ts/components/Canvas/Mode/UiMode';
@@ -35,7 +34,7 @@ function renderCanvas(props: Partial<Props> = {}) {
 describe("<Canvas />", () => {
 
     test("Should display Canvas with default setting (render Move Mode)", async () => {
-        const { findByTestId } = renderCanvas();
+        const { findByTestId} = renderCanvas();
         const canvas = await findByTestId("canvas-div");
         const moveMode = await findByTestId("canvas-moveMode-div");
 
@@ -44,18 +43,18 @@ describe("<Canvas />", () => {
 
     });
 
-    test("Should display Canvas with Create Mode", async () => {
-        const { findByTestId } = renderCanvas({ mode: UiMode.CREATE });
+    test("Should display Canvas with Stock Mode", async () => {
+        const {findByTestId} = renderCanvas( {mode: UiMode.STOCK} );
         const canvas = await findByTestId("canvas-div");
-        const createMode = await findByTestId("canvas-createMode-div");
+        const stockMode = await findByTestId("canvas-stockMode-div");
 
-        expect(canvas).toContainElement(createMode);
-        expect(createMode).not.toContainElement(canvas);
+        expect(canvas).toContainElement(stockMode);
+        expect(stockMode).not.toContainElement(canvas);
 
     })
 
     test("Should display Canvas with Delete Mode", async () => {
-        const { findByTestId } = renderCanvas({ mode: UiMode.DELETE });
+        const {findByTestId} = renderCanvas( {mode: UiMode.DELETE} );
         const canvas = await findByTestId("canvas-div");
         const deleteMode = await findByTestId("canvas-deleteMode-div");
 
@@ -65,7 +64,7 @@ describe("<Canvas />", () => {
     })
 
     test("Should display Canvas with Flow Mode", async () => {
-        const { findByTestId } = renderCanvas({ mode: UiMode.FLOW });
+        const {findByTestId} = renderCanvas( {mode: UiMode.FLOW} );
         const canvas = await findByTestId("canvas-div");
         const flowMode = await findByTestId("canvas-flowMode-div");
 
@@ -75,7 +74,7 @@ describe("<Canvas />", () => {
     })
 
     test("Should display Canvas with Edit Mode", async () => {
-        const { findByTestId } = renderCanvas({ mode: UiMode.EDIT });
+        const {findByTestId} = renderCanvas( {mode: UiMode.EDIT} );
         const canvas = await findByTestId("canvas-div");
         const editMode = await findByTestId("canvas-editMode-div");
 
@@ -118,7 +117,7 @@ describe("<Canvas />", () => {
 
         const { findByTestId } = renderCanvas({ firebaseDataModel: firebaseDataModel });
 
-        await findByTestId("canvas-div");
+        const canvas = await findByTestId("canvas-div");
 
         act(() =>
             componentCreatedFunction.mock.lastCall[1](
@@ -132,25 +131,13 @@ describe("<Canvas />", () => {
         jest.spyOn(React, "useState").mockRestore();
 
         expect(setStateMock).toBeCalledWith(
-            new DataContainer(
-                [],
-                [
-                    new schema.StockFirebaseComponent(
-                        TEST_STOCK_COMPONENT_ID,
-                        {
-                            x: TEST_X_VALUE,
-                            y: TEST_Y_VALUE,
-                            text: "",
-                            initvalue: ""
-                        }
-                    )
-                ]
-            )
+            new DataContainer([],[new schema.StockFirebaseComponent(TEST_STOCK_COMPONENT_ID, { x: TEST_X_VALUE, y: TEST_Y_VALUE, text: "", initvalue: "" })])
         );
     });
 
     test("Should update DataContainer in useState when new Flow is added to the database", async () => {
         const componentCreatedFunction = jest.fn();
+
         const firebaseDataModel: FirebaseDataModel = {
             subscribeToComponent: () => { },
             updateComponent: () => { },
@@ -165,13 +152,13 @@ describe("<Canvas />", () => {
 
         const { findByTestId } = renderCanvas({ firebaseDataModel: firebaseDataModel });
 
-        await findByTestId("canvas-div");
+        const canvas = await findByTestId("canvas-div");
 
         act(() =>
             componentCreatedFunction.mock.lastCall[1](
                 new schema.FlowFirebaseComponent(
                     TEST_FLOW_COMPONENT_ID,
-                    { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation: "" }
+                    { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation:"" }
                 )
             )
         );
@@ -179,22 +166,7 @@ describe("<Canvas />", () => {
         jest.spyOn(React, "useState").mockRestore();
 
         expect(setStateMock).toBeCalledWith(
-            new DataContainer(
-                [],
-                [],
-                [
-                    new schema.FlowFirebaseComponent(
-                        TEST_FLOW_COMPONENT_ID,
-                        {
-                            to: TEST_STOCK_COMPONENT_ID,
-                            from: TEST_STOCK2_COMPONENT_ID,
-                            dependsOn: [""],
-                            text: "",
-                            equation: ""
-                        }
-                    )
-                ]
-            )
+            new DataContainer([],[],[new schema.FlowFirebaseComponent(TEST_FLOW_COMPONENT_ID, { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation:"" })])
         );
     });
 
@@ -229,7 +201,7 @@ describe("<Canvas />", () => {
         const canvas = await findByTestId("canvas-div");
         act(() => componentRemovedFunction.mock.lastCall[1](TEST_STOCK_COMPONENT_ID));
         expect(setStateMock).toBeCalledWith(new DataContainer());
-    });
+    })
 
     test("Should update Data Container useState when Flow is deleted on the database", async () => {
         const componentRemovedFunction = jest.fn();
@@ -254,13 +226,14 @@ describe("<Canvas />", () => {
         act(() => componentAddedFunction.mock.lastCall[1](
             new schema.FlowFirebaseComponent(
                 TEST_FLOW_COMPONENT_ID,
-                { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation: "" }
+                { to: TEST_STOCK_COMPONENT_ID, from: TEST_STOCK2_COMPONENT_ID, dependsOn: [""], text: "", equation:"" }
             )
         ));
         spy.mockClear();  // Forget about adding the stock since we're testing deletion
 
-        await findByTestId("canvas-div");
+        const canvas = await findByTestId("canvas-div");
         act(() => componentRemovedFunction.mock.lastCall[1](TEST_FLOW_COMPONENT_ID));
         expect(setStateMock).toBeCalledWith(new DataContainer());
-    });
-});
+    })
+    
+})
