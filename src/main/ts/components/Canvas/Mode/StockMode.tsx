@@ -36,7 +36,7 @@ const CreateMode: FC<Props> = (props: Props) => {
         <div
             className="draggable_container"
             onDragOver={onDragOver}
-            data-testid="createMode-div"
+            data-testid="stockMode-div"
             style={{ "width": "100%", "height": "1000px" }}
             onClick={onClick}
         >

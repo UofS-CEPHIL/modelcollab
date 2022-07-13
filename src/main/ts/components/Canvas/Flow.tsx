@@ -5,10 +5,11 @@ import FirebaseDataModel from '../../data/FirebaseDataModel';
 import TextField from '@mui/material/TextField';
 import { LabelUtils } from '../../utils/LabelUtils';
 
-
 export const FLOW_LABEL_DEFAULT_WIDTH = 80;
 export const FLOW_LABEL_DEFAULT_FONT_SIZE = 12;
 export const FLOW_LABEL_DEFAULT_HEIGHT = 23;
+export const BOUNDING_BOX_ELEMENT_BUFFER = 70;
+
 
 export interface Props{
     componentId: string,
@@ -46,7 +47,6 @@ export interface flowLocal {
 
 const Flow: FC<Props> = (props) => {
 
-    const boundingBoxElementBuffer = 7;
     const arrow = new ArrowUtils();
     const label = new LabelUtils();
 
@@ -80,10 +80,10 @@ const Flow: FC<Props> = (props) => {
             const stock = data as StockFirebaseComponent;
 
             if ( stock.getId() === props.from && (stock.getData().x !== sharedState.startPoint.x || stock.getData().y !== sharedState.startPoint.y)){
+                
                 const newStart: Point = {x: stock.getData().x, y: stock.getData().y};
 
-
-                const {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,dx,dy} = arrow.calculateArrowComponent(newStart,sharedState.endPoint,boundingBoxElementBuffer)
+                const {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,dx,dy} = arrow.calculateArrowComponent(newStart,sharedState.endPoint,BOUNDING_BOX_ELEMENT_BUFFER)
                 const {labelPoint} = label.calculateLabelComponent({dx,dy,canvasHeight,canvasWidth,canvasXOffset,canvasYOffset});
                 const newSharedState = {
                     ...sharedState, 
@@ -103,7 +103,7 @@ const Flow: FC<Props> = (props) => {
             else if ( stock.getId() === props.to && (stock.getData().x !== sharedState.endPoint.x || stock.getData().y !== sharedState.endPoint.y)){
                 const newEnd: Point = {x: stock.getData().x, y: stock.getData().y};
 
-                const {p1,p4, canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,dx,dy} = arrow.calculateArrowComponent(sharedState.startPoint,newEnd,boundingBoxElementBuffer)
+                const {p1,p4, canvasWidth,canvasHeight,canvasXOffset,canvasYOffset,dx,dy} = arrow.calculateArrowComponent(sharedState.startPoint,newEnd,BOUNDING_BOX_ELEMENT_BUFFER)
                 const {labelPoint} = label.calculateLabelComponent({dx,dy,canvasHeight,canvasWidth,canvasXOffset,canvasYOffset});
 
                 const newSharedState = {
@@ -154,21 +154,38 @@ const Flow: FC<Props> = (props) => {
                 >
                 <defs>
                     <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth" data-testid="flow-arrowhead">
-                        <path d="M0,0 L0,6 L9,3 z" fill="#f00" />
+                        <path d="M0,0 L0,6 L9,3 z" fill="black" />
                     </marker>
                 </defs>
 
                 <line
                     data-testid="flow-line"
                     className = "Flow-line"
-                    stroke="#aaa"
-                    strokeWidth={1}
+                    stroke="black"
+                    strokeWidth={8}
+                    strokeLinejoin="round" 
+                    strokeLinecap="round" 
                     x1={sharedState.calculatedStartPoint.x}
                     y1={sharedState.calculatedStartPoint.y}
                     x2={sharedState.calculatedEndPoint.x}
                     y2={sharedState.calculatedEndPoint.y}
                     markerEnd="url(#arrow)"
                 />
+                <line
+                    data-testid="flow-inner-line"
+                    className = "flow-inner-line"
+                    stroke="white"
+                    strokeWidth={5}
+                    strokeLinejoin="round" 
+                    strokeLinecap="round" 
+                    x1={sharedState.calculatedStartPoint.x}
+                    y1={sharedState.calculatedStartPoint.y}
+                    x2={sharedState.calculatedEndPoint.x}
+                    y2={sharedState.calculatedEndPoint.y}
+                />
+
+                
+
             </svg>  
 
             <div
@@ -188,6 +205,7 @@ const Flow: FC<Props> = (props) => {
                         style: {fontSize: FLOW_LABEL_DEFAULT_FONT_SIZE, width:`${FLOW_LABEL_DEFAULT_WIDTH}px`},
                         className: "Mui_Flow",
                         id: props.componentId,
+                        color: "white",
                         "data-testid": "flow-textfield-mui"
                     }}
             />

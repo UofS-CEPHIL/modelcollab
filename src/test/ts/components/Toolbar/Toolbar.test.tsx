@@ -36,16 +36,16 @@ describe("<Toolbar />", () => {
         expect(setMode).toBeCalledWith(UiMode.MOVE);
     })
 
-    test("Should set to CREATE, when Create mode is selected", async () => {
+    test("Should set to STOCK, when Stock mode is selected", async () => {
         const setMode = jest.fn();
         const { findByTestId, getByRole } = renderToolbar({ setMode: setMode });
 
         const toolbartabs = await findByTestId("toolbar-tabs")
 
-        const tab = getByRole('tab', { name: 'Create' });
+        const tab = getByRole('tab', { name: 'Stock' });
 
-        fireEvent.click(tab, { target: { textContent: "Create" } })
-        expect(setMode).toBeCalledWith(UiMode.CREATE);
+        fireEvent.click(tab, { target: { textContent: "Stock" } })
+        expect(setMode).toBeCalledWith(UiMode.STOCK);
     })
 
     test("Should set to DELETE, when Delete mode is selected", async () => {

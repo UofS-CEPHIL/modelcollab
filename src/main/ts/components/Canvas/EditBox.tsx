@@ -16,11 +16,8 @@ export interface Props {
 
 const EditBox: FC<Props> = (props) => {
 
-    const [sharedState, setSharedState] = useState<FirebaseDataComponent | null>();
-    // const [savedSharedState, setSavedSharedState] = useState<FirebaseDataComponent | null>(null);
-    
-    let savedSharedState: FirebaseDataComponent | null = null;
-    const style = {
+    const [sharedState, setSharedState] = useState<FirebaseDataComponent>();
+        const style = {
         position: 'absolute' as 'absolute',
         top: '50%',
         left: '50%',
@@ -32,20 +29,13 @@ const EditBox: FC<Props> = (props) => {
         p: 4,
     };
 
-    // console.log("render",savedSharedState);
-
     props.firebaseDataModel.subscribeToComponent(props.sessionId, props.component.getId(), (data: FirebaseDataComponent) => {
             if ((!sharedState?.equals(data) && data.getType() === ComponentType.STOCK)){                   
-                if (savedSharedState == null){
-                    // setSavedSharedState(data as StockFirebaseComponent)
-                    savedSharedState = (data as StockFirebaseComponent);
-                }
+
                 setSharedState(data as StockFirebaseComponent);
             }
             else if ((!sharedState?.equals(data) && data.getType() === ComponentType.FLOW)){
-                if (savedSharedState == null){
-                    savedSharedState = (data as FlowFirebaseComponent);
-                }
+
                 setSharedState(data as FlowFirebaseComponent);
             }
         });
@@ -54,22 +44,6 @@ const EditBox: FC<Props> = (props) => {
     const handleClose = () => {
         props.setOpen(false);
     }
-
-    // const submitChange = () => {
-    //     if (sharedState){
-    //         console.log("submit",sharedState);
-    //         savedSharedState = sharedState;
-    //         // props.firebaseDataModel.updateComponent(props.sessionId, sharedState);
-    //     }    
-    //     handleClose()
-    // }
-    // const discardChange = () =>{
-    //     if (savedSharedState){
-    //         console.log("discard",savedSharedState)
-    //         props.firebaseDataModel.updateComponent(props.sessionId, savedSharedState);
-    //     }
-    //     handleClose()
-    // }
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
 
@@ -86,12 +60,17 @@ const EditBox: FC<Props> = (props) => {
     };
 
     return (
-        <div>
+        <div
+            data-testid="editBox-div"
+        >
             <Modal
+                data-testid="editBox-Modal"
                 open={props.open}
             > 
             {(sharedState?.getType() === ComponentType.STOCK)
-                ?<Box sx={style}>
+                ?<Box
+                    data-testid="editBox-Box"
+                    sx={style}>
                     <Typography id="modal-modal-title" variant="h6" component="h2">
                         Edit Stock
                     </Typography>
@@ -107,13 +86,12 @@ const EditBox: FC<Props> = (props) => {
                             "data-testid": "stock-textfield-mui"
                         }}
                     />
-                    
-                     {/* <Button variant="contained" onClick={submitChange}>Save</Button>
-                     <Button variant="contained" onClick={discardChange}>Cancel</Button> */}
                      <Button variant="contained" onClick={handleClose}>Close</Button>
                 </Box>
 
-                :<Box sx={style}>
+                :<Box 
+                    data-testid="editBox-Box"
+                    sx={style}>
                     <Typography id="modal-modal-title" variant="h6" component="h2">
                         Edit Flow
                     </Typography>
@@ -140,10 +118,6 @@ const EditBox: FC<Props> = (props) => {
                             "data-testid": "stock-textfield-mui"
                         }}
                     />
-
-                    {/* <Button>
-                        //save button
-                    </Button> */}
                     <Button variant="contained" onClick={handleClose}>Close</Button>
                 </Box>}
             </Modal>

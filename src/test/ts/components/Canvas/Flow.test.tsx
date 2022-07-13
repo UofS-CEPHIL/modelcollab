@@ -57,7 +57,7 @@ describe("<Flow />", () => {
         expect(flowSVG).toHaveAttribute("width","0");
         expect(flowSVG).toHaveAttribute("height","0");
 
-        expect(flowLINE).toHaveAttribute("stroke","#aaa");
+        expect(flowLINE).toHaveAttribute("stroke","black");
         expect(flowLINE).toHaveAttribute("x1", "0");
         expect(flowLINE).toHaveAttribute("y1", "0");
         expect(flowLINE).toHaveAttribute("x2", "0");
@@ -114,22 +114,22 @@ describe("<Flow />", () => {
             )
         );
 
-        expect(flowLINE).toHaveAttribute("x1", "107");
-        expect(flowLINE).toHaveAttribute("y1", "207");
-        expect(flowLINE).toHaveAttribute("x2", "7");
-        expect(flowLINE).toHaveAttribute("y2", "7");
+        expect(flowLINE).toHaveAttribute("x1", "170");
+        expect(flowLINE).toHaveAttribute("y1", "150");
+        expect(flowLINE).toHaveAttribute("x2", "70");
+        expect(flowLINE).toHaveAttribute("y2", "70");
 
-        expect(flowSVG).toHaveAttribute("width","114");
-        expect(flowSVG).toHaveAttribute("height","214");
+        expect(flowSVG).toHaveAttribute("width","240");
+        expect(flowSVG).toHaveAttribute("height","220");
 
         expect(flowSVG).toHaveStyle(
-            {"transform": "translate(-7px, -7px)"});
+            {"transform": "translate(-20px, 85px)"});
 
         
         expect(flowTextDiv).toHaveStyle({
                 position: "absolute",
-                left: "50px",
-                top: "100px",
+                left: "20px",
+                top: "195px",
         });
 
         act( () => 
@@ -141,21 +141,21 @@ describe("<Flow />", () => {
             )
         );
 
-        expect(flowLINE).toHaveAttribute("x2", "482");
-        expect(flowLINE).toHaveAttribute("y2", "7");
-        expect(flowLINE).toHaveAttribute("x1", "7");
-        expect(flowLINE).toHaveAttribute("y1", "62");
+        expect(flowLINE).toHaveAttribute("x2", "425");
+        expect(flowLINE).toHaveAttribute("y2", "70");
+        expect(flowLINE).toHaveAttribute("x1", "70");
+        expect(flowLINE).toHaveAttribute("y1", "125");
 
-        expect(flowSVG).toHaveAttribute("width","489");
-        expect(flowSVG).toHaveAttribute("height","69");
+        expect(flowSVG).toHaveAttribute("width","495");
+        expect(flowSVG).toHaveAttribute("height","195");
         expect(flowSVG).toHaveStyle(
-            {"transform": "translate(93px, 138px)"}
+            {"transform": "translate(80px, 110px)"}
         );
 
         expect(flowTextDiv).toHaveStyle({
             position: "absolute",
-            left: "257.5px",
-            top: "149.5px",
+            left: "247.5px",
+            top: "184.5px",
         });
 
     })

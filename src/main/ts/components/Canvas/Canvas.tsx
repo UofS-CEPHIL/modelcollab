@@ -6,16 +6,15 @@ import { ComponentType, FlowFirebaseComponent, StockFirebaseComponent } from '..
 import { DataContainer } from '../../data/DataContainer';
 
 import MoveMode from './Mode/MoveMode';
-import CreateMode from './Mode/CreateMode';
+import StockMode from './Mode/StockMode';
 import DeleteMode from './Mode/DeleteMode';
 import FlowMode from './Mode/FlowMode';
 import EditMode from './Mode/EditMode';
 
-
 export const modeFromString = (s: string) => {
     s = s.toUpperCase();
     let out: UiMode | null;
-    if (s === "CREATE") out = UiMode.CREATE;
+    if (s === "STOCK") out = UiMode.STOCK;
     else if (s === "DELETE") out = UiMode.DELETE;
     else if (s === "MOVE") out = UiMode.MOVE;
     else if (s === "FLOW") out = UiMode.FLOW;
@@ -48,12 +47,12 @@ const Canvas: FC<Props> = (props: Props) => {
                             />
                         </div>
                     ) 
-                case (modeFromString("CREATE")):
+                case (modeFromString("STOCK")):
                     return(
                         <div
-                            data-testid="canvas-createMode-div"
+                            data-testid="canvas-stockMode-div"
                         >
-                            <CreateMode 
+                            <StockMode 
                                 data = {data}
                                 sessionId = {props.sessionId}
                                 firebaseDataModel = {props.firebaseDataModel}
@@ -118,13 +117,6 @@ const Canvas: FC<Props> = (props: Props) => {
         }    
     })
     
-    // const triggerCallBack = (id: string ) => {
-    //     if (data.getStocks().some(stock => stock.getId() === id)){
-    //         const newStocks = data.getStocks().filter(stock => stock.getId() !== id);
-    //         const newData = data.withStocks(newStocks);
-    //         setData(newData);
-    //     }
-    // }
 
     props.firebaseDataModel.registerComponentRemovedListener(props.sessionId, (id) => {
 

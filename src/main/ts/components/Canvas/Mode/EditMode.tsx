@@ -16,9 +16,9 @@ export interface Props {
 
 const EditMode: FC<Props> = (props: Props) => {
    
-    const [selected, setSelected] = React.useState<FirebaseDataComponent | null>(null);
+    const [selected, setSelected] = React.useState<FirebaseDataComponent>();
     const [open, setOpen] = React.useState<boolean>(false)
-
+    
     const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
         event.preventDefault();
         if (event.currentTarget.className === "draggable-container") return;
@@ -41,6 +41,8 @@ const EditMode: FC<Props> = (props: Props) => {
             }
         }
     }
+
+    //if selected available => subscribe to component
     
 
     return (

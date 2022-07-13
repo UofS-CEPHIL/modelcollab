@@ -43,13 +43,13 @@ describe("<Canvas />", () => {
 
     });
 
-    test("Should display Canvas with Create Mode", async () => {
-        const {findByTestId} = renderCanvas( {mode: UiMode.CREATE} );
+    test("Should display Canvas with Stock Mode", async () => {
+        const {findByTestId} = renderCanvas( {mode: UiMode.STOCK} );
         const canvas = await findByTestId("canvas-div");
-        const createMode = await findByTestId("canvas-createMode-div");
+        const stockMode = await findByTestId("canvas-stockMode-div");
 
-        expect(canvas).toContainElement(createMode);
-        expect(createMode).not.toContainElement(canvas);
+        expect(canvas).toContainElement(stockMode);
+        expect(stockMode).not.toContainElement(canvas);
 
     })
 

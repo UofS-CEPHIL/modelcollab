@@ -4,9 +4,9 @@ import { FirebaseDataComponent, StockFirebaseComponent } from '../../data/Fireba
 
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 
-export const WIDTH_PX = 20;
-export const HEIGHT_PX = 20;
-export const DEFAULT_COLOR = "blue";
+export const WIDTH_PX = 100;
+export const HEIGHT_PX = 70;
+export const DEFAULT_COLOR = "black";
 export const SELECTED_COLOR = "red";
 
 export interface Props {
@@ -71,20 +71,25 @@ const Stock: FC<Props> = (props) => {
                 position: "absolute",
                 left: `${sharedState.getData().x}px`,
                 top: `${sharedState.getData().y}px`,
-                background: props.color,
+                background: "white",
+                border: `4px solid ${props.color}`
             }}
             id={`${props.componentId} `}
             draggable={props.draggable}
             onDragEnd={onDrag}
             data-testid="stock-div"
         >
-            <TextField id="outlined-basic"
+            <TextField 
+                variant="standard"
                 value={sharedState.getData().text}
                 onChange={handleChange}
                 onBlur={onBlur}
                 onDoubleClick={onDoubleClick}
                 draggable={props.draggable}
                 inputProps={{
+                    style: {width:`${WIDTH_PX}px`,
+                            height: `${HEIGHT_PX}px`,
+                            textAlign: 'center'},
                     className: "Mui_Stock",
                     id: props.componentId,
                     readOnly: readOnly,

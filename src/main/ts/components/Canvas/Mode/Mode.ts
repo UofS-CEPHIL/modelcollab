@@ -1,5 +1,5 @@
 export const enum UiMode {
-    CREATE = "Create",
+    STOCK = "Stock",
     DELETE = "Delete",
     MOVE = "Move",
     FLOW = "Flow",
