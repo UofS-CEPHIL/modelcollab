@@ -5,7 +5,7 @@ import Flow from "../Flow";
 import "./Styles.css"
 import Stock, { DEFAULT_COLOR, SELECTED_COLOR } from "../Stock";
 import EditBox from "../EditBox";
-import { FirebaseComponentModel as schema } from "database/build/export";
+import { FirebaseComponentModel as schema } from "../../../../../../../database/build/export";
 
 export interface Props {
     data: DataContainer;
