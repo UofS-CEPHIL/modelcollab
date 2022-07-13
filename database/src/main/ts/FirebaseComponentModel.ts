@@ -20,11 +20,8 @@ export abstract class FirebaseDataComponent {
     public equals(other: FirebaseDataComponent) {
         const isSameType: boolean = this.getType() === other.getType();
         const isSameId: boolean = this.getId() === other.getId();
-        const isSameData: boolean = Object.keys(this.getData())
-            .filter(k => this.getData()[k] !== other.getData()[k])
-            .length === 0;
 
-        return isSameType && isSameId && isSameData;
+        return isSameType && isSameId && this.dataEquals(other);
     }
 
     public toString() {
@@ -33,6 +30,7 @@ export abstract class FirebaseDataComponent {
 
     abstract getType(): ComponentType;
     abstract getData(): any;
+    abstract dataEquals(data: FirebaseDataComponent): boolean;
     abstract withData(d: FirebaseDataObject): FirebaseDataComponent;
 }
 
@@ -114,6 +112,19 @@ export class ParametersFirebaseComponent extends FirebaseDataComponent {
         return this.data;
     }
 
+    dataEquals(other: any): boolean {
+        try {
+            if (other.startTime !== this.getData().startTime) return false;
+            if (other.stopTime !== this.getData().stopTime) return false;
+            for (const k of Object.keys(other)) {
+                if (this.getData().params[k] !== other.params[k]) return false;
+            }
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     withData(d: ParametersComponentData): ParametersFirebaseComponent {
         return new ParametersFirebaseComponent(this.getId(), d);
     }
@@ -145,6 +156,11 @@ export class StockFirebaseComponent extends FirebaseDataComponent {
 
     getData(): StockComponentData {
         return this.data;
+    }
+
+    dataEquals(other: any) {
+        const d = this.getData();
+        return other.x == d.x && other.y == d.y && other.text == d.text && other.initvalue == d.initvalue;
     }
 
     withData(d: StockComponentData): StockFirebaseComponent {
@@ -187,6 +203,18 @@ export class FlowFirebaseComponent extends FirebaseDataComponent {
 
     getData(): FlowComponentData {
         return this.data;
+    }
+
+    dataEquals(other: any): boolean {
+        const d = this.getData();
+        const dependEquals: boolean = true;
+
+
+        return dependEquals
+            && other.from == d.from
+            && other.to == d.to
+            && other.equation == d.equation
+            && other.text == d.text;
     }
 
     withData(d: FlowComponentData) {
