@@ -48,7 +48,6 @@ export class ArrowUtils {
             x: endPointX,
             y: endPointY,
         };
-    
         return { p1, p4 };
     };
   
@@ -98,58 +97,162 @@ export class ArrowUtils {
         return { canvasWidth, canvasHeight };
   };
 
+    calculatePartialArrowComponent = (startPoint: Point, endPoint: Point, boundingBoxElementBuffer: number): 
+    {p2: Point, p4: Point, partialCanvasWidth: number, partialCanvasHeight: number, 
+        partialCanvasXOffset: number, partialCanvasYOffset: number, 
+        partialDy: number, partialDx: number } => {
+                   
+        const {dy, dx, absDy, absDx} = this.calculateDeltas(startPoint, endPoint);
+        const {p1,p4,boundingBoxBuffer} = this.calculateControlPointsWithBuffer(boundingBoxElementBuffer, absDx, absDy, dx, dy)    
+        const {canvasWidth, canvasHeight } = this.calculateCanvasDimensions(absDx, absDy, boundingBoxBuffer);
+
+        const partialCanvasXOffset = Math.min(startPoint.x, endPoint.x) - boundingBoxBuffer.horizontal; 
+        const partialCanvasYOffset = Math.min(startPoint.y, endPoint.y) - boundingBoxBuffer.vertical;
+        const p2: Point = p1;
+
+        const partialCanvasWidth  = canvasWidth;
+        const partialCanvasHeight  = canvasHeight;
+        
+        const partialDy = dy;
+        const partialDx = dx;
+
+        return {p2,p4,partialCanvasWidth,partialCanvasHeight,partialCanvasXOffset,partialCanvasYOffset, partialDy, partialDx}
+    }
+
     calculateArrowComponent = (startPoint: Point, endPoint: Point, boundingBoxElementBuffer: number): 
-    {p1: Point, p4: Point, canvasWidth: number, canvasHeight: number, canvasXOffset: number, canvasYOffset: number, dy: number, dx: number } => {
+    {p1: Point, p2: Point, p4: Point, canvasWidth: number, canvasHeight: number, canvasXOffset: number, canvasYOffset: number, dy: number, dx: number, labelInfo: labelParameters} => {
            
         let localEndPoint: Point;
         const startCenterPoint: Point = {x : startPoint.x + (WIDTH_PX/2), y: startPoint.y + (HEIGHT_PX/2) }
+        let localMiddlePoint: Point;
+        let renderCase: string = "H";
 
-        // const startCenterPoint: Point = {x : startPoint.x , y: startPoint.y  }
-        // console.log(startPoint,endPoint)
-        if ( ((startPoint.x >= endPoint.x && startPoint.x <= (endPoint.x + WIDTH_PX)) || (startPoint.x + WIDTH_PX >= endPoint.x && startPoint.x + WIDTH_PX<= (endPoint.x + WIDTH_PX)) )
-            && startCenterPoint.y < endPoint.y){
-
+        if (startCenterPoint.x >= endPoint.x && startCenterPoint.x <= (endPoint.x + WIDTH_PX) && startCenterPoint.y < endPoint.y){
             localEndPoint = {x: endPoint.x + (WIDTH_PX/2), y: endPoint.y - boundingBoxElementBuffer}
+            localMiddlePoint = {x:  endPoint.x + (WIDTH_PX/2),y: startCenterPoint.y}
+            renderCase = "V"
         }
 
-        else if( ((startPoint.x >= endPoint.x && startPoint.x <= (endPoint.x + WIDTH_PX)) || (startPoint.x + WIDTH_PX >= endPoint.x && startPoint.x + WIDTH_PX<= (endPoint.x + WIDTH_PX)) )
-            && startCenterPoint.y > endPoint.y){
-            localEndPoint = {x: endPoint.x + (WIDTH_PX/2), y: endPoint.y + (HEIGHT_PX) + boundingBoxElementBuffer + 15} 
+        else if (startCenterPoint.x >= endPoint.x && startCenterPoint.x <= (endPoint.x + WIDTH_PX) && startCenterPoint.y > (endPoint.y + HEIGHT_PX)){
+            localEndPoint = {x: endPoint.x + (WIDTH_PX/2), y: endPoint.y + (HEIGHT_PX) + boundingBoxElementBuffer + 15}     
+            localMiddlePoint = {x:  endPoint.x + (WIDTH_PX/2),y: startCenterPoint.y}
+            renderCase = "V"
         }
 
-        else if ( ( (startPoint.y >= endPoint.y && startPoint.y <= endPoint.y + HEIGHT_PX) || (startPoint.y + HEIGHT_PX>= endPoint.y && startPoint.y +HEIGHT_PX <= endPoint.y + HEIGHT_PX) )
-            && startCenterPoint.x < endPoint.x){
+        else if (startCenterPoint.y >= endPoint.y && startCenterPoint.y <= endPoint.y + HEIGHT_PX && startCenterPoint.x < endPoint.x){
             localEndPoint = {x: endPoint.x - boundingBoxElementBuffer , y: endPoint.y + (HEIGHT_PX/2)}
+            localMiddlePoint = {x: startCenterPoint.x,y: endPoint.y + (HEIGHT_PX/2)}
+            renderCase = "H"
         }
 
-        else if (( (startPoint.y >= endPoint.y && startPoint.y <= endPoint.y + HEIGHT_PX) || (startPoint.y + HEIGHT_PX>= endPoint.y && startPoint.y +HEIGHT_PX <= endPoint.y + HEIGHT_PX) )
-            && startCenterPoint.x > endPoint.x){
+        else if (startCenterPoint.y >= endPoint.y && startCenterPoint.y <= endPoint.y + HEIGHT_PX && startCenterPoint.x > endPoint.x){
             localEndPoint = {x: endPoint.x + WIDTH_PX + boundingBoxElementBuffer, y: endPoint.y + (HEIGHT_PX/2)}
+            localMiddlePoint = {x: startCenterPoint.x,y: endPoint.y + (HEIGHT_PX/2)}
+            renderCase = "H"
         }
 
         //special cases
+        
+        //top right corner
         else if (startCenterPoint.x > endPoint.x && startCenterPoint.y < endPoint.y){
-            localEndPoint = {x: endPoint.x + WIDTH_PX , y: endPoint.y - boundingBoxElementBuffer}
+            if (startCenterPoint.x - (endPoint.x + WIDTH_PX) < endPoint.y - startCenterPoint.y){
+                localEndPoint = {x: endPoint.x + (WIDTH_PX/2), y: endPoint.y - boundingBoxElementBuffer}
+                localMiddlePoint = {x: endPoint.x + (WIDTH_PX/2),y: startCenterPoint.y}
+                renderCase = "V"
+            }
+            else{
+                localEndPoint = {x: endPoint.x + WIDTH_PX + boundingBoxElementBuffer, y: endPoint.y + (HEIGHT_PX/2)}
+                localMiddlePoint = {x: startCenterPoint.x, y: endPoint.y + (HEIGHT_PX/2)}
+                renderCase = "H"
+
+            }
         }
 
+        //bottom right corner
         else if (startCenterPoint.x > endPoint.x && startCenterPoint.y > endPoint.y){
-            localEndPoint = {x: endPoint.x + WIDTH_PX + boundingBoxElementBuffer, y: endPoint.y + HEIGHT_PX}
+
+            if (startCenterPoint.x - (endPoint.x + WIDTH_PX) <  startCenterPoint.y - (endPoint.y+HEIGHT_PX)){
+                localEndPoint = {x: endPoint.x + (WIDTH_PX/2), y: endPoint.y + (HEIGHT_PX) + boundingBoxElementBuffer + 15}     
+                localMiddlePoint = {x:  endPoint.x + (WIDTH_PX/2),y: startCenterPoint.y}
+                renderCase = "V"
+
+            }
+            else{
+                localEndPoint = {x: endPoint.x + WIDTH_PX + boundingBoxElementBuffer, y: endPoint.y + (HEIGHT_PX/2)}
+                localMiddlePoint = {x: startCenterPoint.x,y: endPoint.y + (HEIGHT_PX/2)}
+                renderCase = "H"
+            }        
         }
 
+        //bottom left corner
         else if (startCenterPoint.x < endPoint.x && startCenterPoint.y > endPoint.y){
-            localEndPoint = {x: endPoint.x - boundingBoxElementBuffer , y: endPoint.y + HEIGHT_PX}
+            if ( endPoint.x - startCenterPoint.x <  startCenterPoint.y - (endPoint.y + HEIGHT_PX)){
+                localEndPoint = {x: endPoint.x + (WIDTH_PX/2), y: endPoint.y + (HEIGHT_PX) + boundingBoxElementBuffer + 15}      
+                localMiddlePoint = {x:  endPoint.x + (WIDTH_PX/2), y: startCenterPoint.y}
+                renderCase = "V";
+            }
+            else{
+                localEndPoint = {x: endPoint.x - boundingBoxElementBuffer , y: endPoint.y + (HEIGHT_PX/2)}
+                localMiddlePoint = {x: startCenterPoint.x, y: endPoint.y + (HEIGHT_PX/2)}
+                renderCase = "H";
+            }               
         }
+        
+        //top left corner
         else{
-            localEndPoint = {x: endPoint.x, y: endPoint.y - boundingBoxElementBuffer}
+            if ( endPoint.x - startCenterPoint.x <  endPoint.y - startCenterPoint.y){
+                localEndPoint = {x: endPoint.x + (WIDTH_PX/2), y: endPoint.y - boundingBoxElementBuffer}
+                localMiddlePoint = {x:  endPoint.x + (WIDTH_PX/2), y: startCenterPoint.y}
+                renderCase = "V"
+
+            }
+            else{
+                localEndPoint = {x: endPoint.x - boundingBoxElementBuffer , y: endPoint.y + (HEIGHT_PX/2)}
+                localMiddlePoint = {x: startCenterPoint.x, y: endPoint.y + (HEIGHT_PX/2)}
+                renderCase = "H"
+            }    
         }
 
-        const {dy, dx, absDy, absDx} = this.calculateDeltas(startCenterPoint, localEndPoint);
-        const {p1,p4,boundingBoxBuffer} = this.calculateControlPointsWithBuffer(boundingBoxElementBuffer, absDx, absDy, dx, dy)    
+        const {p2, partialCanvasHeight, 
+                   partialCanvasWidth, 
+                   partialCanvasXOffset,
+                   partialCanvasYOffset, partialDx, partialDy} = this.calculatePartialArrowComponent(localMiddlePoint,localEndPoint, boundingBoxElementBuffer)
+        
+        let {dy, dx, absDy, absDx} = this.calculateDeltas(startCenterPoint, localEndPoint);
+        let {p1,p4,boundingBoxBuffer} = this.calculateControlPointsWithBuffer(boundingBoxElementBuffer, absDx, absDy, dx, dy)   
+        switch (renderCase){ 
+            case ("V"):
+                p2.x = p4.x 
+                break
+            case ("H"):
+                p2.y = p4.y               
+        }
+        
+        const labelInfo = new labelParameters(partialDy,partialDx,partialCanvasWidth, partialCanvasHeight,partialCanvasXOffset, partialCanvasYOffset)
         const {canvasWidth, canvasHeight } = this.calculateCanvasDimensions(absDx, absDy, boundingBoxBuffer);
+
         const canvasXOffset = Math.min(startCenterPoint.x, localEndPoint.x) - boundingBoxBuffer.horizontal; 
         const canvasYOffset = Math.min(startCenterPoint.y, localEndPoint.y) - boundingBoxBuffer.vertical;
-
-        return {p1,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset, dy, dx}
+        
+        return {p1,p2,p4,canvasWidth,canvasHeight,canvasXOffset,canvasYOffset, dy, dx, labelInfo}
     }
   
+}
+
+class labelParameters{
+    public dy: number;
+    public dx: number;
+    public width: number;
+    public height: number;
+    public xOffset: number;
+    public yOffset: number;
+
+    constructor(dy: number, dx: number, width: number, height: number, xOffset: number, yOffset:number){
+        this.dy = dy;
+        this.dx = dx;
+        this.width = width;
+        this.height = height;
+        this.xOffset = xOffset;
+        this.yOffset = yOffset;    
+    }
 }

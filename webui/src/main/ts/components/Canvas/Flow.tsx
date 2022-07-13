@@ -33,6 +33,7 @@ export interface flowLocal {
     endPoint: Point,
 
     calculatedStartPoint: Point,
+    calculatedMiddlePoint: Point,
     calculatedEndPoint: Point,
 
     canvasWidth: number,
@@ -56,6 +57,7 @@ const Flow: FC<Props> = (props) => {
         endPoint: { x: 0, y: 0 },
 
         calculatedStartPoint: { x: 0, y: 0 },
+        calculatedMiddlePoint: { x: 0, y: 0 },
         calculatedEndPoint: { x: 0, y: 0 },
 
         canvasWidth: 0,
@@ -82,12 +84,13 @@ const Flow: FC<Props> = (props) => {
             if (stock.getId() === props.from && (stock.getData().x !== sharedState.startPoint.x || stock.getData().y !== sharedState.startPoint.y)) {
                 const newStart: Point = { x: stock.getData().x, y: stock.getData().y };
 
-                const { p1, p4, canvasWidth, canvasHeight, canvasXOffset, canvasYOffset, dx, dy } = arrow.calculateArrowComponent(newStart, sharedState.endPoint, BOUNDING_BOX_ELEMENT_BUFFER)
+                const { p1, p2,p4, canvasWidth, canvasHeight, canvasXOffset, canvasYOffset, dx, dy } = arrow.calculateArrowComponent(newStart, sharedState.endPoint, BOUNDING_BOX_ELEMENT_BUFFER)
                 const { labelPoint } = label.calculateLabelComponent({ dx, dy, canvasHeight, canvasWidth, canvasXOffset, canvasYOffset });
                 const newSharedState = {
                     ...sharedState,
                     startPoint: newStart,
                     calculatedStartPoint: p1,
+                    calculatedMiddlePoint: p2,
                     calculatedEndPoint: p4,
                     canvasWidth: canvasWidth,
                     canvasHeight: canvasHeight,
@@ -102,13 +105,14 @@ const Flow: FC<Props> = (props) => {
             else if (stock.getId() === props.to && (stock.getData().x !== sharedState.endPoint.x || stock.getData().y !== sharedState.endPoint.y)) {
                 const newEnd: Point = { x: stock.getData().x, y: stock.getData().y };
 
-                const { p1, p4, canvasWidth, canvasHeight, canvasXOffset, canvasYOffset, dx, dy } = arrow.calculateArrowComponent(sharedState.startPoint, newEnd, BOUNDING_BOX_ELEMENT_BUFFER)
+                const { p1,p2,p4, canvasWidth, canvasHeight, canvasXOffset, canvasYOffset, dx, dy } = arrow.calculateArrowComponent(sharedState.startPoint, newEnd, BOUNDING_BOX_ELEMENT_BUFFER)
                 const { labelPoint } = label.calculateLabelComponent({ dx, dy, canvasHeight, canvasWidth, canvasXOffset, canvasYOffset });
 
                 const newSharedState = {
                     ...sharedState,
                     endPoint: newEnd,
                     calculatedStartPoint: p1,
+                    calculatedMiddlePoint: p2,
                     calculatedEndPoint: p4,
                     canvasWidth: canvasWidth,
                     canvasHeight: canvasHeight,
@@ -121,13 +125,11 @@ const Flow: FC<Props> = (props) => {
             }
         }
         else if (data && data.getType() === schema.ComponentType.FLOW) {
-            // console.log(`flow: ${data.getData()}`);
             if (!sharedState.flow.equals(data)) {
                 setSharedState({ ...sharedState, flow: data as schema.FlowFirebaseComponent });
             }
         }
     }
-
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newData = { ...sharedState.flow.getData(), text: event.target.value };
         const newState: schema.FlowFirebaseComponent = sharedState.flow.withData(newData);
@@ -166,22 +168,49 @@ const Flow: FC<Props> = (props) => {
                     strokeLinecap="round"
                     x1={sharedState.calculatedStartPoint.x}
                     y1={sharedState.calculatedStartPoint.y}
+                    x2={sharedState.calculatedMiddlePoint.x}
+                    y2={sharedState.calculatedMiddlePoint.y}
+                />
+
+                <line
+                    data-testid="flow-line"
+                    className="Flow-line"
+                    stroke="black"
+                    strokeWidth={8}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    x1={sharedState.calculatedMiddlePoint.x}
+                    y1={sharedState.calculatedMiddlePoint.y}
                     x2={sharedState.calculatedEndPoint.x}
                     y2={sharedState.calculatedEndPoint.y}
                     markerEnd="url(#arrow)"
                 />
+
                 <line
-                    data-testid="flow-inner-line"
-                    className="flow-inner-line"
+                    data-testid="flow-line"
+                    className="Flow-line"
                     stroke="white"
                     strokeWidth={5}
                     strokeLinejoin="round"
                     strokeLinecap="round"
                     x1={sharedState.calculatedStartPoint.x}
                     y1={sharedState.calculatedStartPoint.y}
+                    x2={sharedState.calculatedMiddlePoint.x}
+                    y2={sharedState.calculatedMiddlePoint.y}
+                />
+                <line
+                    data-testid="flow-line"
+                    className="Flow-line"
+                    stroke="white"
+                    strokeWidth={5}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    x1={sharedState.calculatedMiddlePoint.x}
+                    y1={sharedState.calculatedMiddlePoint.y}
                     x2={sharedState.calculatedEndPoint.x}
                     y2={sharedState.calculatedEndPoint.y}
                 />
+
 
             </svg>
 
