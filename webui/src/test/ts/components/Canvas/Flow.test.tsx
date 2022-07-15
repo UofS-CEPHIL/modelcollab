@@ -18,9 +18,6 @@ const TEST_Y1_VALUE: number = 200;
 const TEST_X2_VALUE: number = 575;
 const TEST_Y2_VALUE: number = 145;
 
-// const TEST_FROM: stockInfo = {id: TEST_COMPONENT_FROM_ID, x: 20, y: 20};
-// const TEST_TO: stockInfo =   {id: TEST_COMPONENT_TO_ID, x: 100,y: 100};
-
 function renderFlow(props: Partial<Props> = {}) {
     const defaultProps: Props = {
         sessionId: TEST_SESSION_ID,
@@ -46,7 +43,14 @@ describe("<Flow />", () => {
         const {findByTestId} = renderFlow();
 
         const flowSVG = await findByTestId("flow-svg");
-        const flowLINE = await findByTestId("flow-line");
+
+        const flowOutterFirstLINE = await findByTestId("flow-line-outter-first-half");
+        const flowOutterSecondLINE = await findByTestId("flow-line-outter-second-half");
+
+        const flowInnerFirstLINE = await findByTestId("flow-line-inner-first-half");
+        const flowInnerSecondLINE = await findByTestId("flow-line-inner-first-half");
+
+
         const flowARROWHEAD = await findByTestId("flow-arrowhead");
         const flowTextDiv = await findByTestId("flow-text-div");
   
@@ -57,11 +61,31 @@ describe("<Flow />", () => {
         expect(flowSVG).toHaveAttribute("width","0");
         expect(flowSVG).toHaveAttribute("height","0");
 
-        expect(flowLINE).toHaveAttribute("stroke","black");
-        expect(flowLINE).toHaveAttribute("x1", "0");
-        expect(flowLINE).toHaveAttribute("y1", "0");
-        expect(flowLINE).toHaveAttribute("x2", "0");
-        expect(flowLINE).toHaveAttribute("y2", "0");
+        expect(flowOutterFirstLINE).toHaveAttribute("stroke","black");
+        expect(flowOutterFirstLINE).toHaveAttribute("x1", "0");
+        expect(flowOutterFirstLINE).toHaveAttribute("y1", "0");
+        expect(flowOutterFirstLINE).toHaveAttribute("x2", "0");
+        expect(flowOutterFirstLINE).toHaveAttribute("y2", "0");
+        
+        expect(flowInnerFirstLINE).toHaveAttribute("stroke","white");
+        expect(flowInnerFirstLINE).toHaveAttribute("x1", "0");
+        expect(flowInnerFirstLINE).toHaveAttribute("y1", "0");
+        expect(flowInnerFirstLINE).toHaveAttribute("x2", "0");
+        expect(flowInnerFirstLINE).toHaveAttribute("y1", "0");
+
+
+        expect(flowOutterSecondLINE).toHaveAttribute("stroke","black");
+        expect(flowOutterSecondLINE).toHaveAttribute("x1", "0");
+        expect(flowOutterSecondLINE).toHaveAttribute("y1", "0");
+        expect(flowOutterSecondLINE).toHaveAttribute("x2", "0");
+        expect(flowOutterSecondLINE).toHaveAttribute("y2", "0");
+
+        expect(flowInnerSecondLINE).toHaveAttribute("stroke","white");
+        expect(flowInnerSecondLINE).toHaveAttribute("x1", "0");
+        expect(flowInnerSecondLINE).toHaveAttribute("y1", "0");
+        expect(flowInnerSecondLINE).toHaveAttribute("x2", "0");
+        expect(flowInnerSecondLINE).toHaveAttribute("y2", "0");
+
 
         expect(flowARROWHEAD).toHaveAttribute("markerWidth","10");
         expect(flowARROWHEAD).toHaveAttribute("markerHeight","10");
@@ -101,7 +125,13 @@ describe("<Flow />", () => {
         };
         
         const { findByTestId } = renderFlow( { firebaseDataModel: firebaseDataModel });
-        const flowLINE = await findByTestId("flow-line");
+
+        const flowOutterFirstLINE = await findByTestId("flow-line-outter-first-half");
+        const flowOutterSecondLINE = await findByTestId("flow-line-outter-second-half");
+
+        const flowInnerFirstLINE = await findByTestId("flow-line-inner-first-half");
+        const flowInnerSecondLINE = await findByTestId("flow-line-inner-second-half");
+
         const flowSVG = await findByTestId("flow-svg");
         const flowTextDiv = await findByTestId("flow-text-div");
 
@@ -114,10 +144,25 @@ describe("<Flow />", () => {
             )
         );
 
-        expect(flowLINE).toHaveAttribute("x1", "170");
-        expect(flowLINE).toHaveAttribute("y1", "150");
-        expect(flowLINE).toHaveAttribute("x2", "70");
-        expect(flowLINE).toHaveAttribute("y2", "70");
+        expect(flowOutterFirstLINE).toHaveAttribute("x1", "170");
+        expect(flowOutterFirstLINE).toHaveAttribute("y1", "150");
+        expect(flowOutterFirstLINE).toHaveAttribute("x2", "70");
+        expect(flowOutterFirstLINE).toHaveAttribute("y2", "150");
+
+        expect(flowInnerFirstLINE).toHaveAttribute("x1", "170");
+        expect(flowInnerFirstLINE).toHaveAttribute("y1", "150");
+        expect(flowInnerFirstLINE).toHaveAttribute("x2", "70");
+        expect(flowInnerFirstLINE).toHaveAttribute("y2", "150");
+
+        expect(flowOutterSecondLINE).toHaveAttribute("x1", "70");
+        expect(flowOutterSecondLINE).toHaveAttribute("y1", "150");
+        expect(flowOutterSecondLINE).toHaveAttribute("x2", "70");
+        expect(flowOutterSecondLINE).toHaveAttribute("y2", "70");
+
+        expect(flowInnerSecondLINE).toHaveAttribute("x1", "70");
+        expect(flowInnerSecondLINE).toHaveAttribute("y1", "150");
+        expect(flowInnerSecondLINE).toHaveAttribute("x2", "70");
+        expect(flowInnerSecondLINE).toHaveAttribute("y2", "70");
 
         expect(flowSVG).toHaveAttribute("width","240");
         expect(flowSVG).toHaveAttribute("height","220");
@@ -140,11 +185,27 @@ describe("<Flow />", () => {
                 )
             )
         );
+        expect(flowOutterFirstLINE).toHaveAttribute("x1", "70");
+        expect(flowOutterFirstLINE).toHaveAttribute("y1", "125");
+        expect(flowOutterFirstLINE).toHaveAttribute("x2", "70");
+        expect(flowOutterFirstLINE).toHaveAttribute("y2", "70");
+    
 
-        expect(flowLINE).toHaveAttribute("x2", "425");
-        expect(flowLINE).toHaveAttribute("y2", "70");
-        expect(flowLINE).toHaveAttribute("x1", "70");
-        expect(flowLINE).toHaveAttribute("y1", "125");
+        expect(flowInnerFirstLINE).toHaveAttribute("x1", "70");
+        expect(flowInnerFirstLINE).toHaveAttribute("y1", "125");
+        expect(flowInnerFirstLINE).toHaveAttribute("x2", "70");
+        expect(flowInnerFirstLINE).toHaveAttribute("y2", "70");
+
+
+        expect(flowOutterSecondLINE).toHaveAttribute("x1", "70");
+        expect(flowOutterSecondLINE).toHaveAttribute("y1", "70");
+        expect(flowOutterSecondLINE).toHaveAttribute("x2", "425");
+        expect(flowOutterSecondLINE).toHaveAttribute("y2", "70");
+
+        expect(flowInnerSecondLINE).toHaveAttribute("x1", "70");
+        expect(flowInnerSecondLINE).toHaveAttribute("y1", "70");
+        expect(flowInnerSecondLINE).toHaveAttribute("x2", "425");
+        expect(flowInnerSecondLINE).toHaveAttribute("y2", "70");
 
         expect(flowSVG).toHaveAttribute("width","495");
         expect(flowSVG).toHaveAttribute("height","195");

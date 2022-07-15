@@ -160,8 +160,8 @@ const Flow: FC<Props> = (props) => {
                 </defs>
 
                 <line
-                    data-testid="flow-line"
-                    className="Flow-line"
+                    data-testid="flow-line-outter-first-half"
+                    className="Flow-line-outter-first-half"
                     stroke="black"
                     strokeWidth={8}
                     strokeLinejoin="round"
@@ -173,8 +173,8 @@ const Flow: FC<Props> = (props) => {
                 />
 
                 <line
-                    data-testid="flow-line"
-                    className="Flow-line"
+                    data-testid="flow-line-outter-second-half"
+                    className="Flow-line-outter-second-half"
                     stroke="black"
                     strokeWidth={8}
                     strokeLinejoin="round"
@@ -187,8 +187,8 @@ const Flow: FC<Props> = (props) => {
                 />
 
                 <line
-                    data-testid="flow-line"
-                    className="Flow-line"
+                    data-testid="flow-line-inner-first-half"
+                    className="Flow-line-inner-first-half"
                     stroke="white"
                     strokeWidth={5}
                     strokeLinejoin="round"
@@ -199,8 +199,8 @@ const Flow: FC<Props> = (props) => {
                     y2={sharedState.calculatedMiddlePoint.y}
                 />
                 <line
-                    data-testid="flow-line"
-                    className="Flow-line"
+                    data-testid="flow-line-inner-second-half"
+                    className="Flow-line-inner-second-half"
                     stroke="white"
                     strokeWidth={5}
                     strokeLinejoin="round"
