@@ -17,8 +17,7 @@ export interface Props {
 
 const EditBox: FC<Props> = (props) => {
 
-    const [sharedState, setSharedState] = useState<schema.FirebaseDataComponent | null>();
-    // const [savedSharedState, setSavedSharedState] = useState<FirebaseDataComponent | null>(null);
+    const [sharedState, setSharedState] = useState<schema.FirebaseDataComponent | null>(props.component);
 
     let savedSharedState: schema.FirebaseDataComponent | null = null;
     const style = {
@@ -33,12 +32,9 @@ const EditBox: FC<Props> = (props) => {
         p: 4,
     };
 
-    // console.log("render",savedSharedState);
-
     props.firebaseDataModel.subscribeToComponent(props.sessionId, props.component.getId(), (data: schema.FirebaseDataComponent) => {
         if ((!sharedState?.equals(data) && data.getType() === schema.ComponentType.STOCK)) {
             if (savedSharedState == null) {
-                // setSavedSharedState(data as StockFirebaseComponent)
                 savedSharedState = (data as schema.StockFirebaseComponent);
             }
             setSharedState(data as schema.StockFirebaseComponent);
@@ -55,22 +51,6 @@ const EditBox: FC<Props> = (props) => {
     const handleClose = () => {
         props.setOpen(false);
     }
-
-    // const submitChange = () => {
-    //     if (sharedState){
-    //         console.log("submit",sharedState);
-    //         savedSharedState = sharedState;
-    //         // props.firebaseDataModel.updateComponent(props.sessionId, sharedState);
-    //     }    
-    //     handleClose()
-    // }
-    // const discardChange = () =>{
-    //     if (savedSharedState){
-    //         console.log("discard",savedSharedState)
-    //         props.firebaseDataModel.updateComponent(props.sessionId, savedSharedState);
-    //     }
-    //     handleClose()
-    // }
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
 
@@ -90,9 +70,11 @@ const EditBox: FC<Props> = (props) => {
         <div>
             <Modal
                 open={props.open}
+                data-testid="editBox-Modal"
             >
                 {(sharedState?.getType() === schema.ComponentType.STOCK)
-                    ? <Box sx={style}>
+                    ? <Box sx={style}
+                        data-testid="editBox-Box">
                         <Typography id="modal-modal-title" variant="h6" component="h2">
                             Edit Stock
                         </Typography>
@@ -105,16 +87,20 @@ const EditBox: FC<Props> = (props) => {
                             inputProps={{
                                 className: "Mui_Stock",
                                 id: props.component.getId(),
-                                "data-testid": "stock-textfield-mui"
+                                "data-testid": "edit-stock-textfield-mui"
                             }}
                         />
-
-                        {/* <Button variant="contained" onClick={submitChange}>Save</Button>
-                     <Button variant="contained" onClick={discardChange}>Cancel</Button> */}
-                        <Button variant="contained" onClick={handleClose}>Close</Button>
+                        <Button 
+                            data-testid="editBox-Button"
+                            variant="contained" 
+                            onClick={handleClose}>
+                                Close
+                        </Button>
                     </Box>
 
-                    : <Box sx={style}>
+                    : <Box sx={style}
+                        data-testid="editBox-Box"
+                        >
                         <Typography id="modal-modal-title" variant="h6" component="h2">
                             Edit Flow
                         </Typography>
@@ -127,7 +113,7 @@ const EditBox: FC<Props> = (props) => {
                             inputProps={{
                                 className: "Mui_Stock",
                                 id: props.component.getId(),
-                                "data-testid": "stock-textfield-mui"
+                                "data-testid": "edit-flow-dependsOn-textfield-mui"
                             }}
                         />
                         <TextField id="outlined-basic"
@@ -138,14 +124,15 @@ const EditBox: FC<Props> = (props) => {
                             inputProps={{
                                 className: "Mui_Stock",
                                 id: props.component.getId(),
-                                "data-testid": "stock-textfield-mui"
+                                "data-testid": "edit-flow-equation-textfield-mui"
                             }}
                         />
-
-                        {/* <Button>
-                        //save button
-                    </Button> */}
-                        <Button variant="contained" onClick={handleClose}>Close</Button>
+                        <Button 
+                            data-testid="editBox-Button"
+                            variant="contained" 
+                            onClick={handleClose}>
+                                Close
+                        </Button>
                     </Box>}
             </Modal>
 
