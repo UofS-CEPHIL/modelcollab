@@ -9,15 +9,17 @@ import { FirebaseComponentModel as schema } from "../../../../../../../database/
 
 export interface Props {
     data: DataContainer;
+    selected: schema.FirebaseDataComponent | null
     sessionId: string;
     firebaseDataModel: FirebaseDataModel;
+    open: boolean
 }
 
 
 const EditMode: FC<Props> = (props: Props) => {
-
-    const [selected, setSelected] = React.useState<schema.FirebaseDataComponent | null>(null);
-    const [open, setOpen] = React.useState<boolean>(false)
+    
+    const [selected, setSelected] = React.useState<schema.FirebaseDataComponent | null>(props.selected);
+    const [open, setOpen] = React.useState<boolean>(props.open)
 
     const onDragOver: React.DragEventHandler = (event: React.DragEvent) => {
         event.preventDefault();
@@ -41,7 +43,6 @@ const EditMode: FC<Props> = (props: Props) => {
             }
         }
     }
-
 
     return (
         <div
@@ -78,7 +79,7 @@ const EditMode: FC<Props> = (props: Props) => {
                                 sessionId={props.sessionId}
                                 componentId={stock.getId()}
                                 color={SELECTED_COLOR}
-                                draggable={true}
+                                draggable={false}
                                 text={stock.getData().text}
                                 firebaseDataModel={props.firebaseDataModel}
                             />
@@ -98,13 +99,17 @@ const EditMode: FC<Props> = (props: Props) => {
                 )
             })}
             {(open && selected)
-                && <EditBox
-                    setOpen={setOpen}
-                    open={open}
-                    component={selected}
-                    sessionId={props.sessionId}
-                    firebaseDataModel={props.firebaseDataModel}
-                />}
+                && 
+                < div 
+                    data-testid="editMode-EditBox-div">
+                    <EditBox
+                        setOpen={setOpen}
+                        open={open}
+                        component={selected}
+                        sessionId={props.sessionId}
+                        firebaseDataModel={props.firebaseDataModel}
+                    />
+                </div>}
         </div>
     )
 }

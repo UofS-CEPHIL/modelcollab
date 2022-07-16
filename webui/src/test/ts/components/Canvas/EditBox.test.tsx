@@ -65,11 +65,11 @@ describe("<EditBox />", () => {
         expect(editBox_Modal).toContainElement(editBox_Box);
         expect(editBox_Box).not.toContainElement(editBox_Modal);
 
-        expect(editBox_Box).toHaveTextContent("Edit Flow")
+        expect(editBox_Box).toHaveTextContent("Edit Flow");
         
     });
 
-    test("Should invoke callback when text changed", async () => {
+    test("Should invoke callback when textfield changed while editing Stocks", async () => {
         const updateFunction = jest.fn();
         const firebaseDataModel: FirebaseDataModel = {
             subscribeToComponent: () => { },
@@ -85,7 +85,7 @@ describe("<EditBox />", () => {
         expect(updateFunction).toHaveBeenCalled();
     });
 
-    test("Should invoke callback when textfield changed", async () => {
+    test("Should invoke callback when textfield changed while editing Flows", async () => {
         const updateFunction = jest.fn();
         const firebaseDataModel: FirebaseDataModel = {
             subscribeToComponent: () => { },
@@ -100,10 +100,10 @@ describe("<EditBox />", () => {
                                                 firebaseDataModel });
 
         const edit_flow_dependsOn_text = await findByTestId("edit-flow-dependsOn-textfield-mui");
-        fireEvent.change(edit_flow_dependsOn_text, { target: { value: 'a' } })
+        fireEvent.change(edit_flow_dependsOn_text, { target: { value: 'a' } });
 
         const edit_flow_equation_text = await findByTestId("edit-flow-equation-textfield-mui");
-        fireEvent.change(edit_flow_equation_text, { target: { value: 'i' } })
+        fireEvent.change(edit_flow_equation_text, { target: { value: 'i' } });
         
         expect(updateFunction).toHaveBeenCalledTimes(2);
 
@@ -122,7 +122,7 @@ describe("<EditBox />", () => {
         const { findByTestId } = renderEditBox({ setOpen, firebaseDataModel});
 
         const edit_button = await findByTestId("editBox-Button");
-        fireEvent.click(edit_button )
+        fireEvent.click(edit_button );
         
         expect(setOpen).toBeCalledWith(false);
     });
@@ -144,7 +144,7 @@ describe("<EditBox />", () => {
                                                 setOpen });
 
         const edit_button = await findByTestId("editBox-Button");
-        fireEvent.click(edit_button )
+        fireEvent.click(edit_button );
         
         expect(setOpen).toBeCalledWith(false);
     });
@@ -183,7 +183,7 @@ describe("<EditBox />", () => {
                 )
             )
         );
-        expect(edit_stock_text).toHaveValue("45556")
+        expect(edit_stock_text).toHaveValue("45556");
     });
 
     test("Should update component when database updates while editing Flow", async () => {
@@ -208,6 +208,6 @@ describe("<EditBox />", () => {
                                                 {from: TEST_FROM_ID, to: TEST_TO_ID, dependsOn: [""], equation: "Stock1 + Stock2", text: ""})
             )
         );
-        expect(edit_flow_equation_text).toHaveValue("Stock1 + Stock2")
+        expect(edit_flow_equation_text).toHaveValue("Stock1 + Stock2");
     });
 });

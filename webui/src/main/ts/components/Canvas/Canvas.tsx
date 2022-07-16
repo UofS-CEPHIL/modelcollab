@@ -91,6 +91,8 @@ const Canvas: FC<Props> = (props: Props) => {
                             data-testid="canvas-editMode-div"
                         >
                             <EditMode 
+                                selected={null}
+                                open={false}
                                 data = {data}
                                 sessionId = {props.sessionId}
                                 firebaseDataModel = {props.firebaseDataModel}

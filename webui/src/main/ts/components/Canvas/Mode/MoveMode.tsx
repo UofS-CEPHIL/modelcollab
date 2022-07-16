@@ -21,8 +21,6 @@ const MoveMode: FC<Props> = (props: Props) => {
         if (event.currentTarget.className === "draggable-container") return;
     }
 
- 
-    
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
         if (typeof ((event.target as Element).className) === "string" 
         && (event.target as Element).className
