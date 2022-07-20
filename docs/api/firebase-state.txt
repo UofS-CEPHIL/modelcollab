@@ -1,31 +1,15 @@
-Model Collab
-API Documentation - firebase store
-V0.0.1
-Eric Redekopp
-2022/05/13
 
 This document describes the format of the firebase document that
-stores the UI's internal state. This is intended for Firebase RT
-Database and is to be stored as a single JSON document.
+serves as the database for the application. Since it is Firebase, it
+is all one huge JSON object as shown under "Main Format".
 
 
 ################################# Main Format ##################################
 
 {
-
-    "sessions": {
-        "session-id": {
-            "component-ids": [
-                "component-id",
-                ...
-            ],
-            "results": {
-                "result-id": string, // UTC timestamp in ISO format
-                ...
-            }
-        },
+    "session-ids": [
         ...
-    },
+    ],
 
     "components": {
         "session-id": {
@@ -34,16 +18,19 @@ Database and is to be stored as a single JSON document.
                 "data": {}          // see below
             },
             ...
-        }
+        },
+        ...
     }
     
     "results": {
-        "result-id": {
-            // TBD
+        "session-id": {
+            "result-id": {
+                TBD
+            },
+            ...
         },
         ...
     }   
-
 }
 
 
@@ -53,12 +40,21 @@ Database and is to be stored as a single JSON document.
 Each component type has its own "data" object used in the "components"
 list, which contains all the data specific to that object type.
 
+#### Parameters ####
+
+{
+    startTime: number,       // The model's start time
+    stopTime: number,        // The model's stop time (non-inclusive)
+    params: {
+        "param": string      // All other parameters
+    }
+}
 
 ###### Stock #######
 
 {
-    "x": int,                // The x position of the stock on the canvas
-    "y": int,                // The y position of the stock on the canvas
+    "x": number,             // The x position of the stock on the canvas
+    "y": number,             // The y position of the stock on the canvas
     "text": string,          // The text to be rendered on the stock
     "initvalue": string      // The initial value of the stock
                              //   (may be an equation, param, or var)

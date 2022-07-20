@@ -1,0 +1,10 @@
+
+#################################### About #####################################
+
+The integration tests are written in selenium-webdriver and perform
+basic functions on the web UI.
+
+At this time they are rather crude and executed by running test.sh. We
+hope one day to integrate these into Github Actions as a proper CI
+etc.
+

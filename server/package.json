@@ -1,0 +1,28 @@
+{
+  "name": "server",
+  "version": "0.0.1",
+  "description": "The server which acts as the backend for Modelcollab",
+  "main": "build/main/ts/main.js",
+  "scripts": {
+    "start": "tsc && node build/main/ts/Main.js",
+    "build": "tsc",
+    "test": "jest"
+  },
+  "author": "",
+  "dependencies": {
+    "database": "file:../database",
+    "express": "^4.18.1",
+    "firebase": "^9.9.0",
+    "ts-jest": "^28.0.5",
+    "webpack": "^5.73.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "@types/express": "^4.17.13",
+    "@types/jest": "^28.1.3",
+    "@types/node": "^18.0.0",
+    "jest": "^28.1.2",
+    "typescript": "^4.7.4"
+  },
+  "types": "build/src/main/ts/Main.d.ts"
+}

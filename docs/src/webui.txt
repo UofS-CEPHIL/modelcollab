@@ -1,0 +1,24 @@
+
+#################################### About #####################################
+
+The WebUI is a basic create-react-app application that serves the
+React front-end.
+
+The basic flow is that we enter through App, which shows a LoginScreen
+until the user authenticates using Google. After that, the LoginScreen
+disappears and is replaced with a SimulationScreen. The simulation
+screen consists of various items found inside the Components
+directory.
+
+
+#################################### Usage #####################################
+
+npm start
+
+    Compile and start the React server on localhost.
+
+
+npm test
+
+    Run the Jest test suite.
+

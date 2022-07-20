@@ -1,0 +1,164 @@
+{
+    "sessions": { },
+    "components": {
+        "1": {
+            "1": {
+                "type": "stock",
+                "data": {
+                    "initvalue": "38010000.0",
+                    "text": "S",
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            "2": {
+                "type": "stock",
+                "data": {
+                    "initvalue": "0.0",
+                    "text": "E",
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            "3": {
+                "type": "stock",
+                "data": {
+                    "initvalue": "1.0",
+                    "text": "I",
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            "4": {
+                "type": "stock",
+                "data": {
+                    "initvalue": "0.0",
+                    "text": "R",
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            "5": {
+                "type": "stock",
+                "data": {
+                    "initvalue": "0.0",
+                    "text": "HICU",
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            "6": {
+                "type": "stock",
+                "data": {
+                    "initvalue": "0.0",
+                    "text": "HNICU",
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            "7": {
+                "type": "flow",
+                "data": {
+                    "equation": "p.B*u._1*u._3/p.N",
+                    "text": "newIncidence",
+                    "from": "1",
+                    "to": "2",
+                    "dependsOn": ["1", "3"]
+                }
+            },
+            "8": {
+                "type": "flow",
+                "data": {
+                    "equation": "u._2*p.ri",
+                    "text": "newInfectious",
+                    "from": "2",
+                    "to": "3",
+                    "dependsOn": ["2"]
+                }
+            },
+            "9": {
+                "type": "flow",
+                "data": {
+                    "equation": "u._3/p.tr * (1.0 - p.fH)",
+                    "text": "newRecovery",
+                    "from": "3",
+                    "to": "4",
+                    "dependsOn": ["3"]
+                }
+            },
+            "10": {
+                "type": "flow",
+                "data": {
+                    "equation": "u._4/p.tw",
+                    "text": "waningImmunity",
+                    "from": "4",
+                    "to": "1",
+                    "dependsOn": ["4"]
+                }
+            },
+            "11": {
+                "type": "flow",
+                "data": {
+                    "equation": "u._3/p.tr * p.fH * p.fICU",
+                    "text": "hicuAdmission",
+                    "from": "3",
+                    "to": "5",
+                    "dependsOn": ["3"]
+                }
+            },
+            "12": {
+                "type": "flow",
+                "data": {
+                    "equation": "u._3/p.tr * p.fH * (1.0 - p.fICU)",
+                    "text": "hnicuAdmission",
+                    "from": "3",
+                    "to": "6",
+                    "dependsOn": ["3"]
+                }
+            },
+            "13": {
+                "type": "flow",
+                "data": {
+                    "equation": "u._5/p.tICU",
+                    "text": "outICU",
+                    "from": "5",
+                    "to": "6",
+                    "dependsOn": ["5"]
+                }
+            },
+            "14": {
+                "type": "flow",
+                "data": {
+                    "equation": "u._6/p.tH",
+                    "text": "recoveryH",
+                    "from": "6",
+                    "to": "4",
+                    "dependsOn": ["6"]
+                }
+            },
+            "15": {
+                "type": "parameters",
+                "data": {
+                    "startTime": "0.0",
+                    "stopTime": "300.0",
+                    "params": {                        
+                        "B": "0.8",
+                        "N": "3081001.0",
+                        "tr": "12.22",
+                        "tw": "2*365.0",
+                        "fH": "0.002",
+                        "fICU": "0.23",
+                        "tICU": "6.0",
+                        "tH": "12.0",
+                        "rv": "0.01",
+                        "eP": "0.6",
+                        "eF": "0.85",
+                        "ri": "0.207",
+                        "ria": "0.138"
+                    }
+                }
+            }
+        }
+    },
+    "results": { }
+}
