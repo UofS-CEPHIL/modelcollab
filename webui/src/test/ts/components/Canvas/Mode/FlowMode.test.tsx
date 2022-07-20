@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from "@testing-library/react";
-import FlowMode, { Props } from "../../../../../main/ts/components/Canvas/Mode/FlowMode";
+import FlowMode, { Props } from "../../../../../main/ts/components/Canvas/FlowModeCanvas";
 import { FirebaseComponentModel as schema } from 'database/build/export';
 import { DataContainer } from '../../../../../main/ts/data/DataContainer';
 import FirebaseDataModel from '../../../../../main/ts/data/FirebaseDataModel';

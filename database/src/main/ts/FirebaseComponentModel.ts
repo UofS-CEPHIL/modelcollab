@@ -38,8 +38,8 @@ export abstract class FirebaseDataComponent {
 export interface FirebaseDataObject { };
 
 export function createFirebaseDataComponent(id: string, data: any) {
-    const componentType = data.type;
-    const dataVal = data.data;
+    const componentType: string = data.type;
+    const dataVal: any = data.data;
     let component: FirebaseDataComponent;
 
     switch (componentType) {
@@ -56,6 +56,7 @@ export function createFirebaseDataComponent(id: string, data: any) {
             break;
 
         case ComponentType.FLOW.toString():
+            if (!dataVal.dependsOn) dataVal.dependsOn = [];
             component = new FlowFirebaseComponent(
                 id,
                 {
@@ -160,10 +161,10 @@ export class StockFirebaseComponent extends FirebaseDataComponent {
 
     dataEquals(other: any) {
         const d = this.getData();
-        return other.getData().x == d.x && 
-               other.getData().y == d.y && 
-               other.getData().text == d.text && 
-               other.getData().initvalue == d.initvalue;
+        return other.getData().x == d.x &&
+            other.getData().y == d.y &&
+            other.getData().text == d.text &&
+            other.getData().initvalue == d.initvalue;
     }
 
     withData(d: StockComponentData): StockFirebaseComponent {

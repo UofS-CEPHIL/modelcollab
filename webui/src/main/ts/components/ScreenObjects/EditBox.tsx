@@ -1,0 +1,131 @@
+import Modal from '@mui/material/Modal';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { Button, TextField } from '@mui/material';
+import React, { ReactElement } from 'react';
+import { FirebaseComponentModel as schema } from "database/build/export";
+
+export interface Props {
+    initialComponent: schema.FirebaseDataComponent;
+    handleSave: (c: schema.FirebaseDataComponent) => void;
+    handleCancel: () => void;
+}
+
+export interface State {
+    component: schema.FirebaseDataComponent;
+}
+
+export default class EditBox extends React.Component<Props, State> {
+
+    constructor(props: Props) {
+        super(props);
+        this.state = { component: props.initialComponent };
+    }
+
+    private STYLE = {
+        position: 'absolute' as 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        border: '2px solid #000',
+        boxShadow: 24,
+        p: 4,
+    };
+
+    private handleChange(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>): void {
+        const newData = { ...this.state.component.getData(), [event.target.name]: event.target.value };
+        let component: schema.FirebaseDataComponent = this.state.component.withData(newData);
+        this.setState({ component });
+    };
+
+    render(): ReactElement {
+        return (
+            <Modal
+                open={true}
+            >
+                <Box sx={this.STYLE}>
+                    {this.renderContents()}
+                    <Button
+                        variant="contained"
+                        onClick={() => this.props.handleSave(this.state.component)}
+                    >
+                        Save
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={this.props.handleCancel}
+                    >
+                        Cancel
+                    </Button>
+                </Box>
+            </Modal>
+        );
+    }
+
+    private renderContents(): ReactElement {
+        if (this.state.component.getType() === schema.ComponentType.STOCK) {
+            return (
+                <Box sx={this.STYLE}>
+                    <Typography id="modal-modal-title" variant="h6" component="h2">
+                        Edit Stock
+                    </Typography>
+                    <TextField
+                        id="outlined-basic"
+                        value={this.state.component.getData().initvalue}
+                        onChange={this.handleChange}
+                        name="initvalue"
+                        label="Initial Value"
+                        inputProps={{
+                            className: "Mui_Stock",
+                            id: this.props.initialComponent.getId(),
+                            "data-testid": "stock-textfield-mui"
+                        }}
+                    />
+                    <TextField
+                        id="outlined-basic"
+                        value={this.state.component.getData().initvalue}
+                        onChange={this.handleChange}
+                        name="text"
+                        label="Name"
+                        inputProps={{
+                            className: "Mui_Stock",
+                            id: this.props.initialComponent.getId(),
+                            "data-testid": "stock-textfield-mui"
+                        }}
+                    />
+                </Box >
+            );
+        }
+        else if (this.state.component.getType() === schema.ComponentType.FLOW) {
+            return (
+                <Box sx={this.STYLE}>
+                    <Typography id="modal-modal-title" variant="h6" component="h2">
+                        Edit Flow
+                    </Typography>
+                    <TextField id="outlined-basic"
+                        value={this.state.component.getData().equation}
+                        onChange={this.handleChange}
+                        name="equation"
+                        label="Equation"
+                        inputProps={{
+                            className: "Mui_Stock",
+                            id: this.props.initialComponent.getId(),
+                            "data-testid": "stock-textfield-mui"
+                        }}
+                    />
+                </Box>
+            );
+        }
+        else {
+            return (
+                <Box sx={this.STYLE}>
+                    <Typography id="modal-modal-title" variant="h6" component="h2">
+                        {"Error: unknown component type"}
+                    </Typography>
+                </Box>
+            );
+        }
+    }
+}

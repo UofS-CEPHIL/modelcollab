@@ -1,6 +1,6 @@
 import { render, fireEvent } from "@testing-library/react";
 
-import { UiMode } from "../../../../main/ts/components/Canvas/Mode/UiMode";
+import { UiMode } from "../../../../main/ts/UiMode";
 import Toolbar, { Props } from "../../../../main/ts/components/Toolbar/Toolbar";
 
 function renderToolbar(props: Partial<Props> = {}) {
@@ -83,5 +83,5 @@ describe("<Toolbar />", () => {
         fireEvent.click(tab, { target: { textContent: "Edit" } })
         expect(setMode).toBeCalledWith(UiMode.EDIT)
     })
- 
+
 })

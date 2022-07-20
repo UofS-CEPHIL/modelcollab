@@ -1,5 +1,5 @@
 import { fireEvent, render } from "@testing-library/react";
-import Flow, { Props } from "../../../../main/ts/components/Canvas/Flow";
+import Flow, { Props } from "../../../../main/ts/components/ScreenObjects/Flow";
 import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
 import { act } from 'react-dom/test-utils';
 import { FirebaseComponentModel as schema } from 'database/build/export';
@@ -43,30 +43,30 @@ function renderFlow(props: Partial<Props> = {}) {
 
 describe("<Flow />", () => {
     test("Should display Flow with default settings", async () => {
-        const {findByTestId} = renderFlow();
+        const { findByTestId } = renderFlow();
 
         const flowSVG = await findByTestId("flow-svg");
         const flowLINE = await findByTestId("flow-line");
         const flowARROWHEAD = await findByTestId("flow-arrowhead");
         const flowTextDiv = await findByTestId("flow-text-div");
-  
+
         expect(flowSVG).toHaveStyle({
-            backgroundColor: "transparent",            
+            backgroundColor: "transparent",
         });
 
-        expect(flowSVG).toHaveAttribute("width","0");
-        expect(flowSVG).toHaveAttribute("height","0");
+        expect(flowSVG).toHaveAttribute("width", "0");
+        expect(flowSVG).toHaveAttribute("height", "0");
 
-        expect(flowLINE).toHaveAttribute("stroke","black");
+        expect(flowLINE).toHaveAttribute("stroke", "black");
         expect(flowLINE).toHaveAttribute("x1", "0");
         expect(flowLINE).toHaveAttribute("y1", "0");
         expect(flowLINE).toHaveAttribute("x2", "0");
         expect(flowLINE).toHaveAttribute("y2", "0");
 
-        expect(flowARROWHEAD).toHaveAttribute("markerWidth","10");
-        expect(flowARROWHEAD).toHaveAttribute("markerHeight","10");
-        expect(flowARROWHEAD).toHaveAttribute("refX","0");
-        expect(flowARROWHEAD).toHaveAttribute("refY","3");
+        expect(flowARROWHEAD).toHaveAttribute("markerWidth", "10");
+        expect(flowARROWHEAD).toHaveAttribute("markerHeight", "10");
+        expect(flowARROWHEAD).toHaveAttribute("refX", "0");
+        expect(flowARROWHEAD).toHaveAttribute("refY", "3");
 
         expect(flowTextDiv).toHaveStyle({
             position: "absolute",
@@ -99,13 +99,13 @@ describe("<Flow />", () => {
             registerComponentRemovedListener: () => { }
 
         };
-        
-        const { findByTestId } = renderFlow( { firebaseDataModel: firebaseDataModel });
+
+        const { findByTestId } = renderFlow({ firebaseDataModel: firebaseDataModel });
         const flowLINE = await findByTestId("flow-line");
         const flowSVG = await findByTestId("flow-svg");
         const flowTextDiv = await findByTestId("flow-text-div");
 
-        act( () => 
+        act(() =>
             subFunction.mock.lastCall[2](
                 new schema.StockFirebaseComponent(
                     TEST_COMPONENT_FROM_ID,
@@ -119,20 +119,20 @@ describe("<Flow />", () => {
         expect(flowLINE).toHaveAttribute("x2", "70");
         expect(flowLINE).toHaveAttribute("y2", "70");
 
-        expect(flowSVG).toHaveAttribute("width","240");
-        expect(flowSVG).toHaveAttribute("height","220");
+        expect(flowSVG).toHaveAttribute("width", "240");
+        expect(flowSVG).toHaveAttribute("height", "220");
 
         expect(flowSVG).toHaveStyle(
-            {"transform": "translate(-20px, 85px)"});
+            { "transform": "translate(-20px, 85px)" });
 
-        
+
         expect(flowTextDiv).toHaveStyle({
-                position: "absolute",
-                left: "20px",
-                top: "195px",
+            position: "absolute",
+            left: "20px",
+            top: "195px",
         });
 
-        act( () => 
+        act(() =>
             subFunction.mock.lastCall[2](
                 new schema.StockFirebaseComponent(
                     TEST_COMPONENT_TO_ID,
@@ -146,10 +146,10 @@ describe("<Flow />", () => {
         expect(flowLINE).toHaveAttribute("x1", "70");
         expect(flowLINE).toHaveAttribute("y1", "125");
 
-        expect(flowSVG).toHaveAttribute("width","495");
-        expect(flowSVG).toHaveAttribute("height","195");
+        expect(flowSVG).toHaveAttribute("width", "495");
+        expect(flowSVG).toHaveAttribute("height", "195");
         expect(flowSVG).toHaveStyle(
-            {"transform": "translate(80px, 110px)"}
+            { "transform": "translate(80px, 110px)" }
         );
 
         expect(flowTextDiv).toHaveStyle({
@@ -176,11 +176,13 @@ describe("<Flow />", () => {
             subFunction.mock.lastCall[2](
                 new schema.FlowFirebaseComponent(
                     TEST_COMPONENT_ID,
-                    { from: TEST_COMPONENT_FROM_ID, 
-                       to : TEST_COMPONENT_TO_ID,
-                       text: TEST_TEXT, 
-                       equation: "",
-                       dependsOn: []}
+                    {
+                        from: TEST_COMPONENT_FROM_ID,
+                        to: TEST_COMPONENT_TO_ID,
+                        text: TEST_TEXT,
+                        equation: "",
+                        dependsOn: []
+                    }
                 )
             )
         );

@@ -1,6 +1,6 @@
 import { FC, useEffect } from 'react';
 
-import FirebaseManager from "../../FirebaseManager";
+import FirebaseManager from "../../data/FirebaseManager";
 
 interface Props {
     firebaseManager: FirebaseManager;
