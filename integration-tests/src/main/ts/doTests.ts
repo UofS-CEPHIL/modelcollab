@@ -5,7 +5,7 @@ import { canvasPageTestSuite } from "./canvasPage";
 // import FirebaseManager from "../../main/ts/FirebaseManager";
 // import FirebaseTestingDataModelImpl from "../../main/ts/data/FirebaseTestingDataModelImpl";
 import FirebaseInteractions from "./data/FirebaseInteractions"
-
+require('chromedriver');
 export const selenium = require("selenium-webdriver");
 export const WEB_ADDRESS = "http://localhost:3000";
 export const SUCCESS_MESSAGE = "";

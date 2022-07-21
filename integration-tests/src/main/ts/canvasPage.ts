@@ -1,6 +1,8 @@
-import { ComponentType, FirebaseDataComponent, StockFirebaseComponent } from "../../main/ts/data/FirebaseComponentModel";
-import FirebaseDataModel from "../../main/ts/data/FirebaseDataModel";
-import FirebaseTestingDataModel from "../../main/ts/data/FirebaseTestingDataModel";
+// import { ComponentType, FirebaseDataComponent, StockFirebaseComponent } from "database/build/export";
+import {FirebaseComponentModel as schema} from "database/build/export"
+// import FirebaseDataModel from "../../main/ts/data/FirebaseDataModel";
+// import FirebaseTestingDataModel from "../../main/ts/data/FirebaseTestingDataModel";
+import FirebaseInteractions from "./data/FirebaseInteractions";
 import { clickElementWithOffset, dragElementByOffset, ensurePageHasTitle, searchForElementWithClassName, searchForElementWithId, selenium, SUCCESS_MESSAGE, verifyElementDoesNotExist } from "./doTests";
 
 const CANVAS_ID = "canvas-div";
@@ -119,7 +121,7 @@ async function createStock(driver: any): Promise<string> {
     return await searchForElementWithClassName(driver, STOCK_CLASSNAME);
 }
 
-async function verifyFirebaseHasOneStock(_: any, dm?: FirebaseTestingDataModel): Promise<string> {
+async function verifyFirebaseHasOneStock(_: any, dm?: FirebaseInteractions): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
     const sessions = dm.getSessionIds();
@@ -132,7 +134,7 @@ async function verifyFirebaseHasOneStock(_: any, dm?: FirebaseTestingDataModel):
     if (myComponents.length !== 1)
         return "Expected one stock but found ${myComponents.length}";
     const myComponent = myComponents[0];
-    if (myComponent.getType() !== ComponentType.STOCK)
+    if (myComponent.getType() !== schema.ComponentType.STOCK)
         return `Expected component to be Stock but was type: ${myComponent.getType()}`
 
     return SUCCESS_MESSAGE;
@@ -151,7 +153,7 @@ async function moveStock(driver: any): Promise<string> {
     return dragElementByOffset(driver, OFFSET_PX, stock);
 }
 
-async function verifyLocationUpdatedInFirebase(driver: any, dm?: FirebaseTestingDataModel): Promise<string> {
+async function verifyLocationUpdatedInFirebase(driver: any, dm?: FirebaseInteractions): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
     const sessions = dm.getSessionIds();
@@ -197,7 +199,7 @@ async function addTextToStock(driver: any): Promise<string> {
     return SUCCESS_MESSAGE;
 }
 
-async function verifyTextUpdatedInFirebase(_: any, dm?: FirebaseTestingDataModel): Promise<string> {
+async function verifyTextUpdatedInFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
     const sessions = dm.getSessionIds();
@@ -210,7 +212,7 @@ async function verifyTextUpdatedInFirebase(_: any, dm?: FirebaseTestingDataModel
     if (myComponents.length !== 1)
         return `Expected one component but found ${myComponents.length}`;
     const myComponent = myComponents[0];
-    if (myComponent.getType() !== ComponentType.STOCK)
+    if (myComponent.getType() !== schema.ComponentType.STOCK)
         return `Expected component to be stock but was ${myComponent.getType()}`;
 
     const myText = myComponent.getData().text;
@@ -220,14 +222,14 @@ async function verifyTextUpdatedInFirebase(_: any, dm?: FirebaseTestingDataModel
     return SUCCESS_MESSAGE;
 }
 
-async function createSecondStockInFirebase(_: any, dm?: FirebaseTestingDataModel): Promise<string> {
+async function createSecondStockInFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
     const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
         return "Expected one session but found ${sessions.length}";
     const mySession = sessions[0];
-    const newData = new StockFirebaseComponent(
+    const newData = new schema.StockFirebaseComponent(
         COMPONENT_ID,
         {
             x: 0,
@@ -268,14 +270,14 @@ async function verifyCorrectStockStillSelected(driver: any): Promise<string> {
     return SUCCESS_MESSAGE;
 }
 
-async function moveSecondStockInFirebase(_: any, dm?: FirebaseDataModel): Promise<string> {
+async function moveSecondStockInFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
     const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
         return "Expected one session but found ${sessions.length}";
     const mySession = sessions[0];
-    const newData = new StockFirebaseComponent(
+    const newData = new schema.StockFirebaseComponent(
         COMPONENT_ID,
         {
             x: OFFSET_PX,
@@ -300,14 +302,14 @@ async function verifyStockMovedOnCanvas(driver: any): Promise<string> {
     return SUCCESS_MESSAGE;
 }
 
-async function editSecondStockTextInFirebase(_: any, dm?: FirebaseDataModel): Promise<string> {
+async function editSecondStockTextInFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
     const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
         return "Expected one session but found ${sessions.length}";
     const mySession = sessions[0];
-    const newData = new StockFirebaseComponent(
+    const newData = new schema.StockFirebaseComponent(
         COMPONENT_ID,
         {
             x: OFFSET_PX,
@@ -338,7 +340,7 @@ async function clickDeleteModeButton(driver: any): Promise<string> {
     return SUCCESS_MESSAGE;
 }
 
-async function deleteSecondStockFromFirebase(_: any, dm?: FirebaseDataModel): Promise<string> {
+async function deleteSecondStockFromFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
     const sessions = dm.getSessionIds();
@@ -369,7 +371,7 @@ async function deleteFirstStock(driver: any): Promise<string> {
     return SUCCESS_MESSAGE;
 }
 
-async function verifyFirstStockDeletedFromFirebase(_: any, dm?: FirebaseTestingDataModel): Promise<string> {
+async function verifyFirstStockDeletedFromFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
     if (dm.getSessionIds().length !== 1) {
@@ -386,7 +388,7 @@ async function verifyFirstStockDeletedFromFirebase(_: any, dm?: FirebaseTestingD
   This test will leave the Canvas in that same state.
  */
 export const canvasPageTestSuite:
-    ((driver: any, firebaseDm?: FirebaseTestingDataModel) => Promise<string>)[] =
+    ((driver: any, firebaseDm?: FirebaseInteractions) => Promise<string>)[] =
     [
         verifyPageHasCorrectTitle,
         verifyPageHasToolbar,

@@ -1,6 +1,6 @@
 import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build/export";
 import { FirebaseApp,initializeApp } from "firebase/app";
-import { connectDatabaseEmulator, Database, getDatabase, ref, get, set } from "firebase/database";
+import { connectDatabaseEmulator, Database, getDatabase, ref, get, set, remove } from "firebase/database";
 import { Auth, getAuth, GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup } from "firebase/auth";
 import { initializeTestEnvironment, RulesTestEnvironment } from "@firebase/rules-unit-testing";
 
@@ -81,6 +81,15 @@ export default class FirebaseInteractions {
         );
     }
 
+    removeComponent(sessionId: string, componentId: string) {
+        const componentPath = this.makeComponentPath(sessionId, componentId);
+        remove(
+            ref(
+                this.getDb(),
+                componentPath
+            )
+        );
+    }
 
     getSessionIds(): string[] {
         return [...this.sessionIds];
