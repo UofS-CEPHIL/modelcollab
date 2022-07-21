@@ -1,16 +1,15 @@
 import { loginPageTestSuite } from "./loginPage";
 import { canvasPageTestSuite } from "./canvasPage";
-import FirebaseDataModel from "../../main/ts/data/FirebaseDataModel";
-import FirebaseTestingDataModel from "../../main/ts/data/FirebaseTestingDataModelImpl";
-import FirebaseManager from "../../main/ts/FirebaseManager";
-import FirebaseTestingDataModelImpl from "../../main/ts/data/FirebaseTestingDataModelImpl";
+// import FirebaseDataModel from "../../main/ts/data/FirebaseDataModel";
+// import FirebaseTestingDataModel from "../../main/ts/data/FirebaseTestingDataModelImpl";
+// import FirebaseManager from "../../main/ts/FirebaseManager";
+// import FirebaseTestingDataModelImpl from "../../main/ts/data/FirebaseTestingDataModelImpl";
+import FirebaseInteractions from "./data/FirebaseInteractions"
 
 export const selenium = require("selenium-webdriver");
-
 export const WEB_ADDRESS = "http://localhost:3000";
 export const SUCCESS_MESSAGE = "";
 export const DEFAULT_WAIT_TIME_MS = 1000;
-
 export async function navigateToWebAddress(
     driver: any,
     url: string
@@ -138,43 +137,43 @@ async function setupBrowser(driver: any): Promise<void> {
     await driver.manage().deleteAllCookies();
 }
 
-async function setupFirebase(mgr: FirebaseManager): Promise<void> {
+async function setupFirebase(mgr: FirebaseInteractions): Promise<void> {
     mgr.login();
 }
 
 async function doTests() {
 
-    const tests: ((driver: any, fbDm?: FirebaseTestingDataModel) => Promise<string>)[] = [
+    const tests: ((driver: any, fbDm?: FirebaseInteractions) => Promise<string>)[] = [
         // ...loginPageTestSuite,
         // ...canvasPageTestSuite
     ];
 
     const driver = await new selenium.Builder().forBrowser('chrome').build();
-    const firebaseManager = await FirebaseManager.create();
+    const firebaseManager = await FirebaseInteractions.create();
     await setupFirebase(firebaseManager);
-    const firebaseDataModel = new FirebaseTestingDataModelImpl(firebaseManager, driver);
+    // const firebaseDataModel = new FirebaseTestingDataModelImpl(firebaseManager, driver);
     await setupBrowser(driver);
     let message: string;
 
     setTimeout(() => {
-        const sessions = firebaseDataModel.getSessionIds();
+        const sessions = firebaseManager.getSessionIds();
         console.log(sessions);
-        firebaseDataModel.getComponents(sessions[0]).then(c => console.log(c));
+        firebaseManager.getComponents(sessions[0]).then(c => console.log(c));
     }, 1000);
 
     for (const test of tests) {
         console.log("Running test: " + test.name);
         try {
-            message = await test(driver, firebaseDataModel);
+            message = await test(driver, firebaseManager);
         }
         catch (e) {
             message = `Uncaught exception: ${e}`;
         }
         if (message === SUCCESS_MESSAGE) {
-            console.log(`  Success!`)
+            console.log(`Success!`)
         }
         else {
-            console.error(`  Failed: ${message}`);
+            console.error(`Failed: ${message}`);
             break;
         }
     }
