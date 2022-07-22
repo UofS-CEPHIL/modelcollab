@@ -4,13 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import FirebaseManager from "./FirebaseManager";
 import LoginScreen from "./components/screens/LoginScreen";
 import SimulationScreen from "./components/screens/SimulationScreen";
-<<<<<<< HEAD:src/main/ts/App.tsx
-import applicationConfig from "./config/applicationConfig";
-import FirebaseManager from "./FirebaseManager";
-=======
 
 const firebaseManager = new FirebaseManager();
->>>>>>> main:webui/src/main/ts/App.tsx
 
 function App() {
     const [isSignedIn, setIsSignedIn] = useState<boolean>(false);

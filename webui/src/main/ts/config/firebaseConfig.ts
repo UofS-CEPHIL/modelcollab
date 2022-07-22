@@ -6,7 +6,7 @@ const firebaseConfig = {
     storageBucket: "model-collab.appspot.com",
     messagingSenderId: "920735074076",
     appId: "1:920735074076:web:c767b1c5bfffda0f701cd9",
-    useEmulators: false
+    useEmulators: true
   };
 
 export default firebaseConfig;

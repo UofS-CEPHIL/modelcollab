@@ -1,28 +1,7 @@
-<<<<<<< HEAD:src/main/ts/data/FirebaseDataModelImpl.ts
-import {
-    ref,
-    set,
-    onValue,
-    onChildAdded,
-    get,
-    child,
-    remove,
-    onChildRemoved,
-    push
-} from "firebase/database";
-import FirebaseManager from "../FirebaseManager";
-import {
-    ComponentType,
-    FirebaseDataComponent,
-    FlowFirebaseComponent,
-    StockFirebaseComponent
-} from "./FirebaseComponentModel";
-=======
 import { ref, set, onValue, onChildAdded, get, child, remove, onChildRemoved, DataSnapshot } from "firebase/database";
 import FirebaseManager from "../FirebaseManager";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
->>>>>>> main:webui/src/main/ts/data/FirebaseDataModelImpl.ts
 import FirebaseDataModel from "./FirebaseDataModel";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
@@ -55,56 +34,6 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         return `components/${sessionId}/${componentId}`;
     }
 
-<<<<<<< HEAD:src/main/ts/data/FirebaseDataModelImpl.ts
-    protected createComponent(id: string, obj: any): FirebaseDataComponent {
-        const data = obj.data;
-        const componentType = obj.type;
-        let component: FirebaseDataComponent;
-        switch (componentType) {
-            case ComponentType.STOCK.toString():
-                component = new StockFirebaseComponent(
-                    id,
-                    {
-                        x: data.x as number,
-                        y: data.y as number,
-                        text: data.text as string,
-                        initvalue: data.initvalue as string
-                    }
-                );
-                break;
-            case ComponentType.FLOW.toString():
-                component = new FlowFirebaseComponent(
-                    id,
-                    {
-                        from: data.from as string,
-                        to: data.to as string,
-                        equation: data.equation as string,
-                        text: data.text as string,
-                        dependsOn: data.dependsOn as string[]
-                    }
-                );
-                break;
-            default:
-                throw new Error("Unknown component type: " + componentType);
-        }
-        return component;
-    }
-
-    private triggerCallback(
-        snapshot: any,
-        callback: (data: FirebaseDataComponent) => void
-    ) {
-        if (!snapshot || !snapshot.key || !snapshot.val()) return;
-        const component = this.createComponent(snapshot.key, snapshot.val());
-        callback(component);
-    }
-
-    getSessionIds(): string[] {
-        return [...this.sessionIds];
-    }
-
-    updateComponent(sessionId: string, data: FirebaseDataComponent) {
-=======
     private triggerCallback(
         snapshot: DataSnapshot,
         callback: (data: schema.FirebaseDataComponent) => void
@@ -115,7 +44,6 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     }
 
     updateComponent(sessionId: string, data: schema.FirebaseDataComponent) {
->>>>>>> main:webui/src/main/ts/data/FirebaseDataModelImpl.ts
         set(
             ref(
                 this.firebaseManager.getDb(),
@@ -162,14 +90,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-<<<<<<< HEAD:src/main/ts/data/FirebaseDataModelImpl.ts
-    registerComponentCreatedListener(
-        sessionId: string,
-        callback: (data: FirebaseDataComponent) => void
-    ) {
-=======
     registerComponentCreatedListener(sessionId: string, callback: (data: schema.FirebaseDataComponent) => void) {
->>>>>>> main:webui/src/main/ts/data/FirebaseDataModelImpl.ts
         onChildAdded(
             ref(
                 this.firebaseManager.getDb(),
@@ -211,14 +132,6 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         });
     }
 
-<<<<<<< HEAD:src/main/ts/data/FirebaseDataModelImpl.ts
-    assignSessionId() {
-        const sessionIdNums = this.sessionIds.map((s: unknown) => s as number);
-        const newId = Math.max(...sessionIdNums) + 1;
-        const newIdRef = push(ref(this.firebaseManager.getDb(), this.SESSION_IDS_PATH));
-        set(newIdRef, newId);
-        return newId.toString();
-=======
     async getComponentsOnce(sessionId: string): Promise<schema.FirebaseDataComponent[]> {
         function makeComponentsFromSnapshot(snap: DataSnapshot) {
             if (!snap.exists()) return [];
@@ -248,7 +161,6 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
         console.log("Got snapshot.");
         return makeComponentsFromSnapshot(snap);
->>>>>>> main:webui/src/main/ts/data/FirebaseDataModelImpl.ts
     }
 
 }

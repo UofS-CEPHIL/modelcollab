@@ -1,6 +1,6 @@
 import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build/export";
 import { FirebaseApp,initializeApp } from "firebase/app";
-import { connectDatabaseEmulator, Database, getDatabase, ref, get, set, remove } from "firebase/database";
+import { connectDatabaseEmulator, Database, getDatabase, ref, get, set, remove, onChildAdded, onChildRemoved, push } from "firebase/database";
 import { Auth, getAuth, GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup } from "firebase/auth";
 import { initializeTestEnvironment, RulesTestEnvironment } from "@firebase/rules-unit-testing";
 
@@ -17,15 +17,33 @@ export default class FirebaseInteractions {
     private testEnvironment: RulesTestEnvironment | null
     private authStateChangedCallback: ((isSignedIn: boolean) => void) | null;
 
+    private readonly SESSION_IDS_PATH = "/";
+
     constructor() {
-        this.sessionIds = []
-        this.db = null;
-        this.auth = null;
-        this.app = null;
+        this.sessionIds = ["1"];
         this.testEnvironment = null;
+
+        this.app = initializeApp(firebaseConfig);
+        this.auth = getAuth(this.app);
+        this.db = getDatabase(this.app);
+
         this.authStateChangedCallback = null;
+        this.subscribeToSessionIds();
     }
 
+    private subscribeToSessionIds(): void {
+        const sessionsRef = ref(this.getDb(), this.SESSION_IDS_PATH);
+        onChildAdded(
+            sessionsRef,
+            (data: any) => this.sessionIds.push(data.val() as string)
+        );
+        onChildRemoved(
+            sessionsRef,
+            (data: any) =>
+                this.sessionIds = this.sessionIds.filter((s: string) => s !== (data.val() as string))
+        );
+    }
+    
     public static async create(): Promise<FirebaseInteractions> {
         const theManager = new FirebaseInteractions();
         if (applicationConfig.isProduction) {
@@ -142,6 +160,14 @@ export default class FirebaseInteractions {
 
     private isProduction(): boolean {
         return this.testEnvironment === null;
+    }
+
+    assignSessionId() {
+        const sessionIdNums = this.sessionIds.map((s: unknown) => s as number);
+        const newId = Math.max(...sessionIdNums) + 1;
+        const newIdRef = push(ref(this.getDb(), this.SESSION_IDS_PATH));
+        set(newIdRef, newId);
+        return newId.toString();
     }
 
 }

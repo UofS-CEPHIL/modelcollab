@@ -1,2 +1,2 @@
 #!/bin/bash
-tsc doTests.ts && node doTests.js
+npx tsc doTests.ts && node doTests.js

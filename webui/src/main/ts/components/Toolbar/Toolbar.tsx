@@ -28,19 +28,12 @@ export default function Toolbar(props: Props) {
     return (
         <Box sx={{ width: '100%' }} id={TOOLBAR_ID} data-testid={TOOLBAR_ID}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-<<<<<<< HEAD:src/main/ts/components/Toolbar/Toolbar.tsx
-                <Tabs value={props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs' id='toolbar-tabs'>
-                    <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} id='move-tab' />
-                    <Tab label="Create" value={UiMode.CREATE} onClick={handleChange} id='create-tab' />
-                    <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} id='delete-tab' />
-=======
                 <Tabs value={props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs'>
-                    <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} />
-                    <Tab label="Stock" value={UiMode.STOCK} onClick={handleChange} />
-                    <Tab label="Flow" value = {UiMode.FLOW} onClick={handleChange} />
-                    <Tab label="Edit" value = {UiMode.EDIT} onClick={handleChange} />
-                    <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} />
->>>>>>> main:webui/src/main/ts/components/Toolbar/Toolbar.tsx
+                    <Tab label="Move" value={UiMode.MOVE} id="Move-tab" onClick={handleChange} />
+                    <Tab label="Stock" value={UiMode.STOCK} id="Stock-tab"onClick={handleChange} />
+                    <Tab label="Flow" value = {UiMode.FLOW} id="Flow-tab"onClick={handleChange} />
+                    <Tab label="Edit" value = {UiMode.EDIT} id="Edit-tab"onClick={handleChange} />
+                    <Tab label="Delete" value={UiMode.DELETE} id="Delete-tab" onClick={handleChange} />
                 </Tabs>
             </Box>
         </Box>

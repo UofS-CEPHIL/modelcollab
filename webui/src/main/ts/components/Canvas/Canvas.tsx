@@ -136,6 +136,7 @@ const Canvas: FC<Props> = (props: Props) => {
     return (
         <div 
             data-testid="canvas-div"
+            id = "canvas-div"
         >
             {renderMode(props)}       
         </div>

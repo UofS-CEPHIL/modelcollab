@@ -75,13 +75,8 @@ const Stock: FC<Props> = (props) => {
                 background: "white",
                 border: `4px solid ${props.color}`
             }}
-<<<<<<< HEAD:src/main/ts/components/Canvas/Stock.tsx
-            id={`${props.componentId}`}
-            draggable="true"
-=======
             id={`${props.componentId} `}
             draggable={props.draggable}
->>>>>>> main:webui/src/main/ts/components/Canvas/Stock.tsx
             onDragEnd={onDrag}
             data-testid="stock-div"
             className="stock-div"

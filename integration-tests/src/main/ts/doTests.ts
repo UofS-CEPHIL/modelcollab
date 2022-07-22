@@ -1,9 +1,5 @@
 import { loginPageTestSuite } from "./loginPage";
 import { canvasPageTestSuite } from "./canvasPage";
-// import FirebaseDataModel from "../../main/ts/data/FirebaseDataModel";
-// import FirebaseTestingDataModel from "../../main/ts/data/FirebaseTestingDataModelImpl";
-// import FirebaseManager from "../../main/ts/FirebaseManager";
-// import FirebaseTestingDataModelImpl from "../../main/ts/data/FirebaseTestingDataModelImpl";
 import FirebaseInteractions from "./data/FirebaseInteractions"
 require('chromedriver');
 export const selenium = require("selenium-webdriver");
@@ -144,8 +140,8 @@ async function setupFirebase(mgr: FirebaseInteractions): Promise<void> {
 async function doTests() {
 
     const tests: ((driver: any, fbDm?: FirebaseInteractions) => Promise<string>)[] = [
-        // ...loginPageTestSuite,
-        // ...canvasPageTestSuite
+        ...loginPageTestSuite,
+        ...canvasPageTestSuite
     ];
 
     const driver = await new selenium.Builder().forBrowser('chrome').build();

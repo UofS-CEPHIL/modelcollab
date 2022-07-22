@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
+    "outDir": "build",
     "target": "es6",
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ],
+    "declaration": true,
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -17,10 +19,13 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
     "jsx": "react-jsx"
   },
   "include": [
-    "src"
+    "src/main/ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build"
   ]
 }

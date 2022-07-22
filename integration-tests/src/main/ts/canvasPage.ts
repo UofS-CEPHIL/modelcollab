@@ -78,7 +78,7 @@ async function verifyToolbarIsFormattedCorrectly(driver: any): Promise<string> {
             return SUCCESS_MESSAGE;
     }
     let message: string;
-    let buttons = ["move", "create", "delete"];
+    let buttons = ["Move", "Stock", "Flow", "Edit", "Delete"];
 
     for (const button of buttons) {
         message = await findAndValidateButton(button);
@@ -100,18 +100,18 @@ async function verifyCanvasIsEmpty(driver: any): Promise<string> {
 }
 
 async function verifyCanvasIsInMoveMode(driver: any): Promise<string> {
-    return await verifyCanvasIsInMode(driver, "move");
+    return await verifyCanvasIsInMode(driver, "Move");
 }
 
-async function clickCreateModeButton(driver: any): Promise<string> {
-    const createModeButton = await driver.findElement(selenium.By.id("create-tab"));
-    if (!createModeButton) return "Unable to find Create mode button.";
-    await createModeButton.click();
+async function clickStockModeButton(driver: any): Promise<string> {
+    const stockModeButton = await driver.findElement(selenium.By.id("Stock-tab"));
+    if (!stockModeButton) return "Unable to find Create mode button.";
+    await stockModeButton.click();
     return SUCCESS_MESSAGE;
 }
 
-async function verifyCanvasIsInCreateMode(driver: any): Promise<string> {
-    return await verifyCanvasIsInMode(driver, "create");
+async function verifyCanvasIsInStockMode(driver: any): Promise<string> {
+    return await verifyCanvasIsInMode(driver, "Stock");
 }
 
 async function createStock(driver: any): Promise<string> {
@@ -126,13 +126,13 @@ async function verifyFirebaseHasOneStock(_: any, dm?: FirebaseInteractions): Pro
         return "Expected a firebase DM but found none";
     const sessions = dm.getSessionIds();
     if (sessions.length !== 1)
-        return "Expected one session but found ${sessions.length}";
+        return `Expected one session but found ${sessions.length}`;
     const mySession = sessions[0];
     const myComponents = await dm.getComponents(mySession);
     if (!myComponents)
         return "Unable to find any components for session: " + mySession;
     if (myComponents.length !== 1)
-        return "Expected one stock but found ${myComponents.length}";
+        return `Expected one stock but found ${myComponents.length}`;
     const myComponent = myComponents[0];
     if (myComponent.getType() !== schema.ComponentType.STOCK)
         return `Expected component to be Stock but was type: ${myComponent.getType()}`
@@ -395,23 +395,35 @@ export const canvasPageTestSuite:
         verifyToolbarIsFormattedCorrectly,
         verifyPageHasCanvas,
         verifyCanvasIsEmpty,
+
         verifyCanvasIsInMoveMode,
-        clickCreateModeButton,
-        verifyCanvasIsInCreateMode,
+
+        clickStockModeButton,
+        verifyCanvasIsInStockMode,
+
         createStock,
         verifyFirebaseHasOneStock,
+
         clickMoveModeButton,
         verifyCanvasIsInMoveMode,
-        moveStock,
-        verifyLocationUpdatedInFirebase,
+
         selectStock,
         addTextToStock,
         verifyTextUpdatedInFirebase,
+
+        //Resources
+        // moveStock,
+        // verifyLocationUpdatedInFirebase,
+
         createSecondStockInFirebase,
         verifyStockAppearsOnCanvas,
         verifyCorrectStockStillSelected,
         editSecondStockTextInFirebase,
         verifyTextChangedOnCanvas,
+
+        //TODO
+        //end TODO
+
         moveSecondStockInFirebase,
         verifyStockMovedOnCanvas,
         clickDeleteModeButton,
