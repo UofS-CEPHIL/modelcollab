@@ -112,20 +112,22 @@ export async function verifyElementDoesNotExist(
         element = await driver.findElement(locator);
     }
     catch (e: any) {
-        if (e.name == "NoSuchElementError")
+        if (e.name == "NoSuchElementError"){
             return SUCCESS_MESSAGE;
+        }
         else
             throw e;
     }
     if (!element) return `Unable to find element ${elemName}`
+    
     const result: boolean = await driver.wait(
         selenium.until.elementIsNotVisible(
             element
         ),
-        DEFAULT_WAIT_TIME_MS
-    );
+        DEFAULT_WAIT_TIME_MS, 
+    `Element ${elemName} expected to disappear but still visible`);
     if (result) return SUCCESS_MESSAGE;
-    else return "Element ${elemName} expected to disappear but still visible";
+    else return `Element ${elemName} expected to disappear but still visible`;
 }
 
 
@@ -174,7 +176,7 @@ async function doTests() {
         }
     }
     console.log("Done.")
-    driver.quit();
+    //driver.quit();
 }
 
 doTests();

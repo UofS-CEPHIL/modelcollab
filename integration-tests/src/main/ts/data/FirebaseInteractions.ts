@@ -17,7 +17,7 @@ export default class FirebaseInteractions {
     private testEnvironment: RulesTestEnvironment | null
     private authStateChangedCallback: ((isSignedIn: boolean) => void) | null;
 
-    private readonly SESSION_IDS_PATH = "/";
+    private readonly SESSION_IDS_PATH = "/session-ids";
 
     constructor() {
         this.sessionIds = ["1"];

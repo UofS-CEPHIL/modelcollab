@@ -7,6 +7,7 @@ import { clickElementWithOffset, dragElementByOffset, ensurePageHasTitle, search
 
 const CANVAS_ID = "canvas-div";
 const TOOLBAR_ID = "toolbar-box";
+const MUITEXTFIELD_ID = "MuiInput-input MuiInputBase-input Mui_Stock css-1x51dt5-MuiInputBase-input-MuiInput-input"
 const STOCK_CLASSNAME = "stock-div";
 const COMPONENT_ID = "999";
 const OFFSET_PX = 250;
@@ -14,9 +15,14 @@ const EXPECTED_TITLE = "ModelCollab";
 const SOME_TEXT = "text";
 const MORE_TEXT = "moretext";
 const EVEN_MORE_TEXT = "asdfasd";
+const BLACK = "rgb(0, 0, 0)"
+const RED = "rgb(255, 0, 0)"
 
 const getStock = async (driver: any) =>
     await driver.findElement(selenium.By.className(STOCK_CLASSNAME));
+
+const getMuiTextField = async (driver: any) =>
+    await driver.findElement(selenium.By.className(MUITEXTFIELD_ID));
 
 async function getSelectedToolbarTabId(driver: any): Promise<string | null> {
     try {
@@ -28,12 +34,18 @@ async function getSelectedToolbarTabId(driver: any): Promise<string | null> {
     }
 }
 
-function checkStockBackgroundColor(stock: any, expectedColour: string) {
+async function checkStockBorderColor(stock: any, expectedColour: string) {
     if (!stock) return "Unable to find stock.";
-    const colour = stock.getCssValue("background");
-    if (colour.toLowerCase() !== expectedColour)
-        return "Expected selected stock to be ${expectedColour} but found: ${colour}";
-    return SUCCESS_MESSAGE;
+    
+    try {
+        const colour = await stock.getCssValue("border");
+        if (!colour.toLowerCase().includes(expectedColour))
+            return `Expected selected stock to be ${expectedColour} but found: ${colour}`;
+        return SUCCESS_MESSAGE;
+    }
+    catch (e) {
+        return "Encountered error";
+    }
 }
 
 
@@ -92,6 +104,7 @@ async function verifyPageHasCanvas(driver: any): Promise<string> {
 }
 
 async function verifyCanvasIsEmpty(driver: any): Promise<string> {
+    driver.manage().setTimeouts( { implicit: 500 } );
     return await verifyElementDoesNotExist(
         driver,
         selenium.By.className(STOCK_CLASSNAME),
@@ -141,7 +154,7 @@ async function verifyFirebaseHasOneStock(_: any, dm?: FirebaseInteractions): Pro
 }
 
 async function clickMoveModeButton(driver: any): Promise<string> {
-    const moveModeButton = await driver.findElement(selenium.By.id("move-tab"));
+    const moveModeButton = await driver.findElement(selenium.By.id("Move-tab"));
     if (!moveModeButton) return "Unable to find Move mode button.";
     await moveModeButton.click();
     return SUCCESS_MESSAGE;
@@ -181,21 +194,28 @@ async function selectStock(driver: any): Promise<string> {
     let message: string;
 
     let stock = await getStock(driver);
-    message = checkStockBackgroundColor(stock, "blue");
+
+    message = await checkStockBorderColor(stock, BLACK);
     if (message !== SUCCESS_MESSAGE) return message;
+    
     await stock.click();
     stock = await getStock(driver);
-    message = checkStockBackgroundColor(stock, "red");
+    message = await checkStockBorderColor(stock, RED);
     return message;
 }
 
 async function addTextToStock(driver: any): Promise<string> {
     let stock = await getStock(driver);
     driver.actions().doubleClick(stock).perform();
-    driver.sendKeys(SOME_TEXT);
-    stock = await getStock(driver);
-    if (stock.getText() !== SOME_TEXT)
-        return `Expected stock to have text ${SOME_TEXT} but found ${stock.getText()}`
+
+    let mui_textfield = await getMuiTextField(driver)
+    mui_textfield.sendKeys(SOME_TEXT);
+
+    mui_textfield = await getMuiTextField(driver)
+    const textFieldText = await mui_textfield.getAttribute("value");
+    // stock = await getStock(driver);
+    if (textFieldText !== SOME_TEXT)
+        return `Expected stock to have text "${SOME_TEXT}" but found "${textFieldText}"`
     return SUCCESS_MESSAGE;
 }
 
@@ -387,6 +407,8 @@ async function verifyFirstStockDeletedFromFirebase(_: any, dm?: FirebaseInteract
   This test expects to start logged in on the canvas page, with no stocks.
   This test will leave the Canvas in that same state.
  */
+
+
 export const canvasPageTestSuite:
     ((driver: any, firebaseDm?: FirebaseInteractions) => Promise<string>)[] =
     [
@@ -424,11 +446,12 @@ export const canvasPageTestSuite:
         //TODO
         //end TODO
 
-        moveSecondStockInFirebase,
-        verifyStockMovedOnCanvas,
-        clickDeleteModeButton,
-        deleteSecondStockFromFirebase,
-        verifySecondStockDeletedFromCanvas,
-        deleteFirstStock,
-        verifyFirstStockDeletedFromFirebase
+        //Resources
+        // moveSecondStockInFirebase,
+        // verifyStockMovedOnCanvas,
+        // clickDeleteModeButton,
+        // deleteSecondStockFromFirebase,
+        // verifySecondStockDeletedFromCanvas,
+        // deleteFirstStock,
+        // verifyFirstStockDeletedFromFirebase
     ];
