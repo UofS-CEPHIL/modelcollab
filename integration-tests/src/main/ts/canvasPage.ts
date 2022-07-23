@@ -7,7 +7,7 @@ import { clickElementWithOffset, dragElementByOffset, ensurePageHasTitle, search
 
 const CANVAS_ID = "canvas-div";
 const TOOLBAR_ID = "toolbar-box";
-const MUITEXTFIELD_ID = "MuiInput-input MuiInputBase-input Mui_Stock css-1x51dt5-MuiInputBase-input-MuiInput-input"
+const MUITEXTFIELD_CLASSNAME = "MuiInput-input MuiInputBase-input Mui_Stock css-1x51dt5-MuiInputBase-input-MuiInput-input"
 const STOCK_CLASSNAME = "stock-div";
 const COMPONENT_ID = "999";
 const OFFSET_PX = 250;
@@ -22,7 +22,7 @@ const getStock = async (driver: any) =>
     await driver.findElement(selenium.By.className(STOCK_CLASSNAME));
 
 const getMuiTextField = async (driver: any) =>
-    await driver.findElement(selenium.By.className(MUITEXTFIELD_ID));
+    await driver.findElement(selenium.By.className(MUITEXTFIELD_CLASSNAME));
 
 async function getSelectedToolbarTabId(driver: any): Promise<string | null> {
     try {
@@ -266,27 +266,54 @@ async function verifyStockAppearsOnCanvas(driver: any): Promise<string> {
     const stocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
     if (stocks.length !== 2)
         return `Expected 2 stocks but found ${stocks.length}`;
-    const newStock = stocks.find((s: any) => s.getAttribute("id") === COMPONENT_ID);
+
+    //Prefer this method over for-loop, but this gives the wrong Stock. Need to investigate more
+    //const newStock = stocks.find(async (s: any) => await s.getAttribute("id") === COMPONENT_ID);
+    let newStock = null;
+
+    for (var i = 0; i < 2; i++) {
+        const id = await stocks[i].getAttribute("id")
+        if (id === COMPONENT_ID){
+            newStock = stocks[i];
+            break;
+        }
+    }
+
     if (!newStock)
         return "Unable to find new stock on canvas";
-    const left = newStock.getCssValue("left");
-    const top = newStock.getCssValue("top");
-    if (left != 0 || top != 0)
-        return `Expected new stock at 0,0 but found at ${left},${top}`;
+    const left = await newStock.getCssValue("left");
+    const top = await newStock.getCssValue("top");
+    if (left !== "0px" || top !== "0px")
+        return `Expected new stock at 0px,0px but found at ${left},${top}`;
     return SUCCESS_MESSAGE;
 }
 
 async function verifyCorrectStockStillSelected(driver: any): Promise<string> {
+
     const stocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
     if (stocks.length !== 2) return `Expected 2 stocks but found ${stocks.length}`;
-    const secondStock = stocks.find((s: any) => s.getAttribute("id") === COMPONENT_ID);
-    const firstStock = stocks.find((s: any) => s.getAttribute("id") !== COMPONENT_ID);
-    const firstBgColor = firstStock.getCssValue("background");
-    const secondBgColor = secondStock.getCssValue("background");
-    if (firstBgColor !== "red")
-        return `First stock: expected red background but found ${firstBgColor}`;
-    if (secondBgColor !== "blue")
-        return `Second stock: expected blue background but found ${secondBgColor}`;
+
+    // const secondStock = stocks.find( async (s: any) => await s.getAttribute("id") === COMPONENT_ID);
+    // const firstStock = stocks.find( async (s: any) => await s.getAttribute("id") !== COMPONENT_ID);
+    let firstStock;
+    let secondStock;
+
+    for (var i = 0; i < 2; i++) {
+        const id = await stocks[i].getAttribute("id")
+        if (id !== COMPONENT_ID){
+            firstStock = stocks[i]
+        }
+        else if (id === COMPONENT_ID){
+            secondStock = stocks[i]
+        }
+    }
+    const firstBdColor = await firstStock.getCssValue("border");
+    const secondBdColor = await secondStock.getCssValue("border");
+
+    if (!firstBdColor.includes(RED))
+        return `First stock: expected red ${RED} border but found ${firstBdColor}`;
+    if (!secondBdColor.includes(BLACK))
+        return `Second stock: expected black ${BLACK} border but found ${secondBdColor}`;
     return SUCCESS_MESSAGE;
 }
 
@@ -344,10 +371,19 @@ async function editSecondStockTextInFirebase(_: any, dm?: FirebaseInteractions):
 }
 
 async function verifyTextChangedOnCanvas(driver: any): Promise<string> {
-    const stocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
+
+    const stocks = await driver.findElements(selenium.By.className(MUITEXTFIELD_CLASSNAME));
     if (stocks.length !== 2) return `Expected 2 stocks but found ${stocks.length}`;
-    const secondStock = stocks.find((s: any) => s.getAttribute("id") === COMPONENT_ID);
-    const text = secondStock.getText();
+
+    let secondStock;
+    for (var i = 0; i < 2; i++) {
+        const id = await stocks[i].getAttribute("id")
+        if (id === COMPONENT_ID){
+            secondStock = stocks[i];
+            break;
+        }
+    }    
+    const text = await secondStock.getAttribute("value");
     if (text !== EVEN_MORE_TEXT)
         return `Expected text "${EVEN_MORE_TEXT}" in second stock but found "${text}"`;
     return SUCCESS_MESSAGE;
