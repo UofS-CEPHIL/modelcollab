@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react';
 import { Rect, Text, Group } from "react-konva";
 
-import { ComponentType, StockFirebaseComponent } from 'database/build/FirebaseComponentModel';
+import StockUiData from './StockUiData';
 
 export const WIDTH_PX = 100;
 export const HEIGHT_PX = 70;
@@ -9,11 +9,11 @@ export const DEFAULT_COLOR = "black";
 export const SELECTED_COLOR = "red";
 
 export interface Props {
-    stock: StockFirebaseComponent;
+    stock: StockUiData;
     text: string;
     color: string;
     draggable: boolean;
-    updateState: (s: StockFirebaseComponent) => void;
+    updateState: (s: StockUiData) => void;
 }
 
 export default class Stock extends React.Component<Props> {
@@ -21,7 +21,7 @@ export default class Stock extends React.Component<Props> {
         const onDragEnd = (event: any) => {
             const pos = { x: event.target.x(), y: event.target.y() };
             const newComponent = this.props.stock.withData(
-                { ...this.props.stock.getData(), x: pos.x, y: pos.y }
+                { ...this.props.stock.getData(), ...pos }
             );
             this.props.updateState(newComponent);
         };

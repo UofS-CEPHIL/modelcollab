@@ -1,6 +1,5 @@
-import { DataContainer } from "./data/DataContainer";
 import { FirebaseComponentModel as schema } from "database/build/export";
-import { FirebaseDataComponent } from "database/build/FirebaseComponentModel";
+import ComponentUiData from "./components/ScreenObjects/ComponentUiData";
 
 export default class IdGenerator {
 
@@ -13,7 +12,7 @@ export default class IdGenerator {
         return "1";
     }
 
-    static generateUniqueId(existing: ReadonlyArray<FirebaseDataComponent>): string {
+    static generateUniqueId(existing: ReadonlyArray<ComponentUiData>): string {
         let componentID: string;
         let isUsed: boolean;
         do {

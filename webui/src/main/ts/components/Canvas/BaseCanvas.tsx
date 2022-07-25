@@ -1,22 +1,26 @@
 import React, { ReactElement } from 'react';
 import { Stage, Layer } from 'react-konva';
-import FirebaseDataModel from '../../data/FirebaseDataModel';
 import { FirebaseComponentModel as schema } from "database/build/export";
 
-
-export interface Point {
-    x: number;
-    y: number;
-}
+import FirebaseDataModel from '../../data/FirebaseDataModel';
+import ComponentUiData from '../ScreenObjects/ComponentUiData';
+import Flow from '../ScreenObjects/Flow';
+import Stock, { DEFAULT_COLOR, SELECTED_COLOR } from '../ScreenObjects/Stock';
+import Parameter from '../ScreenObjects/Parameter';
+import FlowUiData from '../ScreenObjects/FlowUiData';
+import StockUiData from '../ScreenObjects/StockUiData';
+import ParameterUiData from '../ScreenObjects/ParameterUiData';
+import ConnectionUiData from '../ScreenObjects/ConnectionUiData';
+import Connection from '../ScreenObjects/Connection';
 
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
     sessionId: string;
-    children: ReadonlyArray<schema.FirebaseDataComponent>;
+    children: ReadonlyArray<ComponentUiData>;
     selectedComponentId: string | null;
 
-    addComponent: (_: schema.FirebaseDataComponent) => void;
-    editComponent: (_: schema.FirebaseDataComponent) => void;
+    addComponent: (_: ComponentUiData) => void;
+    editComponent: (_: ComponentUiData) => void;
     deleteComponent: (id: string) => void;
     setSelected: (id: string | null) => void;
 }
@@ -26,34 +30,51 @@ export class ComponentNotFoundError extends Error { }
 
 export default abstract class BaseCanvas extends React.Component<Props> {
 
-    // Must return a Konva node. Couldn't make the imports work that way.
-    protected abstract renderChildren(): ReactElement;
+    protected onCanvasClicked(x: number, y: number): void {
+        if (this.props.selectedComponentId) this.props.setSelected(null);
+    }
 
-
-    protected onCanvasClicked(x: number, y: number): void { }
-    protected onComponentClicked(comp: schema.FirebaseDataComponent): void { }
+    protected onComponentClicked(comp: ComponentUiData): void {
+        this.props.setSelected(comp.getId());
+    }
 
     protected constructor(props: Props) {
         super(props);
     }
 
-    protected getFlows(): schema.FlowFirebaseComponent[] {
+    protected getFlows(): FlowUiData[] {
         return this.props.children.filter(
-            (c: schema.FirebaseDataComponent) => c.getType() == schema.ComponentType.FLOW
+            (c: ComponentUiData) => c.getType() == schema.ComponentType.FLOW
         ).map(
-            (c: schema.FirebaseDataComponent) => c as schema.FlowFirebaseComponent
+            (c: ComponentUiData) => c as FlowUiData
         );
     }
 
-    protected getStocks(): schema.StockFirebaseComponent[] {
+    protected getStocks(): StockUiData[] {
         return this.props.children.filter(
-            (c: schema.FirebaseDataComponent) => c.getType() == schema.ComponentType.STOCK
+            (c: ComponentUiData) => c.getType() == schema.ComponentType.STOCK
         ).map(
-            (c: schema.FirebaseDataComponent) => c as schema.StockFirebaseComponent
+            (c: ComponentUiData) => c as StockUiData
         );
     }
 
-    protected getComponent(id: string): schema.FirebaseDataComponent {
+    protected getParams(): ParameterUiData[] {
+        return this.props.children.filter(
+            (c: ComponentUiData) => c.getType() == schema.ComponentType.PARAMETER
+        ).map(
+            (c: ComponentUiData) => c as ParameterUiData
+        );
+    }
+
+    protected getConnections(): ConnectionUiData[] {
+        return this.props.children.filter(
+            (c: ComponentUiData) => c.getType() === schema.ComponentType.CONNECTION
+        ).map(
+            (c: ComponentUiData) => c as ConnectionUiData
+        );
+    }
+
+    protected getComponent(id: string): ComponentUiData {
         const cpt = this.props.children.find(c => c.getId() === id);
         if (!cpt) throw new ComponentNotFoundError();
         return cpt;
@@ -74,7 +95,61 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                 onClick={onClick}
             >
                 <Layer>
-                    {this.renderChildren()}
+                    {
+                        this.getFlows().map((flow, i) => {
+                            return (
+                                <Flow
+                                    flowData={flow}
+                                    components={this.props.children}
+                                    color={this.props.selectedComponentId === flow.getId()
+                                        ? SELECTED_COLOR : DEFAULT_COLOR}
+                                    key={i}
+                                />
+                            )
+                        })
+                    }
+                    {
+                        this.getStocks().map((stock, i) => {
+                            return (
+                                <Stock
+                                    stock={stock}
+                                    color={
+                                        this.props.selectedComponentId === stock.getId()
+                                            ? SELECTED_COLOR : DEFAULT_COLOR
+                                    }
+                                    draggable={true}
+                                    text={stock.getData().text}
+                                    updateState={this.props.editComponent}
+                                    key={i}
+                                />
+                            )
+                        })
+                    }
+                    {
+                        this.getParams().map((param, i) => {
+                            return (
+                                <Parameter
+                                    param={param}
+                                    draggable={true}
+                                    updateState={this.props.editComponent}
+                                    color={this.props.selectedComponentId === param.getId()
+                                        ? SELECTED_COLOR : DEFAULT_COLOR}
+                                    key={i}
+                                />
+                            )
+                        })
+                    }
+                    {
+                        this.getConnections().map((conn, i) => {
+                            return (
+                                <Connection
+                                    conn={conn}
+                                    components={this.props.children}
+                                    key={i}
+                                />
+                            );
+                        })
+                    }
                 </Layer>
             </Stage>
         );

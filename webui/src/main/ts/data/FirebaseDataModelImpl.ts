@@ -18,14 +18,14 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
     private triggerCallback(
         snapshot: DataSnapshot,
-        callback: (data: schema.FirebaseDataComponent) => void
+        callback: (data: schema.FirebaseDataComponent<any>) => void
     ) {
         if (!snapshot || !snapshot.key || !snapshot.val()) return;
         const component = schema.createFirebaseDataComponent(snapshot.key, snapshot.val());
         callback(component);
     }
 
-    updateComponent(sessionId: string, data: schema.FirebaseDataComponent) {
+    updateComponent(sessionId: string, data: schema.FirebaseDataComponent<any>) {
         set(
             ref(
                 this.firebaseManager.getDb(),
@@ -41,7 +41,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     subscribeToComponent(
         sessionId: string,
         componentId: string,
-        callback: (newData: schema.FirebaseDataComponent) => void
+        callback: (newData: schema.FirebaseDataComponent<any>) => void
     ) {
         onValue(
             ref(
@@ -72,7 +72,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    registerComponentCreatedListener(sessionId: string, callback: (data: schema.FirebaseDataComponent) => void) {
+    registerComponentCreatedListener(sessionId: string, callback: (data: schema.FirebaseDataComponent<any>) => void) {
         onChildAdded(
             ref(
                 this.firebaseManager.getDb(),

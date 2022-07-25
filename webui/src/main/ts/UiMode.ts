@@ -1,9 +1,11 @@
 export const enum UiMode {
     STOCK = "Stock",
+    FLOW = "Flow",
+    PARAM = "Param",
     DELETE = "Delete",
     MOVE = "Move",
-    FLOW = "Flow",
-    EDIT = "Edit"
+    EDIT = "Edit",
+    CONNECT = "Connect"
 };
 
 export function modeFromString(s: string): UiMode | null {
@@ -18,6 +20,11 @@ export function modeFromString(s: string): UiMode | null {
             return UiMode.EDIT;
         case "DELETE":
             return UiMode.DELETE;
+        case "PARAM":
+        case "PARAMETER":
+            return UiMode.PARAM;
+        case "CONNECT":
+            return UiMode.CONNECT;
         default:
             return null;
     }

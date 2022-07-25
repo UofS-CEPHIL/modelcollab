@@ -6,13 +6,13 @@ import React, { ReactElement } from 'react';
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 export interface Props {
-    initialComponent: schema.FirebaseDataComponent;
-    handleSave: (c: schema.FirebaseDataComponent) => void;
+    initialComponent: schema.FirebaseDataComponent<any>;
+    handleSave: (c: schema.FirebaseDataComponent<any>) => void;
     handleCancel: () => void;
 }
 
 export interface State {
-    component: schema.FirebaseDataComponent;
+    component: schema.FirebaseDataComponent<any>;
 }
 
 export default class EditBox extends React.Component<Props, State> {
@@ -36,7 +36,7 @@ export default class EditBox extends React.Component<Props, State> {
 
     private handleChange(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>): void {
         const newData = { ...this.state.component.getData(), [event.target.name]: event.target.value };
-        let component: schema.FirebaseDataComponent = this.state.component.withData(newData);
+        let component: schema.FirebaseDataComponent<any> = this.state.component.withData(newData);
         this.setState({ component });
     };
 
@@ -128,6 +128,37 @@ export default class EditBox extends React.Component<Props, State> {
                         onChange={e => this.handleChange(e)}
                         name="text"
                         label="Name"
+                        inputProps={{
+                            className: "Mui_Stock",
+                            id: this.props.initialComponent.getId(),
+                            "data-testid": "stock-textfield-mui"
+                        }}
+                    />
+                </Box>
+            );
+        }
+        else if (this.state.component.getType() === schema.ComponentType.PARAMETER) {
+            return (
+                <Box>
+                    <Typography id="modal-modal-title" variant="h6" component="h2">
+                        Edit Flow
+                    </Typography>
+                    <TextField id="outlined-basic"
+                        value={this.state.component.getData().from}
+                        onChange={e => this.handleChange(e)}
+                        name="text"
+                        label="Name"
+                        inputProps={{
+                            className: "Mui_Stock",
+                            id: this.props.initialComponent.getId(),
+                            "data-testid": "stock-textfield-mui"
+                        }}
+                    />
+                    <TextField id="outlined-basic"
+                        value={this.state.component.getData().to}
+                        onChange={e => this.handleChange(e)}
+                        name="value"
+                        label="Value"
                         inputProps={{
                             className: "Mui_Stock",
                             id: this.props.initialComponent.getId(),

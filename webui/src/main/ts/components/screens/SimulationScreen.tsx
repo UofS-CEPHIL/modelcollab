@@ -2,7 +2,8 @@ import React from 'react';
 
 import { FirebaseComponentModel as schema } from "database/build/export";
 
-import { Props as CanvasProps } from "../Canvas/BaseCanvas";
+import ComponentUiData, { PointableComponent } from '../ScreenObjects/ComponentUiData';
+import { ComponentNotFoundError, Props as CanvasProps } from "../Canvas/BaseCanvas";
 import Toolbar from '../Toolbar/Toolbar';
 import FirebaseDataModelImpl from '../../data/FirebaseDataModelImpl';
 import { UiMode } from '../../UiMode';
@@ -16,6 +17,13 @@ import DeleteModeCanvas from '../Canvas/DeleteModeCanvas';
 import EditModeCanvas from '../Canvas/EditModeCanvas';
 import { DataSnapshot } from 'firebase/database';
 import EditBox from '../EditBox/EditBox';
+import ParamModeCanvas from '../Canvas/ParamModeCanvas';
+import StockUiData from '../ScreenObjects/StockUiData';
+import FlowUiData from '../ScreenObjects/FlowUiData';
+import ConnectionUiData from '../ScreenObjects/ConnectionUiData';
+import ParameterUiData from '../ScreenObjects/ParameterUiData';
+import ConnectModeCanvas from '../Canvas/ConnectModeCanvas';
+import { ComponentType } from 'database/build/FirebaseComponentModel';
 
 
 interface Props {
@@ -25,7 +33,7 @@ interface Props {
 
 interface State {
     mode: UiMode,
-    components: schema.FirebaseDataComponent[];
+    components: ComponentUiData[];
     selectedComponentId: string | null;
 }
 
@@ -45,12 +53,35 @@ export default class SimulationScreen extends React.Component<Props, State> {
     }
 
     componentDidMount() {
+        const isPointerComponentType = (componentType: string) => {
+            switch (componentType) {
+                case schema.ComponentType.STOCK.toString(): return false;
+                case schema.ComponentType.PARAMETER.toString(): return false;
+                case schema.ComponentType.FLOW.toString(): return true;
+                case schema.ComponentType.CONNECTION.toString(): return true;
+                default: throw new Error("Unknown component: " + componentType);
+            }
+        }
+        const getComponentType = (data: any) => data.type as string;
         this.dm.subscribeToAllComponents(
             this.props.sessionId,
             (snapshot: DataSnapshot) => {
                 if (snapshot.exists() && snapshot.key) {
-                    const components = Object.entries(snapshot.val())
-                        .map(([k, v]) => schema.createFirebaseDataComponent(k, v));
+                    // Load objects s.t. stocks are loaded before flows, and all pointable components are loaded before pointers that reference them.
+                    const nonPointerComponents = Object.entries(snapshot.val())
+                        .filter(([_, v]) => !isPointerComponentType(getComponentType(v)))
+                        .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
+
+                    const flowComponents = Object.entries(snapshot.val())
+                        .filter(([_, v]) => getComponentType(v) === schema.ComponentType.FLOW)
+                        .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
+
+                    const nonFlowPointerComponents = Object.entries(snapshot.val())
+                        .filter(([_, v]) => isPointerComponentType(getComponentType(v)) && getComponentType(v) !== schema.ComponentType.FLOW.toString())
+                        .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
+
+                    const components = nonPointerComponents.concat(flowComponents).concat(nonFlowPointerComponents);
+
                     let selectedComponentId: string | null = this.state.selectedComponentId;
                     if (!components.find(c => c.getId() === selectedComponentId)) {
                         selectedComponentId = null;
@@ -96,12 +127,12 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 {
                     (selectedComponent && this.shouldShowEditBox()) &&
                     <EditBox
-                        initialComponent={selectedComponent}
+                        initialComponent={selectedComponent.getDatabaseObject()}
                         handleCancel={() => this.setSelected(null)}
-                        handleSave={(comp: schema.FirebaseDataComponent) => {
-                            console.log("saving component " + comp.toString())
-                            const components: schema.FirebaseDataComponent[] = this.state.components
-                                .filter(c => c.getId() !== comp.getId()).concat([comp]);
+                        handleSave={(comp: schema.FirebaseDataComponent<any>) => {
+                            const components: ComponentUiData[] = this.state.components
+                                .filter(c => c.getId() !== comp.getId())
+                                .concat(this.createUiComponent(comp));
                             this.dm.updateComponent(this.props.sessionId, comp);
                             this.setState({ ...this.state, components, selectedComponentId: null });
                         }}
@@ -143,6 +174,18 @@ export default class SimulationScreen extends React.Component<Props, State> {
                         {...props}
                     />
                 );
+            case UiMode.PARAM:
+                return (
+                    <ParamModeCanvas
+                        {...props}
+                    />
+                );
+            case UiMode.CONNECT:
+                return (
+                    <ConnectModeCanvas
+                        {...props}
+                    />
+                );
         }
     }
 
@@ -150,15 +193,16 @@ export default class SimulationScreen extends React.Component<Props, State> {
         return this.state.mode === UiMode.EDIT;
     }
 
-    private addComponent(newComponent: schema.FirebaseDataComponent): void {
+    private addComponent(newComponent: ComponentUiData): void {
         if (!this.state.components.find(c => c.getId() === newComponent.getId())) {
             this.setState(
                 {
                     ...this.state,
+                    selectedComponentId: newComponent.getId(),
                     components: this.state.components.concat([newComponent])
                 }
             );
-            this.dm.updateComponent(this.props.sessionId, newComponent);
+            this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
         }
     }
 
@@ -176,15 +220,28 @@ export default class SimulationScreen extends React.Component<Props, State> {
         }
     }
 
-    private updateComponent(newComponent: schema.FirebaseDataComponent): void {
-        const components: schema.FirebaseDataComponent[] = this.state.components
+    private updateComponent(newComponent: ComponentUiData): void {
+        const components: ComponentUiData[] = this.state.components
             .filter(c => c.getId() !== newComponent.getId()).concat([newComponent]);
-        this.dm.updateComponent(this.props.sessionId, newComponent);
+        this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
         this.setState({ ...this.state, components });
     }
 
     private setSelected(selectedComponentId: string | null): void {
         if (selectedComponentId !== this.state.selectedComponentId)
             this.setState({ ...this.state, selectedComponentId });
+    }
+
+    private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>) {
+        switch (dbComponent.getType()) {
+            case schema.ComponentType.STOCK:
+                return new StockUiData(dbComponent);
+            case schema.ComponentType.FLOW:
+                return new FlowUiData(dbComponent);
+            case schema.ComponentType.CONNECTION:
+                return new ConnectionUiData(dbComponent);
+            case schema.ComponentType.PARAMETER:
+                return new ParameterUiData(dbComponent);
+        }
     }
 }

@@ -31,6 +31,8 @@ export default class Toolbar extends React.Component<Props> {
                         <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} />
                         <Tab label="Stock" value={UiMode.STOCK} onClick={handleChange} />
                         <Tab label="Flow" value={UiMode.FLOW} onClick={handleChange} />
+                        <Tab label="Connect" value={UiMode.CONNECT} onClick={handleChange} />
+                        <Tab label="Parameter" value={UiMode.PARAM} onClick={handleChange} />
                         <Tab label="Edit" value={UiMode.EDIT} onClick={handleChange} />
                         <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} />
                     </Tabs>

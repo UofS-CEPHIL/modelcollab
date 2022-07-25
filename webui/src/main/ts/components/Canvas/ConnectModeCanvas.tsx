@@ -1,32 +1,29 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../IdGenerator";
 import ComponentUiData from "../ScreenObjects/ComponentUiData";
-import FlowUiData from "../ScreenObjects/FlowUiData";
+import ConnectionUiData from "../ScreenObjects/ConnectionUiData";
+import StockUiData from "../ScreenObjects/StockUiData";
 import BaseCanvas from "./BaseCanvas";
 
 
-export default class FlowModeCanvas extends BaseCanvas {
+export default class ConnectModeCanvas extends BaseCanvas {
     protected onComponentClicked(component: ComponentUiData): void {
-        if (component.getType() === schema.ComponentType.STOCK) {
+        if (component.isPointable()) {
             if (!this.props.selectedComponentId) {
                 this.props.setSelected(component.getId());
             }
             else if (component.getId() !== this.props.selectedComponentId) {
-                const newFlow = new FlowUiData(
-                    new schema.FlowFirebaseComponent(
+                const newConn = new ConnectionUiData(
+                    new schema.ConnectionFirebaseComponent(
                         IdGenerator.generateUniqueId(this.props.children),
                         {
                             from: this.props.selectedComponentId,
                             to: component.getId(),
-                            equation: "",
-                            dependsOn: [],
-                            text: ""
                         }
                     )
                 );
-                this.props.addComponent(newFlow);
+                this.props.addComponent(newConn);
             }
         }
     }
 }
-
