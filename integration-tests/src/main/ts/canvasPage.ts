@@ -6,29 +6,44 @@ import { ComponentType } from "database/build/FirebaseComponentModel";
 import FirebaseInteractions from "./data/FirebaseInteractions";
 import { clickElementWithOffset, dragElementByOffset, ensurePageHasTitle, searchForElementWithClassName, searchForElementWithId, selenium, SUCCESS_MESSAGE, verifyElementDoesNotExist } from "./doTests";
 
-const STOCK = "Stock"
-const FLOW = "Flow"
-
 const CANVAS_ID = "canvas-div";
 const TOOLBAR_ID = "toolbar-box";
-const STOCK_MUITEXTFIELD_CLASSNAME = "MuiInput-input MuiInputBase-input Mui_Stock css-1x51dt5-MuiInputBase-input-MuiInput-input"
-const FLOW_MUITEXTFIELD_CLASSNAME = "MuiOutlinedInput-input MuiInputBase-input MuiInputBase-inputSizeSmall Mui_Flow css-1n4twyu-MuiInputBase-input-MuiOutlinedInput-input"
+const BUTTON_CLASSNAME = "MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButtonBase-root  css-sghohy-MuiButtonBase-root-MuiButton-root";
+const STOCK_MUITEXTFIELD_CLASSNAME = "MuiInput-input MuiInputBase-input Mui_Stock css-1x51dt5-MuiInputBase-input-MuiInput-input";
+const FLOW_MUITEXTFIELD_CLASSNAME = "MuiOutlinedInput-input MuiInputBase-input MuiInputBase-inputSizeSmall Mui_Flow css-1n4twyu-MuiInputBase-input-MuiOutlinedInput-input";
+
+const EDIT_BOX_INITVAL_CLASSNAME = "MuiOutlinedInput-input MuiInputBase-input Mui_InitVal css-1t8l2tu-MuiInputBase-input-MuiOutlinedInput-input";
+const EDIT_BOX_DEPENDSON_CLASSNAME = "MuiOutlinedInput-input MuiInputBase-input Mui_DependsOn css-1t8l2tu-MuiInputBase-input-MuiOutlinedInput-input";
+const EDIT_BOX_EQUATION_CLASSNAME = "MuiOutlinedInput-input MuiInputBase-input Mui_Equation css-1t8l2tu-MuiInputBase-input-MuiOutlinedInput-input";
+
+const EDITMODE_INITVAL = "InitVal";
+const EDITMODE_DEPENDSON = "DependsOn";
+const EDITMODE_EQUATION = "Equation";
 
 const STOCK_CLASSNAME = "stock-div";
 const STOCK_COMPONENT_ID = "999";
 const STOCK_COMPONENT2_ID = "888";
+
 const STOCK_1_TEXT = "S";
-const MORE_TEXT = "moretext";
 const STOCK_2_TEXT = "I";
-const STOCK_3_TEXT = "R"
+const STOCK_3_TEXT = "R";
+const MORE_TEXT = "moretext";
+
+const STOCK_1_INITVAL = 90;
+const STOCK_2_INITVAL = 80;
+const STOCK_3_INITVAL = 70;
+
 
 const FLOW_CLASSNAME = "flow-div"
 const FLOW_SVG_CLASSNAME = "Flow-svg"
 const FLOW_COMPONENT_ID = "777"
 const FLOW_SECOND_HALF_LINE_CLASSNAME = "Flow-line-inner-second-half"
+const FLOW_SECOND_HALF_LINE_OUTTER_CLASSNAME = "Flow-line-outter-second-half"
 const FLOW_1_TEXT = "Infection"
 const FLOW_2_TEXT = "Hospital"
 
+const FLOW_1_EQUATION = "Some Equation for Flow 1"
+const FLOW_2_EQUATION = "Some Equation for Flow 2"
 const OFFSET_PX = 250;
 const EXPECTED_TITLE = "ModelCollab";
 
@@ -39,12 +54,24 @@ const RED = "rgb(255, 0, 0)"
 const getStock = async (driver: any) =>
     await driver.findElement(selenium.By.className(STOCK_CLASSNAME));
 
-const getMuiTextField = async (driver: any, type: string) =>{
-    if (type === schema.ComponentType.STOCK){
-        return await driver.findElement(selenium.By.className(STOCK_MUITEXTFIELD_CLASSNAME));
+const getMuiTextField = async (driver: any, type: string, Mode: string = "", ) =>{
+
+    if (Mode === "")
+        if (type === schema.ComponentType.STOCK){
+            return await driver.findElement(selenium.By.className(STOCK_MUITEXTFIELD_CLASSNAME));
+        }
+        else{
+            return await driver.findElement(selenium.By.className(FLOW_MUITEXTFIELD_CLASSNAME));
+        }
+
+    else if (Mode === EDITMODE_INITVAL){
+        return await driver.findElement(selenium.By.className(EDIT_BOX_INITVAL_CLASSNAME));
     }
-    else{
-        return await driver.findElement(selenium.By.className(FLOW_MUITEXTFIELD_CLASSNAME));
+    else if (Mode === EDITMODE_DEPENDSON){
+        return await driver.findElement(selenium.By.className(EDIT_BOX_DEPENDSON_CLASSNAME));
+    }
+    else if (Mode === EDITMODE_EQUATION){
+        return await driver.findElement(selenium.By.className(EDIT_BOX_EQUATION_CLASSNAME));
     }
 }
 
@@ -497,7 +524,6 @@ async function createFirstFlow(driver: any): Promise<string> {
     await driver.actions().click(stockS).perform();
     await driver.actions().click(stockI).perform();
 
-
     const result = await searchForElementWithClassName(driver, FLOW_SVG_CLASSNAME)
     if (result === SUCCESS_MESSAGE){
         const flow = await driver.findElement(selenium.By.className(FLOW_SECOND_HALF_LINE_CLASSNAME))
@@ -561,6 +587,8 @@ async function createThirdStockInFirebase(_: any, dm?: FirebaseInteractions): Pr
 
 async function verifyThirdStockAppearsOnCanvas(driver: any): Promise<string> {
 
+    await driver.wait(selenium.until.elementLocated(selenium.By.id(STOCK_COMPONENT2_ID)),100);
+
     const stocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
 
     if (stocks.length !== 3)
@@ -608,13 +636,14 @@ async function verifyThirdStockAppearsOnCanvas(driver: any): Promise<string> {
 }
 
 async function verifySecondFlowAppearsOnCanvas(driver: any): Promise<string> {
+    await driver.wait(selenium.until.elementLocated(selenium.By.id(FLOW_COMPONENT_ID)),100);
+
     const flows = await driver.findElements(selenium.By.className(FLOW_SVG_CLASSNAME));
     if (flows.length !== 2)
         return `Expected 2 stocks but found ${flows.length}`;
 
 
     let newFlow = null;
-
     for (var i = 0; i < 2; i++) {
         const id = await flows[i].getAttribute("id")
         if (id === FLOW_COMPONENT_ID){
@@ -624,7 +653,7 @@ async function verifySecondFlowAppearsOnCanvas(driver: any): Promise<string> {
     }
 
     if (!newFlow)
-        return "Unable to find new stock on canvas";
+        return "Unable to find new Flow on canvas";
 
     const line = await newFlow.findElement(selenium.By.className(FLOW_SECOND_HALF_LINE_CLASSNAME))
     const x2 = await line.getAttribute("x2")
@@ -650,16 +679,16 @@ async function editFirstFlowTextInFirebase(_: any, dm?: FirebaseInteractions): P
     return "Unable to find any components for session: " + mySession;
     
     if (myComponents.length !== 5)
-    return `Expected three stocks and two flow (4 components) but found ${myComponents.length}`;
+    return `Expected three stocks and two flow (5 components) but found ${myComponents.length}`;
 
     let flow_id;
-    let stock_id
+    let stock_id;
     for (var i = 0; i < 5; i++){
         if ((myComponents[i].getType() === schema.ComponentType.FLOW) && (myComponents[i].getId() !== FLOW_COMPONENT_ID)){
                 flow_id = myComponents[i].getId()
         }
         
-        else if ((myComponents[i].getType() === schema.ComponentType.FLOW) 
+        else if ((myComponents[i].getType() === schema.ComponentType.STOCK) 
                     && 
                   (myComponents[i].getId() !== STOCK_COMPONENT_ID ) || myComponents[i].getId() !== STOCK_COMPONENT2_ID){
 
@@ -756,11 +785,166 @@ async function verifySecondFlowTextUpdatedInFirebase(_: any, dm?: FirebaseIntera
     return SUCCESS_MESSAGE;
 }
 
+async function clickEditModeButton(driver: any): Promise<string> {
+    const flowModeButton = await driver.findElement(selenium.By.id("Edit-tab"));
+    if (!flowModeButton) return "Unable to find Flow mode button.";
+    await flowModeButton.click();
+    return SUCCESS_MESSAGE;
+}
+
+async function verifyCanvasIsInEditMode(driver: any): Promise<string> {
+    return await verifyCanvasIsInMode(driver, "Edit");
+}
+
+async function addInitValueToStocks(driver: any): Promise<string> {
+
+    const stocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
+
+    for (var i = 0; i < stocks.length; i ++){
+
+        const id = await stocks[i].getAttribute("id");
+        await driver.actions().click(stocks[i]).perform();
+        let mui_textfield = await getMuiTextField(driver, schema.ComponentType.STOCK, EDITMODE_INITVAL)
+
+        let value;
+        if (id === STOCK_COMPONENT_ID)
+            value = STOCK_2_INITVAL;
+        else if (id  === STOCK_COMPONENT2_ID)
+            value = STOCK_3_INITVAL;
+        else 
+            value = STOCK_1_INITVAL;
+
+        mui_textfield.sendKeys(value.toString());
+        mui_textfield = await getMuiTextField(driver, schema.ComponentType.STOCK, EDITMODE_INITVAL)
+        const textFieldInitValue = await mui_textfield.getAttribute("value");
+
+        if (textFieldInitValue !== value.toString())
+            return `Expected stock to have text "${value.toString()}" but found "${textFieldInitValue}"`;
+        const button = await driver.findElement(selenium.By.className(BUTTON_CLASSNAME));
+        await driver.actions().click(button).perform();
+
+    }
+    return SUCCESS_MESSAGE;
+}
+
+async function verifyStocksInitValueUpdatedInFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
+    if (!dm)
+        return "Expected a firebase DM but found none";
+    const sessions = dm.getSessionIds();
+    if (sessions.length !== 1)
+        return `Expected one session but found ${sessions.length}`;
+    const mySession = sessions[0];
+    const myComponents = await dm.getComponents(mySession);
+    if (!myComponents)
+        return "Unable to find any components for session: " + mySession;
+    if (myComponents.length !== 5)
+        return `Expected five components but found ${myComponents.length}`;
+    
+    let myComponentCount = 0
+    for (var i = 0; i < 5; i ++){
+        if (myComponents[i].getType() === schema.ComponentType.STOCK){
+            myComponentCount++;
+            const id = await myComponents[i].getId()
+            const initvalue = myComponents[i].getData().initvalue;
+
+            if (id === STOCK_COMPONENT_ID){
+                if (initvalue !== STOCK_2_INITVAL.toString())
+                    return `Expected Firebase Stock to have init value ${STOCK_2_INITVAL} but found: ${initvalue}`;
+            }
+            else if (id === STOCK_COMPONENT2_ID){
+                if (initvalue !== STOCK_3_INITVAL.toString())
+                    return `Expected Firebase Stock to have init value ${STOCK_3_INITVAL} but found: ${initvalue}`;     
+            }
+            else{
+                if (initvalue !== STOCK_1_INITVAL.toString())
+                    return `Expected Firebase Stock to have init value ${STOCK_1_INITVAL} but found: ${initvalue}`;     
+            }
+        }        
+    }
+    
+    if (myComponentCount === 0){
+        return "Cannot find the Stocks in Firebase"
+    }
+    return SUCCESS_MESSAGE;
+}
+
+async function editFlowEquationsInFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
+    if (!dm)
+        return "Expected a firebase DM but found none";
+    const sessions = dm.getSessionIds();
+    if (sessions.length !== 1)
+        return "Expected one session but found ${sessions.length}";
+    const mySession = sessions[0];
+
+    const myComponents = await dm.getComponents(mySession);
+    if (!myComponents)
+    return "Unable to find any components for session: " + mySession;
+    
+    if (myComponents.length !== 5)
+    return `Expected three stocks and two flow (5 components) but found ${myComponents.length}`;
+
+    for (var i = 0; i < 5; i++){
+        if (myComponents[i].getType() === schema.ComponentType.FLOW){
+                let flow = myComponents[i];
+                let equation
+
+                if (flow.getId() !== FLOW_COMPONENT_ID)
+                    equation = FLOW_1_EQUATION;
+                else
+                    equation = FLOW_2_EQUATION;
+                
+                const newData = new schema.FlowFirebaseComponent(
+                    flow.getId(),
+                    {
+                        text: flow.getData().text ,
+                        dependsOn: flow.getData().dependsOn,
+                        equation: equation,
+                        from: flow.getData().from,
+                        to: flow.getData().to
+                    }
+                );
+                dm.updateComponent(mySession, newData);
+        }
+    }
+
+    return SUCCESS_MESSAGE;
+}
+
+
+async function verifyFlowEquationsAppearsOnCanvas(driver: any): Promise<string> {
+
+    const flows = await driver.findElements(selenium.By.className(FLOW_SVG_CLASSNAME));
+    
+
+    for (var i = 0; i < flows.length; i ++){
+
+        const id = await flows[i].getAttribute("id");
+        await driver.actions().click(flows[i]).perform();
+
+        let value;
+        if (id !== FLOW_COMPONENT_ID)
+            value = FLOW_1_EQUATION;
+        else 
+            value = FLOW_2_EQUATION;
+        
+        let mui_textfield = await getMuiTextField(driver, schema.ComponentType.FLOW, EDITMODE_EQUATION)
+        const textFieldEquation = await mui_textfield.getAttribute("value");
+
+        if (textFieldEquation !== value.toString())
+            return `Expected flow to have equation "${value.toString()}" but found "${textFieldEquation}"`;
+            
+        const button = await driver.findElement(selenium.By.className(BUTTON_CLASSNAME));
+        await driver.actions().click(button).perform();
+    }
+    return SUCCESS_MESSAGE;
+}
 
 /*
   This test expects to start logged in on the canvas page, with no stocks.
   This test will leave the Canvas in that same state.
  */
+
+
 
 export const canvasPageTestSuite:
     ((driver: any, firebaseDm?: FirebaseInteractions) => Promise<string>)[] =
@@ -805,7 +989,6 @@ export const canvasPageTestSuite:
         createThirdStockInFirebase,
         verifyThirdStockAppearsOnCanvas,
 
-	
 	    createSecondFlowInFirebase,
 	    verifySecondFlowAppearsOnCanvas,
 
@@ -813,21 +996,22 @@ export const canvasPageTestSuite:
 	    verifyFirstFlowTextChangedOnCanvas,
 
         addTextToSecondFlow, 
-	    verifySecondFlowTextUpdatedInFirebase
+	    verifySecondFlowTextUpdatedInFirebase,
 
-        
-	    // clickEditModeButton,
-        // verifyCanvasIsInEditMode,
+	    clickEditModeButton,
+        verifyCanvasIsInEditMode,
 
-	    // addInitValueToFirstStock
-	    // verifyFirstStockInitValueUpdatedInFirebase
+	    addInitValueToStocks,
+	    verifyStocksInitValueUpdatedInFirebase,
 
-	    // addInitValueToSecondStock
-	    // verifySecondStockInitValueUpdatedInFirebase
+        editFlowEquationsInFirebase,
+        verifyFlowEquationsAppearsOnCanvas
 
-	    // addInitValueToThirdStock
-	    // verifyThirdStockInitValueUpdatedInFirebase
-
+        // editFirstFlowEquationsInFirebase
+        // verifyFirstFlowEquationsAppearsOnCanvas
+    
+        // editFirstFlowDependsOnInFirebase
+        // verifyFirstFlowDependsOnAppearsOnCanvas
 
 
         //end TODO
