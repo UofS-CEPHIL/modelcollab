@@ -3,10 +3,9 @@ import express, { Express, Response } from "express";
 
 import ComputeModelTask from "./ComputeModelTask";
 import applicationConfig from "./config/applicationConfig";
-import firebaseConfig from "./FirebaseConfig";
 
 import { FirebaseClient } from "./data/FirebaseClient";
-import { FirebaseComponentModel as data } from "database/build/export";
+import { FirebaseComponentModel as schema } from "database/build/export";
 
 class Server {
 
@@ -35,7 +34,7 @@ class Server {
     }
 
     private async computeModel(sessionId: string, res: Response): Promise<void> {
-        const components: data.FirebaseDataComponent[] = await this.fbClient.getComponents(sessionId);
+        const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
 
         new ComputeModelTask(components).start();
 

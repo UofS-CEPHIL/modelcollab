@@ -15,7 +15,7 @@ interface FirebaseConfig {
 const firebaseConfig: FirebaseConfig = {
     apiKey: "AIzaSyAwHYCU_Gnx9tFjjTxIXFwerHaPEw_Le5k",
     authDomain: "modelcollab.firebaseapp.com",
-    databaseURL: "https://modelcollab-default-rtdb.firebaseio.com",
+    databaseURL: "https://model-collab-default-rtdb.firebaseio.com",
     projectId: "modelcollab",
     storageBucket: "modelcollab.appspot.com",
     messagingSenderId: "388145787482",
