@@ -108,6 +108,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 <Toolbar
                     mode={this.state.mode}
                     setMode={setMode}
+                    sessionId={this.props.sessionId}
                 />
                 {
                     this.createCanvasForMode(

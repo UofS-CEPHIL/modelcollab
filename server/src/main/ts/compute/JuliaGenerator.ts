@@ -220,7 +220,6 @@ export default class JuliaGenerator {
                 const replacement = possibleReplacements.find(c => c.getData().text.includes(s.replaceAll(/\s/g, "")));
                 if (!replacement)
                     throw new Error(`Unable to find component for symbol ${s} in equation ${data.getData().equation}`);
-                console.log(`Symbol: ${s} => replacement: ${replacement.toString()}`)
                 if (replacement instanceof schema.ParameterFirebaseComponent) {
                     return `${paramsVarName}.${replacement.getData().text}`;
                 }
