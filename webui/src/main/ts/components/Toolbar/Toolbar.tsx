@@ -139,6 +139,7 @@ export default class Toolbar extends React.Component<Props, State> {
                     <Tabs value={this.props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs'>
                         <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} />
                         <Tab label="Parameter" value={UiMode.PARAM} onClick={handleChange} />
+                        <Tab label="Variable" value={UiMode.VARIABLE} onClick={handleChange} />
                         <Tab label="Stock" value={UiMode.STOCK} onClick={handleChange} />
                         <Tab label="Flow" value={UiMode.FLOW} onClick={handleChange} />
                         <Tab label="Connect" value={UiMode.CONNECT} onClick={handleChange} />

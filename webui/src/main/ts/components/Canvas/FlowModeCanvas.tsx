@@ -12,6 +12,10 @@ export default class FlowModeCanvas extends BaseCanvas {
                 this.props.setSelected(component.getId());
             }
             else if (component.getId() !== this.props.selectedComponentId) {
+                if (
+                    this.getFlows().find(f => f.getData().from === this.props.selectedComponentId
+                        && f.getData().to === component.getId())
+                ) return;
                 const newFlow = new FlowUiData(
                     new schema.FlowFirebaseComponent(
                         IdGenerator.generateUniqueId(this.props.children),

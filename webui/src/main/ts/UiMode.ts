@@ -2,6 +2,7 @@ export const enum UiMode {
     STOCK = "Stock",
     FLOW = "Flow",
     PARAM = "Param",
+    VARIABLE = "Variable",
     DELETE = "Delete",
     MOVE = "Move",
     EDIT = "Edit",
@@ -23,6 +24,8 @@ export function modeFromString(s: string): UiMode | null {
         case "PARAM":
         case "PARAMETER":
             return UiMode.PARAM;
+        case "VARIABLE":
+            return UiMode.VARIABLE;
         case "CONNECT":
             return UiMode.CONNECT;
         default:

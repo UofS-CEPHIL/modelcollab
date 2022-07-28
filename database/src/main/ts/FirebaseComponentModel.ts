@@ -2,6 +2,7 @@ export enum ComponentType {
     STOCK = "stock",
     FLOW = "flow",
     PARAMETER = "parameter",
+    VARIABLE = "variable",
     CONNECTION = "connection"
 }
 
@@ -40,7 +41,7 @@ export interface FirebasePointerDataObject {
     to: string
 };
 
-export function createFirebaseDataComponent(id: string, data: any) {
+export function createFirebaseDataComponent(id: string, data: any): FirebaseDataComponent<any> {
     const componentType: string = data.type;
     const dataVal: any = data.data;
     let component: FirebaseDataComponent<FirebaseDataObject>;
@@ -81,6 +82,17 @@ export function createFirebaseDataComponent(id: string, data: any) {
                 }
             );
             break;
+        case ComponentType.VARIABLE.toString():
+            component = new VariableFirebaseComponent(
+                id,
+                {
+                    x: dataVal.x as number,
+                    y: dataVal.y as number,
+                    text: dataVal.text as string,
+                    value: dataVal.value as string
+                }
+            );
+            break;
         case ComponentType.CONNECTION.toString():
             component = new ConnectionFirebaseComponent(
                 id,
@@ -99,26 +111,42 @@ export function createFirebaseDataComponent(id: string, data: any) {
 }
 
 
-//################################## Parameter ###################################
+//################################# Var / Param ##################################
 
-export interface ParameterComponentData extends FirebaseDataObject {
+export interface TextComponentData extends FirebaseDataObject {
     x: number;
     y: number;
     text: string;
     value: string;
 }
 
-export class ParameterFirebaseComponent extends FirebaseDataComponent<ParameterComponentData> {
-    constructor(id: string, data: ParameterComponentData) {
+export abstract class TextFirebaseComponent extends FirebaseDataComponent<TextComponentData> {
+    constructor(id: string, data: TextComponentData) {
         super(id, data);
     }
 
-    getType(): ComponentType {
+    abstract getType(): ComponentType;
+
+    abstract withData(d: TextComponentData): TextFirebaseComponent;
+}
+
+export class ParameterFirebaseComponent extends TextFirebaseComponent {
+    public getType(): ComponentType {
         return ComponentType.PARAMETER;
     }
 
-    withData(d: ParameterComponentData): ParameterFirebaseComponent {
+    public withData(d: TextComponentData) {
         return new ParameterFirebaseComponent(this.getId(), d);
+    }
+}
+
+export class VariableFirebaseComponent extends TextFirebaseComponent {
+    public getType(): ComponentType {
+        return ComponentType.VARIABLE;
+    }
+
+    public withData(d: TextComponentData) {
+        return new VariableFirebaseComponent(this.getId(), d);
     }
 }
 

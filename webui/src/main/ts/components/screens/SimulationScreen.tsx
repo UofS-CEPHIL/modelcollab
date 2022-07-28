@@ -23,7 +23,8 @@ import FlowUiData from '../ScreenObjects/FlowUiData';
 import ConnectionUiData from '../ScreenObjects/ConnectionUiData';
 import ParameterUiData from '../ScreenObjects/ParameterUiData';
 import ConnectModeCanvas from '../Canvas/ConnectModeCanvas';
-import { ComponentType } from 'database/build/FirebaseComponentModel';
+import VariableModeCanvas from '../Canvas/VariableModeCanvas';
+import VariableUiData from '../ScreenObjects/VariableUiData';
 
 
 interface Props {
@@ -57,6 +58,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
             switch (componentType) {
                 case schema.ComponentType.STOCK.toString(): return false;
                 case schema.ComponentType.PARAMETER.toString(): return false;
+                case schema.ComponentType.VARIABLE.toString(): return false;
                 case schema.ComponentType.FLOW.toString(): return true;
                 case schema.ComponentType.CONNECTION.toString(): return true;
                 default: throw new Error("Unknown component: " + componentType);
@@ -68,19 +70,19 @@ export default class SimulationScreen extends React.Component<Props, State> {
             (snapshot: DataSnapshot) => {
                 if (snapshot.exists() && snapshot.key) {
                     // Load objects s.t. stocks are loaded before flows, and all pointable components are loaded before pointers that reference them.
-                    const nonPointerComponents = Object.entries(snapshot.val())
+                    const nonPointerComponents: ComponentUiData[] = Object.entries(snapshot.val())
                         .filter(([_, v]) => !isPointerComponentType(getComponentType(v)))
                         .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
 
-                    const flowComponents = Object.entries(snapshot.val())
+                    const flowComponents: ComponentUiData[] = Object.entries(snapshot.val())
                         .filter(([_, v]) => getComponentType(v) === schema.ComponentType.FLOW)
                         .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
 
-                    const nonFlowPointerComponents = Object.entries(snapshot.val())
+                    const nonFlowPointerComponents: ComponentUiData[] = Object.entries(snapshot.val())
                         .filter(([_, v]) => isPointerComponentType(getComponentType(v)) && getComponentType(v) !== schema.ComponentType.FLOW.toString())
                         .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
 
-                    const components = nonPointerComponents.concat(flowComponents).concat(nonFlowPointerComponents);
+                    const components: ComponentUiData[] = nonPointerComponents.concat(flowComponents).concat(nonFlowPointerComponents);
 
                     let selectedComponentId: string | null = this.state.selectedComponentId;
                     if (!components.find(c => c.getId() === selectedComponentId)) {
@@ -181,12 +183,20 @@ export default class SimulationScreen extends React.Component<Props, State> {
                         {...props}
                     />
                 );
+            case UiMode.VARIABLE:
+                return (
+                    <VariableModeCanvas
+                        {...props}
+                    />
+                );
             case UiMode.CONNECT:
                 return (
                     <ConnectModeCanvas
                         {...props}
                     />
                 );
+            default:
+                throw new Error("Unknown UI Mode");
         }
     }
 
@@ -199,7 +209,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
             this.setState(
                 {
                     ...this.state,
-                    selectedComponentId: newComponent.getId(),
+                    selectedComponentId: null,
                     components: this.state.components.concat([newComponent])
                 }
             );
@@ -233,7 +243,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
             this.setState({ ...this.state, selectedComponentId });
     }
 
-    private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>) {
+    private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>): ComponentUiData {
         switch (dbComponent.getType()) {
             case schema.ComponentType.STOCK:
                 return new StockUiData(dbComponent);
@@ -243,6 +253,8 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 return new ConnectionUiData(dbComponent);
             case schema.ComponentType.PARAMETER:
                 return new ParameterUiData(dbComponent);
+            case schema.ComponentType.VARIABLE:
+                return new VariableUiData(dbComponent);
         }
     }
 }

@@ -23,6 +23,8 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
 
     public abstract withData(data: DataType): ComponentUiDataInternal<DataType, DbObject>;
 
+    // Can we point FROM this object TO another component?
+    // TO -> FROM is determined by whether it implements PointableComponent
     public abstract isPointable(): boolean;
 
 
@@ -180,6 +182,27 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
                 offsetFromLeft = width;
         }
         return { x: topLeft.x + offsetFromLeft, y: topLeft.y + offsetFromTop };
+    }
+}
+
+export abstract class TextComponent<DbObject extends schema.TextFirebaseComponent> extends RectangularComponent<schema.TextComponentData, DbObject> {
+    public static WIDTH = 150;
+    public static HEIGHT = 50;
+
+    public getTopLeft(): Point {
+        return { x: this.getData().x, y: this.getData().y };
+    }
+
+    public getWidthPx(): number {
+        return TextComponent.WIDTH;
+    }
+
+    public getHeightPx(): number {
+        return TextComponent.HEIGHT;
+    }
+
+    public isPointable(): boolean {
+        return true;
     }
 }
 

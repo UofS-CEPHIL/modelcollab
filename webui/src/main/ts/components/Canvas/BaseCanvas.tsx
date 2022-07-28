@@ -12,6 +12,8 @@ import StockUiData from '../ScreenObjects/StockUiData';
 import ParameterUiData from '../ScreenObjects/ParameterUiData';
 import ConnectionUiData from '../ScreenObjects/ConnectionUiData';
 import Connection from '../ScreenObjects/Connection';
+import Variable from '../ScreenObjects/Variable';
+import VariableUiData from '../ScreenObjects/VariableUiData';
 
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
@@ -44,7 +46,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
 
     protected getFlows(): FlowUiData[] {
         return this.props.children.filter(
-            (c: ComponentUiData) => c.getType() == schema.ComponentType.FLOW
+            (c: ComponentUiData) => c.getType() === schema.ComponentType.FLOW
         ).map(
             (c: ComponentUiData) => c as FlowUiData
         );
@@ -52,7 +54,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
 
     protected getStocks(): StockUiData[] {
         return this.props.children.filter(
-            (c: ComponentUiData) => c.getType() == schema.ComponentType.STOCK
+            (c: ComponentUiData) => c.getType() === schema.ComponentType.STOCK
         ).map(
             (c: ComponentUiData) => c as StockUiData
         );
@@ -60,9 +62,17 @@ export default abstract class BaseCanvas extends React.Component<Props> {
 
     protected getParams(): ParameterUiData[] {
         return this.props.children.filter(
-            (c: ComponentUiData) => c.getType() == schema.ComponentType.PARAMETER
+            (c: ComponentUiData) => c.getType() === schema.ComponentType.PARAMETER
         ).map(
             (c: ComponentUiData) => c as ParameterUiData
+        );
+    }
+
+    protected getVariables(): VariableUiData[] {
+        return this.props.children.filter(
+            (c: ComponentUiData) => c.getType() == schema.ComponentType.VARIABLE
+        ).map(
+            (c: ComponentUiData) => c as VariableUiData
         );
     }
 
@@ -129,10 +139,24 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                         this.getParams().map((param, i) => {
                             return (
                                 <Parameter
-                                    param={param}
+                                    data={param}
                                     draggable={true}
                                     updateState={this.props.editComponent}
                                     color={this.props.selectedComponentId === param.getId()
+                                        ? SELECTED_COLOR : DEFAULT_COLOR}
+                                    key={i}
+                                />
+                            )
+                        })
+                    }
+                    {
+                        this.getVariables().map((vari, i) => {
+                            return (
+                                <Variable
+                                    data={vari}
+                                    draggable={true}
+                                    updateState={this.props.editComponent}
+                                    color={this.props.selectedComponentId === vari.getId()
                                         ? SELECTED_COLOR : DEFAULT_COLOR}
                                     key={i}
                                 />
