@@ -56,22 +56,6 @@ const EditBox: FC<Props> = (props) => {
         props.setOpen(false);
     }
 
-    // const submitChange = () => {
-    //     if (sharedState){
-    //         console.log("submit",sharedState);
-    //         savedSharedState = sharedState;
-    //         // props.firebaseDataModel.updateComponent(props.sessionId, sharedState);
-    //     }    
-    //     handleClose()
-    // }
-    // const discardChange = () =>{
-    //     if (savedSharedState){
-    //         console.log("discard",savedSharedState)
-    //         props.firebaseDataModel.updateComponent(props.sessionId, savedSharedState);
-    //     }
-    //     handleClose()
-    // }
-
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
 
         if (sharedState?.getType() === schema.ComponentType.STOCK) {
@@ -103,7 +87,7 @@ const EditBox: FC<Props> = (props) => {
                             name="initvalue"
                             label="Initial Value"
                             inputProps={{
-                                className: "Mui_Stock",
+                                className: "Mui_InitVal",
                                 id: props.component.getId(),
                                 "data-testid": "stock-textfield-mui"
                             }}
@@ -125,7 +109,7 @@ const EditBox: FC<Props> = (props) => {
                             name="dependsOn"
                             label="Depends on"
                             inputProps={{
-                                className: "Mui_Stock",
+                                className: "Mui_DependsOn",
                                 id: props.component.getId(),
                                 "data-testid": "stock-textfield-mui"
                             }}
@@ -136,7 +120,7 @@ const EditBox: FC<Props> = (props) => {
                             name="equation"
                             label="Equation"
                             inputProps={{
-                                className: "Mui_Stock",
+                                className: "Mui_Equation",
                                 id: props.component.getId(),
                                 "data-testid": "stock-textfield-mui"
                             }}

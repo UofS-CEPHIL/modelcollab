@@ -25,7 +25,7 @@ const EditMode: FC<Props> = (props: Props) => {
     }
 
     const onClick: React.MouseEventHandler = (event: React.MouseEvent) => {
-        if ((event.target as Element).classList.toString() === "Flow-svg") {
+        if ((event.target as Element).classList.toString() === "Flow-svg" || (event.target as Element).className.split(" ").find(item => ["Mui_Flow"].indexOf(item) > -1)) {
             const flow = props.data.getFlows().find(flow => flow.getId() === (event.target as Element).id);
             if (flow) {
                 setSelected(flow);

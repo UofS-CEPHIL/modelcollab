@@ -141,7 +141,10 @@ const Flow: FC<Props> = (props) => {
     props.firebaseDataModel.subscribeToComponent(props.sessionId, props.componentId, triggerCallback);
 
     return (
-        <div style={{ position: "absolute" }}>
+        <div style={{ position: "absolute"}}
+            className="flow-div"
+            id={props.componentId}
+            >
             <svg
                 width={sharedState.canvasWidth}
                 height={sharedState.canvasHeight}
@@ -154,14 +157,15 @@ const Flow: FC<Props> = (props) => {
                 data-testid="flow-svg"
             >
                 <defs>
-                    <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth" data-testid="flow-arrowhead">
+                    <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" 
+                            markerUnits="strokeWidth" data-testid="flow-arrowhead"> 
                         <path d="M0,0 L0,6 L9,3 z" fill="black" />
                     </marker>
                 </defs>
 
                 <line
-                    data-testid="flow-line"
-                    className="Flow-line"
+                    data-testid="flow-line-outter-first-half"
+                    className="Flow-line-outter-first-half"
                     stroke="black"
                     strokeWidth={8}
                     strokeLinejoin="round"
@@ -173,8 +177,8 @@ const Flow: FC<Props> = (props) => {
                 />
 
                 <line
-                    data-testid="flow-line"
-                    className="Flow-line"
+                    data-testid="flow-line-outter-second-half"
+                    className="Flow-line-outter-second-half"
                     stroke="black"
                     strokeWidth={8}
                     strokeLinejoin="round"
@@ -187,8 +191,8 @@ const Flow: FC<Props> = (props) => {
                 />
 
                 <line
-                    data-testid="flow-line"
-                    className="Flow-line"
+                    data-testid="flow-line-inner-first-half"
+                    className="Flow-line-inner-first-half"
                     stroke="white"
                     strokeWidth={5}
                     strokeLinejoin="round"
@@ -199,8 +203,8 @@ const Flow: FC<Props> = (props) => {
                     y2={sharedState.calculatedMiddlePoint.y}
                 />
                 <line
-                    data-testid="flow-line"
-                    className="Flow-line"
+                    data-testid="flow-line-inner-second-half"
+                    className="Flow-line-inner-second-half"
                     stroke="white"
                     strokeWidth={5}
                     strokeLinejoin="round"
@@ -210,8 +214,6 @@ const Flow: FC<Props> = (props) => {
                     x2={sharedState.calculatedEndPoint.x}
                     y2={sharedState.calculatedEndPoint.y}
                 />
-
-
             </svg>
 
             <div

@@ -75,7 +75,8 @@ const Stock: FC<Props> = (props) => {
                 background: "white",
                 border: `4px solid ${props.color}`
             }}
-            id={`${props.componentId} `}
+            id={`${props.componentId}`}
+            // id = "stock-div"
             draggable={props.draggable}
             onDragEnd={onDrag}
             data-testid="stock-div"
