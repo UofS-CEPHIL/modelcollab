@@ -90,11 +90,12 @@ export async function clickElementWithOffset(
 
 export async function dragElementByOffset(
     driver: any,
-    offset: number,
-    elem: any
+    elem: any,
+    xOffset: number,
+    yOffset: number
 ): Promise<string> {
     try {
-        await driver.actions().dragAndDropBy(elem, offset, offset);
+        await driver.actions().dragAndDrop(elem, {x: xOffset, y: yOffset});
     }
     catch (e) {
         return `Error dragging element: ${e}`;

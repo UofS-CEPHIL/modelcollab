@@ -1,6 +1,7 @@
 // import { ComponentType, FirebaseDataComponent, StockFirebaseComponent } from "database/build/export";
 import {FirebaseComponentModel as schema} from "database/build/export"
 import { ComponentType } from "database/build/FirebaseComponentModel";
+import { browserLocalPersistence } from "firebase/auth";
 // import FirebaseDataModel from "../../main/ts/data/FirebaseDataModel";
 // import FirebaseTestingDataModel from "../../main/ts/data/FirebaseTestingDataModel";
 import FirebaseInteractions from "./data/FirebaseInteractions";
@@ -34,19 +35,21 @@ const STOCK_2_INITVAL = 80;
 const STOCK_3_INITVAL = 70;
 
 
-const FLOW_CLASSNAME = "flow-div"
-const FLOW_SVG_CLASSNAME = "Flow-svg"
-const FLOW_COMPONENT_ID = "777"
-const FLOW_SECOND_HALF_LINE_CLASSNAME = "Flow-line-inner-second-half"
-const FLOW_SECOND_HALF_LINE_OUTTER_CLASSNAME = "Flow-line-outter-second-half"
-const FLOW_1_TEXT = "Infection"
-const FLOW_2_TEXT = "Hospital"
+const FLOW_CLASSNAME = "flow-div";
+const FLOW_SVG_CLASSNAME = "Flow-svg";
+const FLOW_COMPONENT_ID = "777";
+const FLOW_SECOND_HALF_LINE_CLASSNAME = "Flow-line-inner-second-half";
+const FLOW_1_TEXT = "Infection";
+const FLOW_2_TEXT = "Hospital";
 
-const FLOW_1_EQUATION = "Some Equation for Flow 1"
-const FLOW_2_EQUATION = "Some Equation for Flow 2"
+const FLOW_1_EQUATION = "Some Equation for Flow 1";
+const FLOW_2_EQUATION = "Some Equation for Flow 2";
+
 const OFFSET_PX = 250;
-const EXPECTED_TITLE = "ModelCollab";
+const XOFFSET_PX_STOCK1 = 0;
+const XOFFSET_PX_STOCK3 = 900;
 
+const EXPECTED_TITLE = "ModelCollab";
 
 const BLACK = "rgb(0, 0, 0)"
 const RED = "rgb(255, 0, 0)"
@@ -212,10 +215,22 @@ async function clickMoveModeButton(driver: any): Promise<string> {
     return SUCCESS_MESSAGE;
 }
 
-async function moveStock(driver: any): Promise<string> {
-    const stock = await driver.findElement(selenium.By.className(STOCK_CLASSNAME));
+async function moveFirstStockOnCanvas(driver: any): Promise<string> {
+    const stocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
+
+    let stock;
+    for (var i = 0; i < stocks.length; i++){
+        const id = stocks[i].getAttribute("id");
+        if (id !== STOCK_COMPONENT_ID && id !== STOCK_COMPONENT2_ID){
+            stock = stocks[i];
+            break;
+        }
+    }
     if (!stock) return "Unable to find stock";
-    return dragElementByOffset(driver, OFFSET_PX, stock);
+
+    await driver.actions().click(stock).perform();
+
+    return dragElementByOffset(driver,stock, XOFFSET_PX_STOCK1, OFFSET_PX);
 }
 
 async function verifyLocationUpdatedInFirebase(driver: any, dm?: FirebaseInteractions): Promise<string> {
@@ -228,17 +243,37 @@ async function verifyLocationUpdatedInFirebase(driver: any, dm?: FirebaseInterac
     const myComponents = await dm.getComponents(mySession);
     if (!myComponents)
         return "Unable to find any components for session: " + mySession;
-    if (myComponents.length !== 1)
-        return `Expected one stock but found ${myComponents.length}`;
-    const myComponent = myComponents[0];
+    if (myComponents.length !== 5)
+        return `Expected five components but found ${myComponents.length}`;
 
-    const myStock = await getStock(driver);
-    const canvasTop = myStock.getCssValue("left");
-    const canvasLeft = myStock.getCssValue("top");
+    let myComponent;
+    for (var i = 0; i < myComponents.length; i++){
+        if (myComponents[i].getType() === schema.ComponentType.STOCK && myComponents[i].getId() !== STOCK_COMPONENT_ID && myComponents[i].getId() !== STOCK_COMPONENT2_ID){
+            myComponent = myComponents[i];
+            break;
+        }
+    }
 
-    if (myComponent.getData().x !== canvasLeft || myComponent.getData().y !== canvasTop)
-        return `Expected stock to have position ${canvasLeft},${canvasTop} ` +
-            `but found ${myComponent.getData().x},${myComponent.getData().y}`;
+    const myStocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
+    let myStock
+    for (var i = 0; i < myStocks.length; i++){
+        const id = await myStocks[i].getAttribute("id");
+        if (id !== STOCK_COMPONENT_ID && id !== STOCK_COMPONENT2_ID){
+            myStock = myStocks[i];
+            break;
+        }
+    }
+    const canvasTop = await myStock.getCssValue("top");
+    const canvasLeft = await myStock.getCssValue("left");
+
+    if (!myComponent){
+        return "Cannot find the first Stock in the Firebase"; 
+    }
+
+    if (myComponent.getData().x !== canvasLeft || myComponent.getData().y !== canvasTop 
+        || myComponent.getData().x !== XOFFSET_PX_STOCK1 || myComponent.getData().y !== OFFSET_PX)
+        return `Expected stock to have position ${XOFFSET_PX_STOCK1},${OFFSET_PX} ` +
+            `but found ${myComponent.getData().x},${myComponent.getData().y} in Firebase and found ${canvasLeft},${canvasTop} in Canvas`;
     return SUCCESS_MESSAGE;
 }
 
@@ -390,9 +425,9 @@ async function moveSecondStockInFirebase(_: any, dm?: FirebaseInteractions): Pro
     return SUCCESS_MESSAGE;
 }
 
-async function verifyStockMovedOnCanvas(driver: any): Promise<string> {
+async function verifySecondStockMovedOnCanvas(driver: any): Promise<string> {
     const stocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
-    if (stocks.length !== 2) return `Expected 2 stocks but found ${stocks.length}`;
+    if (stocks.length !== 3) return `Expected  stocks but found ${stocks.length}`;
     const secondStock = stocks.find((s: any) => s.getAttribute("id") === STOCK_COMPONENT_ID);
     const left = secondStock.getCssValue("left");
     const top = secondStock.getCssValue("top");
@@ -442,10 +477,14 @@ async function verifyTextChangedOnCanvas(driver: any): Promise<string> {
 }
 
 async function clickDeleteModeButton(driver: any): Promise<string> {
-    const delModeButton = await driver.findElement(selenium.By.id("delete-tab"));
+    const delModeButton = await driver.findElement(selenium.By.id("Delete-tab"));
     if (!delModeButton) return "Unable to find Delete mode button.";
     await delModeButton.click();
     return SUCCESS_MESSAGE;
+}
+
+async function verifyCanvasIsInDeleteMode(driver: any): Promise<string> {
+    return await verifyCanvasIsInMode(driver, "Delete");
 }
 
 async function deleteSecondStockFromFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
@@ -461,10 +500,13 @@ async function deleteSecondStockFromFirebase(_: any, dm?: FirebaseInteractions):
 
 async function verifySecondStockDeletedFromCanvas(driver: any): Promise<string> {
     const stocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
-    if (stocks.length !== 1)
-        return `Expected 1 stock but found ${stocks.length}`;
-    if (stocks[0].getAttribute("id") === STOCK_COMPONENT_ID)
-        return "Expected new stock to be deleted but found it on the canvas";
+    if (stocks.length !== 2)
+        return `Expected 2 stock but found ${stocks.length}`;
+
+    for (var i = 0; i < 2; i ++){
+        if (stocks[0].getAttribute("id") === STOCK_COMPONENT_ID)
+            return "Expected second stock to be deleted but found it on the canvas";
+    }
     return SUCCESS_MESSAGE;
 }
 
@@ -522,6 +564,7 @@ async function createFirstFlow(driver: any): Promise<string> {
     }
 
     await driver.actions().click(stockS).perform();
+    driver.manage().setTimeouts( { implicit: 100 } );
     await driver.actions().click(stockI).perform();
 
     const result = await searchForElementWithClassName(driver, FLOW_SVG_CLASSNAME)
@@ -939,6 +982,126 @@ async function verifyFlowEquationsAppearsOnCanvas(driver: any): Promise<string> 
     return SUCCESS_MESSAGE;
 }
 
+async function moveThirdStockInFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
+    if (!dm)
+        return "Expected a firebase DM but found none";
+    const sessions = dm.getSessionIds();
+    if (sessions.length !== 1)
+        return `Expected one session but found ${sessions.length}`;
+    const mySession = sessions[0];
+    
+
+    const newData = new schema.StockFirebaseComponent(
+        STOCK_COMPONENT2_ID,
+        {
+            x: XOFFSET_PX_STOCK3,
+            y: OFFSET_PX,
+            text: STOCK_3_TEXT,
+            initvalue: STOCK_3_INITVAL.toString(),
+        }
+    );
+    dm.updateComponent(mySession, newData);
+
+    return SUCCESS_MESSAGE;
+}
+
+async function verifyThirdStockMovedOnCanvas(driver: any): Promise<string> {
+    const stocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
+    if (stocks.length !== 3) return `Expected  stocks but found ${stocks.length}`;
+    const thirdStock = stocks.find((s: any) => s.getAttribute("id") === STOCK_COMPONENT2_ID);
+    const left = thirdStock.getCssValue("left");
+    const top = thirdStock.getCssValue("top");
+    if (left !== XOFFSET_PX_STOCK3 || top !== OFFSET_PX)
+        return `Expected new stock at ${XOFFSET_PX_STOCK3},${OFFSET_PX} but found at ${left},${top}`;
+    return SUCCESS_MESSAGE;
+}
+
+
+
+async function deleteFirstFlowFromFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
+    if (!dm)
+        return "Expected a firebase DM but found none";
+    const sessions = dm.getSessionIds();
+    if (sessions.length !== 1)
+        return "Expected one session but found ${sessions.length}";
+    const mySession = sessions[0];
+
+    const myComponents = await dm.getComponents(mySession);
+    if (!myComponents)
+    return "Unable to find any components for session: " + mySession;
+    
+    if (myComponents.length !== 5)
+    return `Expected three stocks and two flow (5 components) but found ${myComponents.length}`;
+
+    let flow
+    for (var i = 0; i < 5; i++){
+        if (myComponents[i].getType() === schema.ComponentType.FLOW){
+                flow = myComponents[i];
+                if (flow.getId() !== FLOW_COMPONENT_ID)
+                    dm.removeComponent(mySession, flow.getId());
+        }
+    }
+
+    return SUCCESS_MESSAGE;
+}
+
+
+async function verifyFirstFlowDeletedFromCanvas(driver: any): Promise<string> {
+    const flows = await driver.findElements(selenium.By.className(FLOW_CLASSNAME));
+    if (flows.length !== 1)
+        return `Expected 1 flow but found ${flows.length}`;
+    if (await flows[0].getAttribute("id") !== FLOW_COMPONENT_ID)
+        return "Expected the first flow to be deleted but found it on the canvas";
+    return SUCCESS_MESSAGE;
+}
+
+async function deleteSecondFlow(driver: any): Promise<string> {
+    let flows = await driver.findElements(selenium.By.className(FLOW_CLASSNAME));
+    if (flows.length !== 1)
+        return `Expected 1 flow but found ${flows.length}`;
+    await flows[0].click();
+    flows = await driver.findElements(selenium.By.className(FLOW_CLASSNAME));
+    if (flows.length > 0)
+        return `Expected 0 stocks after deleting but found ${flows.length}`;
+    return SUCCESS_MESSAGE;
+}
+
+async function verifySecondFlowDeletedFromFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
+    if (!dm)
+        return "Expected a firebase DM but found none";
+    if (dm.getSessionIds().length !== 1) {
+        return `Expected 1 session ID but found ${dm.getSessionIds().length}`
+    }
+    const components = await dm.getComponents(dm.getSessionIds()[0]);
+
+    for (var i = 0; i < 3; i ++){
+        if (components[i].getType() === schema.ComponentType.FLOW){
+            return `Expected 0 flows in Firebase after deleting all but so far found one`;
+        }
+    }
+    return SUCCESS_MESSAGE;
+}
+
+async function deleteThirdStockFromFirebase(_: any, dm?: FirebaseInteractions): Promise<string> {
+    if (!dm)
+        return "Expected a firebase DM but found none";
+    const sessions = dm.getSessionIds();
+    if (sessions.length !== 1)
+        return `Expected one session but found ${sessions.length}`;
+    const mySession = sessions[0];
+    dm.removeComponent(mySession, STOCK_COMPONENT2_ID);
+    return SUCCESS_MESSAGE;
+}
+
+async function verifyThirdStockDeletedFromCanvas(driver: any): Promise<string> {
+    const stocks = await driver.findElements(selenium.By.className(STOCK_CLASSNAME));
+    if (stocks.length !== 1)
+        return `Expected 1 stock but found ${stocks.length}`;
+    if (stocks[0].getAttribute("id") === STOCK_COMPONENT2_ID)
+        return "Expected new stock to be deleted but found it on the canvas";
+    return SUCCESS_MESSAGE;
+}
+
 /*
   This test expects to start logged in on the canvas page, with no stocks.
   This test will leave the Canvas in that same state.
@@ -970,17 +1133,12 @@ export const canvasPageTestSuite:
         addTextToStock,
         verifyTextUpdatedInFirebase,
 
-        //Resources
-        // moveStock,
-        // verifyLocationUpdatedInFirebase,
-
         createSecondStockInFirebase,
         verifySecondStockAppearsOnCanvas,
         verifyCorrectStockStillSelected,
         editSecondStockTextInFirebase,
         verifyTextChangedOnCanvas,
 
-        //TODO
         clickFlowModeButton,
         verifyCanvasIsInFlowMode,
         createFirstFlow,
@@ -1005,16 +1163,39 @@ export const canvasPageTestSuite:
 	    verifyStocksInitValueUpdatedInFirebase,
 
         editFlowEquationsInFirebase,
-        verifyFlowEquationsAppearsOnCanvas
-
-        // editFirstFlowEquationsInFirebase
-        // verifyFirstFlowEquationsAppearsOnCanvas
-    
-        // editFirstFlowDependsOnInFirebase
-        // verifyFirstFlowDependsOnAppearsOnCanvas
+        verifyFlowEquationsAppearsOnCanvas,
 
 
-        //end TODO
+        // clickMoveModeButton,
+        // verifyCanvasIsInMoveMode,
+
+        // moveFirstStockOnCanvas,
+        // verifyLocationUpdatedInFirebase,
+
+        // moveSecondStockInFirebase,
+        // verifySecondStockMovedOnCanvas,
+
+        // moveThirdStockInFirebase,
+	    // verifyThirdStockMovedOnCanvas,
+
+        clickDeleteModeButton,
+        verifyCanvasIsInDeleteMode,
+
+        deleteFirstFlowFromFirebase,
+        verifyFirstFlowDeletedFromCanvas,
+
+        deleteSecondFlow,
+        verifySecondFlowDeletedFromFirebase,
+
+
+        deleteSecondStockFromFirebase,
+        verifySecondStockDeletedFromCanvas,
+
+        deleteThirdStockFromFirebase,
+        verifyThirdStockDeletedFromCanvas,
+
+        deleteFirstStock,
+        verifyFirstStockDeletedFromFirebase
 
         //Resources
         // moveSecondStockInFirebase,
