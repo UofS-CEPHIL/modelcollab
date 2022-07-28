@@ -19,7 +19,6 @@ export default class FlowModeCanvas extends BaseCanvas {
                             from: this.props.selectedComponentId,
                             to: component.getId(),
                             equation: "",
-                            dependsOn: [],
                             text: ""
                         }
                     )

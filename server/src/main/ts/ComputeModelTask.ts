@@ -13,8 +13,10 @@ export default class ComputeModelTask {
         this.components = components;
     }
 
-    async start(): Promise<void> {
-        const juliaCode: string = new JuliaGenerator(this.components).generateJulia();
+    async start(onResultsReady?: (path: string) => void): Promise<void> {
+        const date: string = new Date().toISOString().slice(0, 16);
+        const filename: string = `/tmp/ModelResults_${date}`;
+        const juliaCode: string = new JuliaGenerator(this.components).generateJulia(filename);
         console.log(juliaCode.split(';'));
         let proc = spawn(
             "julia",
@@ -27,5 +29,6 @@ export default class ComputeModelTask {
         proc.stdin.write("\n");
         proc.stdin.write("exit()\n");
         proc.stdin.end();
+        if (onResultsReady) proc.on("exit", () => onResultsReady(filename));
     }
 }

@@ -59,15 +59,13 @@ export function createFirebaseDataComponent(id: string, data: any) {
             break;
 
         case ComponentType.FLOW.toString():
-            if (!dataVal.dependsOn) dataVal.dependsOn = [];
             component = new FlowFirebaseComponent(
                 id,
                 {
                     from: dataVal.from as string,
                     to: dataVal.to as string,
                     equation: dataVal.equation as string,
-                    text: dataVal.text as string,
-                    dependsOn: dataVal.dependsOn as string[]
+                    text: dataVal.text as string
                 }
             );
             break;
@@ -195,8 +193,6 @@ export interface FlowComponentData extends FirebasePointerDataObject {
     from: string;            // ID of the source of this flow
     to: string;              // ID of the sink of this flow
     equation: string;        // The equation for the flow rate
-    dependsOn: string[];     // The IDs of the stocks that this
-    //                            flow's equation depends on
     text: string;            // The text on screen
 }
 
@@ -218,8 +214,7 @@ export class FlowFirebaseComponent extends FirebaseDataComponent<FlowComponentDa
             from: String(data.from),
             to: String(data.to),
             text: String(data.text),
-            equation: String(data.equation),
-            dependsOn: data.dependsOn
+            equation: String(data.equation)
         };
         return d;
     }

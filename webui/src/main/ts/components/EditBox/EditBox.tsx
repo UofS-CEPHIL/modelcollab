@@ -141,10 +141,10 @@ export default class EditBox extends React.Component<Props, State> {
             return (
                 <Box>
                     <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Edit Flow
+                        Edit Parameter
                     </Typography>
                     <TextField id="outlined-basic"
-                        value={this.state.component.getData().from}
+                        value={this.state.component.getData().text}
                         onChange={e => this.handleChange(e)}
                         name="text"
                         label="Name"
@@ -155,7 +155,7 @@ export default class EditBox extends React.Component<Props, State> {
                         }}
                     />
                     <TextField id="outlined-basic"
-                        value={this.state.component.getData().to}
+                        value={this.state.component.getData().value}
                         onChange={e => this.handleChange(e)}
                         name="value"
                         label="Value"

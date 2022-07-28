@@ -1,4 +1,4 @@
-import generateJulia from "./../../main/ts/compute/JuliaGenerator";
+import JuliaGenerator from "./../../main/ts/compute/JuliaGenerator";
 import { FirebaseComponentModel as data } from "database/build/export";
 
 
@@ -8,97 +8,209 @@ const EXPECTED_INCLUDES = [
     "Catlab.WiringDiagrams"
 ];
 
+const RESULTS_FILENAME = "modelResults";
+
 const S_STOCK_NAME = "S";
+const S_ID = "0";
 const S_STARTING_VALUE = "38010000.0";
 const E_STOCK_NAME = "E";
+const E_ID = "1";
 const E_STARTING_VALUE = "0.0";
 const I_STOCK_NAME = "I";
+const I_ID = "2";
 const I_STARTING_VALUE = "1.0"
 const R_STOCK_NAME = "R";
+const R_ID = "3";
 const R_STARTING_VALUE = "0.0";
 const HICU_STOCK_NAME = "HICU";
+const HICU_ID = "4";
 const HICU_STARTING_VALUE = "0.0";
 const HNICU_STOCK_NAME = "HNICU";
+const HNICU_ID = "5";
 const HNICU_STARTING_VALUE = "0.0";
+
 const NEWINC_FLOW_NAME = "newIncidence";
-const NEWINC_EQUATION = "p.B*u.S*u.I/p.N";
+const NEWINC_ID = "6";
+const NEWINC_EQUATION = "B*S*I/N";
 const NEWINF_FLOW_NAME = "newInfectious";
-const NEWINF_EQUATION = "u.E*p.ri";
+const NEWINF_ID = "7";
+const NEWINF_EQUATION = "E*ri";
 const NEWREC_FLOW_NAME = "newRecovery";
-const NEWREC_EQUATION = "u.I/p.tr * (1.0 - p.fH)";
+const NEWREC_ID = "8";
+const NEWREC_EQUATION = "I/tr * (1.0 - fH)";
 const WANIMM_FLOW_NAME = "waningImmunity";
-const WANIMM_EQUATION = "u.R/p.tw";
+const WANIMM_ID = "9";
+const WANIMM_EQUATION = "R/tw";
 const HICUAD_FLOW_NAME = "hicuAdmission";
-const HICUAD_EQUATION = "u.I/p.tr * p.fH * p.fICU";
+const HICUAD_ID = "10";
+const HICUAD_EQUATION = "I/tr * fH * fICU";
 const HNICUA_FLOW_NAME = "hnicuAdmission";
-const HNICUA_EQUATION = "u.I/p.tr * p.fH * (1.0-p.fICU)";
+const HNICUA_ID = "11";
+const HNICUA_EQUATION = "I/tr * fH * (1.0-fICU)";
 const OUTICU_FLOW_NAME = "outICU";
-const OUTICU_EQUATION = "u.HICU/p.tICU";
+const OUTICU_ID = "12";
+const OUTICU_EQUATION = "HICU/tICU";
 const RECOVH_FLOW_NAME = "recoveryH";
-const RECOVH_EQUATION = "u.HNICU/p.tH";
-const PARAMS_NAME = "PARAMS";
+const RECOVH_ID = "13";
+const RECOVH_EQUATION = "HNICU/tH";
+
+const EXPECTED_EQUATIONS: { [id: string]: string } = {
+    NEWINC_ID: "p.B*u.S*u.I/p.N",
+    NEWINF_ID: "u.E*p.ri",
+    NEWREC_ID: "u.I/p.tr * (1.0 - p.fH)",
+    WANIMM_ID: "u.R/p.tw",
+    HICUAD_ID: "u.I/p.tr * p.fH * p.fICU",
+    HNICUA_ID: "u.I/p.tr * p.fH * (1.0-p.fICU)",
+    OUTICU_ID: "u.HICU/p.tICU",
+    RECOVH_ID: "u.HNICU/p.tH"
+};
+
+const START_TIME_NAME = "startTime";
+const START_TIME_ID = "14";
+const START_TIME_VALUE = "0.0";
+const STOP_TIME_NAME = "stopTime";
+const STOP_TIME_ID = "15";
+const STOP_TIME_VALUE = "300.0";
+const B_NAME = "B";
+const B_ID = "16";
+const B_VALUE = "0.8";
+const N_NAME = "N";
+const N_ID = "17";
+const N_VALUE = "3801001.0";
+const TR_NAME = "tr";
+const TR_ID = "18";
+const TR_VALUE = "12.22";
+const TW_NAME = "tw";
+const TW_ID = "19";
+const TW_VALUE = "2*365.0";
+const FH_NAME = "fH";
+const FH_ID = "20";
+const FH_VALUE = "0.002";
+const FICU_NAME = "fICU";
+const FICU_ID = "21";
+const FICU_VALUE = "0.23";
+const TICU_NAME = "tICU";
+const TICU_ID = "22";
+const TICU_VALUE = "6.0";
+const TH_NAME = "tH";
+const TH_ID = "23";
+const TH_VALUE = "12.0";
+const RV_NAME = "rv";
+const RV_ID = "24";
+const RV_VALUE = "0.01";
+const EP_NAME = "eP";
+const EP_ID = "25";
+const EP_VALUE = "0.6";
+const EF_NAME = "eF";
+const EF_ID = "26";
+const EF_VALUE = "0.85";
+const RI_NAME = "ri";
+const RI_ID = "27";
+const RI_VALUE = "0.207";
+const RIA_NAME = "ria";
+const RIA_ID = "28";
+const RIA_VALUE = "0.138";
+
+const ARBITRARY_ID = "999";
 
 
-const createStock = (id: string, initvalue: string) => {
-    return new data.StockFirebaseComponent(id, { x: 0, y: 0, text: "", initvalue: initvalue })
+const createStock = (id: string, name: string, initvalue: string) => {
+    return new data.StockFirebaseComponent(id, { x: 0, y: 0, text: name, initvalue })
 }
 
-const createFlow = (id: string, fromId: string, toId: string, equation: string, dependsOn: string[]) => {
-    return new data.FlowFirebaseComponent(id, { from: fromId, to: toId, equation: equation, dependsOn: dependsOn, text: "" });
+const createFlow = (id: string, fromId: string, toId: string, equation: string, name: string) => {
+    return new data.FlowFirebaseComponent(id, { from: fromId, to: toId, equation, text: name });
+}
+
+const createParam = (id: string, name: string, value: string) => {
+    return new data.ParameterFirebaseComponent(id, { x: 0, y: 0, text: name, value });
+}
+
+const createConnection = (from: string, to: string) => {
+    return new data.ConnectionFirebaseComponent(ARBITRARY_ID, { from, to });
 }
 
 const fail = () => expect(0).toEqual(1);
+
+const createVarName = (basename: string) => `_${basename}`;
 
 
 describe("generateJulia", () => {
 
     const TEST_STOCKS: data.StockFirebaseComponent[] = [
-        createStock(S_STOCK_NAME, S_STARTING_VALUE),
-        createStock(E_STOCK_NAME, E_STARTING_VALUE),
-        createStock(I_STOCK_NAME, I_STARTING_VALUE),
-        createStock(R_STOCK_NAME, R_STARTING_VALUE),
-        createStock(HICU_STOCK_NAME, HICU_STARTING_VALUE),
-        createStock(HNICU_STOCK_NAME, HNICU_STARTING_VALUE)
+        createStock(S_ID, S_STOCK_NAME, S_STARTING_VALUE),
+        createStock(E_ID, E_STOCK_NAME, E_STARTING_VALUE),
+        createStock(I_ID, I_STOCK_NAME, I_STARTING_VALUE),
+        createStock(R_ID, R_STOCK_NAME, R_STARTING_VALUE),
+        createStock(HICU_ID, HICU_STOCK_NAME, HICU_STARTING_VALUE),
+        createStock(HNICU_ID, HNICU_STOCK_NAME, HNICU_STARTING_VALUE),
     ];
-    const EXPECTED_STOCK_NAMES = TEST_STOCKS.map(s => s.getId());
+
+    const EXPECTED_STOCK_NAMES: string[] = TEST_STOCKS.map(s => createVarName(s.getData().text));
 
     const TEST_FLOWS: data.FlowFirebaseComponent[] = [
-        createFlow(NEWINC_FLOW_NAME, S_STOCK_NAME, E_STOCK_NAME, NEWINC_EQUATION, [I_STOCK_NAME, S_STOCK_NAME]),
-        createFlow(NEWINF_FLOW_NAME, E_STOCK_NAME, I_STOCK_NAME, NEWINF_EQUATION, [E_STOCK_NAME]),
-        createFlow(NEWREC_FLOW_NAME, I_STOCK_NAME, R_STOCK_NAME, NEWREC_EQUATION, [I_STOCK_NAME]),
-        createFlow(WANIMM_FLOW_NAME, R_STOCK_NAME, S_STOCK_NAME, WANIMM_EQUATION, [R_STOCK_NAME]),
-        createFlow(HICUAD_FLOW_NAME, I_STOCK_NAME, HICU_STOCK_NAME, HICUAD_EQUATION, [I_STOCK_NAME]),
-        createFlow(HNICUA_FLOW_NAME, I_STOCK_NAME, HNICU_STOCK_NAME, HNICUA_EQUATION, [I_STOCK_NAME]),
-        createFlow(OUTICU_FLOW_NAME, HICU_STOCK_NAME, HNICU_STOCK_NAME, OUTICU_EQUATION, [HICU_STOCK_NAME]),
-        createFlow(RECOVH_FLOW_NAME, HNICU_STOCK_NAME, R_STOCK_NAME, RECOVH_EQUATION, [HNICU_STOCK_NAME])
+        createFlow(NEWINC_ID, S_ID, E_ID, NEWINC_EQUATION, NEWINC_FLOW_NAME),
+        createFlow(NEWINF_ID, E_ID, I_ID, NEWINF_EQUATION, NEWINF_FLOW_NAME),
+        createFlow(NEWREC_ID, I_ID, R_ID, NEWREC_EQUATION, NEWREC_FLOW_NAME),
+        createFlow(WANIMM_ID, R_ID, S_ID, WANIMM_EQUATION, WANIMM_FLOW_NAME),
+        createFlow(HICUAD_ID, I_ID, HICU_ID, HICUAD_EQUATION, HICUAD_FLOW_NAME),
+        createFlow(HNICUA_ID, I_ID, HNICU_ID, HNICUA_EQUATION, HNICUA_FLOW_NAME),
+        createFlow(OUTICU_ID, HICU_ID, HNICU_ID, OUTICU_EQUATION, OUTICU_FLOW_NAME),
+        createFlow(RECOVH_ID, HNICU_ID, R_ID, RECOVH_EQUATION, RECOVH_FLOW_NAME),
     ];
 
-    const TEST_COMPONENTS = [...TEST_STOCKS, ...TEST_FLOWS];
+    const TEST_PARAMS: data.ParameterFirebaseComponent[] = [
+        createParam(START_TIME_ID, START_TIME_NAME, START_TIME_VALUE),
+        createParam(STOP_TIME_ID, STOP_TIME_NAME, STOP_TIME_VALUE),
+        createParam(B_ID, B_NAME, B_VALUE),
+        createParam(N_ID, N_NAME, N_VALUE),
+        createParam(TR_ID, TR_NAME, TR_VALUE),
+        createParam(TW_ID, TW_NAME, TW_VALUE),
+        createParam(FH_ID, FH_NAME, FH_VALUE),
+        createParam(FICU_ID, FICU_NAME, FICU_VALUE),
+        createParam(TICU_ID, TICU_NAME, TICU_VALUE),
+        createParam(TH_ID, TH_NAME, TH_VALUE),
+        createParam(RV_ID, RV_NAME, RV_VALUE),
+        createParam(RI_ID, RI_NAME, RI_VALUE),
+        createParam(RIA_ID, RIA_NAME, RIA_VALUE),
+        createParam(EP_ID, EP_NAME, EP_VALUE),
+        createParam(EF_ID, EF_NAME, EF_VALUE),
+    ];
 
-    const TEST_PARAMS = new data.ParametersFirebaseComponent(
-        PARAMS_NAME,
-        {
-            'startTime': 0.0,
-            'stopTime': 300.0,
-            'params': {
-                'B': '0.8',
-                'N': '3801001.0',
-                'tr': '12.22',
-                'tw': '2*365.0',
-                'fH': '0.002',
-                'fICU': '0.23',
-                'tICU': '6.0',
-                'tH': '12.0',
-                'rv': '0.01',
-                'eP': '0.6',
-                'eF': '0.85',
-                'ri': '0.207',
-                'ria': '0.138'
-            }
-        }
-    );
+    const TEST_CONNECTIONS: data.ConnectionFirebaseComponent[] = [
+        createConnection(B_ID, NEWINC_ID),
+        createConnection(S_ID, NEWINC_ID),
+        createConnection(I_ID, NEWINC_ID),
+        createConnection(N_ID, NEWINC_ID),
+        createConnection(E_ID, NEWINF_ID),
+        createConnection(RI_ID, NEWINF_ID),
+        createConnection(I_ID, NEWREC_ID),
+        createConnection(TR_ID, NEWREC_ID),
+        createConnection(FH_ID, NEWREC_ID),
+        createConnection(TR_ID, NEWREC_ID),
+        createConnection(R_ID, WANIMM_ID),
+        createConnection(TW_ID, WANIMM_ID),
+        createConnection(I_ID, HICUAD_ID),
+        createConnection(TR_ID, HICUAD_ID),
+        createConnection(FH_ID, HICUAD_ID),
+        createConnection(FICU_ID, HICUAD_ID),
+        createConnection(I_ID, HNICUA_ID),
+        createConnection(TR_ID, HNICUA_ID),
+        createConnection(FH_ID, HNICUA_ID),
+        createConnection(FICU_ID, HNICUA_ID),
+        createConnection(HICU_ID, OUTICU_ID),
+        createConnection(TICU_ID, OUTICU_ID),
+        createConnection(HNICU_ID, RECOVH_ID),
+        createConnection(TH_ID, RECOVH_ID),
+    ];
 
-    const resultString = generateJulia(TEST_COMPONENTS, TEST_PARAMS);
+
+    const TEST_COMPONENTS = [...TEST_STOCKS, ...TEST_FLOWS, ...TEST_PARAMS, ...TEST_CONNECTIONS];
+    const TEST_STOCKS_FLOWS = [...TEST_STOCKS, ...TEST_FLOWS];
+
+
+    const resultString = new JuliaGenerator(TEST_COMPONENTS).generateJulia(RESULTS_FILENAME);
+    console.log(resultString)
 
     test("Julia sample should have includes", async () => {
         const regex = /using (\.?[a-zA-Z][a-zA-Z0-9.]+);/g;
@@ -120,14 +232,14 @@ describe("generateJulia", () => {
         // Matches a group of (:_<blah>, ...)
         const regex = new RegExp(
             `\\w+( +)?=( +)?StockAndFlowp( +)?\\(( +)?\\(((( +)?:_(\\w+),?( +)?)`
-            + `{${EXPECTED_STOCK_NAMES.length}})\\),`
+            + `{${TEST_STOCKS.length}})\\),`
         );
         let matches = resultString.match(regex);
         if (!matches) fail();
         else {
             // Magic number 5 = the index where the desired list lives for the above regex.
             //   will possibly have to edit this if the above regex changes
-            matches = matches[5].split(",").map(s => s.trim().substring(2)/* strip leading ':' */);
+            matches = matches[5].split(",").map(s => s.trim().substring(1)/* strip leading ':' */);
             expect(matches.sort()).toStrictEqual(EXPECTED_STOCK_NAMES.sort());
         }
     });
@@ -139,6 +251,7 @@ describe("generateJulia", () => {
                     return ":_" + dependsOn[0];
                 else return `\\(${dependsOn.map(s => ":_" + s.toUpperCase()).join(",")}\\)`;
             }
+            if (!equation) console.log("!equation. flowname = " + flowname)
             equation = equation.replaceAll("*", "\\*").replaceAll("(", "\\(").replaceAll(")", "\\)");
             // Matches a correct Flow declaration
             return new RegExp(
@@ -148,12 +261,16 @@ describe("generateJulia", () => {
             );
         };
         for (const flow of TEST_FLOWS) {
+            const dependencies = TEST_CONNECTIONS
+                .filter(c => c.getData().to === flow.getId())
+                .filter(c => TEST_STOCKS_FLOWS.find(x => x.getId() === c.getId()))
+                .map(c => c.getData().from);
             const regex = createRegexForFlow(
-                flow.getId(),
-                flow.getData().equation,
+                flow.getData().text,
+                EXPECTED_EQUATIONS[flow.getId()],
                 flow.getData().from,
                 flow.getData().to,
-                flow.getData().dependsOn
+                dependencies
             );
             expect(regex.test(resultString)).toStrictEqual(true);
         }
@@ -208,7 +325,7 @@ describe("generateJulia", () => {
             //   will possibly have to edit this if the above regex changes
             const pairs = matches[4].split(",").map(s => s.split("="));
             for (const [paramName, val] of pairs) {
-                expect(val).toEqual(TEST_PARAMS.getData().params[paramName]);
+                expect(val).toEqual(TEST_PARAMS.find(p => p.getData().text === paramName)?.getData().value);
             }
         }
     });
@@ -227,8 +344,8 @@ describe("generateJulia", () => {
             expect(matches[1]).toEqual(matches[27]);
 
             // Assert that the start and stop times are correct
-            expect(matches[13]).toEqual(TEST_PARAMS.getData().startTime.toString());
-            expect(matches[16]).toEqual(TEST_PARAMS.getData().stopTime.toString());
+            expect(matches[13]).toEqual(START_TIME_VALUE);
+            expect(matches[16]).toEqual(STOP_TIME_VALUE);
         }
     });
 

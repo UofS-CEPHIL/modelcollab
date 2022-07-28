@@ -39,7 +39,7 @@ export default class JuliaGenerator {
         this.componentDependencies = this.findDependentsForComponents(this.components);
     }
 
-    public generateJulia() {
+    public generateJulia(filename: string) {
         return [
             IMPORT_LINE,
             this.makeStockFlowpLine(),
@@ -48,7 +48,7 @@ export default class JuliaGenerator {
             this.makeParamsLine(),
             this.makeInitialStocksLine(),
             this.makeSolutionLine(),
-            this.makeSaveFigureLine()
+            this.makeSaveFigureLine(filename)
         ].join("; ");
     }
 
@@ -122,9 +122,8 @@ export default class JuliaGenerator {
         return `${this.openModelName} = Open(${this.modelName}, ${makeStockVarList()})`;
     }
 
-    private makeSaveFigureLine(): string {
-        const date: string = new Date().toISOString().slice(0, 16);
-        return `plot(sol) ; savefig("/tmp/juliaPlot_${date}.png")`;
+    private makeSaveFigureLine(filename: string): string {
+        return `plot(sol) ; savefig("${filename}")`;
     }
 
     private makeApexLine(): string {
@@ -189,7 +188,7 @@ export default class JuliaGenerator {
             const juliaFlowFuncBody = this.makeJuliaFlowFunctionBody(flow, "u", "p", "t");
             const juliaFromVarName = this.stockFlowVarNames[flowData.from];
             const juliaToVarName = this.stockFlowVarNames[flowData.to];
-            const juliaDependentVarNames = createDependentsList(this.componentDependencies[flow.getId()]);
+            const juliaDependentVarNames = createDependentsList(this.componentDependencies[flow.getId()] || []);
             const line =
                 `(${juliaFlowVarName}=>${juliaFlowFuncBody}, ` +
                 `:${juliaFromVarName}=>:${juliaToVarName}) => ${juliaDependentVarNames}, `;
