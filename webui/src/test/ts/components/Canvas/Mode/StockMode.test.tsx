@@ -1,5 +1,5 @@
 import { render, fireEvent } from "@testing-library/react";
-import StockMode, { Props } from "../../../../../main/ts/components/Canvas/Mode/StockMode";
+import StockMode, { Props } from "../../../../../main/ts/components/Canvas/StockModeCanvas";
 import FirebaseDataModel from '../../../../../main/ts/data/FirebaseDataModel';
 import { DataContainer } from '../../../../../main/ts/data/DataContainer';
 
@@ -44,11 +44,11 @@ describe("<StockMode />", () => {
             registerComponentRemovedListener: () => { }
         };
 
-        const { findByTestId } = renderStockMode({firebaseDataModel: firebaseDataModel});
-        
+        const { findByTestId } = renderStockMode({ firebaseDataModel: firebaseDataModel });
+
         const stockMode = await findByTestId("stockMode-div");
         fireEvent.click(stockMode);
-        
+
         expect(updateFunction).toHaveBeenCalledTimes(1);
     });
 });

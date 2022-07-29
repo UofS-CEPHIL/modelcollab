@@ -2,7 +2,7 @@ import { FirebaseApp, initializeApp } from "firebase/app";
 import { Auth, getAuth, GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup } from "firebase/auth";
 import { connectDatabaseEmulator, Database, getDatabase } from "firebase/database";
 
-import firebaseConfig from "./config/firebaseConfig";
+import firebaseConfig from "../config/firebaseConfig";
 
 
 export default class FirebaseManager {

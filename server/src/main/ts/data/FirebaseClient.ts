@@ -20,7 +20,7 @@ export class FirebaseClient {
         }
     }
 
-    async getComponents(sessionId: string): Promise<FirebaseComponentModel.FirebaseDataComponent[]> {
+    async getComponents(sessionId: string): Promise<FirebaseComponentModel.FirebaseDataComponent<any>[]> {
         const components = await get(
             ref(
                 this.db,

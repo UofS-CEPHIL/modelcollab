@@ -4,7 +4,7 @@ import { render, fireEvent, act } from "@testing-library/react";
 import FirebaseDataModel from '../../../../main/ts/data/FirebaseDataModel';
 import { FirebaseComponentModel as schema } from 'database/build/export';
 
-import Stock, { DEFAULT_COLOR, Props } from "../../../../main/ts/components/Canvas/Stock";
+import Stock, { DEFAULT_COLOR, Props } from "../../../../main/ts/components/ScreenObjects/Stock";
 
 const TEST_X_VALUE: number = 100;
 const TEST_Y_VALUE: number = 200;
@@ -15,8 +15,8 @@ const TEST_COMPONENT_ID: string = "0";
 
 function renderStock(props: Partial<Props> = {}) {
     const defaultProps: Props = {
-        initx: 0,
-        inity: 0,
+        x: 0,
+        y: 0,
         sessionId: TEST_SESSION_ID,
         draggable: true,
         componentId: TEST_COMPONENT_ID,
@@ -36,7 +36,7 @@ function renderStock(props: Partial<Props> = {}) {
 
 describe("<Stock />", () => {
     test("Should display a stock with default settings", async () => {
-        const { findByTestId } = renderStock({ initx: TEST_X_VALUE, inity: TEST_Y_VALUE, color: DEFAULT_COLOR });
+        const { findByTestId } = renderStock({ x: TEST_X_VALUE, y: TEST_Y_VALUE, color: DEFAULT_COLOR });
         const stock = await findByTestId("stock-div");
 
         expect(stock).toHaveAttribute("draggable", "true");

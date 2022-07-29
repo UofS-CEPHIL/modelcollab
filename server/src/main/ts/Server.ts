@@ -1,25 +1,29 @@
-
 import express, { Express, Response } from "express";
+import cors from "cors";
 
 import ComputeModelTask from "./ComputeModelTask";
 import applicationConfig from "./config/applicationConfig";
-import firebaseConfig from "./FirebaseConfig";
 
 import { FirebaseClient } from "./data/FirebaseClient";
-import { FirebaseComponentModel as data } from "database/build/export";
+import { FirebaseComponentModel as schema } from "database/build/export";
+import JuliaGenerator from "./compute/JuliaGenerator";
 
 class Server {
 
     private readonly SUCCESS_CODE = 200;
 
-    private fbClient: FirebaseClient;
+    private readonly fbClient: FirebaseClient;
 
-    constructor() {
+    private pendingResults: { [id: string]: string };
+
+    public constructor() {
         this.fbClient = new FirebaseClient();
+        this.pendingResults = {};
     }
 
-    serve(): void {
+    public serve(): void {
         const app: Express = express();
+        app.use(cors());
         this.setupRoutes(app);
         app.listen(
             applicationConfig.port,
@@ -28,19 +32,49 @@ class Server {
     }
 
     private setupRoutes(app: Express): void {
+        app.get(
+            "/getCode/:sessionId",
+            (req, res) => this.getCode(req.params.sessionId, res)
+        );
         app.post(
-            "/compute/:sessionId",
+            "/computeModel/:sessionId",
             (req, res) => this.computeModel(req.params.sessionId, res)
+        );
+        app.get(
+            "/getModelResults/:resultId",
+            (req, res) => this.getModelResults(req.params.resultId, res)
         );
     }
 
     private async computeModel(sessionId: string, res: Response): Promise<void> {
-        const components: data.FirebaseDataComponent[] = await this.fbClient.getComponents(sessionId);
-
-        new ComputeModelTask(components).start();
+        console.log("computeModel");
+        const id = Math.floor(Math.random() * 1000).toString();
+        const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
+        new ComputeModelTask(components).start(p => this.pendingResults[id] = p);
 
         console.log("Started Julia task.");
-        res.sendStatus(this.SUCCESS_CODE);
+        delete this.pendingResults[id];
+        res.status(200).send(id);
+    }
+
+    private async getCode(sessionId: string, res: Response): Promise<void> {
+        console.log("getCode")
+        const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
+        const code = new JuliaGenerator(components).generateJulia("/your/path").replaceAll(";", "\n");
+
+        console.log("Sending code for session " + sessionId);
+        console.log(code);
+        res.status(200).contentType("text/plain").send(code);
+    }
+
+    private async getModelResults(resultId: string, res: Response) {
+        console.log("getModelResults: " + resultId);
+        if (this.pendingResults[resultId]) {
+            res.download(this.pendingResults[resultId] + ".png");
+        }
+        else {
+            res.sendStatus(204);
+        }
     }
 
     // private runJuliaHardCoded() {

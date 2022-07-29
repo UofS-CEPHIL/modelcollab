@@ -1,5 +1,5 @@
 import { render, fireEvent } from "@testing-library/react";
-import DeleteMode, { Props } from "../../../../../main/ts/components/Canvas/Mode/DeleteMode";
+import DeleteMode, { Props } from "../../../../../main/ts/components/Canvas/DeleteModeCanvas";
 import FirebaseDataModel from '../../../../../main/ts/data/FirebaseDataModel';
 import { DataContainer } from '../../../../../main/ts/data/DataContainer';
 import { FirebaseComponentModel as schema } from "database/build/export";
