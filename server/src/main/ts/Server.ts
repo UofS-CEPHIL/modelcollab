@@ -60,10 +60,12 @@ class Server {
     private async getCode(sessionId: string, res: Response): Promise<void> {
         console.log("getCode")
         const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
+        console.log("got components");
         const code = new JuliaGenerator(components).generateJulia("/your/path").replaceAll(";", "\n");
 
         console.log("Sending code for session " + sessionId);
         console.log(code);
+        console.log("getCode")
         res.status(200).contentType("text/plain").send(code);
     }
 

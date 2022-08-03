@@ -40,7 +40,7 @@ export default class Toolbar extends React.Component<Props, State> {
         };
         const getCode = () => {
             Axios.get(
-                `http://${applicationConfig.serverAddress}:${applicationConfig.serverPort}/getCode/${this.props.sessionId}`,
+                `${applicationConfig.serverAddress}/getCode/${this.props.sessionId}`,
                 {
                     method: 'get',
                     responseType: 'blob',
@@ -62,7 +62,7 @@ export default class Toolbar extends React.Component<Props, State> {
             const POLLING_TIME_MS = 2000;
             const pollForResults = (id: string) => {
                 Axios.get(
-                    `http://${applicationConfig.serverAddress}:${applicationConfig.serverPort}/getModelResults/${id}`,
+                    `${applicationConfig.serverAddress}:${applicationConfig.serverPort}/getModelResults/${id}`,
                     {
                         method: 'get',
                         headers: {
@@ -104,7 +104,7 @@ export default class Toolbar extends React.Component<Props, State> {
             const pollOnce = (id: string) => setTimeout(() => pollForResults(id), POLLING_TIME_MS);
             if (!this.state.waitingForResults) {
                 Axios.post(
-                    `http://${applicationConfig.serverAddress}:${applicationConfig.serverPort}/computeModel/${this.props.sessionId}`,
+                    `${applicationConfig.serverAddress}/computeModel/${this.props.sessionId}`,
                     {
                         method: 'post',
                         headers: {
