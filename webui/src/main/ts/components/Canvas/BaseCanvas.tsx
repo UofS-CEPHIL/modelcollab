@@ -12,6 +12,10 @@ import StockUiData from '../ScreenObjects/StockUiData';
 import ParameterUiData from '../ScreenObjects/ParameterUiData';
 import ConnectionUiData from '../ScreenObjects/ConnectionUiData';
 import Connection from '../ScreenObjects/Connection';
+import SumVariable from '../ScreenObjects/SumVariable';
+import SumVariableUiData from '../ScreenObjects/SumVariableUiData';
+import DynamicVariableUiData from '../ScreenObjects/DynamicVariableUiData';
+import DynamicVariable from '../ScreenObjects/DynamicVariable';
 
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
@@ -38,13 +42,9 @@ export default abstract class BaseCanvas extends React.Component<Props> {
         this.props.setSelected(comp.getId());
     }
 
-    protected constructor(props: Props) {
-        super(props);
-    }
-
     protected getFlows(): FlowUiData[] {
         return this.props.children.filter(
-            (c: ComponentUiData) => c.getType() == schema.ComponentType.FLOW
+            (c: ComponentUiData) => c.getType() === schema.ComponentType.FLOW
         ).map(
             (c: ComponentUiData) => c as FlowUiData
         );
@@ -52,7 +52,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
 
     protected getStocks(): StockUiData[] {
         return this.props.children.filter(
-            (c: ComponentUiData) => c.getType() == schema.ComponentType.STOCK
+            (c: ComponentUiData) => c.getType() === schema.ComponentType.STOCK
         ).map(
             (c: ComponentUiData) => c as StockUiData
         );
@@ -60,10 +60,24 @@ export default abstract class BaseCanvas extends React.Component<Props> {
 
     protected getParams(): ParameterUiData[] {
         return this.props.children.filter(
-            (c: ComponentUiData) => c.getType() == schema.ComponentType.PARAMETER
+            (c: ComponentUiData) => c.getType() === schema.ComponentType.PARAMETER
         ).map(
             (c: ComponentUiData) => c as ParameterUiData
         );
+    }
+
+    protected getSumVariables(): SumVariableUiData[] {
+        return this.props.children.filter(
+            (c: ComponentUiData) => c.getType() === schema.ComponentType.SUM_VARIABLE
+        ).map(
+            (c: ComponentUiData) => c as SumVariableUiData
+        );
+    }
+
+    protected getDynamicVariables(): DynamicVariableUiData[] {
+        return this.props.children
+            .filter((c: ComponentUiData) => c.getType() === schema.ComponentType.VARIABLE)
+            .map((c: ComponentUiData) => c as DynamicVariableUiData)
     }
 
     protected getConnections(): ConnectionUiData[] {
@@ -129,7 +143,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                         this.getParams().map((param, i) => {
                             return (
                                 <Parameter
-                                    param={param}
+                                    data={param}
                                     draggable={true}
                                     updateState={this.props.editComponent}
                                     color={this.props.selectedComponentId === param.getId()
@@ -137,6 +151,34 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                                     key={i}
                                 />
                             )
+                        })
+                    }
+                    {
+                        this.getSumVariables().map((sv, i) => {
+                            return (
+                                <SumVariable
+                                    data={sv}
+                                    draggable={true}
+                                    updateState={this.props.editComponent}
+                                    color={this.props.selectedComponentId === sv.getId()
+                                        ? SELECTED_COLOR : DEFAULT_COLOR}
+                                    key={i}
+                                />
+                            )
+                        })
+                    }
+                    {
+                        this.getDynamicVariables().map((dv, i) => {
+                            return (
+                                <DynamicVariable
+                                    data={dv}
+                                    draggable={true}
+                                    updateState={this.props.editComponent}
+                                    color={this.props.selectedComponentId === dv.getId()
+                                        ? SELECTED_COLOR : DEFAULT_COLOR}
+                                    key={i}
+                                />
+                            );
                         })
                     }
                     {

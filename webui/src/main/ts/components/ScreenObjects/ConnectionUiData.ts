@@ -12,4 +12,4 @@ export default class ConnectionUiData extends PointerComponent<schema.Connection
     public isPointable(): boolean {
         return false;
     }
-}
+} 

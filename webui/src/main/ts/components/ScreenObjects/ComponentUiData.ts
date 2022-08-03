@@ -23,6 +23,8 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
 
     public abstract withData(data: DataType): ComponentUiDataInternal<DataType, DbObject>;
 
+    // Can we point FROM this object TO another component?
+    // TO -> FROM is determined by whether it implements PointableComponent
     public abstract isPointable(): boolean;
 
 
@@ -75,6 +77,10 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
             }
         }
     }
+
+    public toString(): string {
+        return this.getDatabaseObject().toString();
+    }
 }
 
 export default abstract class ComponentUiData extends ComponentUiDataInternal<any, any> { }
@@ -90,12 +96,12 @@ export abstract class PointerComponent<
 
     public getSource(components: ReadonlyArray<ComponentUiData>): SourceComponent {
         const source = (components.find(c => c.getId() === this.getData().from) as unknown) as SourceComponent;
-        if (!source) throw new ComponentNotFoundError();
+        if (!source) throw new ComponentNotFoundError(`Unable to find id ${this.getData().from} in list ${components.map(c => c.getId())}`);
         return source;
     }
     public getTarget(components: ReadonlyArray<ComponentUiData>): TargetComponent {
         const target = (components.find(c => c.getId() === this.getData().to) as unknown) as TargetComponent;
-        if (!target) throw new ComponentNotFoundError();
+        if (!target) throw new ComponentNotFoundError(`Unable to find id ${this.getData().to} in list ${Object.values(components)}`);
         return target;
     }
 
@@ -180,6 +186,27 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
                 offsetFromLeft = width;
         }
         return { x: topLeft.x + offsetFromLeft, y: topLeft.y + offsetFromTop };
+    }
+}
+
+export abstract class TextComponent<DbObject extends schema.TextFirebaseComponent<any>> extends RectangularComponent<schema.TextComponentData, DbObject> {
+    public static WIDTH = 150;
+    public static HEIGHT = 50;
+
+    public getTopLeft(): Point {
+        return { x: this.getData().x, y: this.getData().y };
+    }
+
+    public getWidthPx(): number {
+        return TextComponent.WIDTH;
+    }
+
+    public getHeightPx(): number {
+        return TextComponent.HEIGHT;
+    }
+
+    public isPointable(): boolean {
+        return true;
     }
 }
 

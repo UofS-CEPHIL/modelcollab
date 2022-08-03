@@ -2,7 +2,6 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../IdGenerator";
 import ComponentUiData from "../ScreenObjects/ComponentUiData";
 import ConnectionUiData from "../ScreenObjects/ConnectionUiData";
-import StockUiData from "../ScreenObjects/StockUiData";
 import BaseCanvas from "./BaseCanvas";
 
 
@@ -13,6 +12,10 @@ export default class ConnectModeCanvas extends BaseCanvas {
                 this.props.setSelected(component.getId());
             }
             else if (component.getId() !== this.props.selectedComponentId) {
+                if (
+                    this.getConnections().find(c => c.getData().from === this.props.selectedComponentId
+                        && c.getData().to === component.getId())
+                ) return;
                 const newConn = new ConnectionUiData(
                     new schema.ConnectionFirebaseComponent(
                         IdGenerator.generateUniqueId(this.props.children),
