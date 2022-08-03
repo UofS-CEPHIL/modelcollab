@@ -23,8 +23,10 @@ import FlowUiData from '../ScreenObjects/FlowUiData';
 import ConnectionUiData from '../ScreenObjects/ConnectionUiData';
 import ParameterUiData from '../ScreenObjects/ParameterUiData';
 import ConnectModeCanvas from '../Canvas/ConnectModeCanvas';
-import VariableModeCanvas from '../Canvas/VariableModeCanvas';
-import VariableUiData from '../ScreenObjects/VariableUiData';
+import SumVariableModeCanvas from '../Canvas/SumVariableModeCanvas';
+import SumVariableUiData from '../ScreenObjects/SumVariableUiData';
+import DynamicVariableModeCanvas from '../Canvas/DynamicVariableModeCanvas';
+import DynamicVariableUiData from '../ScreenObjects/DynamicVariableUiData';
 
 
 interface Props {
@@ -59,6 +61,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 case schema.ComponentType.STOCK.toString(): return false;
                 case schema.ComponentType.PARAMETER.toString(): return false;
                 case schema.ComponentType.VARIABLE.toString(): return false;
+                case schema.ComponentType.SUM_VARIABLE.toString(): return false;
                 case schema.ComponentType.FLOW.toString(): return true;
                 case schema.ComponentType.CONNECTION.toString(): return true;
                 default: throw new Error("Unknown component: " + componentType);
@@ -183,15 +186,21 @@ export default class SimulationScreen extends React.Component<Props, State> {
                         {...props}
                     />
                 );
-            case UiMode.VARIABLE:
+            case UiMode.SUM_VARIABLE:
                 return (
-                    <VariableModeCanvas
+                    <SumVariableModeCanvas
                         {...props}
                     />
                 );
             case UiMode.CONNECT:
                 return (
                     <ConnectModeCanvas
+                        {...props}
+                    />
+                );
+            case UiMode.DYN_VARIABLE:
+                return (
+                    <DynamicVariableModeCanvas
                         {...props}
                     />
                 );
@@ -253,8 +262,10 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 return new ConnectionUiData(dbComponent);
             case schema.ComponentType.PARAMETER:
                 return new ParameterUiData(dbComponent);
+            case schema.ComponentType.SUM_VARIABLE:
+                return new SumVariableUiData(dbComponent);
             case schema.ComponentType.VARIABLE:
-                return new VariableUiData(dbComponent);
+                return new DynamicVariableUiData(dbComponent);
         }
     }
 }

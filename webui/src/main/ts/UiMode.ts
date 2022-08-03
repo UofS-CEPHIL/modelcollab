@@ -2,7 +2,8 @@ export const enum UiMode {
     STOCK = "Stock",
     FLOW = "Flow",
     PARAM = "Param",
-    VARIABLE = "Variable",
+    DYN_VARIABLE = "Dynamic Variable",
+    SUM_VARIABLE = "Sum Variable",
     DELETE = "Delete",
     MOVE = "Move",
     EDIT = "Edit",
@@ -24,8 +25,11 @@ export function modeFromString(s: string): UiMode | null {
         case "PARAM":
         case "PARAMETER":
             return UiMode.PARAM;
-        case "VARIABLE":
-            return UiMode.VARIABLE;
+        case "DYN_VARIABLE":
+        case "DYNAMIC VARIABLE":
+            return UiMode.DYN_VARIABLE;
+        case "SUM VARIABLE":
+            return UiMode.SUM_VARIABLE;
         case "CONNECT":
             return UiMode.CONNECT;
         default:

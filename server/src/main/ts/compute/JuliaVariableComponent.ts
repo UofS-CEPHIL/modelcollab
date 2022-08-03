@@ -1,15 +1,15 @@
-import JuliaComponentData, { JuliaNameValueComponent } from "./JuliaComponentData";
+import { JuliaNameValueComponent } from "./JuliaComponentData";
 
 export default class JuliaVariableComponent extends JuliaNameValueComponent {
 
-    public readonly dependedVarNames: string[];
+    public readonly dependedStockNames: string[];
 
     public readonly dependedSumVarNames: string[];
 
-    public constructor(name: string, value: string, dependedNames: string[], dependedSumVarNames: string[]) {
+    public constructor(name: string, value: string, dependedStockNames: string[], dependedSumVarNames: string[]) {
         super(name, value);
-        this.dependedVarNames = dependedNames;
         this.dependedSumVarNames = dependedSumVarNames;
+        this.dependedStockNames = dependedStockNames;
     }
 }
 

@@ -1,4 +1,3 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import JuliaComponentData from "./JuliaComponentData";
 import JuliaFlowComponent from "./JuliaFlowComponent";
 import JuliaParameterComponent from "./JuliaParameterComponent";
@@ -52,7 +51,7 @@ export default class JuliaGenerator {
                     sumVariables.push(component);
                 }
                 else if (component instanceof JuliaVariableComponent) {
-                    variables.push(component)
+                    variables.push(component);
                 }
                 else {
                     throw new Error("Unknown component type: " + typeof component);
@@ -79,25 +78,9 @@ export default class JuliaGenerator {
         ].join("; ");
     }
 
-    private getAllComponents(): JuliaComponentData[] {
-        return [
-            ...this.components.stocks,
-            ...this.components.flows,
-            ...this.components.variables,
-            ...this.components.parameters
-        ];
-    }
-
-    private getStocksAndFlows(): JuliaComponentData[] {
-        return [
-            ...this.components.stocks,
-            ...this.components.flows
-        ]
-    }
-
     private makeStockAndFlowLine(): string {
         const makeStockLines = () => this.components.stocks.map(
-            stock => `:${stock.name} => (${stock.getInFlowsLine()}, ${stock.getOutFlowsLine()}, ${stock.getDependedVariablesLine()}, ${stock.getContributingSumVarsLine()})`
+            stock => `:${stock.name} => (${stock.getInFlowsLine()}, ${stock.getOutFlowsLine()}, ${stock.getContributingVariablesLine()}, ${stock.getContributingSumVarsLine()})`
         ).join(', ');
 
 
@@ -106,11 +89,11 @@ export default class JuliaGenerator {
         ).join(', ');
 
         const makeVarLines = () => this.components.variables.map(
-            v => `:${v.name} => ${v.getTranslatedValue(this.getAllComponents())}`
+            v => `:${v.name} => ${v.getTranslatedValue()}`
         ).join(', ');
 
         const makeSumVarLines = () => this.components.sumVariables.map(
-            v => `:${v.name} => ${v.getContributingVariableNames(this.components.variables)}`
+            v => `:${v.name} => ${JuliaComponentData.makeVarList(v.dependedStockNames)}`
         ).join(', ');
 
         return `${this.modelName} = StockAndFlow((${makeStockLines()}), (${makeFlowLines()}), (${makeVarLines()}), (${makeSumVarLines()}))`;
@@ -118,7 +101,7 @@ export default class JuliaGenerator {
 
     private makeOpenLine(): string {
         const stockVarList = this.components.stocks
-            .map(v => `[:${v}]`)
+            .map(v => `[:${v.name}]`)
             .join(", ");
 
         return `${this.openModelName} = Open(${this.modelName}, ${stockVarList})`;
@@ -137,14 +120,15 @@ export default class JuliaGenerator {
 
     private makeInitialStocksLine(): string {
         const stocksString = this.components.stocks
-            .map((s: JuliaStockComponent) => `${s.name}=${s.}`)
+            .map((s: JuliaStockComponent) => `${s.name}=${s.getTranslatedInitValue()}`)
             .join(", ");
         return `${this.initialValuesVectorName} = LVector(${stocksString})`;
     }
 
     private makeSolutionLine(): string {
-        const startTime = this.components.parameters.find(p => p.name === "startTime");
-        const stopTime = this.components.parameters.find(p => p.name === "stopTime");
+        const startTime = this.components.parameters.find(p => p.name === "startTime")?.value;
+        const stopTime = this.components.parameters.find(p => p.name === "stopTime")?.value;
+        if (!startTime || !stopTime) throw new Error(`Can't find start or stop time: start = ${startTime} stop = ${stopTime}`);
         const odeLine =
             `${this.probVarName} = ODEProblem(vectorfield(${this.apexModelName}),${this.initialValuesVectorName},`
             + `(${startTime},${stopTime}),${this.paramsVectorName})`;

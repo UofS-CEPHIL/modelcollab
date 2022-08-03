@@ -1,10 +1,12 @@
 import JuliaComponentData from "./JuliaComponentData";
-import JuliaVariableComponent from "./JuliaVariableComponent";
 
 
-export default class JuliaSumVariableComponent extends JuliaVariableComponent {
-    public getContributingVariableNames(variables: JuliaVariableComponent[]): string {
-        const contVariables = variables.filter(v => v.dependedSumVarNames.includes(this.name)).map(v => v.name);
-        return JuliaSumVariableComponent.makeVarList(contVariables);
+export default class JuliaSumVariableComponent extends JuliaComponentData {
+
+    public readonly dependedStockNames: string[];
+
+    public constructor(name: string, dependedStockNames: string[]) {
+        super(name);
+        this.dependedStockNames = dependedStockNames;
     }
 }

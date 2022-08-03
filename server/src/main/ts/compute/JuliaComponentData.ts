@@ -1,10 +1,3 @@
-import JuliaFlowComponent from "./JuliaFlowComponent";
-
-import JuliaParameterComponent from "./JuliaParameterComponent";
-import JuliaStockComponent from "./JuliaStockComponent";
-import JuliaSumVariableComponent from "./JuliaSumVariableComponent";
-import JuliaVariableComponent from "./JuliaVariableComponent";
-
 export default abstract class JuliaComponentData {
 
     public static readonly MODEL_NAME = "modelName";
@@ -30,35 +23,10 @@ export default abstract class JuliaComponentData {
             .filter(s => !this.isSimpleNumber(s))
     }
 
-    public static qualifyParameterReferences(equation: string, components: JuliaComponentData[]) {
-        const replacementFunction = (s: string) => {
-            const replacement = components.find(c => c.name === s);
-            if (!replacement)
-                throw new Error(`Unable to find component for symbol ${s} in equation ${equation}`);
-            else if (replacement instanceof JuliaParameterComponent) {
-                return `${this.PARAMS_VAR_NAME}.${replacement.name}`;
-            }
-            else if (replacement instanceof JuliaStockComponent) {
-                return `${this.STOCKS_VARIABLES_VAR_NAME}.${replacement.name}`;
-            }
-            else if (replacement instanceof JuliaVariableComponent) {
-                return `${this.STOCKS_VARIABLES_VAR_NAME}.${replacement.name}`;
-            }
-            else if (replacement instanceof JuliaSumVariableComponent) {
-                return `${this.SUM_VARS_VECTOR_NAME}.${replacement.name}(${this.STOCKS_VARIABLES_VAR_NAME},${this.TIME_VAR_NAME})`;
-            }
-            else if (replacement instanceof JuliaFlowComponent) {
-                return `${this.STOCKS_VARIABLES_VAR_NAME}.${replacement.associatedVarName}`;
-            }
-            else {
-                throw new Error("Received unknown Julia component: " + typeof replacement);
-            }
-        }
-
-
+    public static replaceSymbols(statement: string, replacementFunction: (s: string) => string) {
         const operators = /[\+-\/\*\(\) ]/g;
-        const values = equation.split(operators);
-        let out = equation;
+        const values = statement.split(operators);
+        let out = statement;
         for (const value of values) {
             if (!(value === "" || this.isSimpleNumber(value)))
                 out = out.replaceAll(
@@ -101,7 +69,10 @@ export abstract class JuliaNameValueComponent extends JuliaComponentData {
         this.value = value;
     }
 
-    public getTranslatedValue(components: JuliaComponentData[]): string {
-        return JuliaVariableComponent.qualifyParameterReferences(this.value, components);
+    public getTranslatedValue(): string {
+        const replacementFunction = (s: string) => {
+            return `${JuliaComponentData.PARAMS_VECTOR_NAME}.${s} `;
+        };
+        return JuliaNameValueComponent.replaceSymbols(this.value, replacementFunction);
     }
 }

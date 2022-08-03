@@ -1,5 +1,6 @@
 import JuliaGenerator from "./../../main/ts/compute/JuliaGenerator";
 import { FirebaseComponentModel as data } from "database/build/export";
+import JuliaComponentDataBuilder from "../../main/ts/compute/JuliaComponentDataBuilder";
 
 
 const EXPECTED_INCLUDES = [
@@ -209,7 +210,7 @@ describe("generateJulia", () => {
     const TEST_STOCKS_FLOWS = [...TEST_STOCKS, ...TEST_FLOWS];
 
 
-    const resultString = new JuliaGenerator(TEST_COMPONENTS).generateJulia(RESULTS_FILENAME);
+    const resultString = new JuliaGenerator(JuliaComponentDataBuilder.makeJuliaComponents(TEST_COMPONENTS)).generateJulia(RESULTS_FILENAME);
     console.log(resultString)
 
     test("Julia sample should have includes", async () => {

@@ -1,31 +1,32 @@
+import JuliaComponentData, { JuliaNameValueComponent } from "./JuliaComponentData";
+import JuliaFlowComponent from "./JuliaFlowComponent";
 
-import JuliaComponentData from "./JuliaComponentData";
-
-export default class JuliaStockComponent extends JuliaComponentData {
+export default class JuliaStockComponent extends JuliaNameValueComponent {
     public readonly inFlowNames: string[];
     public readonly outFlowNames: string[];
-    public readonly dependedVarNames: string[];
-    public readonly dependedSumVarNames: string[];
-    public readonly initValue: string;
+    public readonly dependedParameterNames: string[];
+    public readonly contributingSumVarNames: string[];
+    public readonly contributingFlowNames: string[];
 
     public constructor(
         name: string,
+        initValue: string,
         inFlowNames: string[],
         outFlowNames: string[],
-        dependedVarNames: string[],
-        dependedSumVarNames: string[],
-        initValue: string
+        dependedParameterNames: string[],
+        contributingFlowNames: string[],
+        contributingSumVarNames: string[]
     ) {
-        super(name);
+        super(name, initValue);
         this.inFlowNames = inFlowNames;
         this.outFlowNames = outFlowNames;
-        this.dependedVarNames = dependedVarNames;
-        this.dependedSumVarNames = dependedSumVarNames;
-        this.initValue = initValue;
+        this.dependedParameterNames = dependedParameterNames;
+        this.contributingFlowNames = contributingFlowNames;
+        this.contributingSumVarNames = contributingSumVarNames;
     }
 
-    public getTranslatedInitValue(components: JuliaComponentData[]): string {
-        return JuliaStockComponent.qualifyParameterReferences(this.initValue, components);
+    public getTranslatedInitValue(): string {
+        return this.getTranslatedValue();
     }
 
     public getInFlowsLine(): string {
@@ -36,12 +37,12 @@ export default class JuliaStockComponent extends JuliaComponentData {
         return this.makeLine(this.outFlowNames, "F_NONE");
     }
 
-    public getDependedVariablesLine(): string {
-        return this.makeLine(this.dependedVarNames, "V_NONE");
+    public getContributingVariablesLine(): string {
+        return this.makeLine(this.contributingFlowNames, "V_NONE");
     }
 
     public getContributingSumVarsLine(): string {
-        return this.makeLine(this.dependedSumVarNames, "SV_NONE");
+        return this.makeLine(this.contributingSumVarNames, "SV_NONE");
     }
 
     private makeLine(names: string[], alternate: string): string {
