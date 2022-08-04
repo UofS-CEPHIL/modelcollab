@@ -15,21 +15,30 @@ export default class JuliaComponentDataBuilder {
         const sumVars: schema.SumVariableFirebaseComponent[] = components.filter(c => c.getType() === schema.ComponentType.SUM_VARIABLE);
         const parameters: schema.ParameterFirebaseComponent[] = components.filter(c => c.getType() === schema.ComponentType.PARAMETER);
 
+        console.log(`Components = `);
+        components.forEach(console.log)
+
         const stockJuliaComponents: JuliaStockComponent[] = stocks.map(s => {
             const inFlows = flows.filter(f => f.getData().to === s.getId()).map(f => f.getData().text);
             const outFlows = flows.filter(f => f.getData().from === s.getId()).map(f => f.getData().text);
             const dependedComponentIds = connections.filter(c => c.getData().to === s.getId()).map(c => c.getData().from);
             const contributingComponentIds = connections.filter(c => c.getData().from === s.getId()).map(c => c.getData().to);
-            const dependedParameterNames = parameters.filter(p => dependedComponentIds.find(id => p.getId() === id)).map(p => p.getData().text);
-            const contributingVarNames = variables.filter(v => contributingComponentIds.find(id => v.getId() === id)).map(v => v.getData().text);
-            const contributingSumVarNames = sumVars.filter(sv => contributingComponentIds.find(id => sv.getId() === id)).map(v => v.getData().text);
+            const dependedParameterNames = parameters
+                .filter(p => dependedComponentIds.find(id => p.getId() === id))
+                .map(p => p.getData().text);
+            const contributingFlowNames = flows
+                .filter(f => contributingComponentIds.find(id => f.getId() === id))
+                .map(f => f.getData().text);
+            const contributingSumVarNames = sumVars
+                .filter(sv => contributingComponentIds.find(id => sv.getId() === id))
+                .map(sv => sv.getData().text);
             return new JuliaStockComponent(
                 s.getData().text,
                 s.getData().initvalue,
                 inFlows,
                 outFlows,
                 dependedParameterNames,
-                contributingVarNames,
+                contributingFlowNames,
                 contributingSumVarNames
             );
         });

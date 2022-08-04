@@ -78,18 +78,21 @@ export default class JuliaGenerator {
         ].join("; ");
     }
 
+    private getAllComponents(): JuliaComponentData[] {
+        return Object.values(this.components).reduce((prev, cur) => prev.concat(cur));
+    }
+
     private makeStockAndFlowLine(): string {
         const makeStockLines = () => this.components.stocks.map(
-            stock => `:${stock.name} => (${stock.getInFlowsLine()}, ${stock.getOutFlowsLine()}, ${stock.getContributingVariablesLine()}, ${stock.getContributingSumVarsLine()})`
+            stock => `:${stock.name} => (${stock.getInFlowsLine()}, ${stock.getOutFlowsLine()}, ${stock.getContributingVariablesLine(this.getAllComponents())}, ${stock.getContributingSumVarsLine()})`
         ).join(', ');
-
 
         const makeFlowLines = () => this.components.flows.map(
             flow => `:${flow.name} => :${flow.associatedVarName}`
         ).join(', ');
 
         const makeVarLines = () => this.components.variables.map(
-            v => `:${v.name} => ${v.getTranslatedValue()}`
+            v => `:${v.name} => (${JuliaComponentData.STOCKS_VARIABLES_VAR_NAME}, ${JuliaComponentData.SUM_VARS_VAR_NAME}, ${JuliaComponentData.PARAMS_VAR_NAME}, ${JuliaComponentData.TIME_VAR_NAME}) -> ${v.getTranslatedValue()}`
         ).join(', ');
 
         const makeSumVarLines = () => this.components.sumVariables.map(

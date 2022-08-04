@@ -37,8 +37,14 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
         return this.makeLine(this.outFlowNames, "F_NONE");
     }
 
-    public getContributingVariablesLine(): string {
-        return this.makeLine(this.contributingFlowNames, "V_NONE");
+    public getContributingVariablesLine(components: JuliaComponentData[]): string {
+        const contributingFlowNames = components
+            .filter(c => c instanceof JuliaFlowComponent)
+            .filter(c => this.contributingFlowNames.includes(c.name))
+            .map(f => (f as JuliaFlowComponent).associatedVarName);
+        console.log(`components = ${components}`);
+        console.log(`cont = ${contributingFlowNames}`)
+        return this.makeLine(contributingFlowNames, "V_NONE");
     }
 
     public getContributingSumVarsLine(): string {
@@ -49,5 +55,12 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
         return names.length > 0
             ? JuliaComponentData.makeVarList(names, true)
             : alternate;
+    }
+
+    public getTranslatedValue(): string {
+        const replacementFunction = (s: string) => {
+            return `${JuliaComponentData.PARAMS_VECTOR_NAME}.${s} `;
+        };
+        return JuliaNameValueComponent.replaceSymbols(this.value, replacementFunction);
     }
 }

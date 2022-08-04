@@ -49,7 +49,7 @@ export default class JuliaFlowComponent extends JuliaComponentData {
                 return `${JuliaFlowComponent.STOCKS_VARIABLES_VAR_NAME}.${replacement.name}`;
             }
             else if (replacement instanceof JuliaSumVariableComponent) {
-                return `${JuliaFlowComponent.SUM_VARS_VECTOR_NAME}.${replacement.name}(${JuliaFlowComponent.STOCKS_VARIABLES_VAR_NAME},${JuliaFlowComponent.TIME_VAR_NAME})`;
+                return `${JuliaFlowComponent.SUM_VARS_VAR_NAME}.${replacement.name}(${JuliaFlowComponent.STOCKS_VARIABLES_VAR_NAME},${JuliaFlowComponent.TIME_VAR_NAME})`;
             }
             else if (replacement instanceof JuliaFlowComponent) {
                 return `${JuliaFlowComponent.STOCKS_VARIABLES_VAR_NAME}.${replacement.associatedVarName}`;

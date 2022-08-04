@@ -6,7 +6,7 @@ export default abstract class JuliaComponentData {
     public static readonly PARAMS_VECTOR_NAME = "params";
     public static readonly INIT_VALUES_VECTOR_NAME = "u0";
     public static readonly STOCKS_VARIABLES_VAR_NAME = "u";
-    public static readonly SUM_VARS_VECTOR_NAME = "uN";
+    public static readonly SUM_VARS_VAR_NAME = "uN";
     public static readonly PARAMS_VAR_NAME = "p";
     public static readonly TIME_VAR_NAME = "t";
 
@@ -69,10 +69,5 @@ export abstract class JuliaNameValueComponent extends JuliaComponentData {
         this.value = value;
     }
 
-    public getTranslatedValue(): string {
-        const replacementFunction = (s: string) => {
-            return `${JuliaComponentData.PARAMS_VECTOR_NAME}.${s} `;
-        };
-        return JuliaNameValueComponent.replaceSymbols(this.value, replacementFunction);
-    }
+    public abstract getTranslatedValue(): string;
 }
