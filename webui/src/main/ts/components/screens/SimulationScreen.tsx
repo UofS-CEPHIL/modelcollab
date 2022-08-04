@@ -32,6 +32,7 @@ import DynamicVariableUiData from '../ScreenObjects/DynamicVariableUiData';
 interface Props {
     firebaseManager: FirebaseManager;
     sessionId: string;
+    returnToSessionSelect: () => void;
 }
 
 interface State {
@@ -68,7 +69,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
             }
         }
         const getComponentType = (data: any) => data.type as string;
-        this.dm.subscribeToAllComponents(
+        this.dm.subscribeToSession(
             this.props.sessionId,
             (snapshot: DataSnapshot) => {
                 if (snapshot.exists() && snapshot.key) {
@@ -113,6 +114,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 <Toolbar
                     mode={this.state.mode}
                     setMode={setMode}
+                    returnToSessionSelect={this.props.returnToSessionSelect}
                     sessionId={this.props.sessionId}
                 />
                 {

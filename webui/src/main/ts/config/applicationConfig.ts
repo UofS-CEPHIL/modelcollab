@@ -4,7 +4,8 @@ const applicationConfig = {
     appName: "ModelCollab",
 
     // The address of the backend server
-    serverAddress: "https://server-fuffex5k4q-uw.a.run.app",
+    //serverAddress: "https://server-fuffex5k4q-uw.a.run.app",
+    serverAddress: "http://127.0.0.1:8080",
     serverPort: "8080"
 };
 

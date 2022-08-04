@@ -11,6 +11,7 @@ export interface Props {
     mode: UiMode,
     setMode: (_: UiMode) => void
     sessionId: string;
+    returnToSessionSelect: () => void;
 }
 
 export interface State {
@@ -149,6 +150,7 @@ export default class Toolbar extends React.Component<Props, State> {
                         <Tab label="Edit" value={UiMode.EDIT} onClick={handleChange} />
                         <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} />
                         <Tab label="Get Code" value={"GetCode"} onClick={getCode} />
+                        <Tab label="Go Back" value={"GoBack"} onClick={_ => this.props.returnToSessionSelect()} />
                     </Tabs>
                 </Box>
             </Box >
