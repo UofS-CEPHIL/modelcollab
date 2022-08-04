@@ -2,8 +2,8 @@ import React from 'react';
 
 import { FirebaseComponentModel as schema } from "database/build/export";
 
-import ComponentUiData, { PointableComponent } from '../ScreenObjects/ComponentUiData';
-import { ComponentNotFoundError, Props as CanvasProps } from "../Canvas/BaseCanvas";
+import ComponentUiData from '../ScreenObjects/ComponentUiData';
+import { Props as CanvasProps } from "../Canvas/BaseCanvas";
 import Toolbar from '../Toolbar/Toolbar';
 import FirebaseDataModelImpl from '../../data/FirebaseDataModelImpl';
 import { UiMode } from '../../UiMode';
@@ -57,17 +57,6 @@ export default class SimulationScreen extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        const isPointerComponentType = (componentType: string) => {
-            switch (componentType) {
-                case schema.ComponentType.STOCK.toString(): return false;
-                case schema.ComponentType.PARAMETER.toString(): return false;
-                case schema.ComponentType.VARIABLE.toString(): return false;
-                case schema.ComponentType.SUM_VARIABLE.toString(): return false;
-                case schema.ComponentType.FLOW.toString(): return true;
-                case schema.ComponentType.CONNECTION.toString(): return true;
-                default: throw new Error("Unknown component: " + componentType);
-            }
-        }
         const getComponentType = (data: any) => data.type as string;
         this.dm.subscribeToSession(
             this.props.sessionId,
@@ -75,7 +64,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 if (snapshot.exists() && snapshot.key) {
                     // Load objects s.t. stocks are loaded before flows, and all pointable components are loaded before pointers that reference them.
                     const nonPointerComponents: ComponentUiData[] = Object.entries(snapshot.val())
-                        .filter(([_, v]) => !isPointerComponentType(getComponentType(v)))
+                        .filter(([_, v]) => !this.isPointerComponentType(getComponentType(v)))
                         .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
 
                     const flowComponents: ComponentUiData[] = Object.entries(snapshot.val())
@@ -83,7 +72,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                         .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
 
                     const nonFlowPointerComponents: ComponentUiData[] = Object.entries(snapshot.val())
-                        .filter(([_, v]) => isPointerComponentType(getComponentType(v)) && getComponentType(v) !== schema.ComponentType.FLOW.toString())
+                        .filter(([_, v]) => this.isPointerComponentType(getComponentType(v)) && getComponentType(v) !== schema.ComponentType.FLOW.toString())
                         .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
 
                     const components: ComponentUiData[] = nonPointerComponents.concat(flowComponents).concat(nonFlowPointerComponents);
@@ -100,6 +89,18 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 }
             }
         );
+    }
+
+    private isPointerComponentType(componentType: string) {
+        switch (componentType) {
+            case schema.ComponentType.STOCK.toString(): return false;
+            case schema.ComponentType.PARAMETER.toString(): return false;
+            case schema.ComponentType.VARIABLE.toString(): return false;
+            case schema.ComponentType.SUM_VARIABLE.toString(): return false;
+            case schema.ComponentType.FLOW.toString(): return true;
+            case schema.ComponentType.CONNECTION.toString(): return true;
+            default: throw new Error("Unknown component: " + componentType);
+        }
     }
 
     render() {
@@ -231,14 +232,25 @@ export default class SimulationScreen extends React.Component<Props, State> {
     private removeComponent(id: string): void {
         const component = this.state.components.find(c => c.getId() === id);
         if (component) {
+            let orphanIds: string[] = [];
+            if (!this.isPointerComponentType(component.getType().toString())) {
+                orphanIds = this.state.components
+                    .filter(c => this.isPointerComponentType(c.getType()))
+                    .filter(c => c.getData().from === id || c.getData().to === id)
+                    .map(c => c.getId());
+
+            }
+            const components = this.state.components
+                .filter(c => c.getId() !== id)
+                .filter(c => !orphanIds.includes(c.getId()))
             this.setState(
                 {
                     ...this.state,
-                    components: this.state.components.filter(c => c.getId() !== id)
+                    components
                 }
             );
             this.dm.removeComponent(this.props.sessionId, id);
-            // todo check for orphans
+            orphanIds.forEach(o => this.dm.removeComponent(this.props.sessionId, o));
         }
     }
 

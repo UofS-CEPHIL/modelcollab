@@ -96,7 +96,7 @@ export abstract class PointerComponent<
 
     public getSource(components: ReadonlyArray<ComponentUiData>): SourceComponent {
         const source = (components.find(c => c.getId() === this.getData().from) as unknown) as SourceComponent;
-        if (!source) throw new ComponentNotFoundError(`Unable to find id ${this.getData().from} in list ${components.map(c => c.getId())}`);
+        if (!source) throw new ComponentNotFoundError(`Connection ${this.getId()} unable to find id ${this.getData().from} in list ${components.map(c => c.getId())}`);
         return source;
     }
     public getTarget(components: ReadonlyArray<ComponentUiData>): TargetComponent {
