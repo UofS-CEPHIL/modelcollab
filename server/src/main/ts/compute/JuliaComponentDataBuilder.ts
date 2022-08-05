@@ -15,9 +15,6 @@ export default class JuliaComponentDataBuilder {
         const sumVars: schema.SumVariableFirebaseComponent[] = components.filter(c => c.getType() === schema.ComponentType.SUM_VARIABLE);
         const parameters: schema.ParameterFirebaseComponent[] = components.filter(c => c.getType() === schema.ComponentType.PARAMETER);
 
-        console.log(`Components = `);
-        components.forEach(console.log)
-
         const stockJuliaComponents: JuliaStockComponent[] = stocks.map(s => {
             const inFlows = flows.filter(f => f.getData().to === s.getId()).map(f => f.getData().text);
             const outFlows = flows.filter(f => f.getData().from === s.getId()).map(f => f.getData().text);
@@ -58,7 +55,7 @@ export default class JuliaComponentDataBuilder {
             const declaredStockDependencyNames = declaredStockDependencyObjects.map(s => s.getData().text);
 
             const declaredSumVarDependencyIds = dependedIds.filter(id => sumVars.find(s => s.getId() === id));
-            const declaredSumVarDependencyObjects = stocks.filter(s => declaredSumVarDependencyIds.find(id => s.getId() === id));
+            const declaredSumVarDependencyObjects = sumVars.filter(s => declaredSumVarDependencyIds.find(id => s.getId() === id));
             const declaredSumVarDependencyNames = declaredSumVarDependencyObjects.map(s => s.getData().text);
 
             return new JuliaFlowComponent(

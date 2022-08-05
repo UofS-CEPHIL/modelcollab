@@ -7,6 +7,7 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
     public readonly dependedParameterNames: string[];
     public readonly contributingSumVarNames: string[];
     public readonly contributingFlowNames: string[];
+    public readonly footVarName: string;
 
     public constructor(
         name: string,
@@ -23,6 +24,7 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
         this.dependedParameterNames = dependedParameterNames;
         this.contributingFlowNames = contributingFlowNames;
         this.contributingSumVarNames = contributingSumVarNames;
+        this.footVarName = "foot" + name;
     }
 
     public getTranslatedInitValue(): string {
@@ -30,11 +32,11 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
     }
 
     public getInFlowsLine(): string {
-        return this.makeLine(this.inFlowNames, "F_NONE");
+        return this.makeLine(this.inFlowNames, ":F_NONE");
     }
 
     public getOutFlowsLine(): string {
-        return this.makeLine(this.outFlowNames, "F_NONE");
+        return this.makeLine(this.outFlowNames, ":F_NONE");
     }
 
     public getContributingVariablesLine(components: JuliaComponentData[]): string {
@@ -42,13 +44,11 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
             .filter(c => c instanceof JuliaFlowComponent)
             .filter(c => this.contributingFlowNames.includes(c.name))
             .map(f => (f as JuliaFlowComponent).associatedVarName);
-        console.log(`components = ${components}`);
-        console.log(`cont = ${contributingFlowNames}`)
-        return this.makeLine(contributingFlowNames, "V_NONE");
+        return this.makeLine(contributingFlowNames, ":V_NONE");
     }
 
     public getContributingSumVarsLine(): string {
-        return this.makeLine(this.contributingSumVarNames, "SV_NONE");
+        return this.makeLine(this.contributingSumVarNames, ":SV_NONE");
     }
 
     private makeLine(names: string[], alternate: string): string {

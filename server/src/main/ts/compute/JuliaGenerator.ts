@@ -13,7 +13,7 @@ interface Components {
     sumVariables: JuliaSumVariableComponent[];
 }
 
-const IMPORT_LINE = "include(\"./AlgebraicStockFlow.jl\"); using .AlgebraicStockFlow; " +
+const IMPORT_LINE = "using AlgebraicStockFlow; " +
     "using Catlab; using Catlab.CategoricalAlgebra; " +
     "using LabelledArrays; using OrdinaryDiffEq; using Plots; using Catlab.Graphics; " +
     "using Catlab.Programs; using Catlab.Theories; using Catlab.WiringDiagrams";
@@ -96,15 +96,25 @@ export default class JuliaGenerator {
         ).join(', ');
 
         const makeSumVarLines = () => this.components.sumVariables.map(
-            v => `:${v.name} => ${JuliaComponentData.makeVarList(v.dependedStockNames)}`
+            sv => {
+                const contributingVarNames = this.components.variables
+                    .filter(v => v.dependedSumVarNames.includes(sv.name))
+                    .map(v => v.name);
+                return `:${sv.name} => ${JuliaComponentData.makeVarList(contributingVarNames, true)}`;
+            }
         ).join(', ');
 
         return `${this.modelName} = StockAndFlow((${makeStockLines()}), (${makeFlowLines()}), (${makeVarLines()}), (${makeSumVarLines()}))`;
     }
 
     private makeOpenLine(): string {
+        const makeFoot = (stock: JuliaStockComponent) => {
+            const sumVarList = JuliaComponentData.makeVarList(stock.contributingSumVarNames, true);
+            const sumVarArrowList = stock.contributingSumVarNames.map(n => `:${stock.name}=>:${n}`);
+            return `foot(:${stock.name}, ${sumVarList}, (${sumVarArrowList}))`;
+        }
         const stockVarList = this.components.stocks
-            .map(v => `[:${v.name}]`)
+            .map(makeFoot)
             .join(", ");
 
         return `${this.openModelName} = Open(${this.modelName}, ${stockVarList})`;

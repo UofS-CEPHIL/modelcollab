@@ -48,7 +48,7 @@ export default abstract class JuliaComponentData {
     public static makeVarList(names: string[], addColon?: boolean) {
         const prefix = addColon ? ':' : '';
         if (names.length == 0) {
-            throw new Error("'names' must have >0 items");
+            return "()";
         }
         if (names.length == 1) {
             return prefix + names[0];

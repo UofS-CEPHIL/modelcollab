@@ -6,7 +6,6 @@ import applicationConfig from "./config/applicationConfig";
 import { FirebaseClient } from "./data/FirebaseClient";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import JuliaGenerator from "./compute/JuliaGenerator";
-import JuliaComponentData from "./compute/JuliaComponentData";
 import JuliaComponentDataBuilder from "./compute/JuliaComponentDataBuilder";
 
 class Server {
@@ -35,13 +34,7 @@ class Server {
     private setupRoutes(app: Express): void {
         app.get(
             "/getCode/:sessionId",
-            (req, res) => {
-                try {
-                    this.getCode(req.params.sessionId, res);
-                } catch (e) {
-                    res.status(500).send("Error: " + e)
-                }
-            }
+            (req, res) => this.getCode(req.params.sessionId, res)
         );
         app.post(
             "/computeModel/:sessionId",
@@ -66,15 +59,20 @@ class Server {
     }
 
     private async getCode(sessionId: string, res: Response): Promise<void> {
-        console.log("getCode")
-        const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
-        const juliaComponents = JuliaComponentDataBuilder.makeJuliaComponents(components);
-        const code = new JuliaGenerator(juliaComponents).generateJulia("/your/path").replaceAll(";", "\n");
+        try {
+            console.log("getCode");
+            const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
+            const juliaComponents = JuliaComponentDataBuilder.makeJuliaComponents(components);
+            const code = new JuliaGenerator(juliaComponents).generateJulia("/your/path").replaceAll(/(\\s+)?;(\\s+)?/g, "\n");
 
-        console.log("Sending code for session " + sessionId);
-        console.log(code);
-        console.log("getCode")
-        res.status(200).contentType("text/plain").send(code);
+            console.log("Sending code for session " + sessionId);
+            console.log(code);
+            res.status(200).contentType("text/plain").send(code);
+        }
+        catch (e: any) {
+            console.error(e);
+            res.status(200).contentType("text/plain").send("Error: " + e.message);
+        }
     }
 
     private async getModelResults(resultId: string, res: Response) {

@@ -17,7 +17,7 @@ export default class JuliaVariableComponent extends JuliaNameValueComponent {
                 return JuliaVariableComponent.STOCKS_VARIABLES_VAR_NAME + "." + s;
             }
             else if (this.dependedSumVarNames.includes(s)) {
-                return JuliaVariableComponent.SUM_VARS_VAR_NAME + "." + s;
+                return `${JuliaVariableComponent.SUM_VARS_VAR_NAME}.${s}(${JuliaVariableComponent.STOCKS_VARIABLES_VAR_NAME}, ${JuliaVariableComponent.TIME_VAR_NAME})`;
             }
             else {
                 return JuliaVariableComponent.PARAMS_VAR_NAME + "." + s;
