@@ -40,24 +40,22 @@ export default class Toolbar extends React.Component<Props, State> {
             }
         };
         const getCode = () => {
-            Axios.get(
-                `${applicationConfig.serverAddress}/getCode/${this.props.sessionId}`,
-                {
-                    method: 'get',
-                    responseType: 'blob',
-                    headers: {
-                        "Content-Type": "application/x-www-urlencoded"
-                    }
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", `${applicationConfig.serverAddress}/getCode/${this.props.sessionId}`);
+            xhr.setRequestHeader("Content-Type", "application/x-www-urlencoded");
+            xhr.responseType = "blob";
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    let a = document.createElement('a');
+                    a.href = window.URL.createObjectURL(xhr.response);
+                    a.download = "Model.jl";
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
                 }
-            ).then(res => {
-                let a = document.createElement('a');
-                a.href = window.URL.createObjectURL(res.data);
-                a.download = "Model.jl";
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            });
+            }
+            xhr.send();
         }
 
         // const computeModel = () => {

@@ -25,7 +25,6 @@ export default class Flow extends React.Component<Props> {
                 {
                     this.makeLabel(textLocation)
                 }
-
             </Group>
         );
     }

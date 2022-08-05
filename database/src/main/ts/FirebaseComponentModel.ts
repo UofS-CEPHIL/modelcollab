@@ -67,7 +67,7 @@ export function createFirebaseDataComponent(id: string, data: any): FirebaseData
                     from: dataVal.from as string,
                     to: dataVal.to as string,
                     equation: dataVal.equation as string,
-                    text: dataVal.text as string
+                    text: dataVal.text as string,
                 }
             );
             break;
@@ -109,7 +109,9 @@ export function createFirebaseDataComponent(id: string, data: any): FirebaseData
                 id,
                 {
                     from: dataVal.from as string,
-                    to: dataVal.to as string
+                    to: dataVal.to as string,
+                    handleXOffset: dataVal.handleXOffset as number,
+                    handleYOffset: dataVal.handleYOffset as number
                 }
             );
             break;
@@ -182,6 +184,8 @@ export class VariableFirebaseComponent extends TextFirebaseComponent<NameValueCo
 export interface ConnectionComponentData extends FirebasePointerDataObject {
     from: string, // The component from which the connection starts
     to: string    // The component to which the connection goes
+    handleXOffset: number;   // The X offset of the handle from the centre of the line
+    handleYOffset: number;   // The Y offset of the handle from the centre of the line
 }
 
 export class ConnectionFirebaseComponent extends FirebaseDataComponent<ConnectionComponentData> {
@@ -200,7 +204,9 @@ export class ConnectionFirebaseComponent extends FirebaseDataComponent<Connectio
     static toConnectionComponentData(data: any): ConnectionComponentData {
         const d: ConnectionComponentData = {
             from: data.from.toString(),
-            to: data.to.toString()
+            to: data.to.toString(),
+            handleXOffset: Number(data.handleXOffset),
+            handleYOffset: Number(data.handleYOffset)
         };
         return d;
     }

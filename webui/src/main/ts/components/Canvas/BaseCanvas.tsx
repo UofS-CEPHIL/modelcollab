@@ -188,6 +188,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                                     conn={conn}
                                     components={this.props.children}
                                     key={i}
+                                    updateState={this.props.editComponent}
                                 />
                             );
                         })

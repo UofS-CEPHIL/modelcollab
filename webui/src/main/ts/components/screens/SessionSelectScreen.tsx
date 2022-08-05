@@ -22,7 +22,9 @@ export default class SessionSelectScreen extends React.Component<Props, State> {
 
     public componentDidMount() {
         this.props.firebaseData.subscribeToSessionList(
-            sessions => this.setState({ ...this.state, sessions })
+            sessions => {
+                this.setState({ ...this.state, sessions });
+            }
         );
     }
 
@@ -58,7 +60,7 @@ export default class SessionSelectScreen extends React.Component<Props, State> {
     private addSession(s: string) {
         if (!this.state.sessions.includes(s)) {
             this.props.firebaseData.addSession(s);
-            this.setState({ ...this.state, newSessionText: "" });
+            this.setState({ ...this.state, sessions: [...this.state.sessions, s], newSessionText: "" });
         }
     }
 

@@ -22,6 +22,8 @@ export default class ConnectModeCanvas extends BaseCanvas {
                         {
                             from: this.props.selectedComponentId,
                             to: component.getId(),
+                            handleXOffset: 0,
+                            handleYOffset: 0,
                         }
                     )
                 );
