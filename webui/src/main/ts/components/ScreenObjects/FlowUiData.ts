@@ -13,16 +13,9 @@ export const BOUNDING_BOX_ELEMENT_BUFFER = 70;
 export default class FlowUiData extends PointerComponent<schema.FlowComponentData, schema.FlowFirebaseComponent, StockUiData, StockUiData> implements PointableComponent {
 
     public getArrowPoint(side: Side, components: ComponentUiData[]): Point {
-        if (side === Side.TOP) {
-            // Point it near the centre of the line 
-            const centrePoint = this.getCentrePoint(components);
-            return { x: centrePoint.x + PADDING_PX, y: centrePoint.y - PADDING_PX };
-        }
-        else {
-            // Point it to the bottom of the label
-            const labelPoint = this.computeLabelPosition(this.getArrowPoints(components));
-            return RectangularComponent.getCentreOfSideOfRect(labelPoint, FLOW_LABEL_DEFAULT_WIDTH, FLOW_LABEL_DEFAULT_HEIGHT, Side.BOTTOM);
-        }
+        const linePoints = this.getArrowPoints(components);
+        const labelTopLeft = this.computeLabelPosition(linePoints);
+        return RectangularComponent.getCentreOfSideOfRect(labelTopLeft, FLOW_LABEL_DEFAULT_WIDTH, FLOW_LABEL_DEFAULT_HEIGHT, side);
     }
 
     public computeLabelPosition(linePoints: number[]): Point {
