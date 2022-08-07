@@ -29,6 +29,9 @@ export default class JuliaComponentDataBuilder {
             const contributingSumVarNames = sumVars
                 .filter(sv => contributingComponentIds.find(id => sv.getId() === id))
                 .map(sv => sv.getData().text);
+            const contributingDynVarNames = variables
+                .filter(v => contributingComponentIds.find(id => v.getId() === id))
+                .map(v => v.getData().text);
             return new JuliaStockComponent(
                 s.getData().text,
                 s.getData().initvalue,
@@ -36,15 +39,14 @@ export default class JuliaComponentDataBuilder {
                 outFlows,
                 dependedParameterNames,
                 contributingFlowNames,
+                contributingDynVarNames,
                 contributingSumVarNames
             );
         });
 
         const flowJuliaComponents: JuliaFlowComponent[] = flows.map(f => {
-            const fromComponent = stocks.find(s => s.getId() === f.getData().from);
-            const toComponent = stocks.find(s => s.getId() === f.getData().to);
-            if (!fromComponent || !toComponent)
-                throw new Error(`Could not find component. From = ${fromComponent} to = ${toComponent}`);
+            const fromComponent: string = stocks.find(s => s.getId() === f.getData().from)?.getData().text || "";
+            const toComponent: string = stocks.find(s => s.getId() === f.getData().to)?.getData().text || "";
 
             const dependedIds = connections
                 .filter(c => c.getData().to === f.getId())
@@ -60,15 +62,23 @@ export default class JuliaComponentDataBuilder {
 
             return new JuliaFlowComponent(
                 f.getData().text,
-                fromComponent.getData().text,
-                toComponent.getData().text,
+                fromComponent,
+                toComponent,
                 f.getData().equation,
                 declaredStockDependencyNames,
                 declaredSumVarDependencyNames
             );
         });
 
-        const varJuliaComponents: JuliaVariableComponent[] = flowJuliaComponents.map(f => f.getAssociatedVariable());
+        const flowVarJuliaComponents: JuliaVariableComponent[] = flowJuliaComponents.map(f => f.getAssociatedVariable());
+        const dynVarJuliaComponents: JuliaVariableComponent[] = variables.map(v => {
+            const dependedStockNames = stockJuliaComponents.filter(s => s.contributingDynVarNames.includes(v.getData().text)).map(s => s.name);
+            const dependedComponentIds = connections.filter(c => c.getData().to === v.getId()).map(c => c.getData().from);
+            const dependedSumVarNames = sumVars.filter(sv => dependedComponentIds.includes(sv.getId())).map(sv => sv.getData().text);
+            return new JuliaVariableComponent(v.getData().text, v.getData().value, dependedStockNames, dependedSumVarNames);
+        });
+        const varJuliaComponents: JuliaVariableComponent[] = dynVarJuliaComponents.concat(flowVarJuliaComponents);
+
         const sumVarJuliaComponents: JuliaSumVariableComponent[] = sumVars.map(sv => {
             const dependedStocks = stockJuliaComponents.filter(s => s.contributingSumVarNames.includes(sv.getData().text)).map(s => s.name);
             return new JuliaSumVariableComponent(sv.getData().text, dependedStocks);
@@ -80,7 +90,7 @@ export default class JuliaComponentDataBuilder {
             ...flowJuliaComponents,
             ...varJuliaComponents,
             ...sumVarJuliaComponents,
-            ...paramJuliaComponents
+            ...paramJuliaComponents,
         ];
     }
 

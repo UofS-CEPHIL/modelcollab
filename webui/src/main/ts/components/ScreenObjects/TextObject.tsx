@@ -1,5 +1,5 @@
-import React from 'react';
-import { Group, Text } from 'react-konva';
+import React, { ReactElement, Ref, useRef } from 'react';
+import Konva, { Group, Text } from 'react-konva';
 
 import ComponentUiData, { TextComponent } from "./ComponentUiData";
 
@@ -11,7 +11,10 @@ export interface Props {
 }
 
 export default abstract class TextObject extends React.Component<Props> {
+
     protected abstract getFontStyle(): string;
+
+    public static FONT_SIZE = 16;
 
     public render() {
         const onDragEnd = (event: any) => {
@@ -21,27 +24,22 @@ export default abstract class TextObject extends React.Component<Props> {
             );
             this.props.updateState(newComponent);
         };
-        return (
-            <Group
+
+        const textComponent: any = (
+            <Text
                 x={this.props.data.getData().x}
                 y={this.props.data.getData().y}
-                width={TextComponent.WIDTH}
-                height={TextComponent.HEIGHT}
+                text={this.props.data.getData().text}
+                fontSize={TextObject.FONT_SIZE}
+                verticalAlign={"middle"}
+                align={"center"}
+                name={this.props.data.getId()}
+                fill={this.props.color}
+                fontStyle={this.getFontStyle()}
                 draggable={this.props.draggable}
                 onDragEnd={onDragEnd}
-            >
-                <Text
-                    text={this.props.data.getData().text}
-                    width={TextComponent.WIDTH}
-                    height={TextComponent.HEIGHT}
-                    fontSize={16}
-                    verticalAlign={"middle"}
-                    align={"center"}
-                    name={this.props.data.getId()}
-                    fill={this.props.color}
-                    fontStyle={this.getFontStyle()}
-                />
-            </Group>
+            />
         );
+        return textComponent;
     }
 }

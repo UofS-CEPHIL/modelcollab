@@ -71,13 +71,15 @@ export default class Flow extends React.Component<Props> {
     }
 
     private makeLabel(position: Point): ReactElement {
+        const height = this.props.flowData.computeLabelHeight();
+        const width = this.props.flowData.computeLabelWidth();
         return (
             <Group
                 x={position.x}
                 y={position.y}
                 name={this.props.flowData.getId()}
-                width={FLOW_LABEL_DEFAULT_WIDTH}
-                height={FLOW_LABEL_DEFAULT_HEIGHT}
+                width={width}
+                height={height}
             >
                 <Rect
                     fillEnabled={true}
@@ -85,12 +87,12 @@ export default class Flow extends React.Component<Props> {
                     stroke={this.props.color}
                     strokeWidth={1}
                     name={this.props.flowData.getId()}
-                    width={FLOW_LABEL_DEFAULT_WIDTH}
-                    height={FLOW_LABEL_DEFAULT_HEIGHT}
+                    width={width}
+                    height={height}
                 />
                 <Text
-                    width={FLOW_LABEL_DEFAULT_WIDTH}
-                    height={FLOW_LABEL_DEFAULT_HEIGHT}
+                    width={width}
+                    height={height}
                     text={this.props.flowData.getData().text}
                     verticalAlign={"middle"}
                     align={"center"}

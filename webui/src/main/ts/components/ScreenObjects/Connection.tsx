@@ -9,13 +9,13 @@ import ConnectionUiData, { HANDLE_WIDTH } from './ConnectionUiData';
 export interface Props {
     conn: ConnectionUiData;
     components: ReadonlyArray<ComponentUiData>;
+    showHandle: boolean;
     updateState: (c: ConnectionUiData) => void;
 }
 
 export default class Connection extends React.Component<Props> {
     public render(): ReactElement {
         const arrowPoints: number[] = this.props.conn.getArrowPoints(this.props.components);
-        console.log(`arrowpoints = ${arrowPoints}`)
         return (
             <Group>
                 <Arrow
@@ -26,7 +26,7 @@ export default class Connection extends React.Component<Props> {
                     tension={0.5}
                 />
                 {
-                    this.makeHandle(
+                    this.props.showHandle === true && this.makeHandle(   // === true looks stupid but is necessary
                         this.props.conn.computeHandleLocation(this.props.components)
                     )
                 }

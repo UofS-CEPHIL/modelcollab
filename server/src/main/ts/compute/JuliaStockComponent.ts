@@ -6,6 +6,7 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
     public readonly outFlowNames: string[];
     public readonly dependedParameterNames: string[];
     public readonly contributingSumVarNames: string[];
+    public readonly contributingDynVarNames: string[];
     public readonly contributingFlowNames: string[];
     public readonly footVarName: string;
 
@@ -16,6 +17,7 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
         outFlowNames: string[],
         dependedParameterNames: string[],
         contributingFlowNames: string[],
+        contributingDynVarNames: string[],
         contributingSumVarNames: string[]
     ) {
         super(name, initValue);
@@ -23,6 +25,7 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
         this.outFlowNames = outFlowNames;
         this.dependedParameterNames = dependedParameterNames;
         this.contributingFlowNames = contributingFlowNames;
+        this.contributingDynVarNames = contributingDynVarNames;
         this.contributingSumVarNames = contributingSumVarNames;
         this.footVarName = "foot" + name;
     }
@@ -44,7 +47,7 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
             .filter(c => c instanceof JuliaFlowComponent)
             .filter(c => this.contributingFlowNames.includes(c.name))
             .map(f => (f as JuliaFlowComponent).associatedVarName);
-        return this.makeLine(contributingFlowNames, ":V_NONE");
+        return this.makeLine(this.contributingDynVarNames.concat(contributingFlowNames), ":V_NONE");
     }
 
     public getContributingSumVarsLine(): string {

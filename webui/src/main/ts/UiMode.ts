@@ -7,13 +7,16 @@ export const enum UiMode {
     DELETE = "Delete",
     MOVE = "Move",
     EDIT = "Edit",
-    CONNECT = "Connect"
+    CONNECT = "Connect",
+    CLOUD = "Cloud"
 };
 
 export function modeFromString(s: string): UiMode | null {
     switch (s.toUpperCase()) {
         case "STOCK":
             return UiMode.STOCK;
+        case "CLOUD":
+            return UiMode.CLOUD;
         case "FLOW":
             return UiMode.FLOW;
         case "MOVE":

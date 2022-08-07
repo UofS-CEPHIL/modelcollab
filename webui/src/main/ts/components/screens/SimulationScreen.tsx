@@ -27,6 +27,8 @@ import SumVariableModeCanvas from '../Canvas/SumVariableModeCanvas';
 import SumVariableUiData from '../ScreenObjects/SumVariableUiData';
 import DynamicVariableModeCanvas from '../Canvas/DynamicVariableModeCanvas';
 import DynamicVariableUiData from '../ScreenObjects/DynamicVariableUiData';
+import CloudUiData from '../ScreenObjects/CloudUiData';
+import CloudModeCanvas from '../Canvas/CloudModeCanvas';
 
 
 interface Props {
@@ -97,6 +99,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
             case schema.ComponentType.PARAMETER.toString(): return false;
             case schema.ComponentType.VARIABLE.toString(): return false;
             case schema.ComponentType.SUM_VARIABLE.toString(): return false;
+            case schema.ComponentType.CLOUD.toString(): return false;
             case schema.ComponentType.FLOW.toString(): return true;
             case schema.ComponentType.CONNECTION.toString(): return true;
             default: throw new Error("Unknown component: " + componentType);
@@ -207,8 +210,12 @@ export default class SimulationScreen extends React.Component<Props, State> {
                         {...props}
                     />
                 );
-            default:
-                throw new Error("Unknown UI Mode");
+            case UiMode.CLOUD:
+                return (
+                    <CloudModeCanvas
+                        {...props}
+                    />
+                );
         }
     }
 
@@ -221,28 +228,43 @@ export default class SimulationScreen extends React.Component<Props, State> {
             this.setState(
                 {
                     ...this.state,
-                    selectedComponentId: null,
                     components: this.state.components.concat([newComponent])
                 }
             );
+            setTimeout(() => { this.setSelected(null) }); // ????? this is required, otherwise it ignores selection change
             this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
         }
     }
 
     private removeComponent(id: string): void {
+        const findOrphans = (component: ComponentUiData) => {
+            return this.state.components
+                .filter(c => this.isPointerComponentType(c.getType()))
+                .filter(c => c.getData().from === component.getId() || c.getData().to === component.getId());
+        }
+        const findOrphansRecursively = (component: ComponentUiData) => {
+            // Lord, what a lot of orphans
+            let orphans: ComponentUiData[] = [];
+            let newOrphans: ComponentUiData[] = [component];
+            while (newOrphans.length > 0) {
+                let newNewOrphans: ComponentUiData[] = [];
+                for (const orphan of newOrphans) {
+                    const subOrphans = findOrphans(orphan);
+                    const unique = subOrphans.filter(o => { return orphans.find(c => c.getId() === o.getId()) === undefined });
+                    orphans = orphans.concat(unique);
+                    newNewOrphans = newNewOrphans.concat(unique);
+                }
+                newOrphans = newNewOrphans;
+            }
+            return orphans;
+        }
+
         const component = this.state.components.find(c => c.getId() === id);
         if (component) {
-            let orphanIds: string[] = [];
-            if (!this.isPointerComponentType(component.getType().toString())) {
-                orphanIds = this.state.components
-                    .filter(c => this.isPointerComponentType(c.getType()))
-                    .filter(c => c.getData().from === id || c.getData().to === id)
-                    .map(c => c.getId());
-
-            }
+            const orphans = findOrphansRecursively(component);
             const components = this.state.components
                 .filter(c => c.getId() !== id)
-                .filter(c => !orphanIds.includes(c.getId()))
+                .filter(c => { return orphans.find(o => o.getId() === c.getId()) === undefined });
             this.setState(
                 {
                     ...this.state,
@@ -250,7 +272,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 }
             );
             this.dm.removeComponent(this.props.sessionId, id);
-            orphanIds.forEach(o => this.dm.removeComponent(this.props.sessionId, o));
+            orphans.forEach(o => this.dm.removeComponent(this.props.sessionId, o.getId()));
         }
     }
 
@@ -280,6 +302,8 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 return new SumVariableUiData(dbComponent);
             case schema.ComponentType.VARIABLE:
                 return new DynamicVariableUiData(dbComponent);
+            case schema.ComponentType.CLOUD:
+                return new CloudUiData(dbComponent);
         }
     }
 }

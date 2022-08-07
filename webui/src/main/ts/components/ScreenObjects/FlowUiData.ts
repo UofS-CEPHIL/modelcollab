@@ -1,7 +1,7 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import { Point, Side } from "../DrawingUtils";
-import ComponentUiData, { PointerComponent, PointableComponent, RectangularComponent } from "./ComponentUiData";
+import ComponentUiData, { PointerComponent, PointableComponent, RectangularComponent, TextComponent } from "./ComponentUiData";
 import StockUiData from "./StockUiData";
 
 const PADDING_PX: number = 20;
@@ -15,13 +15,29 @@ export default class FlowUiData extends PointerComponent<schema.FlowComponentDat
     public getArrowPoint(side: Side, components: ComponentUiData[]): Point {
         const linePoints = this.getArrowPoints(components);
         const labelTopLeft = this.computeLabelPosition(linePoints);
-        return RectangularComponent.getCentreOfSideOfRect(labelTopLeft, FLOW_LABEL_DEFAULT_WIDTH, FLOW_LABEL_DEFAULT_HEIGHT, side);
+        const labelWidth = this.computeLabelWidth();
+        const labelHeight = this.computeLabelHeight();
+        return RectangularComponent.getCentreOfSideOfRect(labelTopLeft, labelWidth, labelHeight, side);
+    }
+
+    public computeLabelWidth(): number {
+        if (this.getData().text === "") return FLOW_LABEL_DEFAULT_WIDTH;
+        return TextComponent.estimateTextSize(this.getData().text, FLOW_LABEL_DEFAULT_FONT_SIZE).width;
+    }
+
+    public computeLabelHeight(): number {
+        const PAD = 8;
+        if (this.getData().text === "") return FLOW_LABEL_DEFAULT_HEIGHT;
+        return TextComponent.estimateTextSize(this.getData().text, FLOW_LABEL_DEFAULT_FONT_SIZE).height + PAD;
     }
 
     public computeLabelPosition(linePoints: number[]): Point {
         // Just place it near the centre of the line.
         const PADDING_PX = 20;
-        return FlowUiData.getMiddlePoint({ x: linePoints[0], y: linePoints[1] }, { x: linePoints[2], y: linePoints[3] }, PADDING_PX);
+        const middlePoint = FlowUiData.getMiddlePoint({ x: linePoints[0], y: linePoints[1] }, { x: linePoints[2], y: linePoints[3] }, PADDING_PX);
+        const labelWidth = this.computeLabelWidth();
+        const labelHeight = this.computeLabelHeight();
+        return { x: middlePoint.x - labelWidth / 2, y: middlePoint.y - labelHeight / 2 };
     }
 
     public withData(data: schema.FlowComponentData): FlowUiData {

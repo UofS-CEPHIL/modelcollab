@@ -137,11 +137,12 @@ export default class Toolbar extends React.Component<Props, State> {
         return (
             <Box sx={{ width: '100%' }} id={TOOLBAR_ID} data-testid={TOOLBAR_ID} >
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                    <Tabs value={this.props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs'>
+                    <Tabs value={this.props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs' variant="scrollable">
                         <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} />
                         <Tab label="Parameter" value={UiMode.PARAM} onClick={handleChange} />
                         <Tab label="Sum Variable" value={UiMode.SUM_VARIABLE} onClick={handleChange} />
                         <Tab label="Dynamic Variable" value={UiMode.DYN_VARIABLE} onClick={handleChange} />
+                        <Tab label="Cloud" value={UiMode.CLOUD} onClick={handleChange} />
                         <Tab label="Stock" value={UiMode.STOCK} onClick={handleChange} />
                         <Tab label="Flow" value={UiMode.FLOW} onClick={handleChange} />
                         <Tab label="Connect" value={UiMode.CONNECT} onClick={handleChange} />

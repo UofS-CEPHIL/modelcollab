@@ -4,7 +4,8 @@ export enum ComponentType {
     PARAMETER = "parameter",
     VARIABLE = "variable",
     SUM_VARIABLE = "sum_variable",
-    CONNECTION = "connection"
+    CONNECTION = "connection",
+    CLOUD = "cloud"
 }
 
 // Represents all components as they are represented inside Firebase
@@ -115,7 +116,15 @@ export function createFirebaseDataComponent(id: string, data: any): FirebaseData
                 }
             );
             break;
-
+        case ComponentType.CLOUD.toString():
+            component = new CloudFirebaseComponent(
+                id,
+                {
+                    x: dataVal.x as number,
+                    y: dataVal.y as number
+                }
+            );
+            break;
         default:
             throw new Error("Unknown component type: " + componentType);
     }
@@ -281,4 +290,32 @@ export class FlowFirebaseComponent extends FirebaseDataComponent<FlowComponentDa
     }
 }
 
+
+//#################################### Cloud #####################################
+
+export interface CloudComponentData extends FirebaseDataObject {
+    x: number;
+    y: number;
+}
+
+export class CloudFirebaseComponent extends FirebaseDataComponent<CloudComponentData> {
+    constructor(id: string, data: CloudComponentData) {
+        super(id, data);
+    }
+
+    getType(): ComponentType {
+        return ComponentType.CLOUD;
+    }
+
+    withData(d: CloudComponentData) {
+        return new CloudFirebaseComponent(this.getId(), d);
+    }
+
+    public static toCloudComponentData(data: any): CloudComponentData {
+        return {
+            x: Number(data.x),
+            y: Number(data.y)
+        };
+    }
+}
 

@@ -1,6 +1,7 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { ComponentNotFoundError } from "../Canvas/BaseCanvas";
 import { getOppositeSide, Point, Side } from "../DrawingUtils";
+import TextObject from "./TextObject";
 
 export interface VisibleComponent {
     getCentrePoint(components: ReadonlyArray<ComponentUiData>): Point;
@@ -155,7 +156,7 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
     }
 
     public getArrowPoint(side: Side, _: ReadonlyArray<ComponentUiData>) {
-        return RectangularComponent.getCentreOfSideOfRect(this.getTopLeft(), this.getWidthPx(), this.getHeightPx(), side || Side.TOP);
+        return RectangularComponent.getCentreOfSideOfRect(this.getTopLeft(), this.getWidthPx(), this.getHeightPx(), side);
     }
 
     public static getCentreOfRect(topLeft: Point, width: number, height: number): Point {
@@ -192,21 +193,51 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
 export abstract class TextComponent<DbObject extends schema.TextFirebaseComponent<any>> extends RectangularComponent<schema.TextComponentData, DbObject> {
     public static WIDTH = 150;
     public static HEIGHT = 50;
+    private static PAD = 8;
+
+    public getArrowPoint(side: Side, _: ReadonlyArray<ComponentUiData>) {
+        const defaultPoint = super.getArrowPoint(side, _);
+        let xpad: number;
+        let ypad: number;
+        switch (side) {
+            case Side.TOP:
+                xpad = 0;
+                ypad = -1 * TextComponent.PAD;
+                break;
+            case Side.BOTTOM:
+                xpad = 0;
+                ypad = TextComponent.PAD;
+                break;
+            case Side.LEFT:
+                xpad = -1 * TextComponent.PAD;
+                ypad = 0;
+                break;
+            case Side.RIGHT:
+                xpad = TextComponent.PAD;
+                ypad = 0;
+        }
+        return { x: defaultPoint.x + xpad, y: defaultPoint.y + ypad }
+
+    }
 
     public getTopLeft(): Point {
         return { x: this.getData().x, y: this.getData().y };
     }
 
     public getWidthPx(): number {
-        return TextComponent.WIDTH;
+        return TextComponent.estimateTextSize(this.getData().text, TextObject.FONT_SIZE).width;
     }
 
     public getHeightPx(): number {
-        return TextComponent.HEIGHT;
+        return TextComponent.estimateTextSize(this.getData().text, TextObject.FONT_SIZE).height;
     }
 
     public isPointable(): boolean {
         return true;
+    }
+
+    public static estimateTextSize(text: string, fontSize: number) {
+        return { height: fontSize, width: text.length * fontSize * 0.7 };
     }
 }
 

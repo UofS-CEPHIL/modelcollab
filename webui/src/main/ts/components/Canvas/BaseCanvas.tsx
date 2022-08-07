@@ -16,6 +16,8 @@ import SumVariable from '../ScreenObjects/SumVariable';
 import SumVariableUiData from '../ScreenObjects/SumVariableUiData';
 import DynamicVariableUiData from '../ScreenObjects/DynamicVariableUiData';
 import DynamicVariable from '../ScreenObjects/DynamicVariable';
+import CloudUiData from '../ScreenObjects/CloudUiData';
+import Cloud from '../ScreenObjects/Cloud';
 
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
@@ -33,6 +35,13 @@ export class ComponentNotFoundError extends Error { }
 
 
 export default abstract class BaseCanvas extends React.Component<Props> {
+
+    private readonly shouldShowConnectionHandles: boolean;
+
+    protected constructor(props: Props, shouldShowConnectionHandles?: boolean) {
+        super(props);
+        this.shouldShowConnectionHandles = shouldShowConnectionHandles || false;
+    }
 
     protected onCanvasClicked(x: number, y: number): void {
         if (this.props.selectedComponentId) this.props.setSelected(null);
@@ -88,6 +97,12 @@ export default abstract class BaseCanvas extends React.Component<Props> {
         );
     }
 
+    protected getClouds(): CloudUiData[] {
+        return this.props.children
+            .filter(c => c.getType() === schema.ComponentType.CLOUD)
+            .map((c: ComponentUiData) => c as CloudUiData)
+    }
+
     protected getComponent(id: string): ComponentUiData {
         const cpt = this.props.children.find(c => c.getId() === id);
         if (!cpt) throw new ComponentNotFoundError();
@@ -105,7 +120,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
         return (
             <Stage
                 width={window.innerWidth}
-                height={window.innerHeight}
+                height={15000}
                 onClick={onClick}
             >
                 <Layer>
@@ -187,8 +202,22 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                                 <Connection
                                     conn={conn}
                                     components={this.props.children}
-                                    key={i}
                                     updateState={this.props.editComponent}
+                                    showHandle={this.shouldShowConnectionHandles}
+                                    key={i}
+                                />
+                            );
+                        })
+                    }
+                    {
+                        this.getClouds().map((cloud, i) => {
+                            return (
+                                <Cloud
+                                    data={cloud}
+                                    updateState={this.props.editComponent}
+                                    color={this.props.selectedComponentId === cloud.getId()
+                                        ? SELECTED_COLOR : DEFAULT_COLOR}
+                                    key={i}
                                 />
                             );
                         })
