@@ -58,23 +58,6 @@ export default class Toolbar extends React.Component<Props, State> {
                 document.body.removeChild(a);
             });
         }
-<<<<<<< HEAD
-    };
-
-    return (
-        <Box sx={{ width: '100%' }} id={TOOLBAR_ID} data-testid={TOOLBAR_ID}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs'>
-                    <Tab label="Move" value={UiMode.MOVE} id="Move-tab" onClick={handleChange} />
-                    <Tab label="Stock" value={UiMode.STOCK} id="Stock-tab"onClick={handleChange} />
-                    <Tab label="Flow" value = {UiMode.FLOW} id="Flow-tab"onClick={handleChange} />
-                    <Tab label="Edit" value = {UiMode.EDIT} id="Edit-tab"onClick={handleChange} />
-                    <Tab label="Delete" value={UiMode.DELETE} id="Delete-tab" onClick={handleChange} />
-                </Tabs>
-            </Box>
-        </Box>
-    );
-=======
         const computeModel = () => {
             const POLLING_TIME_MS = 2000;
             const pollForResults = (id: string) => {
@@ -154,19 +137,18 @@ export default class Toolbar extends React.Component<Props, State> {
             <Box sx={{ width: '100%' }} id={TOOLBAR_ID} data-testid={TOOLBAR_ID} >
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs value={this.props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs'>
-                        <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} />
-                        <Tab label="Parameter" value={UiMode.PARAM} onClick={handleChange} />
-                        <Tab label="Stock" value={UiMode.STOCK} onClick={handleChange} />
-                        <Tab label="Flow" value={UiMode.FLOW} onClick={handleChange} />
-                        <Tab label="Connect" value={UiMode.CONNECT} onClick={handleChange} />
-                        <Tab label="Edit" value={UiMode.EDIT} onClick={handleChange} />
-                        <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} />
-                        <Tab label="Get Code" value={"GetCode"} onClick={getCode} />
-                        <Tab icon={getComputeModelButtonLabel()} value={"ComputeModel"} onClick={computeModel} />
+                        <Tab label="Move" value={UiMode.MOVE} id= "Move-tab" onClick={handleChange} />
+                        <Tab label="Parameter" value={UiMode.PARAM} id= "Parameter-tab" onClick={handleChange} />
+                        <Tab label="Stock" value={UiMode.STOCK} id= "Stock-tab" onClick={handleChange} />
+                        <Tab label="Flow" value={UiMode.FLOW} id= "Flow-tab" onClick={handleChange} />
+                        <Tab label="Connect" value={UiMode.CONNECT} id= "Connect-tab" onClick={handleChange} />
+                        <Tab label="Edit" value={UiMode.EDIT} id= "Edit-tab" onClick={handleChange} />
+                        <Tab label="Delete" value={UiMode.DELETE} id= "Delete-tab" onClick={handleChange} />
+                        <Tab label="Get Code" value={"GetCode"} id= "Get Code-tab" onClick={getCode} />
+                        <Tab icon={getComputeModelButtonLabel()} value={"ComputeModel"} id = "Compute Model-tab" onClick={computeModel} />
                     </Tabs>
                 </Box>
             </Box >
         );
     }
->>>>>>> main
 }

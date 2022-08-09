@@ -1,7 +1,7 @@
 import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build/export";
 import { FirebaseApp,initializeApp } from "firebase/app";
 import { connectDatabaseEmulator, Database, getDatabase, ref, get, set, remove, onChildAdded, onChildRemoved, push } from "firebase/database";
-import { Auth, getAuth, GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup } from "firebase/auth";
+import { Auth, getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
 import { initializeTestEnvironment, RulesTestEnvironment } from "@firebase/rules-unit-testing";
 
 import firebaseConfig from "../config/FirebaseConfig";
@@ -83,7 +83,7 @@ export default class FirebaseInteractions {
         else throw new Error("Database not configured.");
     }
 
-    async getComponents(sessionId: string): Promise<schema.FirebaseDataComponent[]> {
+    async getComponents(sessionId: string): Promise<schema.FirebaseDataComponent<any>[]> {
         const components = await get(
             ref(
                 this.db,
@@ -113,7 +113,7 @@ export default class FirebaseInteractions {
         return [...this.sessionIds];
     }
 
-    updateComponent(sessionId: string, data: schema.FirebaseDataComponent) {
+    updateComponent(sessionId: string, data: schema.FirebaseDataComponent<any>) {
         set(
             ref(
                 this.getDb(),

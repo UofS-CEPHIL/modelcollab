@@ -55,6 +55,13 @@ export async function searchForElementWithLocator(
     }
 }
 
+// export async function searchForElementWithXpath(
+//     driver: any,
+//     name: string
+// ): Promise<string> {
+//     return await searchForElementWithLocator(driver, selenium.By.(name), name);
+// }
+
 export async function searchForElementWithId(
     driver: any,
     id: string
@@ -71,14 +78,14 @@ export async function searchForElementWithClassName(
 
 export async function clickElementWithOffset(
     driver: any,
-    offset: number,
-    elem: any
+    elem: any,
+    xOffset: number,
+    yOffset: number
 ): Promise<string> {
-
     try {
         const actions = driver.actions();
         await actions
-            .move({ x: offset, y: offset, origin: elem })
+            .move({ origin: elem , x: xOffset, y: yOffset})
             .click()
             .perform();
     }
@@ -95,7 +102,10 @@ export async function dragElementByOffset(
     yOffset: number
 ): Promise<string> {
     try {
-        await driver.actions().dragAndDrop(elem, {x: xOffset, y: yOffset});
+        const actions = driver.actions();
+        // await actions.move({origin: elem, x:0,y:0}).click().perform()
+        // await actions.move({origin: elem, x:xOffset, y:yOffset}).release().perform();
+        await actions.dragAndDrop(elem, {x: xOffset, y: yOffset}).perform();
     }
     catch (e) {
         return `Error dragging element: ${e}`;

@@ -50,6 +50,7 @@ export default class EditBox extends React.Component<Props, State> {
                         </Grid>
                         <Grid item xs={4}>
                             <Button
+                                className = "Save"
                                 variant="contained"
                                 onClick={() => {
                                     this.props.handleSave(this.state.component)
@@ -60,6 +61,7 @@ export default class EditBox extends React.Component<Props, State> {
                         </Grid>
                         <Grid item xs={4}>
                             <Button
+                                className = "Cancel"
                                 variant="contained"
                                 onClick={this.props.handleCancel}
                             >
@@ -86,7 +88,7 @@ export default class EditBox extends React.Component<Props, State> {
                         name="initvalue"
                         label="Initial Value"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Init_Value",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}
@@ -98,7 +100,7 @@ export default class EditBox extends React.Component<Props, State> {
                         name="text"
                         label="Name"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Name",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}
@@ -118,7 +120,7 @@ export default class EditBox extends React.Component<Props, State> {
                         name="equation"
                         label="Equation"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Equation",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}
@@ -129,7 +131,7 @@ export default class EditBox extends React.Component<Props, State> {
                         name="text"
                         label="Name"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Name",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}
