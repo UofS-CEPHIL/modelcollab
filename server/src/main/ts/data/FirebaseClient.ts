@@ -1,7 +1,7 @@
 import { FirebaseComponentModel, FirebaseSchema } from "database/build/export";
 import { initializeApp } from "firebase/app";
 import { connectDatabaseEmulator, Database, getDatabase, ref, get } from "firebase/database";
-import firebaseConfig from "../FirebaseConfig";
+import firebaseConfig from "../config/FirebaseConfig";
 
 
 export class FirebaseClient {

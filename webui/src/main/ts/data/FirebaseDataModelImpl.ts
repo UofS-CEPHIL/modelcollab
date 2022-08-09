@@ -1,4 +1,4 @@
-import { ref, set, onValue, onChildAdded, remove, onChildRemoved, DataSnapshot } from "firebase/database";
+import { ref, set, onValue, onChildAdded, remove, onChildRemoved, DataSnapshot, push } from "firebase/database";
 import FirebaseManager from "./FirebaseManager";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
@@ -70,7 +70,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    subscribeToAllComponents(sessionId: string, callback: (snapshot: DataSnapshot) => void) {
+    subscribeToSession(sessionId: string, callback: (snapshot: DataSnapshot) => void) {
         onValue(
             ref(
                 this.firebaseManager.getDb(),
@@ -78,6 +78,21 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             ),
             callback
         );
+    }
+
+    subscribeToSessionList(onChanged: (sessions: string[]) => void) {
+        const listRef = ref(this.firebaseManager.getDb(), "sessionIds/");
+        onValue(listRef, snap => {
+            let childValues: string[] = [];
+            snap.forEach(childSnap => { childValues.push(childSnap.val() as string) })
+            onChanged(childValues);
+        });
+    }
+
+    addSession(id: string) {
+        const listRef = ref(this.firebaseManager.getDb(), "sessionIds/");
+        const newRef = push(listRef);
+        set(newRef, id);
     }
 
     removeComponent(sessionId: string, componentId: string) {

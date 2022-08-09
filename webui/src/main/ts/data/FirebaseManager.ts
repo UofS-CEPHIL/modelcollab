@@ -37,6 +37,7 @@ export default class FirebaseManager {
 
     public login(): void {
         if (firebaseConfig.useEmulators) {
+            console.log("connecting firebase emulator");
             connectDatabaseEmulator(
                 this.db,
                 "localhost",
@@ -47,6 +48,7 @@ export default class FirebaseManager {
             }
         }
         else {
+            console.log("connecting to firebase cloud");
             const provider = new GoogleAuthProvider();
             signInWithPopup(this.auth, provider)
                 .then(() => {

@@ -1,12 +1,12 @@
 import express, { Express, Response } from "express";
 import cors from "cors";
 
-import ComputeModelTask from "./ComputeModelTask";
 import applicationConfig from "./config/applicationConfig";
 
 import { FirebaseClient } from "./data/FirebaseClient";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import JuliaGenerator from "./compute/JuliaGenerator";
+import JuliaComponentDataBuilder from "./compute/JuliaComponentDataBuilder";
 
 class Server {
 
@@ -48,23 +48,31 @@ class Server {
 
     private async computeModel(sessionId: string, res: Response): Promise<void> {
         console.log("computeModel");
-        const id = Math.floor(Math.random() * 1000).toString();
-        const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
-        new ComputeModelTask(components).start(p => this.pendingResults[id] = p);
+        res.status(200).send("This feature is not currently implemented.")
+        // const id = Math.floor(Math.random() * 1000).toString();
+        // const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
+        // new ComputeModelTask(components).start(p => this.pendingResults[id] = p);
 
-        console.log("Started Julia task.");
-        delete this.pendingResults[id];
-        res.status(200).send(id);
+        // console.log("Started Julia task.");
+        // delete this.pendingResults[id];
+        // res.status(200).send(id);
     }
 
     private async getCode(sessionId: string, res: Response): Promise<void> {
-        console.log("getCode")
-        const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
-        const code = new JuliaGenerator(components).generateJulia("/your/path").replaceAll(";", "\n");
+        try {
+            console.log("getCode");
+            const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
+            const juliaComponents = JuliaComponentDataBuilder.makeJuliaComponents(components);
+            const code = new JuliaGenerator(juliaComponents).generateJulia("/your/path").replaceAll(/(\\s+)?;(\\s+)?/g, "\n");
 
-        console.log("Sending code for session " + sessionId);
-        console.log(code);
-        res.status(200).contentType("text/plain").send(code);
+            console.log("Sending code for session " + sessionId);
+            console.log(code);
+            res.status(200).contentType("text/plain").send(code);
+        }
+        catch (e: any) {
+            console.error(e);
+            res.status(200).contentType("text/plain").send("Error: " + e.message);
+        }
     }
 
     private async getModelResults(resultId: string, res: Response) {

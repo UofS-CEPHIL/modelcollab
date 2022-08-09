@@ -1,13 +1,19 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
+import JuliaComponentData from "./JuliaComponentData";
+import JuliaFlowComponent from "./JuliaFlowComponent";
+import JuliaParameterComponent from "./JuliaParameterComponent";
+import JuliaStockComponent from "./JuliaStockComponent";
+import JuliaSumVariableComponent from "./JuliaSumVariableComponent";
+import JuliaVariableComponent from "./JuliaVariableComponent";
 
 interface Components {
-    stocks: schema.StockFirebaseComponent[];
-    flows: schema.FlowFirebaseComponent[];
-    parameters: schema.ParameterFirebaseComponent[];
-    connections: schema.ConnectionFirebaseComponent[];
+    stocks: JuliaStockComponent[];
+    flows: JuliaFlowComponent[];
+    parameters: JuliaParameterComponent[];
+    variables: JuliaVariableComponent[];
+    sumVariables: JuliaSumVariableComponent[];
 }
 
-const IMPORT_LINE = "include(\"./AlgebraicStockFlow.jl\"); using .AlgebraicStockFlow; " +
+const IMPORT_LINE = "using AlgebraicStockFlow; " +
     "using Catlab; using Catlab.CategoricalAlgebra; " +
     "using LabelledArrays; using OrdinaryDiffEq; using Plots; using Catlab.Graphics; " +
     "using Catlab.Programs; using Catlab.Theories; using Catlab.WiringDiagrams";
@@ -19,30 +25,50 @@ export default class JuliaGenerator {
     private readonly apexModelName = this.modelName + "Apex";
     private readonly paramsVectorName = "params";
     private readonly initialValuesVectorName = "u0";
+    private readonly solutionVarName = "sol";
+    private readonly probVarName = "prob";
 
     private readonly components: Components;
-    private readonly stockFlowVarNames: { [id: string]: string };
-    private readonly paramValues: { [name: string]: string };
-    private readonly componentDependencies: { [name: string]: string[] };
 
-    public constructor(components: schema.FirebaseDataComponent<any>[]) {
-        this.components = this.splitComponents(components);
-        this.stockFlowVarNames = this.createJuliaVarNames(
-            (this.components.stocks as schema.FirebaseDataComponent<any>[]).concat(this.components.flows)
-        );
-        this.paramValues = Object.fromEntries(
-            this.components.parameters.map(p => [p.getData().text, p.getData().value])
-        );
-        if (!this.paramValues.startTime || !this.paramValues.stopTime) {
+    public constructor(components: JuliaComponentData[]) {
+        const splitComponents = (components: JuliaComponentData[]) => {
+            let stocks: JuliaStockComponent[] = [];
+            let flows: JuliaFlowComponent[] = [];
+            let parameters: JuliaParameterComponent[] = [];
+            let variables: JuliaVariableComponent[] = [];
+            let sumVariables: JuliaSumVariableComponent[] = [];
+            for (const component of components) {
+                if (component instanceof JuliaStockComponent) {
+                    stocks.push(component);
+                }
+                else if (component instanceof JuliaFlowComponent) {
+                    flows.push(component);
+                }
+                else if (component instanceof JuliaParameterComponent) {
+                    parameters.push(component);
+                }
+                else if (component instanceof JuliaSumVariableComponent) {
+                    sumVariables.push(component);
+                }
+                else if (component instanceof JuliaVariableComponent) {
+                    variables.push(component);
+                }
+                else {
+                    throw new Error("Unknown component type: " + typeof component);
+                }
+            }
+            return { stocks, flows, parameters, sumVariables, variables };
+        }
+        this.components = splitComponents(components);
+        if (!this.components.parameters.find(p => p.name === "startTime" || !this.components.parameters.find(p => p.name === "stopTime"))) {
             throw new Error("startTime and stopTime parameters not found.");
         }
-        this.componentDependencies = this.findDependentsForComponents(this.components);
     }
 
     public generateJulia(filename: string) {
         return [
             IMPORT_LINE,
-            this.makeStockFlowpLine(),
+            this.makeStockAndFlowLine(),
             this.makeOpenLine(),
             this.makeApexLine(),
             this.makeParamsLine(),
@@ -52,181 +78,79 @@ export default class JuliaGenerator {
         ].join("; ");
     }
 
-
-    private splitComponents(components: schema.FirebaseDataComponent<any>[]): Components {
-        let stocks: schema.StockFirebaseComponent[] = [];
-        let flows: schema.FlowFirebaseComponent[] = [];
-        let parameters: schema.ParameterFirebaseComponent[] = [];
-        let connections: schema.ConnectionFirebaseComponent[] = [];
-        for (const component of components) {
-            if (component.getType() === schema.ComponentType.STOCK) {
-                stocks.push(component as schema.StockFirebaseComponent);
-            }
-            else if (component.getType() === schema.ComponentType.FLOW) {
-                flows.push(component as schema.FlowFirebaseComponent);
-            }
-            else if (component.getType() === schema.ComponentType.PARAMETER) {
-                parameters.push(component as schema.ParameterFirebaseComponent);
-            }
-            else if (component.getType() === schema.ComponentType.CONNECTION) {
-                connections.push(component as schema.ConnectionFirebaseComponent);
-            }
-            else {
-                throw new Error("Unknown component type: " + component.getType());
-            }
-        }
-        return { stocks, flows, parameters, connections };
+    private getAllComponents(): JuliaComponentData[] {
+        return Object.values(this.components).reduce((prev, cur) => prev.concat(cur));
     }
 
-    private createJuliaVarName(key: string): string {
-        return `_${key.toUpperCase()}`;
-    }
+    private makeStockAndFlowLine(): string {
+        const makeStockLines = () => this.components.stocks.map(
+            stock => `:${stock.name} => (${stock.getInFlowsLine()}, ${stock.getOutFlowsLine()}, ${stock.getContributingVariablesLine(this.getAllComponents())}, ${stock.getContributingSumVarsLine()})`
+        ).join(', ');
 
-    private createJuliaVarNames(components: schema.FirebaseDataComponent<any>[]): { [id: string]: string } {
-        let names: { [id: string]: string } = {};
-        for (const component of components) {
-            names[component.getId()] = this.createJuliaVarName(component.getData().text);
-        }
-        return names;
-    }
+        const makeFlowLines = () => this.components.flows.map(
+            flow => `:${flow.name} => :${flow.associatedVarName}`
+        ).join(', ');
 
-    private findDependentsForComponents(componentsLists: Components): { [id: string]: string[] } {
-        let dependencies: { [id: string]: string[] } = {};
-        for (let connection of componentsLists.connections) {
-            const from = connection.getData().from;
-            const to = connection.getData().to;
-            if (!dependencies[to])
-                dependencies[to] = [from];
-            else
-                dependencies[to] = dependencies[to].concat([from]);
-        }
-        return dependencies;
-    }
+        const makeVarLines = () => this.components.variables.map(
+            v => `:${v.name} => (${JuliaComponentData.STOCKS_VARIABLES_VAR_NAME}, ${JuliaComponentData.SUM_VARS_VAR_NAME}, ${JuliaComponentData.PARAMS_VAR_NAME}, ${JuliaComponentData.TIME_VAR_NAME}) -> ${v.getTranslatedValue()}`
+        ).join(', ');
 
-    private makeSolutionLine(): string {
-        const probVarName = "prob";
-        const solVarName = "sol";
-        const odeLine =
-            `${probVarName} = ODEProblem(vectorfield(${this.apexModelName}),${this.initialValuesVectorName},`
-            + `(${this.paramValues.startTime},${this.paramValues.stopTime}),${this.paramsVectorName})`;
-        const solutionLine = `${solVarName} = solve(${probVarName}, Tsit5(), abstol=1e-8)`;
-        return `${odeLine}; ${solutionLine}`;
+        const makeSumVarLines = () => this.components.sumVariables.map(
+            sv => {
+                const contributingVarNames = this.components.variables
+                    .filter(v => v.dependedSumVarNames.includes(sv.name))
+                    .map(v => v.name);
+                return `:${sv.name} => ${JuliaComponentData.makeVarList(contributingVarNames, true)}`;
+            }
+        ).join(', ');
+
+        return `${this.modelName} = StockAndFlow((${makeStockLines()}), (${makeFlowLines()}), (${makeVarLines()}), (${makeSumVarLines()}))`;
     }
 
     private makeOpenLine(): string {
-        const makeStockVarList = () => Object.values(
-            this.createJuliaVarNames(this.components.stocks))
-            .map(v => `[:${v}]`)
+        const makeFoot = (stock: JuliaStockComponent) => {
+            const sumVarList = JuliaComponentData.makeVarList(stock.contributingSumVarNames, true);
+            const sumVarArrowList = stock.contributingSumVarNames.map(n => `:${stock.name}=>:${n}`);
+            return `foot(:${stock.name}, ${sumVarList}, (${sumVarArrowList}))`;
+        }
+        const stockVarList = this.components.stocks
+            .map(makeFoot)
             .join(", ");
 
-        return `${this.openModelName} = Open(${this.modelName}, ${makeStockVarList()})`;
-    }
-
-    private makeSaveFigureLine(filename: string): string {
-        return `plot(sol) ; savefig("${filename}")`;
+        return `${this.openModelName} = Open(${this.modelName}, ${stockVarList})`;
     }
 
     private makeApexLine(): string {
         return `${this.apexModelName} = apex(${this.openModelName})`;
     }
 
-    private makeInitialStocksLine(): string {
-        const paramSubFunction = (s: string) => `${this.paramsVectorName}.${s}`
-        const stocksString = this.components.stocks
-            .map((s: schema.StockFirebaseComponent) =>
-                `${this.stockFlowVarNames[s.getId()].replaceAll(":", "")}=${this.qualifyParameterReferences(s.getData().initvalue, paramSubFunction)}`)
-            .join(", ");
-        return `${this.initialValuesVectorName} = LVector(${stocksString})`;
-    }
-
-    private qualifyParameterReferences(equation: string, replacementFunction: (s: string) => string) {
-        const operators = /[\+-\/\*\(\) ]/g;
-        const values = equation.split(operators);
-        let out = equation;
-        for (const value of values) {
-            if (!(value === "" || this.isSimpleNumber(value)))
-                out = out.replaceAll(
-                    new RegExp(`(^|[\+\-\/\*\(\) ])${value}($|[\+\-\/\*\(\) ])`, 'g'),
-                    s => {
-                        const match = s.match(/\w+/g);
-                        if (!match) throw new Error("Unable to parse symbol: " + s);
-                        return s.replaceAll(match[0], replacementFunction);
-                    }
-                );
-        }
-        return out;
-    }
-
-    private isSimpleNumber(value: string) {
-        return value.match(/^\d+(\.\d+)?$/g);
-    }
-
     private makeParamsLine() {
-        const paramsString = Object.entries(this.paramValues)
-            .map(([k, v]) => `${k.toString()}=${v.toString()}`)
+        const paramsString = this.components.parameters
+            .map(p => `${p.name}=${p.value}`)
             .join(", ");
         return `${this.paramsVectorName} = LVector(${paramsString})`;
     }
 
-    private makeStockFlowpLine(): string {
-        const createDependentsList = (dependedIds: string[]) => {
-            const dependedStocksFlows = dependedIds.filter(id => this.stockFlowVarNames[id] !== undefined);
-            if (dependedStocksFlows.length == 1) {
-                return ':' + this.stockFlowVarNames[dependedStocksFlows[0]];
-            }
-            else {
-                const varList = dependedStocksFlows
-                    .map(id => ':' + this.stockFlowVarNames[id])
-                    .join(",");
-                return `(${varList})`;
-            }
-        }
-        const lines: string[] = [];
-        for (const flow of this.components.flows) {
-            const flowData = flow.getData();
-            const juliaFlowVarName = ":" + this.stockFlowVarNames[flow.getId()];
-            const juliaFlowFuncBody = this.makeJuliaFlowFunctionBody(flow, "u", "p", "t");
-            const juliaFromVarName = this.stockFlowVarNames[flowData.from];
-            const juliaToVarName = this.stockFlowVarNames[flowData.to];
-            const juliaDependentVarNames = createDependentsList(this.componentDependencies[flow.getId()] || []);
-            const line =
-                `(${juliaFlowVarName}=>${juliaFlowFuncBody}, ` +
-                `:${juliaFromVarName}=>:${juliaToVarName}) => ${juliaDependentVarNames}, `;
-            lines.push(line);
-        }
-        lines[lines.length - 1].slice(0, -1);  // strip trailing comma
-
-        const stockVarList = Object.values(this.createJuliaVarNames(this.components.stocks)).map(s => ':' + s).join(", ");
-        const relationLines = lines.join(" ");
-        return `${this.modelName} = StockAndFlowp((${stockVarList}), (${relationLines}))`
+    private makeInitialStocksLine(): string {
+        const stocksString = this.components.stocks
+            .map((s: JuliaStockComponent) => `${s.name}=${s.getTranslatedInitValue()}`)
+            .join(", ");
+        return `${this.initialValuesVectorName} = LVector(${stocksString})`;
     }
 
-    private makeJuliaFlowFunctionBody(
-        data: schema.FlowFirebaseComponent,
-        stocksVarName: string,
-        paramsVarName: string,
-        timeVarName: string
-    ): string {
-        const possibleReplacementIds = this.componentDependencies[data.getId()] || [];
-        const possibleReplacements = (this.components.flows as schema.FirebaseDataComponent<any>[])
-            .concat(this.components.stocks)
-            .concat(this.components.parameters)
-            .filter(c => possibleReplacementIds.includes(c.getId()));
-        const equation = this.qualifyParameterReferences(
-            data.getData().equation,
-            s => {
+    private makeSolutionLine(): string {
+        const startTime = this.components.parameters.find(p => p.name === "startTime")?.value;
+        const stopTime = this.components.parameters.find(p => p.name === "stopTime")?.value;
+        if (!startTime || !stopTime) throw new Error(`Can't find start or stop time: start = ${startTime} stop = ${stopTime}`);
+        const odeLine =
+            `${this.probVarName} = ODEProblem(vectorfield(${this.apexModelName}),${this.initialValuesVectorName},`
+            + `(${startTime},${stopTime}),${this.paramsVectorName})`;
+        const solutionLine = `${this.solutionVarName} = solve(${this.probVarName}, Tsit5(), abstol=1e-8)`;
+        return `${odeLine}; ${solutionLine}`;
+    }
 
-                const replacement = possibleReplacements.find(c => c.getData().text.includes(s.replaceAll(/\s/g, "")));
-                if (!replacement)
-                    throw new Error(`Unable to find component for symbol ${s} in equation ${data.getData().equation}`);
-                if (replacement instanceof schema.ParameterFirebaseComponent) {
-                    return `${paramsVarName}.${replacement.getData().text}`;
-                }
-                else {
-                    return `${stocksVarName}.${this.stockFlowVarNames[replacement.getId()]}`;
-                }
-            }
-        );
-        return `(${stocksVarName}, ${paramsVarName}, ${timeVarName}) -> ${equation} `;
+
+    private makeSaveFigureLine(filename: string): string {
+        return `plot(${this.solutionVarName}) ; savefig("${filename}")`;
     }
 }

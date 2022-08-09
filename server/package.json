@@ -4,7 +4,7 @@
   "description": "The server which acts as the backend for Modelcollab",
   "main": "build/main/ts/main.js",
   "scripts": {
-    "start": "tsc && node build/main/ts/Main.js",
+    "start": "node build/Main.js",
     "build": "tsc",
     "test": "jest"
   },

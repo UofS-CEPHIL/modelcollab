@@ -2,8 +2,8 @@ import React from 'react';
 
 import { FirebaseComponentModel as schema } from "database/build/export";
 
-import ComponentUiData, { PointableComponent } from '../ScreenObjects/ComponentUiData';
-import { ComponentNotFoundError, Props as CanvasProps } from "../Canvas/BaseCanvas";
+import ComponentUiData from '../ScreenObjects/ComponentUiData';
+import { Props as CanvasProps } from "../Canvas/BaseCanvas";
 import Toolbar from '../Toolbar/Toolbar';
 import FirebaseDataModelImpl from '../../data/FirebaseDataModelImpl';
 import { UiMode } from '../../UiMode';
@@ -23,12 +23,18 @@ import FlowUiData from '../ScreenObjects/FlowUiData';
 import ConnectionUiData from '../ScreenObjects/ConnectionUiData';
 import ParameterUiData from '../ScreenObjects/ParameterUiData';
 import ConnectModeCanvas from '../Canvas/ConnectModeCanvas';
-import { ComponentType } from 'database/build/FirebaseComponentModel';
+import SumVariableModeCanvas from '../Canvas/SumVariableModeCanvas';
+import SumVariableUiData from '../ScreenObjects/SumVariableUiData';
+import DynamicVariableModeCanvas from '../Canvas/DynamicVariableModeCanvas';
+import DynamicVariableUiData from '../ScreenObjects/DynamicVariableUiData';
+import CloudUiData from '../ScreenObjects/CloudUiData';
+import CloudModeCanvas from '../Canvas/CloudModeCanvas';
 
 
 interface Props {
     firebaseManager: FirebaseManager;
     sessionId: string;
+    returnToSessionSelect: () => void;
 }
 
 interface State {
@@ -53,34 +59,25 @@ export default class SimulationScreen extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        const isPointerComponentType = (componentType: string) => {
-            switch (componentType) {
-                case schema.ComponentType.STOCK.toString(): return false;
-                case schema.ComponentType.PARAMETER.toString(): return false;
-                case schema.ComponentType.FLOW.toString(): return true;
-                case schema.ComponentType.CONNECTION.toString(): return true;
-                default: throw new Error("Unknown component: " + componentType);
-            }
-        }
         const getComponentType = (data: any) => data.type as string;
-        this.dm.subscribeToAllComponents(
+        this.dm.subscribeToSession(
             this.props.sessionId,
             (snapshot: DataSnapshot) => {
                 if (snapshot.exists() && snapshot.key) {
                     // Load objects s.t. stocks are loaded before flows, and all pointable components are loaded before pointers that reference them.
-                    const nonPointerComponents = Object.entries(snapshot.val())
-                        .filter(([_, v]) => !isPointerComponentType(getComponentType(v)))
+                    const nonPointerComponents: ComponentUiData[] = Object.entries(snapshot.val())
+                        .filter(([_, v]) => !this.isPointerComponentType(getComponentType(v)))
                         .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
 
-                    const flowComponents = Object.entries(snapshot.val())
+                    const flowComponents: ComponentUiData[] = Object.entries(snapshot.val())
                         .filter(([_, v]) => getComponentType(v) === schema.ComponentType.FLOW)
                         .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
 
-                    const nonFlowPointerComponents = Object.entries(snapshot.val())
-                        .filter(([_, v]) => isPointerComponentType(getComponentType(v)) && getComponentType(v) !== schema.ComponentType.FLOW.toString())
+                    const nonFlowPointerComponents: ComponentUiData[] = Object.entries(snapshot.val())
+                        .filter(([_, v]) => this.isPointerComponentType(getComponentType(v)) && getComponentType(v) !== schema.ComponentType.FLOW.toString())
                         .map(([k, v]) => this.createUiComponent(schema.createFirebaseDataComponent(k, v)));
 
-                    const components = nonPointerComponents.concat(flowComponents).concat(nonFlowPointerComponents);
+                    const components: ComponentUiData[] = nonPointerComponents.concat(flowComponents).concat(nonFlowPointerComponents);
 
                     let selectedComponentId: string | null = this.state.selectedComponentId;
                     if (!components.find(c => c.getId() === selectedComponentId)) {
@@ -96,6 +93,19 @@ export default class SimulationScreen extends React.Component<Props, State> {
         );
     }
 
+    private isPointerComponentType(componentType: string) {
+        switch (componentType) {
+            case schema.ComponentType.STOCK.toString(): return false;
+            case schema.ComponentType.PARAMETER.toString(): return false;
+            case schema.ComponentType.VARIABLE.toString(): return false;
+            case schema.ComponentType.SUM_VARIABLE.toString(): return false;
+            case schema.ComponentType.CLOUD.toString(): return false;
+            case schema.ComponentType.FLOW.toString(): return true;
+            case schema.ComponentType.CONNECTION.toString(): return true;
+            default: throw new Error("Unknown component: " + componentType);
+        }
+    }
+
     render() {
         const setMode = (mode: UiMode) => {
             this.setState({ ...this.state, mode });
@@ -108,6 +118,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 <Toolbar
                     mode={this.state.mode}
                     setMode={setMode}
+                    returnToSessionSelect={this.props.returnToSessionSelect}
                     sessionId={this.props.sessionId}
                 />
                 {
@@ -181,9 +192,27 @@ export default class SimulationScreen extends React.Component<Props, State> {
                         {...props}
                     />
                 );
+            case UiMode.SUM_VARIABLE:
+                return (
+                    <SumVariableModeCanvas
+                        {...props}
+                    />
+                );
             case UiMode.CONNECT:
                 return (
                     <ConnectModeCanvas
+                        {...props}
+                    />
+                );
+            case UiMode.DYN_VARIABLE:
+                return (
+                    <DynamicVariableModeCanvas
+                        {...props}
+                    />
+                );
+            case UiMode.CLOUD:
+                return (
+                    <CloudModeCanvas
                         {...props}
                     />
                 );
@@ -199,25 +228,51 @@ export default class SimulationScreen extends React.Component<Props, State> {
             this.setState(
                 {
                     ...this.state,
-                    selectedComponentId: newComponent.getId(),
                     components: this.state.components.concat([newComponent])
                 }
             );
+            setTimeout(() => { this.setSelected(null) }); // ????? this is required, otherwise it ignores selection change
             this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
         }
     }
 
     private removeComponent(id: string): void {
+        const findOrphans = (component: ComponentUiData) => {
+            return this.state.components
+                .filter(c => this.isPointerComponentType(c.getType()))
+                .filter(c => c.getData().from === component.getId() || c.getData().to === component.getId());
+        }
+        const findOrphansRecursively = (component: ComponentUiData) => {
+            // Lord, what a lot of orphans
+            let orphans: ComponentUiData[] = [];
+            let newOrphans: ComponentUiData[] = [component];
+            while (newOrphans.length > 0) {
+                let newNewOrphans: ComponentUiData[] = [];
+                for (const orphan of newOrphans) {
+                    const subOrphans = findOrphans(orphan);
+                    const unique = subOrphans.filter(o => { return orphans.find(c => c.getId() === o.getId()) === undefined });
+                    orphans = orphans.concat(unique);
+                    newNewOrphans = newNewOrphans.concat(unique);
+                }
+                newOrphans = newNewOrphans;
+            }
+            return orphans;
+        }
+
         const component = this.state.components.find(c => c.getId() === id);
         if (component) {
+            const orphans = findOrphansRecursively(component);
+            const components = this.state.components
+                .filter(c => c.getId() !== id)
+                .filter(c => { return orphans.find(o => o.getId() === c.getId()) === undefined });
             this.setState(
                 {
                     ...this.state,
-                    components: this.state.components.filter(c => c.getId() !== id)
+                    components
                 }
             );
             this.dm.removeComponent(this.props.sessionId, id);
-            // todo check for orphans
+            orphans.forEach(o => this.dm.removeComponent(this.props.sessionId, o.getId()));
         }
     }
 
@@ -233,7 +288,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
             this.setState({ ...this.state, selectedComponentId });
     }
 
-    private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>) {
+    private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>): ComponentUiData {
         switch (dbComponent.getType()) {
             case schema.ComponentType.STOCK:
                 return new StockUiData(dbComponent);
@@ -243,6 +298,12 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 return new ConnectionUiData(dbComponent);
             case schema.ComponentType.PARAMETER:
                 return new ParameterUiData(dbComponent);
+            case schema.ComponentType.SUM_VARIABLE:
+                return new SumVariableUiData(dbComponent);
+            case schema.ComponentType.VARIABLE:
+                return new DynamicVariableUiData(dbComponent);
+            case schema.ComponentType.CLOUD:
+                return new CloudUiData(dbComponent);
         }
     }
 }

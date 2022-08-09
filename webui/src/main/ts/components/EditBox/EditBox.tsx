@@ -170,6 +170,57 @@ export default class EditBox extends React.Component<Props, State> {
                 </Box>
             );
         }
+        else if (this.state.component.getType() === schema.ComponentType.VARIABLE) {
+            return (
+                <Box>
+                    <Typography id="modal-modal-title" variant="h6" component="h2">
+                        Edit Dynamic Variable
+                    </Typography>
+                    <TextField id="outlined-basic"
+                        value={this.state.component.getData().text}
+                        onChange={e => this.handleChange(e)}
+                        name="text"
+                        label="Name"
+                        inputProps={{
+                            className: "Mui_Stock",
+                            id: this.props.initialComponent.getId(),
+                            "data-testid": "stock-textfield-mui"
+                        }}
+                    />
+                    <TextField id="outlined-basic"
+                        value={this.state.component.getData().value}
+                        onChange={e => this.handleChange(e)}
+                        name="value"
+                        label="Value"
+                        inputProps={{
+                            className: "Mui_Stock",
+                            id: this.props.initialComponent.getId(),
+                            "data-testid": "stock-textfield-mui"
+                        }}
+                    />
+                </Box>
+            );
+        }
+        else if (this.state.component.getType() === schema.ComponentType.SUM_VARIABLE) {
+            return (
+                <Box>
+                    <Typography id="modal-modal-title" variant="h6" component="h2">
+                        Edit Sum Variable
+                    </Typography>
+                    <TextField id="outlined-basic"
+                        value={this.state.component.getData().text}
+                        onChange={e => this.handleChange(e)}
+                        name="text"
+                        label="Name"
+                        inputProps={{
+                            className: "Mui_Stock",
+                            id: this.props.initialComponent.getId(),
+                            "data-testid": "stock-textfield-mui"
+                        }}
+                    />
+                </Box>
+            );
+        }
         else {
             return (
                 <Box>

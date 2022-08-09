@@ -1,6 +1,7 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { ComponentNotFoundError } from "../Canvas/BaseCanvas";
 import { getOppositeSide, Point, Side } from "../DrawingUtils";
+import TextObject from "./TextObject";
 
 export interface VisibleComponent {
     getCentrePoint(components: ReadonlyArray<ComponentUiData>): Point;
@@ -23,6 +24,8 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
 
     public abstract withData(data: DataType): ComponentUiDataInternal<DataType, DbObject>;
 
+    // Can we point FROM this object TO another component?
+    // TO -> FROM is determined by whether it implements PointableComponent
     public abstract isPointable(): boolean;
 
 
@@ -75,6 +78,10 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
             }
         }
     }
+
+    public toString(): string {
+        return this.getDatabaseObject().toString();
+    }
 }
 
 export default abstract class ComponentUiData extends ComponentUiDataInternal<any, any> { }
@@ -90,12 +97,12 @@ export abstract class PointerComponent<
 
     public getSource(components: ReadonlyArray<ComponentUiData>): SourceComponent {
         const source = (components.find(c => c.getId() === this.getData().from) as unknown) as SourceComponent;
-        if (!source) throw new ComponentNotFoundError();
+        if (!source) throw new ComponentNotFoundError(`Connection ${this.getId()} unable to find id ${this.getData().from} in list ${components.map(c => c.getId())}`);
         return source;
     }
     public getTarget(components: ReadonlyArray<ComponentUiData>): TargetComponent {
         const target = (components.find(c => c.getId() === this.getData().to) as unknown) as TargetComponent;
-        if (!target) throw new ComponentNotFoundError();
+        if (!target) throw new ComponentNotFoundError(`Unable to find id ${this.getData().to} in list ${Object.values(components)}`);
         return target;
     }
 
@@ -149,7 +156,7 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
     }
 
     public getArrowPoint(side: Side, _: ReadonlyArray<ComponentUiData>) {
-        return RectangularComponent.getCentreOfSideOfRect(this.getTopLeft(), this.getWidthPx(), this.getHeightPx(), side || Side.TOP);
+        return RectangularComponent.getCentreOfSideOfRect(this.getTopLeft(), this.getWidthPx(), this.getHeightPx(), side);
     }
 
     public static getCentreOfRect(topLeft: Point, width: number, height: number): Point {
@@ -180,6 +187,57 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
                 offsetFromLeft = width;
         }
         return { x: topLeft.x + offsetFromLeft, y: topLeft.y + offsetFromTop };
+    }
+}
+
+export abstract class TextComponent<DbObject extends schema.TextFirebaseComponent<any>> extends RectangularComponent<schema.TextComponentData, DbObject> {
+    public static WIDTH = 150;
+    public static HEIGHT = 50;
+    private static PAD = 8;
+
+    public getArrowPoint(side: Side, _: ReadonlyArray<ComponentUiData>) {
+        const defaultPoint = super.getArrowPoint(side, _);
+        let xpad: number;
+        let ypad: number;
+        switch (side) {
+            case Side.TOP:
+                xpad = 0;
+                ypad = -1 * TextComponent.PAD;
+                break;
+            case Side.BOTTOM:
+                xpad = 0;
+                ypad = TextComponent.PAD;
+                break;
+            case Side.LEFT:
+                xpad = -1 * TextComponent.PAD;
+                ypad = 0;
+                break;
+            case Side.RIGHT:
+                xpad = TextComponent.PAD;
+                ypad = 0;
+        }
+        return { x: defaultPoint.x + xpad, y: defaultPoint.y + ypad }
+
+    }
+
+    public getTopLeft(): Point {
+        return { x: this.getData().x, y: this.getData().y };
+    }
+
+    public getWidthPx(): number {
+        return TextComponent.estimateTextSize(this.getData().text, TextObject.FONT_SIZE).width;
+    }
+
+    public getHeightPx(): number {
+        return TextComponent.estimateTextSize(this.getData().text, TextObject.FONT_SIZE).height;
+    }
+
+    public isPointable(): boolean {
+        return true;
+    }
+
+    public static estimateTextSize(text: string, fontSize: number) {
+        return { height: fontSize, width: text.length * fontSize * 0.7 };
     }
 }
 
