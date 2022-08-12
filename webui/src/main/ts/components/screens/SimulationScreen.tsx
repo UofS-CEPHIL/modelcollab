@@ -29,6 +29,7 @@ import DynamicVariableModeCanvas from '../Canvas/DynamicVariableModeCanvas';
 import DynamicVariableUiData from '../ScreenObjects/DynamicVariableUiData';
 import CloudUiData from '../ScreenObjects/CloudUiData';
 import CloudModeCanvas from '../Canvas/CloudModeCanvas';
+import RestClientImpl from '../../rest/RestClientImpl';
 
 
 interface Props {
@@ -120,6 +121,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                     setMode={setMode}
                     returnToSessionSelect={this.props.returnToSessionSelect}
                     sessionId={this.props.sessionId}
+                    restClient={new RestClientImpl()}
                 />
                 {
                     this.createCanvasForMode(

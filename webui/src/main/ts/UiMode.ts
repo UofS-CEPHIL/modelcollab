@@ -1,4 +1,4 @@
-export const enum UiMode {
+export enum UiMode {
     STOCK = "Stock",
     FLOW = "Flow",
     PARAM = "Param",

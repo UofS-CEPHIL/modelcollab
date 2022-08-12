@@ -1,5 +1,5 @@
 module.exports = {
-    roots: ["<rootDir>/src"],
+    roots: ["<rootDir>/src/test"],
     transform: {
         "^.+\\.tsx?$": "ts-jest",
         "^.+\\.jsx?$": "babel-jest",        
@@ -7,7 +7,7 @@ module.exports = {
     setupFilesAfterEnv: [
         "@testing-library/jest-dom/extend-expect"
     ],
-    testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
+    testRegex: ".+\\.test\\.tsx?$",
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
     testEnvironment: 'jsdom',
     transformIgnorePatterns: [
