@@ -58,81 +58,84 @@ export default class Toolbar extends React.Component<Props, State> {
             xhr.send();
         }
 
-        // const computeModel = () => {
-        //     const POLLING_TIME_MS = 2000;
-        //     const pollForResults = (id: string) => {
-        //         Axios.get(
-        //             `http://${applicationConfig.serverAddress}:${applicationConfig.serverPort}/getModelResults/${id}`,
-        //             {
-        //                 method: 'get',
-        //                 headers: {
-        //                     "Content-Type": "application/x-www-urlencoded"
-        //                 },
-        //                 responseType: "arraybuffer"
-        //             }
-        //         ).then(
-        //             res => {
-        //                 if (res.status === 200) {
-        //                     try {
-        //                         let a = document.createElement('a');
-        //                         const blob = new Blob(
-        //                             [res.data],
-        //                             { type: res.headers['content-type'] }
-        //                         );
-        //                         a.href = window.URL.createObjectURL(blob);
-        //                         a.download = "ModelResults.png";
-        //                         a.style.display = 'none';
-        //                         document.body.appendChild(a);
-        //                         a.click();
-        //                         document.body.removeChild(a);
-        //                     }
-        //                     finally {
-        //                         this.setState({ ...this.state, waitingForResults: false });
-        //                     }
-        //                 }
-        //                 else if (res.status === 204) {
-        //                     pollOnce(id);
-        //                 }
-        //                 else {
-        //                     console.error("Received bad response from server");
-        //                     console.error(res);
-        //                     this.setState({ ...this.state, waitingForResults: false });
-        //                 }
-        //             }
-        //         );
-        //     }
-        //     const pollOnce = (id: string) => setTimeout(() => pollForResults(id), POLLING_TIME_MS);
-        //     if (!this.state.waitingForResults) {
-        //         Axios.post(
-        //             `http://${applicationConfig.serverAddress}:${applicationConfig.serverPort}/computeModel/${this.props.sessionId}`,
-        //             {
-        //                 method: 'post',
-        //                 headers: {
-        //                     "Content-Type": "application/x-www-urlencoded"
-        //                 }
-        //             }
-        //         ).then(
-        //             res => {
-        //                 if (res.status === 200) {
-        //                     this.setState({ ...this.state, waitingForResults: true });
-        //                     pollOnce(res.data);
-        //                 }
-        //                 else {
-        //                     console.error("Received bad response from server");
-        //                     console.error(res);
-        //                 }
-        //             }
-        //         );
-        //     }
-        // }
-        // const getComputeModelButtonLabel = () => {
-        //     if (this.state.waitingForResults) {
-        //         return (<CircularProgress />);
-        //     }
-        //     else {
-        //         return ("Compute Model");
-        //     }
-        // }
+        const computeModel = () => {
+            const POLLING_TIME_MS = 2000;
+            const pollForResults = (id: string) => {
+                Axios.get(
+                    `${applicationConfig.serverAddress}/getModelResults/${id}`,
+                    {
+                        method: 'get',
+                        headers: {
+                            "Content-Type": "application/x-www-urlencoded"
+                        },
+                        responseType: "arraybuffer"
+                    }
+                ).then(
+                    res => {
+                        if (res.status === 200) {
+                            try {
+                                let a = document.createElement('a');
+                                const blob = new Blob(
+                                    [res.data],
+                                    { type: res.headers['content-type'] }
+                                );
+                                a.href = window.URL.createObjectURL(blob);
+                                a.download = "ModelResults.png";
+                                a.style.display = 'none';
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                            }
+                            finally {
+                                this.setState({ ...this.state, waitingForResults: false });
+                            }
+                        }
+                        else if (res.status === 204) {
+                            pollOnce(id);
+                        }
+                        else {
+                            console.error("Received bad response from server");
+                            console.error(res);
+                            this.setState({ ...this.state, waitingForResults: false });
+                        }
+                    }
+                ).catch(e => {
+                    console.error(e);
+                    this.setState({ ...this.state, waitingForResults: false });
+                });
+            }
+            const pollOnce = (id: string) => setTimeout(() => pollForResults(id), POLLING_TIME_MS);
+            if (!this.state.waitingForResults) {
+                Axios.post(
+                    `${applicationConfig.serverAddress}/computeModel/${this.props.sessionId}`,
+                    {
+                        method: 'post',
+                        headers: {
+                            "Content-Type": "application/x-www-urlencoded"
+                        }
+                    }
+                ).then(
+                    res => {
+                        if (res.status === 200) {
+                            this.setState({ ...this.state, waitingForResults: true });
+                            pollOnce(res.data);
+                        }
+                        else {
+                            console.error("Received bad response from server");
+                            console.error(res);
+                        }
+                    }
+                );
+            }
+        }
+        const getComputeModelButtonLabel = () => {
+            if (this.state.waitingForResults) {
+                return (<CircularProgress />);
+            }
+            else {
+                return ("Compute Model");
+            }
+        }
 
         return (
             <Box sx={{ width: '100%' }} id={TOOLBAR_ID} data-testid={TOOLBAR_ID} >
@@ -149,11 +152,12 @@ export default class Toolbar extends React.Component<Props, State> {
                         <Tab label="Edit" value={UiMode.EDIT} onClick={handleChange} />
                         <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} />
                         <Tab label="Get Code" value={"GetCode"} onClick={getCode} />
+                        <Tab icon={getComputeModelButtonLabel()} value={"ComputeModel"} onClick={computeModel} />
                         <Tab label="Go Back" value={"GoBack"} onClick={_ => this.props.returnToSessionSelect()} />
                     </Tabs>
                 </Box>
             </Box >
         );
     }
-    // <Tab icon={getComputeModelButtonLabel()} value={"ComputeModel"} onClick={computeModel} />
+
 }
