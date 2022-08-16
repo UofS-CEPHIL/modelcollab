@@ -34,6 +34,7 @@ export default class Stock extends React.Component<Props> {
                 x={this.props.stock.getData().x}
                 y={this.props.stock.getData().y}
                 name={this.props.stock.getId()}
+                data-testid={"stock-" + this.props.stock.getId()}
             >
                 <Rect
                     fillEnabled={true}

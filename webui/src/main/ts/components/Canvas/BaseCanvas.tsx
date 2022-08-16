@@ -121,6 +121,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
             <Stage
                 width={window.innerWidth}
                 height={15000}
+                data-testid={"CanvasStage"}
                 onClick={onClick}
             >
                 <Layer>

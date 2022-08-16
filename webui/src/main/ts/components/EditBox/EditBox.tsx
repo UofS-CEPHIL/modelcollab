@@ -43,12 +43,40 @@ export default class EditBox extends React.Component<Props, State> {
     };
 
     render(): ReactElement {
+        let componentTypeString: string;
+        let fieldsAndLabels: { [field: string]: string };
+        switch (this.props.initialComponent.getType()) {
+            case schema.ComponentType.STOCK:
+                componentTypeString = "Stock";
+                fieldsAndLabels = { text: "Name", initvalue: "Initial Value" };
+                break;
+            case schema.ComponentType.FLOW:
+                componentTypeString = "Flow";
+                fieldsAndLabels = { text: "Name", equation: "Equation" };
+                break;
+            case schema.ComponentType.PARAMETER:
+                componentTypeString = "Parameter";
+                fieldsAndLabels = { text: "Name", value: "Value" };
+                break;
+            case schema.ComponentType.SUM_VARIABLE:
+                componentTypeString = "Sum Variable";
+                fieldsAndLabels = { text: "Name" };
+                break;
+            case schema.ComponentType.VARIABLE:
+                componentTypeString = "Dynamic Variable";
+                fieldsAndLabels = { text: "Name", value: "Value" };
+                break;
+            default:
+                throw new Error("Unable to render edit box for  " + this.props.initialComponent.getType());
+        }
         return (
             <Modal open={true} data-testid={"EditBox"}>
                 <Box sx={this.STYLE}>
                     <Grid container spacing={2}>
                         <Grid item xs={12}>
-                            {this.renderContents()}
+                            {
+                                this.renderContents(componentTypeString, fieldsAndLabels)
+                            }
                         </Grid>
                         <Grid item xs={4}>
                             <Button
@@ -76,160 +104,34 @@ export default class EditBox extends React.Component<Props, State> {
         );
     }
 
-    private renderContents(): ReactElement {
-        if (this.state.component.getType() === schema.ComponentType.STOCK) {
-            return (
-                <Box>
-                    <Typography variant="h6" component="h2" data-testid={"HeaderText"}>
-                        Edit Stock
-                    </Typography>
-                    <TextField
-                        value={this.state.component.getData().initvalue}
-                        onChange={e => this.handleChange(e)}
-                        name="initvalue"
-                        label="Initial Value"
-                        inputProps={{
-                            className: EditBox.TEXT_INPUT_CLASS,
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "initvalue-textfield"
-                        }}
-                    />
-                    <TextField
-                        value={this.state.component.getData().text}
-                        onChange={e => this.handleChange(e)}
-                        name="text"
-                        label="Name"
-                        inputProps={{
-                            className: EditBox.TEXT_INPUT_CLASS,
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "name-textfield"
-                        }}
-                    />
-                </Box >
-            );
-        }
-        else if (this.state.component.getType() === schema.ComponentType.FLOW) {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Edit Flow
-                    </Typography>
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().equation}
-                        onChange={e => this.handleChange(e)}
-                        name="equation"
-                        label="Equation"
-                        inputProps={{
-                            className: EditBox.TEXT_INPUT_CLASS,
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().text}
-                        onChange={e => this.handleChange(e)}
-                        name="text"
-                        label="Name"
-                        inputProps={{
-                            className: EditBox.TEXT_INPUT_CLASS,
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                </Box>
-            );
-        }
-        else if (this.state.component.getType() === schema.ComponentType.PARAMETER) {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Edit Parameter
-                    </Typography>
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().text}
-                        onChange={e => this.handleChange(e)}
-                        name="text"
-                        label="Name"
-                        inputProps={{
-                            className: EditBox.TEXT_INPUT_CLASS,
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().value}
-                        onChange={e => this.handleChange(e)}
-                        name="value"
-                        label="Value"
-                        inputProps={{
-                            className: EditBox.TEXT_INPUT_CLASS,
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                </Box>
-            );
-        }
-        else if (this.state.component.getType() === schema.ComponentType.VARIABLE) {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Edit Dynamic Variable
-                    </Typography>
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().text}
-                        onChange={e => this.handleChange(e)}
-                        name="text"
-                        label="Name"
-                        inputProps={{
-                            className: EditBox.TEXT_INPUT_CLASS,
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().value}
-                        onChange={e => this.handleChange(e)}
-                        name="value"
-                        label="Value"
-                        inputProps={{
-                            className: EditBox.TEXT_INPUT_CLASS,
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                </Box>
-            );
-        }
-        else if (this.state.component.getType() === schema.ComponentType.SUM_VARIABLE) {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Edit Sum Variable
-                    </Typography>
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().text}
-                        onChange={e => this.handleChange(e)}
-                        name="text"
-                        label="Name"
-                        inputProps={{
-                            className: EditBox.TEXT_INPUT_CLASS,
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                </Box>
-            );
-        }
-        else {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        {"Error: unknown component type"}
-                    </Typography>
-                </Box>
-            );
-        }
+    private renderContents(componentTypeName: string, fieldsAndLabels: { [field: string]: string }): ReactElement {
+        return (
+            <Box>
+                <Typography variant="h6" component="h2" data-testid={"HeaderText"}>
+                    Edit {componentTypeName}
+                </Typography>
+                {
+                    Object.keys(fieldsAndLabels).map((fieldName, i) => {
+                        const labelText: string = fieldsAndLabels[fieldName] || "Error: cannot find label text";
+                        const initialText: string = this.state.component.getData()[fieldName];
+                        return (
+                            <TextField
+                                value={initialText}
+                                onChange={e => this.handleChange(e)}
+                                name={fieldName}
+                                label={labelText}
+                                inputProps={{
+                                    className: EditBox.TEXT_INPUT_CLASS,
+                                    id: this.props.initialComponent.getId(),
+                                    "data-testid": `${fieldName}-textfield`
+                                }}
+                                key={i}
+                            />
+                        )
+                    })
+                }
+            </Box >
+        );
     }
 }
 
