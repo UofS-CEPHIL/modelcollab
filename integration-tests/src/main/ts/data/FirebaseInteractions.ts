@@ -1,34 +1,33 @@
 import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build/export";
-import { FirebaseApp,initializeApp } from "firebase/app";
+import { FirebaseApp, initializeApp } from "firebase/app";
 import { connectDatabaseEmulator, Database, getDatabase, ref, get, set, remove, onChildAdded, onChildRemoved, push } from "firebase/database";
 import { Auth, getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup } from "firebase/auth";
 import { initializeTestEnvironment, RulesTestEnvironment } from "@firebase/rules-unit-testing";
 
 import firebaseConfig from "../config/FirebaseConfig";
-import applicationConfig from "../config/applicationConfig";
 
-
+const TEST_SESSIONS = "test";
 export default class FirebaseInteractions {
 
     private sessionIds: string[];
     private app: FirebaseApp | null
     private db: any | null
-    private auth: Auth | null
+    private auth: Auth
     private testEnvironment: RulesTestEnvironment | null
-    private authStateChangedCallback: ((isSignedIn: boolean) => void) | null;
+    private authChangedCallback: ((isSignedIn: boolean) => void) | null;
 
-    private readonly SESSION_IDS_PATH = "/session-ids";
+    private readonly SESSION_IDS_PATH = "/sessionIds";
 
     constructor() {
-        this.sessionIds = ["1"];
+        this.sessionIds = [TEST_SESSIONS];
         this.testEnvironment = null;
 
         this.app = initializeApp(firebaseConfig);
         this.auth = getAuth(this.app);
         this.db = getDatabase(this.app);
 
-        this.authStateChangedCallback = null;
-        this.subscribeToSessionIds();
+        this.authChangedCallback = null;
+        // this.subscribeToSessionIds();
     }
 
     private subscribeToSessionIds(): void {
@@ -46,7 +45,7 @@ export default class FirebaseInteractions {
     
     public static async create(): Promise<FirebaseInteractions> {
         const theManager = new FirebaseInteractions();
-        if (applicationConfig.isProduction) {
+        if (!firebaseConfig.useEmulators) {
             theManager.testEnvironment = null;
             theManager.app = initializeApp(firebaseConfig);
             theManager.auth = getAuth(theManager.app);
@@ -54,7 +53,6 @@ export default class FirebaseInteractions {
         }
         else {
             theManager.app = null;
-            theManager.auth = null;
             theManager.testEnvironment = await initializeTestEnvironment({
                 projectId: "modelcollab",
                 database: {
@@ -64,11 +62,21 @@ export default class FirebaseInteractions {
             });
             
             theManager.db = theManager
-                .testEnvironment
-                .unauthenticatedContext()
-                .database(firebaseConfig.databaseURL);
-                connectDatabaseEmulator(theManager.db, firebaseConfig.emulatorHost,
-                firebaseConfig.emulatorPort);
+                            .testEnvironment
+                            .unauthenticatedContext()
+                            .database(firebaseConfig.databaseURL);
+
+            connectDatabaseEmulator(theManager.db, 
+                                    firebaseConfig.emulatorHost,
+                                    firebaseConfig.emulatorPort);
+
+            // theManager.db = theManager
+            // .testEnvironment
+            // .unauthenticatedContext()
+            // .database();
+
+            // connectDatabaseEmulator(theManager.db, firebaseConfig.emulatorHost,
+            //     firebaseConfig.emulatorPort);
         }
         return theManager;
     }
@@ -134,41 +142,45 @@ export default class FirebaseInteractions {
                 user => callback(user != null)
             );
         }
-        this.authStateChangedCallback = callback;
+        this.authChangedCallback = callback;
     }
 
     public login(): void {
-        if (this.isProduction()) {
-            if (!this.auth) throw new Error("Auth not configured.");
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(this.auth, provider)
-                .then(() => {
-                    console.log("Successfully logged in!");
-                })
-                .catch((error) => {
-                    console.error("Error signing in: ", error);
-                });
+        if (firebaseConfig.useEmulators) {
+            console.log("connecting firebase emulator");
+            connectDatabaseEmulator(
+                this.db,
+                "localhost",
+                9000
+            );
+            if (this.authChangedCallback) {
+                this.authChangedCallback(true);
+            }
         }
         else {
             if (!this.testEnvironment) throw new Error("Test environment not configured.");
             const authContext = this.testEnvironment.authenticatedContext("owner");
             this.db = authContext.database(firebaseConfig.databaseURL);
             if (!this.db) throw new Error("Error creating database");
-            if (this.authStateChangedCallback) this.authStateChangedCallback(true);
+            if (this.authChangedCallback) this.authChangedCallback(true);
         }
     }
 
-    private isProduction(): boolean {
-        return this.testEnvironment === null;
-    }
+    // private isProduction(): boolean {
+    //     return this.testEnvironment === null;
+    // }
 
-    assignSessionId() {
-        const sessionIdNums = this.sessionIds.map((s: unknown) => s as number);
-        const newId = Math.max(...sessionIdNums) + 1;
-        const newIdRef = push(ref(this.getDb(), this.SESSION_IDS_PATH));
-        set(newIdRef, newId);
-        return newId.toString();
+
+
+    addSession(id: string) {
+        const listRef = ref(this.getDb(), "sessionIds/");
+        const newRef = push(listRef);
+        set(newRef, id);
     }
 
 }
+
+
+
+
 

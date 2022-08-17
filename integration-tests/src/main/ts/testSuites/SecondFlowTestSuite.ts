@@ -6,8 +6,8 @@ import * as canvasConstants from "../canvasPage"
 import {createFlow,verifyFirebaseWithFlowNumbers} from "../mode/flowMode";
 import { editFlow, verifyFlowUpdatedInFirebase} from "../mode/editMode";
 
-import {SECONDSTOCK_X,SECONDSTOCK_Y} from "./SecondStockTestSuit";
-import {THIRDSTOCK_X,THIRDSTOCK_Y} from "./ThirdStockTestSuit";
+import {SECONDSTOCK_X,SECONDSTOCK_Y} from "./SecondStockTestSuite";
+import {THIRDSTOCK_X,THIRDSTOCK_Y} from "./ThirdStockTestSuite";
 
 
 const WIDTH_PX = 100;

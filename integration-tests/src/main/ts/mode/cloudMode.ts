@@ -3,16 +3,13 @@ import {FirebaseComponentModel as schema} from "database/build/export";
 import { clickElementWithOffset, selenium, SUCCESS_MESSAGE } from "../doTests";
 import * as canvasConstants from "../canvasPage"
 
-export async function createFlow(driver: any, from: {XOffset: number , YOffset: number}, to: {XOffset: number, YOffset: number}): Promise<string> {
+export async function createCloud(driver: any, xOffset: number , yOffset: number): Promise<string> {
     const canvas = await driver.findElement(selenium.By.className(canvasConstants.CANVAS_CLASSNAME));
-    const message = await clickElementWithOffset(driver,canvas, from.XOffset, from.YOffset);
-    if (message === SUCCESS_MESSAGE){
-        return await clickElementWithOffset(driver,canvas,to.XOffset,to.YOffset)
-    }
+    const message = await clickElementWithOffset(driver,canvas, xOffset,yOffset);
     return message;
 }
 
-export async function verifyFirebaseWithFlowNumbers(_: any, expectedSize: number, dm?: FirebaseInteractions): Promise<string> {
+export async function verifyFirebaseWithCloudNumbers(_: any, expectedSize: number, dm?: FirebaseInteractions): Promise<string> {
     if (!dm)
         return "Expected a firebase DM but found none";
     const sessions = dm.getSessionIds();
@@ -23,18 +20,15 @@ export async function verifyFirebaseWithFlowNumbers(_: any, expectedSize: number
     if (!myComponents)
         return "Unable to find any components for session: " + mySession;
 
-    // if (myComponents.length !== expectedSize)
-    //     return `Expected ${expectedSize} stock(s) but found ${myComponents.length}`;
-    
     let count = 0;
     for (var i = 0; i < myComponents.length; i ++){
         const myComponent = myComponents[i];
-        if (myComponent.getType() === schema.ComponentType.FLOW)
+        if (myComponent.getType() === schema.ComponentType.CLOUD)
             count++;
     }
 
     if (count != expectedSize){
-        return `Expected ${expectedSize} flow(s) but found ${count}`;
+        return `Expected ${expectedSize} cloud(s) but found ${count}`;
     }
 
     return SUCCESS_MESSAGE;

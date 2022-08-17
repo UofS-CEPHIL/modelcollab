@@ -4,14 +4,14 @@ import * as canvasConstants from "../canvasPage"
 
 
 import {createStock,verifyFirebaseWithStockNumbers} from "../mode/stockMode";
-import {editStock, verifyFlowUpdatedInFirebase, verifyStockUpdatedInFirebase } from "../mode/editMode";
+import {editStock, verifyStockUpdatedInFirebase } from "../mode/editMode";
 import {moveStock, verifyStockLocationUpdatedInFirebase} from "../mode/moveMode"
 
 export const THIRDSTOCK_X = 100;
 export const THIRDSTOCK_Y = 100;
 
 export const THIRDSTOCK_EXPECTED_X = 696;
-export const THIRDSTOCK_EXPECTED_Y = 392;
+export const THIRDSTOCK_EXPECTED_Y = 391;
 
 export async function createThirdStock(driver: any): Promise<string> {
     // const {x,y} = await getCanvasCords(driver, 0,0);

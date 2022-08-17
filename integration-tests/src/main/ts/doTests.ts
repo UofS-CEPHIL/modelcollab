@@ -1,6 +1,7 @@
 import { loginPageTestSuite } from "./loginPage";
 import { canvasPageTestSuite } from "./canvasPage";
 import FirebaseInteractions from "./data/FirebaseInteractions"
+import { sessionPageTestSuite } from "./sessionPage";
 require('chromedriver');
 export const selenium = require("selenium-webdriver");
 export const WEB_ADDRESS = "http://localhost:3000";
@@ -113,6 +114,27 @@ export async function dragElementByOffset(
     return SUCCESS_MESSAGE;
 }
 
+export async function dragElementFromSpecifiedPostionToOffset(
+    driver: any,
+    elem: any,
+    sourcePos: {x: number, y: number},
+    destinationPos: {x: number, y: number},
+
+): Promise<string> {
+    try {
+        const actions = driver.actions();
+        await actions.move({origin: elem, x: sourcePos.x, y: sourcePos.y})
+                     .press()
+                     .move({origin: elem, x: destinationPos.x, y: destinationPos.y})
+                     .release()
+                     .perform() 
+    }
+    catch (e) {
+        return `Error dragging element: ${e}`;
+    }
+    return SUCCESS_MESSAGE;
+}
+
 export async function verifyElementDoesNotExist(
     driver: any,
     locator: any,
@@ -154,6 +176,7 @@ async function doTests() {
 
     const tests: ((driver: any, fbDm?: FirebaseInteractions) => Promise<string>)[] = [
         ...loginPageTestSuite,
+        ...sessionPageTestSuite,
         ...canvasPageTestSuite
     ];
 

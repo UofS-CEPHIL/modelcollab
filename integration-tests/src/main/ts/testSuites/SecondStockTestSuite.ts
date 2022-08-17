@@ -4,14 +4,14 @@ import * as canvasConstants from "../canvasPage"
 
 
 import {createStock,verifyFirebaseWithStockNumbers} from "../mode/stockMode";
-import { editStock, verifyFlowUpdatedInFirebase, verifyStockUpdatedInFirebase } from "../mode/editMode";
+import { editStock, verifyStockUpdatedInFirebase } from "../mode/editMode";
 import {moveStock, verifyStockLocationUpdatedInFirebase} from "../mode/moveMode"
 
 export const SECONDSTOCK_X = -200;
 export const SECONDSTOCK_Y = 100;
 
 export const SECONDSTOCK_EXPECTED_X = 396;
-export const SECONDSTOCK_EXPECTED_Y = 392;
+export const SECONDSTOCK_EXPECTED_Y = 391;
 
 
 export async function createSecondStock(driver: any): Promise<string> {

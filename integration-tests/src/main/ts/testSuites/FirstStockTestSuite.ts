@@ -4,14 +4,14 @@ import * as canvasConstants from "../canvasPage"
 
 
 import {createStock,verifyFirebaseWithStockNumbers} from "../mode/stockMode";
-import { editStock, verifyFlowUpdatedInFirebase, verifyStockUpdatedInFirebase } from "../mode/editMode";
+import { editStock, verifyStockUpdatedInFirebase } from "../mode/editMode";
 import {moveStock, verifyStockLocationUpdatedInFirebase} from "../mode/moveMode"
 
 export const FIRSTSTOCK_X = -596;
 export const FIRSTSTOCK_Y = 100;
 
 export const FIRSTSTOCK_EXPECTED_X = 0;
-export const FIRSTSTOCK_EXPECTED_Y = 392;
+export const FIRSTSTOCK_EXPECTED_Y = 391;
 
 export async function createFirstStock(driver: any): Promise<string> {
     // const {x,y} = await getCanvasCords(driver, 0,0);
@@ -46,13 +46,6 @@ export async function editFirstStockInitValue_Save(driver: any){
 
 export async function verifyFirstStockInitValueUpdatedInFirebase(_: any, dm?: FirebaseInteractions){
     return verifyStockUpdatedInFirebase(_, 1,"90", "S", false, dm);
-}
-
-export async function clickMoveModeButton(driver: any): Promise<string> {
-    const moveModeButton = await driver.findElement(selenium.By.id("Move-tab"));
-    if (!moveModeButton) return "Unable to find Move mode button.";
-    await moveModeButton.click();
-    return SUCCESS_MESSAGE;
 }
 
 

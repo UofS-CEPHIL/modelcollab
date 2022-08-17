@@ -5,10 +5,9 @@ import * as canvasConstants from "../canvasPage"
 
 import {createFlow,verifyFirebaseWithFlowNumbers} from "../mode/flowMode";
 import { editFlow, verifyFlowUpdatedInFirebase} from "../mode/editMode";
-import {moveStock, verifyStockLocationUpdatedInFirebase} from "../mode/moveMode";
 
-import {FIRSTSTOCK_X,FIRSTSTOCK_Y} from "./FirstStockTestSuit";
-import {SECONDSTOCK_X,SECONDSTOCK_Y} from "./SecondStockTestSuit";
+import {FIRSTSTOCK_X,FIRSTSTOCK_Y} from "./FirstStockTestSuite";
+import {SECONDSTOCK_X,SECONDSTOCK_Y} from "./SecondStockTestSuite";
 
 const WIDTH_PX = 100;
 const HEIGHT_PX = 70
@@ -53,8 +52,8 @@ export async function editFirstFlowEquation_Save(driver: any){
 
     return editFlow(driver, "First Flow Equation", canvasConstants.EDIT_BOX_EQUATION_CLASSNAME, true, flowCords.x, flowCords.y);
 }
-
 export async function verifyFirstFlowEquationUpdatedInFirebase(_: any, dm?: FirebaseInteractions){
     return verifyFlowUpdatedInFirebase(_, 3,"First Flow Equation", "Incidence", false, dm);
 }
+
 

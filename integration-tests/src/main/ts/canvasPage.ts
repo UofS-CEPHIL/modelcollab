@@ -3,13 +3,21 @@ import {FirebaseComponentModel as schema} from "database/build/export";
 import { ComponentType } from "database/build/FirebaseComponentModel";
 import { browserLocalPersistence } from "firebase/auth";
 import FirebaseInteractions from "./data/FirebaseInteractions";
-import { clickElementWithOffset, dragElementByOffset, ensurePageHasTitle, searchForElementWithClassName, searchForElementWithId, selenium, SUCCESS_MESSAGE, verifyElementDoesNotExist } from "./doTests";
+import {ensurePageHasTitle, searchForElementWithClassName, searchForElementWithId, selenium, SUCCESS_MESSAGE, verifyElementDoesNotExist } from "./doTests";
 
-import {createFirstStock,verifyFirebaseHasOneStock,editFirstStockText_Save, verifyFirstStockTextUpdatedInFirebase, editFirstStockInitValue_NoSave, verifyFirstStockInitValueDidNotUpdateInFirebase, editFirstStockInitValue_Save, verifyFirstStockInitValueUpdatedInFirebase, moveFirstStock, verifyFirstStockLocationUpdatedInFirebase} from "./testSuits/FirstStockTestSuit"
-import {createSecondStock,verifyFirebaseHasTwoStock,editSecondStockText_NoSave, verifySecondStockTextDidNotUpdateInFirebase, editSecondStockText_Save, verifySecondStockTextUpdateInFirebase, editSecondStockInitValue_NoSave, verifySecondStockInitValueDidNotUpdateInFirebase, editSecondStockInitValue_Save, verifySecondStockInitValueUpdatedInFirebase, moveSecondStock, verifySecondStockLocationUpdatedInFirebase} from "./testSuits/SecondStockTestSuit"
-import {createFirstFlow,verifyFirebaseHasOneFlow,editFirstFlowText_Save, verifyFirstFlowTextUpdatedInFirebase, editFirstFlowEquation_NoSave, verifyFirstFlowEquationDidNotUpdateInFirebase, editFirstFlowEquation_Save, verifyFirstFlowEquationUpdatedInFirebase} from "./testSuits/FirstFlowTestSuit"
-import {createThirdStock,verifyFirebaseHasThreeStock,editThirdStockText_Save, verifyThirdStockTextUpdatedInFirebase, editThirdStockInitValue_NoSave, verifyThirdStockInitValueDidNotUpdateInFirebase, editThirdStockInitValue_Save, verifyThirdStockInitValueUpdatedInFirebase, moveThirdStock, verifyThirdStockLocationUpdatedInFirebase} from "./testSuits/ThirdStockTestSuit"
-import {createSecondFlow,verifyFirebaseHasTwoFlow,editSecondFlowText_NoSave, verifySecondFlowTextDidNotUpdatInFirebase,editSecondFlowText_Save, verifySecondFlowTextUpdatedInFirebase ,editSecondFlowEquation_NoSave, verifySecondFlowEquationDidNotUpdateInFirebase, editSecondFlowEquation_Save, verifySecondFlowEquationUpdatedInFirebase} from "./testSuits/SecondFlowTestSuit"
+import {createFirstStock,verifyFirebaseHasOneStock,editFirstStockText_Save, verifyFirstStockTextUpdatedInFirebase, editFirstStockInitValue_NoSave, verifyFirstStockInitValueDidNotUpdateInFirebase, editFirstStockInitValue_Save, verifyFirstStockInitValueUpdatedInFirebase, moveFirstStock, verifyFirstStockLocationUpdatedInFirebase} from "./testSuites/FirstStockTestSuite"
+import {createSecondStock,verifyFirebaseHasTwoStock,editSecondStockText_NoSave, verifySecondStockTextDidNotUpdateInFirebase, editSecondStockText_Save, verifySecondStockTextUpdateInFirebase, editSecondStockInitValue_NoSave, verifySecondStockInitValueDidNotUpdateInFirebase, editSecondStockInitValue_Save, verifySecondStockInitValueUpdatedInFirebase, moveSecondStock, verifySecondStockLocationUpdatedInFirebase} from "./testSuites/SecondStockTestSuite"
+import {createFirstFlow,verifyFirebaseHasOneFlow,editFirstFlowText_Save, verifyFirstFlowTextUpdatedInFirebase, editFirstFlowEquation_NoSave, verifyFirstFlowEquationDidNotUpdateInFirebase, editFirstFlowEquation_Save, verifyFirstFlowEquationUpdatedInFirebase} from "./testSuites/FirstFlowTestSuite"
+import {createThirdStock,verifyFirebaseHasThreeStock,editThirdStockText_Save, verifyThirdStockTextUpdatedInFirebase, editThirdStockInitValue_NoSave, verifyThirdStockInitValueDidNotUpdateInFirebase, editThirdStockInitValue_Save, verifyThirdStockInitValueUpdatedInFirebase, moveThirdStock, verifyThirdStockLocationUpdatedInFirebase} from "./testSuites/ThirdStockTestSuite"
+import {createSecondFlow,verifyFirebaseHasTwoFlow,editSecondFlowText_Save, verifySecondFlowTextUpdatedInFirebase ,editSecondFlowEquation_NoSave, verifySecondFlowEquationDidNotUpdateInFirebase, editSecondFlowEquation_Save, verifySecondFlowEquationUpdatedInFirebase} from "./testSuites/SecondFlowTestSuite"
+import { createFirstConnection, moveFirstConnection, verifyFirebaseHasOneConnection } from "./testSuites/FirstConnectionTestSuite";
+import {createFirstCloud, verifyFirebaseHasOneCloud, moveFirstCloud, verifyFirstCloudLocationUpdatedInFirebase} from "./testSuites/FirstCloudTestSuite"
+import { createThirdFlow, verifyFirebaseHasThreeFlows, editThirdFlowText_Save, verifyThirdFlowTextUpdatedInFirebase, editThirdFlowEquation_NoSave, verifyThirdFlowEquationDidNotUpdateInFirebase, editThirdFlowEquation_Save, verifyThirdFlowEquationUpdatedInFirebase } from "./testSuites/ThirdFlowTestSuite";
+import { createSecondConnection, moveSecondConnection, verifyFirebaseHasTwoConnections } from "./testSuites/SecondConnectionTestSuite";
+import { createFirstParameter,verifyFirebaseHasOneParameter,editFirstParameterText_NoSave, verifyFirstParameterTextDidNotUpdateInFirebase, editFirstParameterText_Save, verifyFirstParameterTextUpdateInFirebase, editFirstParameterValue_NoSave, verifyFirstParameterValueDidNotUpdateInFirebase, editFirstParameterValue_Save, verifyFirstParameterValueUpdatedInFirebase, moveFirstParameter, verifyFirstParameterLocationUpdatedInFirebase, editFirstParameterTextInFirebase } from "./testSuites/FirstParameterTestSuite"
+import {createThirdConnection, verifyFirebaseHasThreeConnections } from "./testSuites/ThirdConnectionTestSuite"
+import { createFirstDynamicVariable, verifyFirebaseHasOneDynamicVariable, editFirstDynamicVariableText_NoSave, verifyFirstDynamicVariableTextDidNotUpdateInFirebase, editFirstDynamicVariableText_Save, verifyFirstDynamicVariableTextUpdatedInFirebase, editFirstDynamicVariableValue_NoSave, verifyFirstDynamicVariableValueDidNotUpdateInFirebase, editFirstDynamicVariableValue_Save, verifyFirstDynamicVariableValueUpdatedInFirebase, moveFirstDynamicVariable, verifyFirstDynamicVariableLocationUpdatedInFirebase } from "./testSuites/FirstDynamicVariableTestSuite";
+import { createFourthConnection, moveFourthConnection, verifyFirebaseHasFourConnections} from "./testSuites/FourthConnectionTestSuite";
 
 
 export const CANVAS_CLASSNAME = "konvajs-content";
@@ -21,7 +29,7 @@ const TOOLBAR_ID = "toolbar-box";
 export const EDIT_BOX_NAME_CLASSNAME = "MuiOutlinedInput-input MuiInputBase-input Name css-1t8l2tu-MuiInputBase-input-MuiOutlinedInput-input";
 export const EDIT_BOX_INITVAL_CLASSNAME = "MuiOutlinedInput-input MuiInputBase-input Init_Value css-1t8l2tu-MuiInputBase-input-MuiOutlinedInput-input";
 export const EDIT_BOX_EQUATION_CLASSNAME = "MuiOutlinedInput-input MuiInputBase-input Equation css-1t8l2tu-MuiInputBase-input-MuiOutlinedInput-input";
-
+export const EDIT_BOX_VALUE_CLASSNAME = "MuiOutlinedInput-input MuiInputBase-input Value css-1t8l2tu-MuiInputBase-input-MuiOutlinedInput-input"
 
 const EXPECTED_TITLE = "ModelCollab";
 
@@ -91,7 +99,7 @@ async function verifyToolbarIsFormattedCorrectly(driver: any): Promise<string> {
             return SUCCESS_MESSAGE;
     }
     let message: string;
-    let buttons = ["Move", "Parameter","Stock", "Flow", "Connect", "Edit", "Delete", "Get Code", "Compute Model"];
+    let buttons = ["Move", "Parameter", "Sum Variable", "Dynamic Variable", "Cloud","Stock", "Flow", "Connect", "Edit", "Delete", "Get Code", "Go Back"];
 
     for (const button of buttons) {
         message = await findAndValidateButton(button);
@@ -159,17 +167,51 @@ async function verifyCanvasIsInFlowMode(driver: any): Promise<string> {
     return await verifyCanvasIsInMode(driver, "Flow");
 }
 
-async function middleCanvasClick(driver: any): Promise<string> {
-    const canvas = await driver.findElement(selenium.By.className(CANVAS_CLASSNAME));
-    const message = await clickElementWithOffset(driver,canvas, 0,0);
-    return message
+async function clickConnectModeButton(driver: any): Promise<string> {
+    const moveModeButton = await driver.findElement(selenium.By.id("Connect-tab"));
+    if (!moveModeButton) return "Unable to find Connect mode button.";
+    await moveModeButton.click();
+    return SUCCESS_MESSAGE;
 }
 
-async function notMiddleCanvasClick(driver: any): Promise<string> {
-    const canvas = await driver.findElement(selenium.By.className(CANVAS_CLASSNAME));
-    const message = await clickElementWithOffset(driver,canvas, -200,-300);
-    return message
+async function verifyCanvasIsInConnectMode(driver: any): Promise<string> {
+    return await verifyCanvasIsInMode(driver, "Connect");
 }
+
+async function clickCloudModeButton(driver: any): Promise<string> {
+    const moveModeButton = await driver.findElement(selenium.By.id("Cloud-tab"));
+    if (!moveModeButton) return "Unable to find Cloud mode button.";
+    await moveModeButton.click();
+    return SUCCESS_MESSAGE;
+}
+
+async function verifyCanvasIsInCloudMode(driver: any): Promise<string> {
+    return await verifyCanvasIsInMode(driver, "Cloud");
+}
+
+async function clickParameterModeButton(driver: any): Promise<string> {
+    const moveModeButton = await driver.findElement(selenium.By.id("Parameter-tab"));
+    if (!moveModeButton) return "Unable to find Parameter mode button.";
+    await moveModeButton.click();
+    return SUCCESS_MESSAGE;
+}
+
+async function verifyCanvasIsInParameterMode(driver: any): Promise<string> {
+    return await verifyCanvasIsInMode(driver, "Parameter");
+}
+
+async function clickDynamicVariableModeButton(driver: any): Promise<string> {
+    const moveModeButton = await driver.findElement(selenium.By.id("Dynamic Variable-tab"));
+    if (!moveModeButton) return "Unable to find Dynamic Variable mode button.";
+    await moveModeButton.click();
+    return SUCCESS_MESSAGE;
+}
+
+async function verifyCanvasIsInDynamicVariableMode(driver: any): Promise<string> {
+    return await verifyCanvasIsInMode(driver, "Dynamic Variable");
+}
+
+
 
 /*
   This test expects to start logged in on the canvas page, with no stocks.
@@ -229,7 +271,6 @@ export const canvasPageTestSuite:
         
         createFirstFlow,
         verifyFirebaseHasOneFlow,
-        middleCanvasClick,
         clickEditModeButton,
         verifyCanvasIsInEditMode,
         editFirstFlowText_Save, 
@@ -264,7 +305,6 @@ export const canvasPageTestSuite:
         
         createSecondFlow,
         verifyFirebaseHasTwoFlow,
-        middleCanvasClick,
         clickEditModeButton,
         verifyCanvasIsInEditMode,
         editSecondFlowText_Save, 
@@ -273,5 +313,103 @@ export const canvasPageTestSuite:
         verifySecondFlowEquationDidNotUpdateInFirebase, 
         editSecondFlowEquation_Save, 
         verifySecondFlowEquationUpdatedInFirebase,
+
+        clickConnectModeButton,
+        verifyCanvasIsInConnectMode,
+
+        createFirstConnection,
+        verifyFirebaseHasOneConnection,
+
+        clickCloudModeButton,
+        verifyCanvasIsInCloudMode,
+
+        createFirstCloud, 
+        verifyFirebaseHasOneCloud, 
+        moveFirstCloud, 
+        verifyFirstCloudLocationUpdatedInFirebase,
+
+        clickFlowModeButton,
+        verifyCanvasIsInFlowMode,
+
+        createThirdFlow, verifyFirebaseHasThreeFlows, 
+
+        clickEditModeButton,
+        verifyCanvasIsInEditMode,
+        
+        editThirdFlowText_Save, 
+        verifyThirdFlowTextUpdatedInFirebase, 
+        editThirdFlowEquation_NoSave, 
+        verifyThirdFlowEquationDidNotUpdateInFirebase, 
+        editThirdFlowEquation_Save, 
+        verifyThirdFlowEquationUpdatedInFirebase,
+
+        clickConnectModeButton,
+        verifyCanvasIsInConnectMode,
+
+        createSecondConnection,
+        verifyFirebaseHasTwoConnections,
+
+        clickParameterModeButton,
+        verifyCanvasIsInParameterMode,
+
+        createFirstParameter,
+        verifyFirebaseHasOneParameter,
+        clickEditModeButton,
+        verifyCanvasIsInEditMode,
+        
+        editFirstParameterText_NoSave, 
+        verifyFirstParameterTextDidNotUpdateInFirebase, 
+        editFirstParameterText_Save, 
+        verifyFirstParameterTextUpdateInFirebase, 
+        editFirstParameterValue_NoSave, 
+        verifyFirstParameterValueDidNotUpdateInFirebase, 
+        editFirstParameterValue_Save, 
+        verifyFirstParameterValueUpdatedInFirebase, 
+        clickMoveModeButton,
+        verifyCanvasIsInMoveMode,
+
+        clickMoveModeButton,
+        verifyCanvasIsInMoveMode,
+
+        moveFirstParameter, 
+        verifyFirstParameterLocationUpdatedInFirebase,
+
+        clickConnectModeButton,
+        verifyCanvasIsInConnectMode,
+
+        createThirdConnection, 
+        verifyFirebaseHasThreeConnections,
+
+        clickDynamicVariableModeButton,
+        verifyCanvasIsInDynamicVariableMode,
+
+        createFirstDynamicVariable, 
+        verifyFirebaseHasOneDynamicVariable,
+        
+        clickEditModeButton,
+        verifyCanvasIsInEditMode,
+
+        editFirstDynamicVariableText_NoSave, 
+        verifyFirstDynamicVariableTextDidNotUpdateInFirebase, 
+        editFirstDynamicVariableText_Save, 
+        verifyFirstDynamicVariableTextUpdatedInFirebase, 
+        editFirstDynamicVariableValue_NoSave, 
+        verifyFirstDynamicVariableValueDidNotUpdateInFirebase, 
+        editFirstDynamicVariableValue_Save, 
+        verifyFirstDynamicVariableValueUpdatedInFirebase, 
+
+        clickMoveModeButton,
+        verifyCanvasIsInMoveMode,
+        
+        moveFirstDynamicVariable, 
+        verifyFirstDynamicVariableLocationUpdatedInFirebase,
+
+        clickConnectModeButton,
+        verifyCanvasIsInConnectMode,
+
+        createFourthConnection, 
+        verifyFirebaseHasFourConnections,
+
+        
 
 ];

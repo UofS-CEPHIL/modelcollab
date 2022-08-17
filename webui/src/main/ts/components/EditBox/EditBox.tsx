@@ -151,7 +151,7 @@ export default class EditBox extends React.Component<Props, State> {
                         name="text"
                         label="Name"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Name",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}
@@ -162,7 +162,7 @@ export default class EditBox extends React.Component<Props, State> {
                         name="value"
                         label="Value"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Value",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}
@@ -182,7 +182,7 @@ export default class EditBox extends React.Component<Props, State> {
                         name="text"
                         label="Name"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Name",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}
@@ -193,7 +193,7 @@ export default class EditBox extends React.Component<Props, State> {
                         name="value"
                         label="Value"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Value",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}
@@ -213,7 +213,7 @@ export default class EditBox extends React.Component<Props, State> {
                         name="text"
                         label="Name"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Name",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}

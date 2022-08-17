@@ -1,7 +1,6 @@
 import FirebaseInteractions from "../data/FirebaseInteractions";
 import {FirebaseComponentModel as schema} from "database/build/export";
-import { ComponentType } from "database/build/FirebaseComponentModel";
-import { clickElementWithOffset, dragElementByOffset, ensurePageHasTitle, searchForElementWithClassName, searchForElementWithId, selenium, SUCCESS_MESSAGE, verifyElementDoesNotExist } from "../doTests";
+import { clickElementWithOffset, selenium, SUCCESS_MESSAGE } from "../doTests";
 import * as canvasConstants from "../canvasPage"
 
 export async function createStock(driver: any, xOffset: number , yOffset: number): Promise<string> {
@@ -20,9 +19,7 @@ export async function verifyFirebaseWithStockNumbers(_: any, expectedSize: numbe
     const myComponents = await dm.getComponents(mySession);
     if (!myComponents)
         return "Unable to find any components for session: " + mySession;
-    // if (myComponents.length !== expectedSize)
-    //     return `Expected ${expectedSize} stock(s) but found ${myComponents.length}`;
-    
+
     let count = 0;
     for (var i = 0; i < myComponents.length; i ++){
         const myComponent = myComponents[i];
