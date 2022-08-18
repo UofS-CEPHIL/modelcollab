@@ -1,27 +1,30 @@
 export enum ComponentType {
     STOCK = "stock",
     FLOW = "flow",
-    PARAMETERS = "parameters"
+    PARAMETER = "parameter",
+    VARIABLE = "variable",
+    SUM_VARIABLE = "sum_variable",
+    CONNECTION = "connection",
+    CLOUD = "cloud"
 }
 
 // Represents all components as they are represented inside Firebase
-export abstract class FirebaseDataComponent {
+export abstract class FirebaseDataComponent<DataType extends FirebaseDataObject> {
 
-    private id: string;
+    private readonly id: string;
+    private readonly data: DataType;
 
-    constructor(id: string) {
+    constructor(id: string, data: DataType) {
         this.id = id;
+        this.data = data;
     }
 
     public getId(): string {
         return this.id;
     };
 
-    public equals(other: FirebaseDataComponent) {
-        const isSameType: boolean = this.getType() === other.getType();
-        const isSameId: boolean = this.getId() === other.getId();
-
-        return isSameType && isSameId && this.dataEquals(other);
+    public getData(): DataType {
+        return this.data;
     }
 
     public toString() {
@@ -29,18 +32,21 @@ export abstract class FirebaseDataComponent {
     }
 
     abstract getType(): ComponentType;
-    abstract getData(): any;
-    abstract dataEquals(data: FirebaseDataComponent): boolean;
-    abstract withData(d: FirebaseDataObject): FirebaseDataComponent;
+    abstract withData(d: DataType): FirebaseDataComponent<DataType>;
 }
 
 // Represents any object that acts as the "data" field for any FirebaseDataComponent
 export interface FirebaseDataObject { };
 
-export function createFirebaseDataComponent(id: string, data: any) {
-    const componentType = data.type;
-    const dataVal = data.data;
-    let component: FirebaseDataComponent;
+export interface FirebasePointerDataObject {
+    from: string,
+    to: string
+};
+
+export function createFirebaseDataComponent(id: string, data: any): FirebaseDataComponent<any> {
+    const componentType: string = data.type;
+    const dataVal: any = data.data;
+    let component: FirebaseDataComponent<FirebaseDataObject>;
 
     switch (componentType) {
         case ComponentType.STOCK.toString():
@@ -63,22 +69,62 @@ export function createFirebaseDataComponent(id: string, data: any) {
                     to: dataVal.to as string,
                     equation: dataVal.equation as string,
                     text: dataVal.text as string,
-                    dependsOn: dataVal.dependsOn as string[]
                 }
             );
             break;
 
-        case ComponentType.PARAMETERS.toString():
-            component = new ParametersFirebaseComponent(
+        case ComponentType.PARAMETER.toString():
+            component = new ParameterFirebaseComponent(
                 id,
                 {
-                    startTime: dataVal.startTime as number,
-                    stopTime: dataVal.stopTime as number,
-                    params: dataVal.params
+                    x: dataVal.x as number,
+                    y: dataVal.y as number,
+                    text: dataVal.text as string,
+                    value: dataVal.value as string
                 }
-            )
+            );
             break;
-
+        case ComponentType.VARIABLE.toString():
+            component = new VariableFirebaseComponent(
+                id,
+                {
+                    x: dataVal.x as number,
+                    y: dataVal.y as number,
+                    text: dataVal.text as string,
+                    value: dataVal.value as string
+                }
+            );
+            break;
+        case ComponentType.SUM_VARIABLE.toString():
+            component = new SumVariableFirebaseComponent(
+                id,
+                {
+                    x: dataVal.x as number,
+                    y: dataVal.y as number,
+                    text: dataVal.text as string
+                }
+            );
+            break;
+        case ComponentType.CONNECTION.toString():
+            component = new ConnectionFirebaseComponent(
+                id,
+                {
+                    from: dataVal.from as string,
+                    to: dataVal.to as string,
+                    handleXOffset: dataVal.handleXOffset as number,
+                    handleYOffset: dataVal.handleYOffset as number
+                }
+            );
+            break;
+        case ComponentType.CLOUD.toString():
+            component = new CloudFirebaseComponent(
+                id,
+                {
+                    x: dataVal.x as number,
+                    y: dataVal.y as number
+                }
+            );
+            break;
         default:
             throw new Error("Unknown component type: " + componentType);
     }
@@ -86,47 +132,92 @@ export function createFirebaseDataComponent(id: string, data: any) {
     return component;
 }
 
-//################################## Parameters ##################################
 
-export interface ParametersComponentData extends FirebaseDataObject {
-    startTime: number;
-    stopTime: number;
-    params: {
-        [paramName: string]: string;
-    };
+//################################# Var / Param ##################################
+
+export interface TextComponentData extends FirebaseDataObject {
+    x: number;
+    y: number;
+    text: string;
 }
 
-export class ParametersFirebaseComponent extends FirebaseDataComponent {
-    private data: ParametersComponentData;
+export interface NameValueComponentData extends TextComponentData {
+    x: number;
+    y: number;
+    text: string;
+    value: string;
+}
 
-    constructor(id: string, data: ParametersComponentData) {
-        super(id);
-        this.data = data;
+export abstract class TextFirebaseComponent<DataType extends TextComponentData> extends FirebaseDataComponent<DataType> {
+    constructor(id: string, data: DataType) {
+        super(id, data);
+    }
+
+    abstract getType(): ComponentType;
+
+    abstract withData(d: TextComponentData): TextFirebaseComponent<DataType>;
+}
+
+export class SumVariableFirebaseComponent extends TextFirebaseComponent<TextComponentData> {
+    public getType(): ComponentType {
+        return ComponentType.SUM_VARIABLE;
+    }
+
+    public withData(d: TextComponentData): SumVariableFirebaseComponent {
+        return new SumVariableFirebaseComponent(this.getId(), d);
+    }
+}
+
+export class ParameterFirebaseComponent extends TextFirebaseComponent<NameValueComponentData> {
+    public getType(): ComponentType {
+        return ComponentType.PARAMETER;
+    }
+
+    public withData(d: NameValueComponentData): ParameterFirebaseComponent {
+        return new ParameterFirebaseComponent(this.getId(), d);
+    }
+}
+
+export class VariableFirebaseComponent extends TextFirebaseComponent<NameValueComponentData> {
+    public getType(): ComponentType {
+        return ComponentType.VARIABLE;
+    }
+
+    public withData(d: NameValueComponentData): VariableFirebaseComponent {
+        return new VariableFirebaseComponent(this.getId(), d);
+    }
+}
+
+//################################## Connection ##################################
+
+export interface ConnectionComponentData extends FirebasePointerDataObject {
+    from: string, // The component from which the connection starts
+    to: string    // The component to which the connection goes
+    handleXOffset: number;   // The X offset of the handle from the centre of the line
+    handleYOffset: number;   // The Y offset of the handle from the centre of the line
+}
+
+export class ConnectionFirebaseComponent extends FirebaseDataComponent<ConnectionComponentData> {
+    constructor(id: string, data: ConnectionComponentData) {
+        super(id, data);
     }
 
     getType(): ComponentType {
-        return ComponentType.PARAMETERS;
+        return ComponentType.CONNECTION;
     }
 
-    getData(): ParametersComponentData {
-        return this.data;
+    withData(d: ConnectionComponentData): ConnectionFirebaseComponent {
+        return new ConnectionFirebaseComponent(this.getId(), d);
     }
 
-    dataEquals(other: any): boolean {
-        try {
-            if (other.startTime !== this.getData().startTime) return false;
-            if (other.stopTime !== this.getData().stopTime) return false;
-            for (const k of Object.keys(other)) {
-                if (this.getData().params[k] !== other.params[k]) return false;
-            }
-            return true;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    withData(d: ParametersComponentData): ParametersFirebaseComponent {
-        return new ParametersFirebaseComponent(this.getId(), d);
+    static toConnectionComponentData(data: any): ConnectionComponentData {
+        const d: ConnectionComponentData = {
+            from: data.from.toString(),
+            to: data.to.toString(),
+            handleXOffset: Number(data.handleXOffset),
+            handleYOffset: Number(data.handleYOffset)
+        };
+        return d;
     }
 }
 
@@ -142,28 +233,13 @@ export interface StockComponentData extends FirebaseDataObject {
     initvalue: string;
 }
 
-export class StockFirebaseComponent extends FirebaseDataComponent {
-    private data: StockComponentData;
-
+export class StockFirebaseComponent extends FirebaseDataComponent<StockComponentData> {
     constructor(id: string, data: StockComponentData) {
-        super(id);
-        this.data = data;
+        super(id, data);
     }
 
     getType(): ComponentType {
         return ComponentType.STOCK;
-    }
-
-    getData(): StockComponentData {
-        return this.data;
-    }
-
-    dataEquals(other: any) {
-        const d = this.getData();
-        return other.getData().x == d.x && 
-               other.getData().y == d.y && 
-               other.getData().text == d.text && 
-               other.getData().initvalue == d.initvalue;
     }
 
     withData(d: StockComponentData): StockFirebaseComponent {
@@ -183,40 +259,20 @@ export class StockFirebaseComponent extends FirebaseDataComponent {
 
 //##################################### Flow #####################################
 
-export interface FlowComponentData extends FirebaseDataObject {
+export interface FlowComponentData extends FirebasePointerDataObject {
     from: string;            // ID of the source of this flow
     to: string;              // ID of the sink of this flow
     equation: string;        // The equation for the flow rate
-    dependsOn: string[];     // The IDs of the stocks that this
-    //                            flow's equation depends on
     text: string;            // The text on screen
 }
 
-export class FlowFirebaseComponent extends FirebaseDataComponent {
-    private data: FlowComponentData;
-
+export class FlowFirebaseComponent extends FirebaseDataComponent<FlowComponentData> {
     constructor(id: string, data: FlowComponentData) {
-        super(id);
-        this.data = data;
+        super(id, data);
     }
 
     getType(): ComponentType {
         return ComponentType.FLOW;
-    }
-
-    getData(): FlowComponentData {
-        return this.data;
-    }
-
-    dataEquals(other: any): boolean {
-        const d = this.getData();
-        const dependEquals: boolean = true;
-
-        return dependEquals
-            && other.getData().from === d.from
-            && other.getData().to === d.to
-            && other.getData().equation === d.equation
-            && other.getData().text === d.text;
     }
 
     withData(d: FlowComponentData) {
@@ -228,9 +284,38 @@ export class FlowFirebaseComponent extends FirebaseDataComponent {
             from: String(data.from),
             to: String(data.to),
             text: String(data.text),
-            equation: String(data.equation),
-            dependsOn: data.dependsOn
+            equation: String(data.equation)
         };
         return d;
     }
 }
+
+
+//#################################### Cloud #####################################
+
+export interface CloudComponentData extends FirebaseDataObject {
+    x: number;
+    y: number;
+}
+
+export class CloudFirebaseComponent extends FirebaseDataComponent<CloudComponentData> {
+    constructor(id: string, data: CloudComponentData) {
+        super(id, data);
+    }
+
+    getType(): ComponentType {
+        return ComponentType.CLOUD;
+    }
+
+    withData(d: CloudComponentData) {
+        return new CloudFirebaseComponent(this.getId(), d);
+    }
+
+    public static toCloudComponentData(data: any): CloudComponentData {
+        return {
+            x: Number(data.x),
+            y: Number(data.y)
+        };
+    }
+}
+

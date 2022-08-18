@@ -1,142 +1,156 @@
-import { FirebaseComponentModel } from "database/build/export";
+import JuliaComponentData from "./JuliaComponentData";
+import JuliaFlowComponent from "./JuliaFlowComponent";
+import JuliaParameterComponent from "./JuliaParameterComponent";
+import JuliaStockComponent from "./JuliaStockComponent";
+import JuliaSumVariableComponent from "./JuliaSumVariableComponent";
+import JuliaVariableComponent from "./JuliaVariableComponent";
 
-const IMPORT_LINE = "include(\"./AlgebraicStockFlow.jl\"); using .AlgebraicStockFlow; " +
+interface Components {
+    stocks: JuliaStockComponent[];
+    flows: JuliaFlowComponent[];
+    parameters: JuliaParameterComponent[];
+    variables: JuliaVariableComponent[];
+    sumVariables: JuliaSumVariableComponent[];
+}
+
+const IMPORT_LINE = "using AlgebraicStockFlow; " +
     "using Catlab; using Catlab.CategoricalAlgebra; " +
     "using LabelledArrays; using OrdinaryDiffEq; using Plots; using Catlab.Graphics; " +
     "using Catlab.Programs; using Catlab.Theories; using Catlab.WiringDiagrams";
 
-function splitStocksAndFlows(
-    components: FirebaseComponentModel.FirebaseDataComponent[]
-): [FirebaseComponentModel.StockFirebaseComponent[], FirebaseComponentModel.FlowFirebaseComponent[]] {
+export default class JuliaGenerator {
 
-    let stocks: FirebaseComponentModel.StockFirebaseComponent[] = [];
-    let flows: FirebaseComponentModel.FlowFirebaseComponent[] = [];
-    for (const component of components) {
-        if (component instanceof FirebaseComponentModel.StockFirebaseComponent) {
-            stocks.push(component as FirebaseComponentModel.StockFirebaseComponent);
+    private readonly modelName = "modelName";
+    private readonly openModelName = this.modelName + "Open";
+    private readonly apexModelName = this.modelName + "Apex";
+    private readonly paramsVectorName = "params";
+    private readonly initialValuesVectorName = "u0";
+    private readonly solutionVarName = "sol";
+    private readonly probVarName = "prob";
+
+    private readonly components: Components;
+
+    public constructor(components: JuliaComponentData[]) {
+        const splitComponents = (components: JuliaComponentData[]) => {
+            let stocks: JuliaStockComponent[] = [];
+            let flows: JuliaFlowComponent[] = [];
+            let parameters: JuliaParameterComponent[] = [];
+            let variables: JuliaVariableComponent[] = [];
+            let sumVariables: JuliaSumVariableComponent[] = [];
+            for (const component of components) {
+                if (component instanceof JuliaStockComponent) {
+                    stocks.push(component);
+                }
+                else if (component instanceof JuliaFlowComponent) {
+                    flows.push(component);
+                }
+                else if (component instanceof JuliaParameterComponent) {
+                    parameters.push(component);
+                }
+                else if (component instanceof JuliaSumVariableComponent) {
+                    sumVariables.push(component);
+                }
+                else if (component instanceof JuliaVariableComponent) {
+                    variables.push(component);
+                }
+                else {
+                    throw new Error("Unknown component type: " + typeof component);
+                }
+            }
+            return { stocks, flows, parameters, sumVariables, variables };
         }
-        else if (component instanceof FirebaseComponentModel.FlowFirebaseComponent) {
-            flows.push(component as FirebaseComponentModel.FlowFirebaseComponent);
+        this.components = splitComponents(components);
+        if (!this.components.parameters.find(p => p.name === "startTime" || !this.components.parameters.find(p => p.name === "stopTime"))) {
+            throw new Error("startTime and stopTime parameters not found.");
         }
     }
-    return [stocks, flows];
-}
 
-const createJuliaVarName = (key: string) => `_${key.toUpperCase()}`;
-
-const createJuliaVarNames = (components: FirebaseComponentModel.FirebaseDataComponent[]) => {
-    let names: { [id: string]: string } = {};
-    for (const component of components) {
-        names[component.getId()] = ":" + createJuliaVarName(component.getId());
+    public generateJulia(filename: string) {
+        return [
+            IMPORT_LINE,
+            this.makeStockAndFlowLine(),
+            this.makeOpenLine(),
+            this.makeApexLine(),
+            this.makeParamsLine(),
+            this.makeInitialStocksLine(),
+            this.makeSolutionLine(),
+            this.makeSaveFigureLine(filename)
+        ].join("; ");
     }
-    return names;
-}
 
-const createJuliaFlowFunctionBody = (
-    data: FirebaseComponentModel.FlowFirebaseComponent,
-    stocksVarName: string,
-    paramsVarName: string,
-    timeVarName: string
-) => `(${stocksVarName},${paramsVarName},${timeVarName}) -> ${data.getData().equation}`;
-
-const createDependentsList = (
-    stockVarNames: { [id: string]: string },
-    dependedIds: string[]
-) => {
-    if (dependedIds.length == 1) {
-        return stockVarNames[dependedIds[0]];
+    private getAllComponents(): JuliaComponentData[] {
+        return Object.values(this.components).reduce((prev, cur) => prev.concat(cur));
     }
-    else {
-        const varList = dependedIds.map(id => stockVarNames[id]).join(",");
-        return `(${varList})`;
+
+    private makeStockAndFlowLine(): string {
+        const makeStockLines = () => this.components.stocks.map(
+            stock => `:${stock.name} => (${stock.getInFlowsLine()}, ${stock.getOutFlowsLine()}, ${stock.getContributingVariablesLine(this.getAllComponents())}, ${stock.getContributingSumVarsLine()})`
+        ).join(', ');
+
+        const makeFlowLines = () => this.components.flows.map(
+            flow => `:${flow.name} => :${flow.associatedVarName}`
+        ).join(', ');
+
+        const makeVarLines = () => this.components.variables.map(
+            v => `:${v.name} => (${JuliaComponentData.STOCKS_VARIABLES_VAR_NAME}, ${JuliaComponentData.SUM_VARS_VAR_NAME}, ${JuliaComponentData.PARAMS_VAR_NAME}, ${JuliaComponentData.TIME_VAR_NAME}) -> ${v.getTranslatedValue()}`
+        ).join(', ');
+
+        const makeSumVarLines = () => this.components.sumVariables.map(
+            sv => {
+                const contributingVarNames = this.components.variables
+                    .filter(v => v.dependedSumVarNames.includes(sv.name))
+                    .map(v => v.name);
+                return `:${sv.name} => ${JuliaComponentData.makeVarList(contributingVarNames, true)}`;
+            }
+        ).join(', ');
+
+        return `${this.modelName} = StockAndFlow((${makeStockLines()}), (${makeFlowLines()}), (${makeVarLines()}), (${makeSumVarLines()}))`;
+    }
+
+    private makeOpenLine(): string {
+        const makeFoot = (stock: JuliaStockComponent) => {
+            const sumVarList = JuliaComponentData.makeVarList(stock.contributingSumVarNames, true);
+            const sumVarArrowList = stock.contributingSumVarNames.map(n => `:${stock.name}=>:${n}`);
+            return `foot(:${stock.name}, ${sumVarList}, (${sumVarArrowList}))`;
+        }
+        const stockVarList = this.components.stocks
+            .map(makeFoot)
+            .join(", ");
+
+        return `${this.openModelName} = Open(${this.modelName}, ${stockVarList})`;
+    }
+
+    private makeApexLine(): string {
+        return `${this.apexModelName} = apex(${this.openModelName})`;
+    }
+
+    private makeParamsLine() {
+        const paramsString = this.components.parameters
+            .map(p => `${p.name}=${p.value}`)
+            .join(", ");
+        return `${this.paramsVectorName} = LVector(${paramsString})`;
+    }
+
+    private makeInitialStocksLine(): string {
+        const stocksString = this.components.stocks
+            .map((s: JuliaStockComponent) => `${s.name}=${s.getTranslatedInitValue()}`)
+            .join(", ");
+        return `${this.initialValuesVectorName} = LVector(${stocksString})`;
+    }
+
+    private makeSolutionLine(): string {
+        const startTime = this.components.parameters.find(p => p.name === "startTime")?.value;
+        const stopTime = this.components.parameters.find(p => p.name === "stopTime")?.value;
+        if (!startTime || !stopTime) throw new Error(`Can't find start or stop time: start = ${startTime} stop = ${stopTime}`);
+        const odeLine =
+            `${this.probVarName} = ODEProblem(vectorfield(${this.apexModelName}),${this.initialValuesVectorName},`
+            + `(${startTime},${stopTime}),${this.paramsVectorName})`;
+        const solutionLine = `${this.solutionVarName} = solve(${this.probVarName}, Tsit5(), abstol=1e-8)`;
+        return `${odeLine}; ${solutionLine}`;
+    }
+
+
+    private makeSaveFigureLine(filename: string): string {
+        return `plot(${this.solutionVarName}) ; savefig("${filename}")`;
     }
 }
-
-const generateStockFlowpCall = (
-    stocks: FirebaseComponentModel.StockFirebaseComponent[],
-    flows: FirebaseComponentModel.FlowFirebaseComponent[],
-    componentNames: { [id: string]: string },
-    modelName: string
-) => {
-    const lines: string[] = [];
-    for (const flow of flows) {
-        const flowData = flow.getData();
-        const juliaFlowVarName = componentNames[flow.getId()];
-        const juliaFlowFuncBody = createJuliaFlowFunctionBody(flow, "u", "p", "t");
-        const juliaFromVarName = componentNames[flowData.from];
-        const juliaToVarName = componentNames[flowData.to];
-        const dependsOn = flowData.dependsOn;
-        const juliaDependentVarNames = createDependentsList(componentNames, dependsOn);
-        const line =
-            `(${juliaFlowVarName}=>${juliaFlowFuncBody}, ` +
-            `${juliaFromVarName}=>${juliaToVarName}) => ${juliaDependentVarNames},`;
-        lines.push(line);
-    }
-    lines[lines.length - 1].slice(0, -1);  // strip trailing comma
-
-    const stockVarList = Object.values(createJuliaVarNames(stocks)).join(", ");
-    const relationLines = lines.join(" ");
-    return `${modelName} = StockAndFlowp((${stockVarList}), (${relationLines}))`
-}
-
-const makeParamsLine = (parameters: object, vectorName: string) => {
-    const paramsString = Object.entries(parameters)
-        .map(([k, v]) => `${k.toString()}=${v.toString()}`)
-        .join(",");
-    return `${vectorName} = LVector(${paramsString})`;
-}
-
-const makeStocksLine = (stocks: FirebaseComponentModel.StockFirebaseComponent[], vectorName: string) => {
-    const stocksString = stocks
-        .map((s: FirebaseComponentModel.StockFirebaseComponent) => `${createJuliaVarName(s.getId())}=${s.getData().initvalue}`)
-        .join(",");
-    return `${vectorName} = LVector(${stocksString})`;
-}
-
-const makeSolutionLine = (apexName: string, paramsName: string, stocksName: string, startTime: Number, stopTime: Number) => {
-    const probVarName = "prob";
-    const solVarName = "sol";
-    const odeLine = `${probVarName} = ODEProblem(vectorfield(${apexName}),${stocksName},(${startTime},${stopTime}),${paramsName})`;
-    const solutionLine = `${solVarName} = solve(${probVarName}, Tsit5(), abstol=1e-8)`;
-    return `${odeLine}; ${solutionLine}`;
-}
-
-const generateJulia = (
-    components: FirebaseComponentModel.FirebaseDataComponent[],
-    parameters: FirebaseComponentModel.ParametersFirebaseComponent
-) => {
-    const [stocks, flows] = splitStocksAndFlows(components);
-    const componentNames = createJuliaVarNames(components);
-    const modelName = "modelName";
-    const openModelName = modelName + "Open";
-    const apexModelName = modelName + "Apex";
-    const paramsVectorName = "params";
-    const paramValues = {
-        startTime: parameters.getData().startTime,
-        stopTime: parameters.getData().stopTime,
-        ...parameters.getData().params
-    };
-    const initialStocksVectorName = "u0";
-
-    const stockFlowPLine = generateStockFlowpCall(stocks, flows, componentNames, modelName);
-    const stockVarList = Object.values(createJuliaVarNames(stocks)).map(v => `[${v}]`).join(", ")
-    const openLine = `${openModelName} = Open(${modelName}, ${stockVarList})`;
-    const apexLine = `${apexModelName} = apex(${openModelName})`;
-    const initParamsLine = makeParamsLine(paramValues, paramsVectorName);
-    const initStocksLine = makeStocksLine(stocks, initialStocksVectorName);
-    const solutionLine = makeSolutionLine(
-        apexModelName,
-        paramsVectorName,
-        initialStocksVectorName,
-        parameters.getData().startTime,
-        parameters.getData().stopTime
-    );
-
-    const date: string = new Date().toISOString().slice(0, 16);
-    const saveFigureLine = `plot(sol) ; savefig("/tmp/juliaPlot_${date}.png")`;
-
-    return [IMPORT_LINE, stockFlowPLine, openLine, apexLine, initParamsLine, initStocksLine, solutionLine, saveFigureLine].join("; ");
-}
-
-export default generateJulia;
-
