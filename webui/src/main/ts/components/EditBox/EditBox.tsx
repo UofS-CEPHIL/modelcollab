@@ -5,6 +5,7 @@ import { Button, Grid, TextField } from '@mui/material';
 import React, { ReactElement } from 'react';
 import { FirebaseComponentModel as schema } from "database/build/export";
 
+const ERROR_MESSAGE = "Error: unknown component type"
 export interface Props {
     initialComponent: schema.FirebaseDataComponent<any>;
     handleSave: (c: schema.FirebaseDataComponent<any>) => void;
@@ -72,162 +73,98 @@ export default class EditBox extends React.Component<Props, State> {
         );
     }
 
-    private renderContents(): ReactElement {
-        if (this.state.component.getType() === schema.ComponentType.STOCK) {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Edit Stock
-                    </Typography>
-                    <TextField
-                        id="outlined-basic"
-                        value={this.state.component.getData().initvalue}
-                        onChange={e => this.handleChange(e)}
-                        name="initvalue"
-                        label="Initial Value"
-                        inputProps={{
-                            className: "Mui_Stock",
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                    <TextField
-                        id="outlined-basic"
-                        value={this.state.component.getData().text}
-                        onChange={e => this.handleChange(e)}
-                        name="text"
-                        label="Name"
-                        inputProps={{
-                            className: "Mui_Stock",
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                </Box >
-            );
+    private renderBoxHeaders(componentType: string): string{
+        switch (componentType){
+            case schema.ComponentType.STOCK:
+                return "Edit Stock";
+            case schema.ComponentType.FLOW:
+                return "Edit Flow";
+            case schema.ComponentType.PARAMETER:
+                return "Edit Parameter";
+            case schema.ComponentType.VARIABLE:
+                return "Edit Dynamic Variable";
+            case schema.ComponentType.SUM_VARIABLE:
+                return "Edit Sum Variable";
+            default:
+                return ERROR_MESSAGE;
         }
-        else if (this.state.component.getType() === schema.ComponentType.FLOW) {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Edit Flow
-                    </Typography>
+    }
+
+    private renderBoxContents(componentType: string): ReactElement{
+        switch (componentType){
+            case schema.ComponentType.STOCK:
+                return (             
+                    <TextField id="outlined-basic"
+                    value={this.state.component.getData().initvalue}
+                    onChange={e => this.handleChange(e)}
+                    name="initvalue"
+                    label="Initial Value"
+                    inputProps={{
+                        className: "Init_Value",
+                        id: this.props.initialComponent.getId(),
+                        "data-testid": "stock-textfield-mui"
+                    }} 
+            />
+                )
+            case schema.ComponentType.FLOW:
+                return (
                     <TextField id="outlined-basic"
                         value={this.state.component.getData().equation}
                         onChange={e => this.handleChange(e)}
                         name="equation"
                         label="Equation"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Equation",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}
                     />
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().text}
-                        onChange={e => this.handleChange(e)}
-                        name="text"
-                        label="Name"
-                        inputProps={{
-                            className: "Mui_Stock",
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                </Box>
-            );
-        }
-        else if (this.state.component.getType() === schema.ComponentType.PARAMETER) {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Edit Parameter
-                    </Typography>
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().text}
-                        onChange={e => this.handleChange(e)}
-                        name="text"
-                        label="Name"
-                        inputProps={{
-                            className: "Mui_Stock",
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
+                )
+            case schema.ComponentType.PARAMETER || schema.ComponentType.VARIABLE :
+                return (
                     <TextField id="outlined-basic"
                         value={this.state.component.getData().value}
                         onChange={e => this.handleChange(e)}
                         name="value"
                         label="Value"
                         inputProps={{
-                            className: "Mui_Stock",
+                            className: "Value",
                             id: this.props.initialComponent.getId(),
                             "data-testid": "stock-textfield-mui"
                         }}
                     />
-                </Box>
-            );
+                )
+            default:
+                return (
+                    <></>
+                )          
         }
-        else if (this.state.component.getType() === schema.ComponentType.VARIABLE) {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Edit Dynamic Variable
-                    </Typography>
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().text}
-                        onChange={e => this.handleChange(e)}
-                        name="text"
-                        label="Name"
-                        inputProps={{
-                            className: "Mui_Stock",
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().value}
-                        onChange={e => this.handleChange(e)}
-                        name="value"
-                        label="Value"
-                        inputProps={{
-                            className: "Mui_Stock",
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                </Box>
-            );
-        }
-        else if (this.state.component.getType() === schema.ComponentType.SUM_VARIABLE) {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Edit Sum Variable
-                    </Typography>
-                    <TextField id="outlined-basic"
-                        value={this.state.component.getData().text}
-                        onChange={e => this.handleChange(e)}
-                        name="text"
-                        label="Name"
-                        inputProps={{
-                            className: "Mui_Stock",
-                            id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
-                        }}
-                    />
-                </Box>
-            );
-        }
-        else {
-            return (
-                <Box>
-                    <Typography id="modal-modal-title" variant="h6" component="h2">
-                        {"Error: unknown component type"}
-                    </Typography>
-                </Box>
-            );
-        }
+    }
+
+    private renderContents(): ReactElement {
+        return (
+            <Box>
+                <Typography id="modal-modal-title" variant="h6" component="h2">
+                    {this.renderBoxHeaders(this.state.component.getType())}
+                </Typography>
+
+                {this.renderBoxHeaders(this.state.component.getType()) !== ERROR_MESSAGE
+                &&    <TextField
+                            id="outlined-basic"
+                            value={this.state.component.getData().text}
+                            onChange={e => this.handleChange(e)}
+                            name="text"
+                            label="Name"
+                            inputProps={{
+                                className: "Name",
+                                id: this.props.initialComponent.getId(),
+                                "data-testid": "stock-textfield-mui"
+                            }}
+                        />}
+                {this.renderBoxContents(this.state.component.getType())} 
+                 
+            </Box>
+        )
     }
 }
 

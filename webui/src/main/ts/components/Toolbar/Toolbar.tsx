@@ -141,23 +141,21 @@ export default class Toolbar extends React.Component<Props, State> {
             <Box sx={{ width: '100%' }} id={TOOLBAR_ID} data-testid={TOOLBAR_ID} >
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs value={this.props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs' variant="scrollable">
-                        <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} />
-                        <Tab label="Parameter" value={UiMode.PARAM} onClick={handleChange} />
-                        <Tab label="Sum Variable" value={UiMode.SUM_VARIABLE} onClick={handleChange} />
-                        <Tab label="Dynamic Variable" value={UiMode.DYN_VARIABLE} onClick={handleChange} />
-                        <Tab label="Cloud" value={UiMode.CLOUD} onClick={handleChange} />
-                        <Tab label="Stock" value={UiMode.STOCK} onClick={handleChange} />
-                        <Tab label="Flow" value={UiMode.FLOW} onClick={handleChange} />
-                        <Tab label="Connect" value={UiMode.CONNECT} onClick={handleChange} />
-                        <Tab label="Edit" value={UiMode.EDIT} onClick={handleChange} />
-                        <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} />
-                        <Tab label="Get Code" value={"GetCode"} onClick={getCode} />
-                        <Tab icon={getComputeModelButtonLabel()} value={"ComputeModel"} onClick={computeModel} />
-                        <Tab label="Go Back" value={"GoBack"} onClick={_ => this.props.returnToSessionSelect()} />
+                        <Tab label="Move" id = "Move-tab" value={UiMode.MOVE} onClick={handleChange} />
+                        <Tab label="Parameter" id = "Parameter-tab" value={UiMode.PARAM} onClick={handleChange} />
+                        <Tab label="Sum Variable" id = "Sum Variable-tab" value={UiMode.SUM_VARIABLE} onClick={handleChange} />
+                        <Tab label="Dynamic Variable" id = "Dynamic Variable-tab" value={UiMode.DYN_VARIABLE} onClick={handleChange} />
+                        <Tab label="Cloud" id = "Cloud-tab" value={UiMode.CLOUD} onClick={handleChange} />
+                        <Tab label="Stock" id = "Stock-tab" value={UiMode.STOCK} onClick={handleChange} />
+                        <Tab label="Flow" id = "Flow-tab" value={UiMode.FLOW} onClick={handleChange} />
+                        <Tab label="Connect" id = "Connect-tab" value={UiMode.CONNECT} onClick={handleChange} />
+                        <Tab label="Edit" id = "Edit-tab" value={UiMode.EDIT} onClick={handleChange} />
+                        <Tab label="Delete" id = "Delete-tab" value={UiMode.DELETE} onClick={handleChange} />
+                        <Tab label="Get Code" id = "Get Code-tab" value={"GetCode"} onClick={getCode} />
+                        <Tab label="Go Back" id = "Go Back-tab" value={"GoBack"} onClick={_ => this.props.returnToSessionSelect()} />
                     </Tabs>
                 </Box>
             </Box >
         );
     }
-
 }
