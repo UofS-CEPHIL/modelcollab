@@ -82,13 +82,9 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
     }
 
     public getAngleRelativeSide(other: VisibleComponent, components: ReadonlyArray<ComponentUiData>): Side {
-        // Which side of this is 'other' on? Basically, if we draw an X
-        // with infinite length with the centre at this, which quadrant is
-        // 'other' in
-
         const from = other.getCentrePoint(components);
         const to = this.getCentrePoint(components);
-
+ 
         const verticalLine = (x: number) => to.x - x;
         const horizontalLine = (y: number) => to.y - y;
 
@@ -162,7 +158,7 @@ export abstract class PointerComponent<
         const fromPoint: Point = this.getSource(components).getArrowPoint(fromSide, components);
         const toPoint: Point = this.getTarget(components).getArrowPoint(toSide, components);
 
-        let middlePoint: Point = {x: 0, y:0};
+        let middlePoint: Point = {x: fromPoint.x, y: fromPoint.y};
 
         if (getOppositeSide(fromSide) != toSide){ 
             if (fromSide == Side.TOP || fromSide == Side.BOTTOM){
@@ -174,11 +170,7 @@ export abstract class PointerComponent<
                 middlePoint.y = fromPoint.y;
             }
         }
-        else {
-            middlePoint.x = fromPoint.x;
-            middlePoint.y = fromPoint.y;
-        }
-
+ 
         return [fromPoint.x, fromPoint.y, middlePoint.x, middlePoint.y, toPoint.x, toPoint.y];
     }
 
