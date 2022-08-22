@@ -102,9 +102,9 @@ export default class EditBox extends React.Component<Props, State> {
                     inputProps={{
                         className: "Init_Value",
                         id: this.props.initialComponent.getId(),
-                        "data-testid": "stock-textfield-mui"
+                        "data-testid": "Stock-textfield-mui"
                     }} 
-            />
+                    />
                 )
             case schema.ComponentType.FLOW:
                 return (
@@ -116,7 +116,7 @@ export default class EditBox extends React.Component<Props, State> {
                         inputProps={{
                             className: "Equation",
                             id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
+                            "data-testid": "Equation-textfield-mui"
                         }}
                     />
                 )
@@ -130,7 +130,7 @@ export default class EditBox extends React.Component<Props, State> {
                         inputProps={{
                             className: "Value",
                             id: this.props.initialComponent.getId(),
-                            "data-testid": "stock-textfield-mui"
+                            "data-testid": "Value-textfield-mui"
                         }}
                     />
                 )
@@ -158,7 +158,7 @@ export default class EditBox extends React.Component<Props, State> {
                             inputProps={{
                                 className: "Name",
                                 id: this.props.initialComponent.getId(),
-                                "data-testid": "stock-textfield-mui"
+                                "data-testid": "Name-textfield-mui"
                             }}
                         />}
                 {this.renderBoxContents(this.state.component.getType())} 

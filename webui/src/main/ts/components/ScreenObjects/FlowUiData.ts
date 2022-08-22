@@ -34,7 +34,7 @@ export default class FlowUiData extends PointerComponent<schema.FlowComponentDat
     public computeLabelPosition(linePoints: number[]): Point {
         // Just place it near the centre of the line.
         const PADDING_PX = 20;
-        const middlePoint = FlowUiData.getMiddlePoint({ x: linePoints[0], y: linePoints[1] }, { x: linePoints[2], y: linePoints[3] }, PADDING_PX);
+        const middlePoint = FlowUiData.getMiddlePoint({ x: linePoints[2], y: linePoints[3] }, { x: linePoints[4], y: linePoints[5] }, PADDING_PX);
         const labelWidth = this.computeLabelWidth();
         const labelHeight = this.computeLabelHeight();
         return { x: middlePoint.x - labelWidth / 2, y: middlePoint.y - labelHeight / 2 };
