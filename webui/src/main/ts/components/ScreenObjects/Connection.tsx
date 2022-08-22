@@ -1,9 +1,9 @@
 import React, { ReactElement } from 'react';
 import { Arrow, Group, Rect } from 'react-konva';
 import { Point } from '../DrawingUtils';
-import ComponentUiData from './ComponentUiData';
 
 import ConnectionUiData, { HANDLE_WIDTH } from './ConnectionUiData';
+import ComponentUiData from './ComponentUiData';
 
 
 export interface Props {

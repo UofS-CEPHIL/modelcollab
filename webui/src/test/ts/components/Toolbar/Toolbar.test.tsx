@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ReactElement } from "react";
-import Toolbar, { Props } from "../../../main/ts/components/Toolbar/Toolbar";
-import RestClient from "../../../main/ts/rest/RestClient";
-import { UiMode } from "../../../main/ts/UiMode";
+import Toolbar, { Props } from "../../../../main/ts/components/Toolbar/Toolbar";
+import RestClient from "../../../../main/ts/rest/RestClient";
+import { UiMode } from "../../../../main/ts/UiMode";
 
 const A_SESSION_ID = "0";
 const A_MODE: UiMode = UiMode.MOVE;

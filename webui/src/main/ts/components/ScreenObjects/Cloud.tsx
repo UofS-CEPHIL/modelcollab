@@ -10,7 +10,6 @@ export interface Props {
 }
 
 export default class Cloud extends React.Component<Props> {
-    public static readonly RADIUS = 25;
 
     public render() {
         const onDragEnd = (event: any) => {
@@ -26,8 +25,8 @@ export default class Cloud extends React.Component<Props> {
                 y={this.props.data.getData().y}
                 name={this.props.data.getId()}
                 numPoints={30}
-                innerRadius={Cloud.RADIUS - 5}
-                outerRadius={Cloud.RADIUS}
+                innerRadius={CloudUiData.RADIUS - 5}
+                outerRadius={CloudUiData.RADIUS}
                 fill={"white"}
                 stroke={this.props.color}
                 lineJoin={"round"}

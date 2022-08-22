@@ -1,7 +1,7 @@
 import { ReactElement } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { FirebaseComponentModel as schema } from "database/build/export";
-import EditBox, { Props as EditBoxProps } from "../../../main/ts/components/EditBox/EditBox";
+import EditBox, { Props as EditBoxProps } from "../../../../main/ts/components/EditBox/EditBox";
 
 
 export default class EditBoxTest<Component extends schema.FirebaseDataComponent<any>> {

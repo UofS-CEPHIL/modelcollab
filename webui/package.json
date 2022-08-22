@@ -13,7 +13,6 @@
     "database": "file:../database",
     "firebase": "^9.9.0",
     "react": "^18.2.0",
-    "react-dom": "^18.1.0",
     "react-konva": "^18.2.1",
     "react-router": "^6.3.0",
     "react-router-dom": "^6.3.0",
@@ -57,10 +56,10 @@
     "@types/node": "^16.11.35",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.4",
+    "canvas": "^2.9.3",
     "jest": "^28.1.2",
-    "jest-environment-jsdom": "^28.1.0",
-    "react-konva": "^18.2.1",
-    "ts-jest": "^28.0.2",
-    "canvas": "^2.9.3"
+    "jest-environment-jsdom": "^28.1.3",
+    "react-dom": "^18.2.0",
+    "ts-jest": "^28.0.2"
   }
 }
