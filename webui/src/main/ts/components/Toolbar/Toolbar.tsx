@@ -5,7 +5,8 @@ import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import { UiMode, modeFromString } from '../../UiMode';
 import applicationConfig from '../../config/applicationConfig';
-import { CircularProgress } from '@mui/material';
+import { CircularProgress, MenuItem, Menu, ListItemIcon } from '@mui/material';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 export interface Props {
     mode: UiMode,
@@ -16,7 +17,7 @@ export interface Props {
 
 export interface State {
     waitingForResults: boolean;
-}
+    anchorEl: null | HTMLElement;}
 
 export const TOOLBAR_ID: string = 'toolbar-box';
 
@@ -24,7 +25,9 @@ export default class Toolbar extends React.Component<Props, State> {
 
     public constructor(props: Props) {
         super(props);
-        this.state = { waitingForResults: false };
+        this.state = { 
+                        waitingForResults: false,
+                        anchorEl: null};
     }
 
     render(): ReactElement {
@@ -128,15 +131,26 @@ export default class Toolbar extends React.Component<Props, State> {
                 );
             }
         }
-        const getComputeModelButtonLabel = () => {
+        const getButtonLabel = (label: string) => {
             if (this.state.waitingForResults) {
-                return (<CircularProgress />);
+                return (
+                        <ListItemIcon>
+                            <CircularProgress />
+                        </ListItemIcon>);
             }
             else {
-                return ("Compute Model");
+                return (label);
             }
         }
 
+        const open = Boolean(this.state.anchorEl);
+
+        const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+            this.setState({...this.state, anchorEl: event.currentTarget});
+        }
+        const handleClose = () => {
+            this.setState({...this.state, anchorEl: null});
+        }
         return (
             <Box sx={{ width: '100%' }} id={TOOLBAR_ID} data-testid={TOOLBAR_ID} >
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -152,8 +166,18 @@ export default class Toolbar extends React.Component<Props, State> {
                         <Tab label="Edit" id = "Edit-tab" value={UiMode.EDIT} onClick={handleChange} />
                         <Tab label="Delete" id = "Delete-tab" value={UiMode.DELETE} onClick={handleChange} />
                         <Tab label="Get Code" id = "Get Code-tab" value={"GetCode"} onClick={getCode} />
+                        <Tab label="Run" id = "Run-tab" value={"Run"} icon={<ArrowDropDownIcon/>} iconPosition="end" onClick={handleClick}/>
                         <Tab label="Go Back" id = "Go Back-tab" value={"GoBack"} onClick={_ => this.props.returnToSessionSelect()} />
                     </Tabs>
+                    <Menu
+                            id="basic-menux"
+                            anchorEl={this.state.anchorEl}
+                            open={open}
+                            onClose={handleClose}
+                            MenuListProps={{'aria-labelledby':'basic-button',}}
+                        >
+                            <MenuItem onClick= {computeModel}> {getButtonLabel("ODE")} </MenuItem>
+                    </Menu> 
                 </Box>
             </Box >
         );
