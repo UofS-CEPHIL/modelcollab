@@ -8,44 +8,33 @@ import StockModeCanvas from "../../../../main/ts/components/Canvas/StockModeCanv
 import { createRoot, Root } from "react-dom/client";
 import ReactDOM, { render, unmountComponentAtNode } from "react-dom";
 import { act } from "react-dom/test-utils";
+import CanvasMock from "./CanvasMock";
 
-
-export const NO_OP = () => { };
-
+/*
+  This needs to be done in order to make tests with Konva behave
+  properly
+ */
 declare global {
     var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+
+
+
 export default abstract class CanvasTest {
 
     protected static AN_ID: string = "123";
 
-    protected makeCanvasSpy(props: Partial<CanvasProps>): ReactElement {
-        const DEFAULT_PROPS: any = {
-            firebaseDataModel: this.makeFirebaseDataModel(),
-            selectedComponentId: null,
-            sessionId: CanvasTest.AN_ID,
-            children: [],
-            editComponent: NO_OP,
-            deleteComponent: NO_OP,
-            addComponent: NO_OP,
-            setSelected: NO_OP
-        };
-        return (
-            <StockModeCanvas
-                {...{ ...DEFAULT_PROPS, ...props }}
-            />
-        );
-    }
-
     protected abstract getCanvasName(): string;
+
+    protected abstract makeCanvasMock(props: Partial<CanvasProps>): CanvasMock;
 
     protected makeSpecificTests(): void { };
 
 
     public describeTest(): void {
-        describe(`<${this.getCanvasName()} />`, () => {
+        describe(`<${this.getCanvasName()} /> `, () => {
 
             var containerNode: HTMLElement | null;
             var root: Root | null;
@@ -65,43 +54,16 @@ export default abstract class CanvasTest {
             });
 
             test("Empty canvas", async () => {
-                const canvasElem = this.makeCanvasSpy({});
+                const canvas = this.makeCanvasMock({});
                 act(() => {
-                    root?.render(canvasElem);
+                    root?.render(canvas.render());
                 });
                 expect(containerNode?.innerHTML.includes("<canvas")).toBeTruthy();
+                canvas.expectNoComponentsRendered();
             });
 
-            // test("Find a stock", async () => {
-            //     const stock = new StockUiData(
-            //         new schema.StockFirebaseComponent(
-            //             CanvasTest.AN_ID,
-            //             { x: 0, y: 0, text: "stock", initvalue: "123" }
-            //         )
-            //     );
-            //     const canvas = this.makeCanvas({
-            //         children: [stock]
-            //     });
-            //     render(canvas);
-            //     const stockHtmlElement = screen.getByTestId("stock-" + CanvasTest.AN_ID);
-            //     expect(stockHtmlElement).toBeDefined();
-            // });
 
             this.makeSpecificTests();
         });
-    }
-
-    protected makeFirebaseDataModel(mockFuncs?: Partial<FirebaseDataModel>): FirebaseDataModel {
-        const emptyDataModel: FirebaseDataModel = {
-            updateComponent: NO_OP,
-            subscribeToComponent: NO_OP,
-            subscribeToSession: NO_OP,
-            subscribeToSessionList: NO_OP,
-            addSession: NO_OP,
-            removeComponent: NO_OP,
-            registerComponentCreatedListener: NO_OP,
-            registerComponentRemovedListener: NO_OP
-        };
-        return { ...emptyDataModel, ...mockFuncs };
     }
 }

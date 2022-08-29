@@ -1,7 +1,8 @@
 //import { ReactElement } from "react";
 // import StockModeCanvas from "../../../../main/ts/components/Canvas/StockModeCanvas";
-//import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import CanvasTest, { NO_OP } from "./CanvasTest";
+import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
+import CanvasMock, { StockModeCanvasMock } from "./CanvasMock";
+import CanvasTest from "./CanvasTest";
 
 class StockModeCanvasTest extends CanvasTest {
 
@@ -9,23 +10,14 @@ class StockModeCanvasTest extends CanvasTest {
         return "StockModeCanvas";
     }
 
-    // protected makeCanvas(props: any): ReactElement {
-    // const DEFAULT_PROPS: any = {
-    //     firebaseDataModel: this.makeFirebaseDataModel(),
-    //     selectedComponentId: null,
-    //     sessionId: CanvasTest.AN_ID,
-    //     children: [],
-    //     editComponent: NO_OP,
-    //     deleteComponent: NO_OP,
-    //     addComponent: NO_OP,
-    //     setSelected: NO_OP
-    // };
-    // return (
-    //     <StockModeCanvas
-    //         {...{ ...DEFAULT_PROPS, ...props }}
-    //     />
-    // );
-    // }
+    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasMock {
+        return new StockModeCanvasMock(props);
+    }
+
+    protected makeSpecificTests(): void {
+
+    }
+
 }
 
 new StockModeCanvasTest().describeTest();
