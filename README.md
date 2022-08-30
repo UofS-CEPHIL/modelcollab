@@ -30,3 +30,5 @@ Modelcollab currently consists of 3 components:
   - `npm run build` to build
   - No code to run, and no unit tests. 
   - Must be built before running webui or server
+  
+You must also create a Firebase project and insert its config information into src/main/ts/config/FirebaseConfig.ts under the server and webui directories.
