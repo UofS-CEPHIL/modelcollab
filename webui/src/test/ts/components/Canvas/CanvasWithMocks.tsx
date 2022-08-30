@@ -9,11 +9,16 @@ import VariableModeCanvas from "../../../../main/ts/components/Canvas/DynamicVar
 import SumVariableModeCanvas from "../../../../main/ts/components/Canvas/SumVariableModeCanvas";
 import ParameterModeCanvas from "../../../../main/ts/components/Canvas/ParamModeCanvas";
 import FirebaseDataModel from "../../../../main/ts/data/FirebaseDataModel";
+import CanvasUtils from "./CanvasUtils";
+import CloudModeCanvas from "../../../../main/ts/components/Canvas/CloudModeCanvas";
+import EditModeCanvas from "../../../../main/ts/components/Canvas/EditModeCanvas";
+import DeleteModeCanvas from "../../../../main/ts/components/Canvas/DeleteModeCanvas";
+import MockFirebaseDataModel from "../../data/MockFirebaseDataModel";
 
-export const NO_OP = () => { };
+
 export const DEFAULT_ID = "0";
 
-export default abstract class CanvasMock {
+export default abstract class CanvasWithMocks {
 
     public readonly props: CanvasProps;
     public readonly makeStockSpy: jest.Mock<ReactElement> | undefined;
@@ -47,14 +52,14 @@ export default abstract class CanvasMock {
         this.makeCloudSpy = jest.fn();
 
         const DEFAULT_PROPS: CanvasProps = {
-            firebaseDataModel: CanvasMock.makeFirebaseDataModel(),
+            firebaseDataModel: new MockFirebaseDataModel(),
             selectedComponentId: null,
             sessionId: DEFAULT_ID,
             children: [],
-            editComponent: NO_OP,
-            deleteComponent: NO_OP,
-            addComponent: NO_OP,
-            setSelected: NO_OP,
+            editComponent: CanvasUtils.NO_OP,
+            deleteComponent: CanvasUtils.NO_OP,
+            addComponent: CanvasUtils.NO_OP,
+            setSelected: CanvasUtils.NO_OP,
             showConnectionHandles: false,
             makeStock: this.makeStockSpy,
             makeFlow: this.makeFlowSpy,
@@ -65,20 +70,6 @@ export default abstract class CanvasMock {
             makeDynVar: this.makeDynVarSpy
         };
         this.props = { ...DEFAULT_PROPS, ...props };
-    }
-
-    public static makeFirebaseDataModel(mockFuncs?: Partial<FirebaseDataModel>): FirebaseDataModel {
-        const emptyDataModel: FirebaseDataModel = {
-            updateComponent: NO_OP,
-            subscribeToComponent: NO_OP,
-            subscribeToSession: NO_OP,
-            subscribeToSessionList: NO_OP,
-            addSession: NO_OP,
-            removeComponent: NO_OP,
-            registerComponentCreatedListener: NO_OP,
-            registerComponentRemovedListener: NO_OP
-        };
-        return { ...emptyDataModel, ...mockFuncs };
     }
 
     public expectNoComponentsRendered(): void {
@@ -128,45 +119,63 @@ export default abstract class CanvasMock {
 }
 
 
-export class StockModeCanvasMock extends CanvasMock {
+export class StockModeCanvasMock extends CanvasWithMocks {
     public render(): ReactElement {
         return (<StockModeCanvas {...this.props} />);
     }
 }
 
-export class MoveModeCanvasMock extends CanvasMock {
+export class MoveModeCanvasMock extends CanvasWithMocks {
     public render(): ReactElement {
         return (<MoveModeCanvas {...this.props} />);
     }
 }
 
-export class FlowModeCanvasMock extends CanvasMock {
+export class FlowModeCanvasMock extends CanvasWithMocks {
     public render(): ReactElement {
         return (<FlowModeCanvas {...this.props} />)
     }
 }
 
-export class ConnectionModeCanvasMock extends CanvasMock {
+export class EditModeCanvasMock extends CanvasWithMocks {
+    public render(): ReactElement {
+        return (<EditModeCanvas {...this.props} />);
+    }
+}
+
+export class ConnectionModeCanvasMock extends CanvasWithMocks {
     public render(): ReactElement {
         return (<ConnectionModeCanvas {...this.props} />)
     }
 }
 
-export class VariableModeCanvasMock extends CanvasMock {
+export class VariableModeCanvasMock extends CanvasWithMocks {
     public render(): ReactElement {
         return (<VariableModeCanvas {...this.props} />)
     }
 }
 
-export class SumVarModeCanvasMock extends CanvasMock {
+export class SumVarModeCanvasMock extends CanvasWithMocks {
     public render(): ReactElement {
         return (<SumVariableModeCanvas {...this.props} />)
     }
 }
 
-export class ParameterModeCanvasMock extends CanvasMock {
+export class ParameterModeCanvasMock extends CanvasWithMocks {
     public render(): ReactElement {
         return (<ParameterModeCanvas {...this.props} />)
+    }
+}
+
+export class DeleteModeCanvasMock extends CanvasWithMocks {
+    public render(): ReactElement {
+        return (<DeleteModeCanvas {...this.props} />);
+    }
+}
+
+export class CloudModeCanvasMock extends CanvasWithMocks {
+    public render(): ReactElement {
+        return (<CloudModeCanvas {...this.props} />)
     }
 }
 

@@ -25,6 +25,7 @@ export interface Props {
     sessionId: string;
     children: ReadonlyArray<ComponentUiData>;
     selectedComponentId: string | null;
+    showConnectionHandles: boolean;
 
     addComponent: (_: ComponentUiData) => void;
     editComponent: (_: ComponentUiData) => void;
@@ -44,13 +45,6 @@ export class ComponentNotFoundError extends Error { }
 
 
 export default abstract class BaseCanvas extends React.Component<Props> {
-
-    private readonly shouldShowConnectionHandles: boolean;
-
-    protected constructor(props: Props, shouldShowConnectionHandles?: boolean) {
-        super(props);
-        this.shouldShowConnectionHandles = shouldShowConnectionHandles || false;
-    }
 
     protected onCanvasClicked(x: number, y: number): void {
         if (this.props.selectedComponentId) this.props.setSelected(null);
@@ -208,7 +202,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                 conn,
                 components: this.props.children,
                 updateState: this.props.editComponent,
-                showHandle: this.shouldShowConnectionHandles,
+                showHandle: this.props.showConnectionHandles,
                 key: i
             } as ConnectionProps;
         }

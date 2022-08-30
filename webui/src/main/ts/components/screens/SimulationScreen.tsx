@@ -134,7 +134,8 @@ export default class SimulationScreen extends React.Component<Props, State> {
                             addComponent: (c) => this.addComponent(c),
                             editComponent: (c) => this.updateComponent(c),
                             deleteComponent: (id) => this.removeComponent(id),
-                            setSelected: (id) => this.setSelected(id)
+                            setSelected: (id) => this.setSelected(id),
+                            showConnectionHandles: false
                         }
                     )
                 }
@@ -204,6 +205,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 return (
                     <ConnectModeCanvas
                         {...props}
+                        showConnectionHandles={true}
                     />
                 );
             case UiMode.DYN_VARIABLE:
