@@ -19,6 +19,7 @@ import DynamicVariable from '../ScreenObjects/DynamicVariable';
 import CloudUiData from '../ScreenObjects/CloudUiData';
 import Cloud from '../ScreenObjects/Cloud';
 
+const RIGHT_CLICK = 2;
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
     sessionId: string;
@@ -43,8 +44,8 @@ export default abstract class BaseCanvas extends React.Component<Props> {
         this.shouldShowConnectionHandles = shouldShowConnectionHandles || false;
     }
 
-    protected onCanvasClicked(x: number, y: number): void {
-        if (this.props.selectedComponentId) this.props.setSelected(null);
+    protected onCanvasClicked(isRightClick: boolean, x: number, y: number): void {
+        if (this.props.selectedComponentId && isRightClick) this.props.setSelected(null);
     }
 
     protected onComponentClicked(comp: ComponentUiData): void {
@@ -113,15 +114,22 @@ export default abstract class BaseCanvas extends React.Component<Props> {
         const onClick = (event: any) => {
             const target = this.props.children.find(c => c.getId() === event.target.attrs.name);
             const pointerPos = event.currentTarget.getPointerPosition();
+
+            const isRightClick = event.evt.button === RIGHT_CLICK;
             target
                 ? this.onComponentClicked(target)
-                : this.onCanvasClicked(pointerPos.x, pointerPos.y);
+                : this.onCanvasClicked(isRightClick, pointerPos.x, pointerPos.y);
         }
+
         return (
             <Stage
                 width={window.innerWidth}
                 height={15000}
                 onClick={onClick}
+                onContextMenu={e => {
+                    e.evt.preventDefault();
+                  }}
+
             >
                 <Layer>
                     {

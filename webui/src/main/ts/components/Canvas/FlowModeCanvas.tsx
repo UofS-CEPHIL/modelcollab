@@ -1,5 +1,6 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../IdGenerator";
+import CloudUiData from "../ScreenObjects/CloudUiData";
 import ComponentUiData from "../ScreenObjects/ComponentUiData";
 import FlowUiData from "../ScreenObjects/FlowUiData";
 import BaseCanvas from "./BaseCanvas";
@@ -29,6 +30,32 @@ export default class FlowModeCanvas extends BaseCanvas {
                 );
                 this.props.addComponent(newFlow);
             }
+        }
+    }
+
+    protected onCanvasClicked(isRightClick: boolean, x: number, y: number): void {
+
+        if (this.props.selectedComponentId) {
+            const cloudID = IdGenerator.generateUniqueId(this.props.children);
+            const newCloud = new CloudUiData(new schema.CloudFirebaseComponent(
+                cloudID,
+                { x, y }
+            ));
+            this.props.addComponent(newCloud);           
+
+            const flowID = IdGenerator.generateUniqueId(this.props.children);
+            const newFlow = new FlowUiData(
+                new schema.FlowFirebaseComponent(
+                    flowID,
+                    {
+                        from: this.props.selectedComponentId,
+                        to: cloudID,
+                        equation: "",
+                        text: ""
+                    }
+                )
+            );            
+            this.props.addComponent(newFlow);
         }
     }
 }
