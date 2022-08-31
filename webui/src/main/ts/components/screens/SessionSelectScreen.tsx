@@ -30,7 +30,7 @@ export default class SessionSelectScreen extends React.Component<Props, State> {
 
     public render(): ReactElement {
         return (
-            <List>
+            <List data-testid={"sessionsList"}>
                 <ListItem disablePadding key={-1}>
                     <TextField
                         label="New session"
@@ -38,7 +38,10 @@ export default class SessionSelectScreen extends React.Component<Props, State> {
                         error={this.state.sessions.includes(this.state.newSessionText)}
                         onChange={s => this.setState({ ...this.state, newSessionText: s.target.value })}
                     />
-                    <Button onClick={() => this.addSession(this.state.newSessionText)} variant={"contained"}>
+                    <Button
+                        onClick={() => this.addSession(this.state.newSessionText)}
+                        variant={"contained"}>
+                        data-testid={"addSessionButton"}
                         <AddIcon />
                     </Button>
                 </ListItem>

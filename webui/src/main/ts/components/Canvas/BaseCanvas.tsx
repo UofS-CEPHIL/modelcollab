@@ -32,6 +32,8 @@ export interface Props {
     deleteComponent: (id: string) => void;
     setSelected: (id: string | null) => void;
 
+    // visible for testing
+    // TODO make these non-optional and send them up by 1 layer
     makeStock?: (_: StockProps) => ReactElement;
     makeFlow?: (_: FlowProps) => ReactElement;
     makeParam?: (_: TextProps) => ReactElement;
@@ -39,6 +41,8 @@ export interface Props {
     makeDynVar?: (_: TextProps) => ReactElement;
     makeConnection?: (_: ConnectionProps) => ReactElement;
     makeCloud?: (_: CloudProps) => ReactElement;
+    registerComponentClickedHandler?: (callback: ((c: ComponentUiData) => void)) => void;
+    registerCanvasClickedHandler?: (callback: ((x: number, y: number) => void)) => void;
 }
 
 export class ComponentNotFoundError extends Error { }
@@ -259,6 +263,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                 ? this.onComponentClicked(target)
                 : this.onCanvasClicked(pointerPos.x, pointerPos.y);
         }
+        this.registerArtificialClickListeners();
         return (
             <Stage
                 width={window.innerWidth}
@@ -277,6 +282,13 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                 </Layer>
             </Stage>
         );
+    }
+
+    private registerArtificialClickListeners(): void {
+        if (this.props.registerCanvasClickedHandler)
+            this.props.registerCanvasClickedHandler((x, y) => this.onCanvasClicked(x, y));
+        if (this.props.registerComponentClickedHandler)
+            this.props.registerComponentClickedHandler(c => this.onComponentClicked(c));
     }
 }
 

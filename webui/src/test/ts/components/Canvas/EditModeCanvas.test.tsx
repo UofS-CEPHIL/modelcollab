@@ -19,7 +19,12 @@ class EditModeCanvasTest extends CanvasTest {
     }
 
     protected makeSpecificTests(): void {
-
+        describe("Mode-specific tests", () => {
+            // n.b. more tests in simulationscreen
+            this.describeClickingCanvasShouldDoNothingIfNothingSelected();
+            this.describeClickCanvasDeselctsSelectedItem();
+            this.describeClickingComponentShouldSelectItAndNotCreateAnything();
+        });
     }
 
 }

@@ -65,58 +65,63 @@ export default abstract class CanvasTest {
 
             this.makeSpecificTests();
 
-            test("Empty canvas should render nothing", async () => {
-                const canvas = this.makeCanvasMock({});
-                act(() => {
-                    this.root?.render(canvas.render());
+            describe("Common tests - empty model", () => {
+                test("Empty canvas should render nothing", async () => {
+                    const canvas = this.makeCanvasMock({});
+                    act(() => {
+                        this.root?.render(canvas.render());
+                    });
+                    expect(this.containerNode?.innerHTML.includes("<canvas")).toBeTruthy();
+                    canvas.expectNoComponentsRendered();
                 });
-                expect(this.containerNode?.innerHTML.includes("<canvas")).toBeTruthy();
-                canvas.expectNoComponentsRendered();
+
+                const doSingleStockTest = (selected: boolean) => {
+                    const stockText = "stock";
+                    const stockValue = "0";
+                    const stockId = CanvasTest.AN_ID;
+                    const stock = new StockUiData(
+                        new schema.StockFirebaseComponent(
+                            stockId,
+                            { x: 0, y: 0, text: stockText, initvalue: stockValue }
+                        )
+                    );
+                    const canvas = this.makeCanvasMock({
+                        children: [stock],
+                        selectedComponentId: selected ? stock.getId() : null
+                    });
+                    act(() => {
+                        this.root?.render(canvas.render());
+                    });
+                    canvas.expectNoCloudsRendered();
+                    canvas.expectNoConnectionsRendered();
+                    canvas.expectNoDynVarsRendered();
+                    canvas.expectNoFlowsRendered();
+                    canvas.expectNoSumVarsRendered();
+                    canvas.expectNoParamsRendered();
+                    expect(canvas.makeStockSpy).toHaveBeenCalledTimes(1);
+                    const stockProps = canvas.makeStockSpy?.mock.calls[0][0];
+                    expect(stockProps).toBeDefined();
+                    expect(stockProps.text).toBe(stockText);
+                    expect(stockProps.stock.dbObject).toEqual(
+                        {
+                            id: stockId,
+                            data: { initvalue: stockValue, text: stockText, x: 0, y: 0 }
+                        }
+                    );
+                    expect(stockProps.draggable).toBe(true);
+                    expect(stockProps.color).toBe(selected ? SELECTED_COLOR : DEFAULT_COLOR);
+                };
+
+                test("Single unselected stock should be rendered with correct props", async () => {
+                    doSingleStockTest(false);
+                });
+
+                test("Single selected stock should be rendered with correct props", async () => {
+                    doSingleStockTest(true);
+                });
             });
 
-            const doSingleStockTest = (selected: boolean) => {
-                const stockText = "stock";
-                const stockValue = "0";
-                const stockId = CanvasTest.AN_ID;
-                const stock = new StockUiData(
-                    new schema.StockFirebaseComponent(
-                        stockId,
-                        { x: 0, y: 0, text: stockText, initvalue: stockValue }
-                    )
-                );
-                const canvas = this.makeCanvasMock({
-                    children: [stock],
-                    selectedComponentId: selected ? stock.getId() : null
-                });
-                act(() => {
-                    this.root?.render(canvas.render());
-                });
-                canvas.expectNoCloudsRendered();
-                canvas.expectNoConnectionsRendered();
-                canvas.expectNoDynVarsRendered();
-                canvas.expectNoFlowsRendered();
-                canvas.expectNoSumVarsRendered();
-                canvas.expectNoParamsRendered();
-                expect(canvas.makeStockSpy).toHaveBeenCalledTimes(1);
-                const stockProps = canvas.makeStockSpy?.mock.calls[0][0];
-                expect(stockProps).toBeDefined();
-                expect(stockProps.text).toBe(stockText);
-                expect(stockProps.stock.dbObject).toEqual(
-                    { id: stockId, data: { initvalue: stockValue, text: stockText, x: 0, y: 0 } }
-                );
-                expect(stockProps.draggable).toBe(true);
-                expect(stockProps.color).toBe(selected ? SELECTED_COLOR : DEFAULT_COLOR);
-            };
-
-            test("Single unselected stock should be rendered with correct props", async () => {
-                doSingleStockTest(false);
-            });
-
-            test("Single selected stock should be rendered with correct props", async () => {
-                doSingleStockTest(true);
-            });
-
-            describe("Canvas with all component types", () => {
+            describe("Common tests - model with all components", () => {
                 const X = 0;
                 const Y = 0;
                 const stockId = "1";
@@ -210,12 +215,20 @@ export default abstract class CanvasTest {
                     act(() => this.root?.render(canvas.render()));
                 });
 
-                Object.keys(canvas.getSpies()).filter(name => name !== "makeConn").forEach((name: string) => {
-                    test(`${name} should have been called one time`, async () => {
-                        const mock = Object.entries(canvas.getSpies()).find(([n, _]) => name === n)?.[1];
-                        expect(mock).toBeDefined();
-                        expect(mock).toHaveBeenCalledTimes(1);
+                Object.keys(canvas.getComponentCreatorFunctions())
+                    .filter(name => name !== "makeConn")
+                    .forEach((name: string) => {
+                        test(`${name} should have been called one time`, async () => {
+                            const mock = Object.entries(
+                                canvas.getComponentCreatorFunctions()
+                            ).find(([n, _]) => name === n)?.[1];
+                            expect(mock).toBeDefined();
+                            expect(mock).toHaveBeenCalledTimes(1);
+                        });
                     });
+                test("makeConn should have been called 3 times", async () => {
+                    expect(canvas.makeConnSpy).toBeDefined();
+                    expect(canvas.makeConnSpy).toHaveBeenCalledTimes(3);
                 });
 
                 test("Stock should be rendered with correct props", async () => {
@@ -285,31 +298,84 @@ export default abstract class CanvasTest {
                     expect(connProps.conn.getData().handleYOffset).toBe(Y);
                 };
 
-                test("Sum Variable -> Dynamic Variable connection should be rendered with correct props", async () => {
-                    const connectionProps: ConnectionProps = canvas.makeConnSpy?.mock.calls.find(
-                        c => (c[0] as ConnectionProps).conn.getData().from === sumVarId
-                    )[0];
-                    expect(connectionProps).toBeDefined();
-                    testConnection(connectionProps, svToVarConnId, sumVarId, dynVarId);
-                });
+                test(
+                    "Sum Variable -> Dynamic Variable connection should be rendered " +
+                    "with correct props",
+                    async () => {
+                        const connectionProps: ConnectionProps =
+                            canvas.makeConnSpy?.mock.calls.find(
+                                c => (c[0] as ConnectionProps).conn.getData().from === sumVarId
+                            )[0];
+                        expect(connectionProps).toBeDefined();
+                        testConnection(connectionProps, svToVarConnId, sumVarId, dynVarId);
+                    });
 
-                test("Param -> Dynamic Variable connection should be rendered with correct props", async () => {
-                    const connectionProps: ConnectionProps = canvas.makeConnSpy?.mock.calls.find(
-                        c => (c[0] as ConnectionProps).conn.getData().from === paramId
-                    )[0];
-                    expect(connectionProps).toBeDefined();
-                    testConnection(connectionProps, paramToVarConnId, paramId, dynVarId);
-                });
+                test(
+                    "Param -> Dynamic Variable connection should be rendered " +
+                    "with correct props",
+                    async () => {
+                        const connectionProps: ConnectionProps =
+                            canvas.makeConnSpy?.mock.calls.find(
+                                c => (c[0] as ConnectionProps).conn.getData().from === paramId
+                            )[0];
+                        expect(connectionProps).toBeDefined();
+                        testConnection(connectionProps, paramToVarConnId, paramId, dynVarId);
+                    });
 
-                test("Dynamic Variable -> Flow connection should be rendered with correct props", async () => {
-                    const connectionProps: ConnectionProps = canvas.makeConnSpy?.mock.calls.find(
-                        c => (c[0] as ConnectionProps).conn.getData().from === dynVarId
-                    )[0];
-                    expect(connectionProps).toBeDefined();
-                    testConnection(connectionProps, varToFlowConnId, dynVarId, flowId);
-                });
-
+                test("Dynamic Variable -> Flow connection should be rendered " +
+                    "with correct props",
+                    async () => {
+                        const connectionProps: ConnectionProps =
+                            canvas.makeConnSpy?.mock.calls.find(
+                                c => (c[0] as ConnectionProps).conn.getData().from === dynVarId
+                            )[0];
+                        expect(connectionProps).toBeDefined();
+                        testConnection(connectionProps, varToFlowConnId, dynVarId, flowId);
+                    });
             });
+        });
+    }
+
+    protected describeClickCanvasDeselctsSelectedItem(): void {
+        test("Clicking on canvas should deselect selected item", async () => {
+            const child = new StockUiData(new schema.StockFirebaseComponent(
+                "12345",
+                { x: 0, y: 0, text: "stocktext", initvalue: "1" }
+            ));
+            const canvas = this.makeCanvasMock(
+                { selectedComponentId: child.getId(), children: [child] }
+            );
+            act(() => this.root?.render(canvas.render()));
+
+            canvas.clickCanvas(0, 0);
+            expect(canvas.setSelectedSpy).toHaveBeenCalledTimes(1);
+            expect(canvas.setSelectedSpy).toHaveBeenCalledWith(null);
+        });
+    }
+
+    protected describeClickingComponentShouldSelectItAndNotCreateAnything(): void {
+        test("Clicking on component should select it", async () => {
+            const child = new CloudUiData(new schema.CloudFirebaseComponent(
+                "12345",
+                { x: 0, y: 0 }
+            ));
+            const canvas = this.makeCanvasMock(
+                { selectedComponentId: null, children: [child] }
+            );
+            act(() => this.root?.render(canvas.render()));
+            canvas.clickComponent(child);
+            expect(canvas.setSelectedSpy).toHaveBeenCalledTimes(1);
+            expect(canvas.setSelectedSpy).toHaveBeenCalledWith(child.getId());
+            expect(canvas.addComponentSpy).not.toHaveBeenCalled();
+        })
+    }
+
+    protected describeClickingCanvasShouldDoNothingIfNothingSelected(): void {
+        test("Clicking on canvas should do nothing when nothing selected selected", async () => {
+            const canvas = this.makeCanvasMock({});
+            act(() => this.root?.render(canvas.render()));
+            canvas.clickCanvas(0, 0);
+            canvas.expectNothingHappened();
         });
     }
 }

@@ -8,12 +8,13 @@ import ConnectionModeCanvas from "../../../../main/ts/components/Canvas/ConnectM
 import VariableModeCanvas from "../../../../main/ts/components/Canvas/DynamicVariableModeCanvas";
 import SumVariableModeCanvas from "../../../../main/ts/components/Canvas/SumVariableModeCanvas";
 import ParameterModeCanvas from "../../../../main/ts/components/Canvas/ParamModeCanvas";
-import FirebaseDataModel from "../../../../main/ts/data/FirebaseDataModel";
 import CanvasUtils from "./CanvasUtils";
 import CloudModeCanvas from "../../../../main/ts/components/Canvas/CloudModeCanvas";
 import EditModeCanvas from "../../../../main/ts/components/Canvas/EditModeCanvas";
 import DeleteModeCanvas from "../../../../main/ts/components/Canvas/DeleteModeCanvas";
 import MockFirebaseDataModel from "../../data/MockFirebaseDataModel";
+import { act } from "react-dom/test-utils";
+import ComponentUiData from "../../../../main/ts/components/ScreenObjects/ComponentUiData";
 
 
 export const DEFAULT_ID = "0";
@@ -21,6 +22,12 @@ export const DEFAULT_ID = "0";
 export default abstract class CanvasWithMocks {
 
     public readonly props: CanvasProps;
+
+    public readonly editComponentSpy: jest.Mock<void> | undefined;
+    public readonly deleteComponentSpy: jest.Mock<void> | undefined;
+    public readonly addComponentSpy: jest.Mock<void> | undefined;
+    public readonly setSelectedSpy: jest.Mock<void> | undefined;
+
     public readonly makeStockSpy: jest.Mock<ReactElement> | undefined;
     public readonly makeFlowSpy: jest.Mock<ReactElement> | undefined;
     public readonly makeConnSpy: jest.Mock<ReactElement> | undefined;
@@ -28,21 +35,17 @@ export default abstract class CanvasWithMocks {
     public readonly makeDynVarSpy: jest.Mock<ReactElement> | undefined;
     public readonly makeParamSpy: jest.Mock<ReactElement> | undefined;
     public readonly makeCloudSpy: jest.Mock<ReactElement> | undefined;
-    public getSpies(): object {
-        return {
-            "makeStock": this.makeStockSpy,
-            "makeFlow": this.makeFlowSpy,
-            "makeConn": this.makeConnSpy,
-            "makeSumVar": this.makeSumVarSpy,
-            "makeDynVar": this.makeDynVarSpy,
-            "makeParam": this.makeParamSpy,
-            "makeCloud": this.makeCloudSpy
-        };
-    }
+
+    public readonly registerComponentClickedSpy: jest.Mock<void> | undefined;
+    public readonly registerCanvasClickedSpy: jest.Mock<void> | undefined;
 
     public abstract render(): ReactElement;
 
     public constructor(props: Partial<CanvasProps>) {
+        this.editComponentSpy = jest.fn();
+        this.deleteComponentSpy = jest.fn();
+        this.addComponentSpy = jest.fn();
+        this.setSelectedSpy = jest.fn();
         this.makeStockSpy = jest.fn();
         this.makeFlowSpy = jest.fn();
         this.makeConnSpy = jest.fn();
@@ -50,16 +53,18 @@ export default abstract class CanvasWithMocks {
         this.makeDynVarSpy = jest.fn();
         this.makeParamSpy = jest.fn();
         this.makeCloudSpy = jest.fn();
+        this.registerComponentClickedSpy = jest.fn();
+        this.registerCanvasClickedSpy = jest.fn();
 
         const DEFAULT_PROPS: CanvasProps = {
             firebaseDataModel: new MockFirebaseDataModel(),
             selectedComponentId: null,
             sessionId: DEFAULT_ID,
             children: [],
-            editComponent: CanvasUtils.NO_OP,
-            deleteComponent: CanvasUtils.NO_OP,
-            addComponent: CanvasUtils.NO_OP,
-            setSelected: CanvasUtils.NO_OP,
+            editComponent: this.editComponentSpy,
+            deleteComponent: this.deleteComponentSpy,
+            addComponent: this.addComponentSpy,
+            setSelected: this.setSelectedSpy,
             showConnectionHandles: false,
             makeStock: this.makeStockSpy,
             makeFlow: this.makeFlowSpy,
@@ -67,9 +72,32 @@ export default abstract class CanvasWithMocks {
             makeSumVar: this.makeSumVarSpy,
             makeParam: this.makeParamSpy,
             makeCloud: this.makeCloudSpy,
-            makeDynVar: this.makeDynVarSpy
+            makeDynVar: this.makeDynVarSpy,
+            registerCanvasClickedHandler: this.registerCanvasClickedSpy,
+            registerComponentClickedHandler: this.registerComponentClickedSpy
         };
         this.props = { ...DEFAULT_PROPS, ...props };
+    }
+
+    public getComponentCreatorFunctions(): object {
+        return {
+            makeStock: this.makeStockSpy,
+            makeFlow: this.makeFlowSpy,
+            makeConn: this.makeConnSpy,
+            makeSumVar: this.makeSumVarSpy,
+            makeDynVar: this.makeDynVarSpy,
+            makeParam: this.makeParamSpy,
+            makeCloud: this.makeCloudSpy
+        };
+    }
+
+    public getActionFunctions(): object {
+        return {
+            editComponent: this.editComponentSpy,
+            addComponent: this.addComponentSpy,
+            deleteComponent: this.deleteComponentSpy,
+            setSelected: this.setSelectedSpy
+        };
     }
 
     public expectNoComponentsRendered(): void {
@@ -115,6 +143,26 @@ export default abstract class CanvasWithMocks {
     public expectNoCloudsRendered(): void {
         if (this.makeCloudSpy === undefined) throw new Error();
         expect(this.makeCloudSpy.mock.calls.length).toBe(0);
+    }
+
+    public clickCanvas(x: number, y: number): void {
+        if (!this.registerCanvasClickedSpy) throw new Error();
+        expect(this.registerCanvasClickedSpy).toHaveBeenCalled();
+        const canvasClickedCallback = this.registerCanvasClickedSpy.mock.lastCall[0];
+        act(() => canvasClickedCallback(x, y));
+    }
+
+    public clickComponent(component: ComponentUiData): void {
+        if (!this.registerComponentClickedSpy) throw new Error();
+        expect(this.registerComponentClickedSpy).toHaveBeenCalled();
+        const componentClickedCallback = this.registerComponentClickedSpy.mock.lastCall[0];
+        act(() => componentClickedCallback(component));
+    }
+
+    public expectNothingHappened(): void {
+        Object.values(this.getActionFunctions()).forEach(f =>
+            expect(f).not.toHaveBeenCalled()
+        );
     }
 }
 
