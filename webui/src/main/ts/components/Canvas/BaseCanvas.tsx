@@ -47,12 +47,19 @@ export interface Props {
     registerCanvasRightClickedHandler?: (callback: ((x: number, y: number) => void)) => void;
 }
 
+export interface State {
+
+}
+
 export class ComponentNotFoundError extends Error { }
 
 
-export default abstract class BaseCanvas extends React.Component<Props> {
+export abstract class ExtendableBaseCanvas
+    <CanvasProps extends Props, CanvasState extends State>
+    extends React.Component<CanvasProps, CanvasState>
+{
 
-    protected constructor(props: Props) {
+    protected constructor(props: CanvasProps) {
         super(props);
     }
 
@@ -67,6 +74,16 @@ export default abstract class BaseCanvas extends React.Component<Props> {
     protected onComponentClicked(comp: ComponentUiData): void {
         this.props.setSelected(comp.getId());
     }
+
+    protected renderModeSpecificLayer(): ReactElement {
+        return (<div />);
+    }
+
+    protected onCanvasMouseDown(x: number, y: number): void { }
+
+    protected onCanvasMouseUp(x: number, y: number): void { }
+
+    protected onCanvasMouseMoved(x: number, y: number): void { }
 
     protected getFlows(): FlowUiData[] {
         return this.props.children.filter(
@@ -266,21 +283,6 @@ export default abstract class BaseCanvas extends React.Component<Props> {
     }
 
     public render(): ReactElement {
-        const onClick = (event: any) => {
-            const target = this.props.children.find(c => c.getId() === event.target.attrs.name);
-            const pointerPos = event.currentTarget.getPointerPosition();
-
-            const isRightClick = event.evt.button === RIGHT_CLICK;
-            if (target) {
-                this.onComponentClicked(target)
-            }
-            else if (isRightClick) {
-                this.onCanvasRightClicked(pointerPos.x, pointerPos.y);
-            }
-            else {
-                this.onCanvasLeftClicked(pointerPos.x, pointerPos.y);
-            }
-        }
         this.registerArtificialClickListeners(); // for testing
 
         return (
@@ -288,7 +290,10 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                 width={window.innerWidth}
                 height={15000}
                 data-testid={"CanvasStage"}
-                onClick={onClick}
+                onClick={e => this.onClick(e)}
+                onMouseDown={e => this.onMouseDown(e)}
+                onMouseUp={e => this.onMouseUp(e)}
+                onMouseMove={e => this.onMouseMove(e)}
                 onContextMenu={e => {
                     e.evt.preventDefault();
                 }}
@@ -302,9 +307,45 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                     {this.renderDynamicVariables()}
                     {this.renderConnections()}
                     {this.renderClouds()}
+                    {this.renderModeSpecificLayer()}
                 </Layer>
             </Stage>
         );
+    }
+
+    private onClick(event: any): void {
+        const target = this.props.children.find(c => c.getId() === event.target.attrs.name);
+        const pointerPos = event.currentTarget.getPointerPosition();
+
+        const isRightClick = event.evt.button === RIGHT_CLICK;
+        if (target) {
+            this.onComponentClicked(target)
+        }
+        else if (isRightClick) {
+            this.onCanvasRightClicked(pointerPos.x, pointerPos.y);
+        }
+        else {
+            this.onCanvasLeftClicked(pointerPos.x, pointerPos.y);
+        }
+    }
+
+    private onMouseDown(event: any): void {
+        const target = this.props.children.find(c => c.getId() === event.target.attrs.name);
+        const pointerPos = event.currentTarget.getPointerPosition();
+
+        if (!target) {
+            this.onCanvasMouseDown(pointerPos.x, pointerPos.y);
+        }
+    }
+
+    private onMouseUp(event: any): void {
+        const pointerPos = event.currentTarget.getPointerPosition();
+        this.onCanvasMouseUp(pointerPos.x, pointerPos.y);
+    }
+
+    private onMouseMove(event: any): void {
+        const pointerPos = event.currentTarget.getPointerPosition();
+        this.onCanvasMouseMoved(pointerPos.x, pointerPos.y);
     }
 
     private registerArtificialClickListeners(): void {
@@ -316,4 +357,6 @@ export default abstract class BaseCanvas extends React.Component<Props> {
             this.props.registerComponentClickedHandler(c => this.onComponentClicked(c));
     }
 }
+
+export default abstract class BaseCanvas extends ExtendableBaseCanvas<Props, State> { }
 
