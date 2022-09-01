@@ -1,6 +1,8 @@
 import express, { Express, Response } from "express";
 import fs from "fs";
 import cors from "cors";
+import https from "https";
+import http from "http";
 
 import applicationConfig from "./config/applicationConfig";
 
@@ -28,9 +30,18 @@ class Server {
         app.use(cors());
         this.setupRoutes(app);
         try {
-            app.listen(
-                applicationConfig.port,
-                () => console.log(`Listening on port ${applicationConfig.port}`)
+            const httpsServer = https.createServer(
+                {
+	            key: fs.readFileSync('/etc/letsencrypt/live/modelcollab-backend.com/privkey.pem'),
+	            cert: fs.readFileSync('/etc/letsencrypt/live/modelcollab-backend.com/cert.pem'),
+	            ca: fs.readFileSync('/etc/letsencrypt/live/modelcollab-backend.com/chain.pem')
+	        },
+	        app
+            );
+	    httpsServer.on('error', console.error);
+	    httpsServer.listen(
+                443,
+                () => console.log(`Listening on port 443`)
             );
         }
         catch (e) {

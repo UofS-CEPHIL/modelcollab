@@ -17,31 +17,27 @@ export default class ComputeModelTask {
 
     public async start(onResultsReady?: (path: string) => void): Promise<void> {
         const date: string = new Date().toISOString().slice(0, 16);
-        const filename: string = `/tmp/ModelResults_${date}`;
+        const filename: string = `./ModelResults_${date}.png`;
+        var juliaCode: string;
         try {
-            const juliaCode: string = new JuliaGenerator(JuliaComponentDataBuilder.makeJuliaComponents(this.components)).generateJulia(filename);
-            console.log(juliaCode.split(';'));
-            let proc = spawn(
-                "julia",
-                {
-                    stdio: ["pipe", "inherit", "inherit"],
-                    cwd: "/home/mc"
-                }
-            );
-            proc.stdin.write('ENV["GKSwstype"] = "nul"\n');
-            proc.stdin.write(juliaCode);
-            proc.stdin.write("\n");
-            proc.stdin.write("exit()\n");
-            proc.stdin.end();
-            if (onResultsReady)
-                proc.on("exit", (code) => {
-                    console.log("Process exited with code " + code);
-                    onResultsReady(filename + ".png");
-                });
+            juliaCode = new JuliaGenerator(JuliaComponentDataBuilder.makeJuliaComponents(this.components)).generateJulia(filename);
         }
         catch (e) {
             console.error(e);
-            if (onResultsReady) onResultsReady(filename);
-        }
+            juliaCode = "";
+        } 
+        console.log(juliaCode.split(';'));
+        let proc = spawn(
+            "/home/ericr789/julia-1.7.3/bin/julia",
+            {
+                stdio: ["pipe", "inherit", "inherit"],
+            }
+        );
+	proc.stdin.write('ENV["GKSwstype"] = "nul"; ');
+        proc.stdin.write(juliaCode);
+        proc.stdin.write("\n");
+        proc.stdin.write("exit()\n");
+        proc.stdin.end();
+        if (onResultsReady) proc.on("exit", () => onResultsReady(filename));
     }
 }

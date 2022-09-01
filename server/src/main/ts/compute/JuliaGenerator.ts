@@ -13,7 +13,7 @@ interface Components {
     sumVariables: JuliaSumVariableComponent[];
 }
 
-const IMPORT_LINE = "using AlgebraicStockFlow; " +
+const IMPORT_LINE = "using StockFlow; " +
     "using Catlab; using Catlab.CategoricalAlgebra; " +
     "using LabelledArrays; using OrdinaryDiffEq; using Plots; using Catlab.Graphics; " +
     "using Catlab.Programs; using Catlab.Theories; using Catlab.WiringDiagrams";

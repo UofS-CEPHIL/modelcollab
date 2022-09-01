@@ -26,7 +26,8 @@ export default abstract class JuliaComponentData {
     public static replaceSymbols(statement: string, replacementFunction: (s: string) => string) {
         const operators = /[\+-\/\*\(\) ]/g;
         const values = statement.split(operators);
-        let out = statement;
+        let out: string = statement;
+	if (!out) throw new Error("replaceSymbols got statement: " + statement);
         for (const value of values) {
             if (!(value === "" || this.isSimpleNumber(value)))
                 out = out.replaceAll(
