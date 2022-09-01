@@ -1,24 +1,25 @@
 import React, { ReactElement } from 'react';
-import Axios from 'axios';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import { UiMode, modeFromString } from '../../UiMode';
-import applicationConfig from '../../config/applicationConfig';
+import RestClient from '../../rest/RestClient';
 import { CircularProgress } from '@mui/material';
+import Axios from 'axios';
+
+import applicationConfig from "../../config/applicationConfig";
 
 export interface Props {
     mode: UiMode,
     setMode: (_: UiMode) => void
     sessionId: string;
     returnToSessionSelect: () => void;
+    restClient: RestClient;
 }
 
 export interface State {
     waitingForResults: boolean;
 }
-
-export const TOOLBAR_ID: string = 'toolbar-box';
 
 export default class Toolbar extends React.Component<Props, State> {
 
@@ -40,22 +41,15 @@ export default class Toolbar extends React.Component<Props, State> {
             }
         };
         const getCode = () => {
-            const xhr = new XMLHttpRequest();
-            xhr.open("GET", `${applicationConfig.serverAddress}/getCode/${this.props.sessionId}`);
-            xhr.setRequestHeader("Content-Type", "application/x-www-urlencoded");
-            xhr.responseType = "blob";
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    let a = document.createElement('a');
-                    a.href = window.URL.createObjectURL(xhr.response);
-                    a.download = "Model.jl";
-                    a.style.display = 'none';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }
-            }
-            xhr.send();
+            this.props.restClient.getCode(this.props.sessionId, (code: string) => {
+                let a = document.createElement('a');
+                a.href = window.URL.createObjectURL(new Blob([code]));
+                a.download = "Model.jl";
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
         }
 
         const computeModel = () => {
@@ -136,24 +130,88 @@ export default class Toolbar extends React.Component<Props, State> {
                 return ("Compute Model");
             }
         }
-
         return (
-            <Box sx={{ width: '100%' }} id={TOOLBAR_ID} data-testid={TOOLBAR_ID} >
+            <Box sx={{ width: '100%' }} >
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                    <Tabs value={this.props.mode} aria-label="basic tabs example" data-testid='toolbar-tabs' variant="scrollable">
-                        <Tab label="Move" value={UiMode.MOVE} onClick={handleChange} />
-                        <Tab label="Parameter" value={UiMode.PARAM} onClick={handleChange} />
-                        <Tab label="Sum Variable" value={UiMode.SUM_VARIABLE} onClick={handleChange} />
-                        <Tab label="Dynamic Variable" value={UiMode.DYN_VARIABLE} onClick={handleChange} />
-                        <Tab label="Cloud" value={UiMode.CLOUD} onClick={handleChange} />
-                        <Tab label="Stock" value={UiMode.STOCK} onClick={handleChange} />
-                        <Tab label="Flow" value={UiMode.FLOW} onClick={handleChange} />
-                        <Tab label="Connect" value={UiMode.CONNECT} onClick={handleChange} />
-                        <Tab label="Edit" value={UiMode.EDIT} onClick={handleChange} />
-                        <Tab label="Delete" value={UiMode.DELETE} onClick={handleChange} />
-                        <Tab label="Get Code" value={"GetCode"} onClick={getCode} />
-                        <Tab icon={getComputeModelButtonLabel()} value={"ComputeModel"} onClick={computeModel} />
-                        <Tab label="Go Back" value={"GoBack"} onClick={_ => this.props.returnToSessionSelect()} />
+                    <Tabs value={this.props.mode} data-testid='toolbar-tabs' variant="scrollable">
+                        <Tab
+                            label="Move"
+                            value={UiMode.MOVE}
+                            onClick={handleChange}
+                            data-testid={UiMode.MOVE}
+                        />
+                        <Tab
+                            label="Parameter"
+                            value={UiMode.PARAM}
+                            onClick={handleChange}
+                            data-testid={UiMode.PARAM}
+                        />
+                        <Tab
+                            label="Sum Variable"
+                            value={UiMode.SUM_VARIABLE}
+                            onClick={handleChange}
+                            data-testid={UiMode.SUM_VARIABLE}
+                        />
+                        <Tab
+                            label="Dynamic Variable"
+                            value={UiMode.DYN_VARIABLE}
+                            onClick={handleChange}
+                            data-testid={UiMode.DYN_VARIABLE}
+                        />
+                        <Tab
+                            label="Cloud"
+                            value={UiMode.CLOUD}
+                            onClick={handleChange}
+                            data-testid={UiMode.CLOUD}
+                        />
+                        <Tab
+                            label="Stock"
+                            value={UiMode.STOCK}
+                            onClick={handleChange}
+                            data-testid={UiMode.STOCK}
+                        />
+                        <Tab
+                            label="Flow"
+                            value={UiMode.FLOW}
+                            onClick={handleChange}
+                            data-testid={UiMode.FLOW}
+                        />
+                        <Tab
+                            label="Connect"
+                            value={UiMode.CONNECT}
+                            onClick={handleChange}
+                            data-testid={UiMode.CONNECT}
+                        />
+                        <Tab
+                            label="Edit"
+                            value={UiMode.EDIT}
+                            onClick={handleChange}
+                            data-testid={UiMode.EDIT}
+                        />
+                        <Tab
+                            label="Delete"
+                            value={UiMode.DELETE}
+                            onClick={handleChange}
+                            data-testid={UiMode.DELETE}
+                        />
+                        <Tab
+                            label="Get Code"
+                            value={"GetCode"}
+                            onClick={getCode}
+                            data-testid={"GetCode"}
+                        />
+                        <Tab
+                            icon={getComputeModelButtonLabel()}
+                            value={"ComputeModel"}
+                            onClick={computeModel}
+                            data-testid={"ComputeModel"}
+                        />
+                        <Tab
+                            label="Go Back"
+                            value={"GoBack"}
+                            onClick={_ => this.props.returnToSessionSelect()}
+                            data-testid={"GoBack"}
+                        />
                     </Tabs>
                 </Box>
             </Box >

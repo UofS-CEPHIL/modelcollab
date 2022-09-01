@@ -2,7 +2,9 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import { Point } from "../DrawingUtils";
 
 import { RectangularComponent } from "./ComponentUiData";
-import { WIDTH_PX as STOCK_WIDTH, HEIGHT_PX as STOCK_HEIGHT } from "./Stock";
+
+export const WIDTH_PX = 100;
+export const HEIGHT_PX = 70;
 
 export default class StockUiData extends RectangularComponent<schema.StockComponentData, schema.StockFirebaseComponent> {
 
@@ -15,11 +17,11 @@ export default class StockUiData extends RectangularComponent<schema.StockCompon
     }
 
     public getWidthPx(): number {
-        return STOCK_WIDTH;
+        return WIDTH_PX;
     }
 
     public getHeightPx(): number {
-        return STOCK_HEIGHT;
+        return HEIGHT_PX;
     }
 
     public isPointable(): boolean {

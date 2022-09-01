@@ -1,10 +1,8 @@
 import React, { ReactElement } from 'react';
 import { Rect, Text, Group } from "react-konva";
 
-import StockUiData from './StockUiData';
+import StockUiData, { WIDTH_PX, HEIGHT_PX } from './StockUiData';
 
-export const WIDTH_PX = 100;
-export const HEIGHT_PX = 70;
 export const DEFAULT_COLOR = "black";
 export const SELECTED_COLOR = "red";
 
@@ -34,6 +32,7 @@ export default class Stock extends React.Component<Props> {
                 x={this.props.stock.getData().x}
                 y={this.props.stock.getData().y}
                 name={this.props.stock.getId()}
+                data-testid={"stock-" + this.props.stock.getId()}
             >
                 <Rect
                     fillEnabled={true}

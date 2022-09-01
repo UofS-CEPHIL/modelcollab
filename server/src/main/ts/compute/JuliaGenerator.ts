@@ -18,6 +18,8 @@ const IMPORT_LINE = "using StockFlow; " +
     "using LabelledArrays; using OrdinaryDiffEq; using Plots; using Catlab.Graphics; " +
     "using Catlab.Programs; using Catlab.Theories; using Catlab.WiringDiagrams";
 
+export class InvalidModelError extends Error { }
+
 export default class JuliaGenerator {
 
     private readonly modelName = "modelName";
@@ -60,8 +62,18 @@ export default class JuliaGenerator {
             return { stocks, flows, parameters, sumVariables, variables };
         }
         this.components = splitComponents(components);
-        if (!this.components.parameters.find(p => p.name === "startTime" || !this.components.parameters.find(p => p.name === "stopTime"))) {
-            throw new Error("startTime and stopTime parameters not found.");
+        this.validateComponents();
+    }
+
+    private validateComponents(): void {
+        if (!Object.values(this.components).find(l => l.length > 0)) {
+            throw new InvalidModelError("No model components found");
+        }
+        else if (!this.components.parameters.find(p => p.name === "startTime" || !this.components.parameters.find(p => p.name === "stopTime"))) {
+            throw new InvalidModelError("Unable to find startTime or stopTime parameter");
+        }
+        else if (this.components.stocks.length === 0) {
+            throw new InvalidModelError("Model must contain one or more stocks");
         }
     }
 
@@ -91,13 +103,15 @@ export default class JuliaGenerator {
             flow => `:${flow.name} => :${flow.associatedVarName}`
         ).join(', ');
 
-        const makeVarLines = () => this.components.variables.map(
+        const flowVars: JuliaVariableComponent[] = this.components.flows.map(f => f.getAssociatedVariable());
+        const allVars: JuliaVariableComponent[] = this.components.variables.concat(flowVars);
+        const makeVarLines = () => allVars.map(
             v => `:${v.name} => (${JuliaComponentData.STOCKS_VARIABLES_VAR_NAME}, ${JuliaComponentData.SUM_VARS_VAR_NAME}, ${JuliaComponentData.PARAMS_VAR_NAME}, ${JuliaComponentData.TIME_VAR_NAME}) -> ${v.getTranslatedValue()}`
         ).join(', ');
 
         const makeSumVarLines = () => this.components.sumVariables.map(
             sv => {
-                const contributingVarNames = this.components.variables
+                const contributingVarNames = allVars
                     .filter(v => v.dependedSumVarNames.includes(sv.name))
                     .map(v => v.name);
                 return `:${sv.name} => ${JuliaComponentData.makeVarList(contributingVarNames, true)}`;

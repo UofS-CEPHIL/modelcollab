@@ -1,4 +1,4 @@
-import { ref, set, onValue, onChildAdded, remove, onChildRemoved, DataSnapshot, push } from "firebase/database";
+import { ref, set, onValue, remove, DataSnapshot, push } from "firebase/database";
 import FirebaseManager from "./FirebaseManager";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
@@ -18,11 +18,17 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
     private triggerCallback(
         snapshot: DataSnapshot,
-        callback: (data: schema.FirebaseDataComponent<any>) => void
+        callback: (data: schema.FirebaseDataComponent<any>[]) => void
     ) {
-        if (!snapshot || !snapshot.key || !snapshot.val()) return;
-        const component = schema.createFirebaseDataComponent(snapshot.key, snapshot.val());
-        callback(component);
+        if (snapshot.exists() && snapshot.key) {
+            const components: schema.FirebaseDataComponent<any>[] =
+                Object
+                    .entries(snapshot.val())
+                    .map(
+                        ([k, v]) => schema.createFirebaseDataComponent(k, v)
+                    );
+            callback(components);
+        }
     }
 
     updateComponent(sessionId: string, data: schema.FirebaseDataComponent<any>) {
@@ -38,27 +44,13 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    subscribeToComponent(
-        sessionId: string,
-        componentId: string,
-        callback: (newData: schema.FirebaseDataComponent<any>) => void
-    ) {
-        onValue(
-            ref(
-                this.firebaseManager.getDb(),
-                this.makeComponentPath(sessionId, componentId)
-            ),
-            (x) => this.triggerCallback(x, callback)
-        );
-    }
-
-    subscribeToSession(sessionId: string, callback: (snapshot: DataSnapshot) => void) {
+    subscribeToSession(sessionId: string, callback: (snapshot: schema.FirebaseDataComponent<any>[]) => void) {
         onValue(
             ref(
                 this.firebaseManager.getDb(),
                 `components/${sessionId}`
             ),
-            callback
+            s => this.triggerCallback(s, callback)
         );
     }
 
@@ -84,28 +76,6 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                 this.firebaseManager.getDb(),
                 componentPath
             )
-        );
-    }
-
-    registerComponentCreatedListener(sessionId: string, callback: (data: schema.FirebaseDataComponent<any>) => void) {
-        onChildAdded(
-            ref(
-                this.firebaseManager.getDb(),
-                `components/${sessionId}/`
-            ),
-            (x) => this.triggerCallback(x, callback)
-        );
-    }
-
-    registerComponentRemovedListener(sessionId: string, callBack: (componentId: string) => void) {
-        onChildRemoved(
-            ref(
-                this.firebaseManager.getDb(),
-                `components/${sessionId}/`
-            ),
-            (snapshot: DataSnapshot) => {
-                if (snapshot.key) callBack(snapshot.key);
-            }
         );
     }
 }

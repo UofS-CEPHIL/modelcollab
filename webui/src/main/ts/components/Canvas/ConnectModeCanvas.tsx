@@ -2,14 +2,10 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../IdGenerator";
 import ComponentUiData from "../ScreenObjects/ComponentUiData";
 import ConnectionUiData from "../ScreenObjects/ConnectionUiData";
-import BaseCanvas, { Props } from "./BaseCanvas";
+import BaseCanvas from "./BaseCanvas";
 
 
 export default class ConnectModeCanvas extends BaseCanvas {
-
-    public constructor(props: Props) {
-        super(props, true);
-    }
 
     protected onComponentClicked(component: ComponentUiData): void {
         if (component.isPointable()) {

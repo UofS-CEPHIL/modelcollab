@@ -1,11 +1,12 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Point } from "../DrawingUtils";
-import Cloud from "./Cloud";
 
 import { RectangularComponent } from "./ComponentUiData";
 
 
 export default class CloudUiData extends RectangularComponent<schema.CloudComponentData, schema.CloudFirebaseComponent> {
+
+    public static readonly RADIUS = 25;
 
     public getCentrePoint(): Point {
         // 'star' konva objects are located by their centre point.
@@ -14,8 +15,8 @@ export default class CloudUiData extends RectangularComponent<schema.CloudCompon
 
     public getTopLeft(): Point {
         return {
-            x: this.getData().x - Cloud.RADIUS / 2,
-            y: this.getData().y - Cloud.RADIUS / 2
+            x: this.getData().x - CloudUiData.RADIUS / 2,
+            y: this.getData().y - CloudUiData.RADIUS / 2
         };
     }
 
@@ -24,11 +25,11 @@ export default class CloudUiData extends RectangularComponent<schema.CloudCompon
     }
 
     public getWidthPx(): number {
-        return Cloud.RADIUS;
+        return CloudUiData.RADIUS;
     }
 
     public getHeightPx(): number {
-        return Cloud.RADIUS;
+        return CloudUiData.RADIUS;
     }
 
     public withData(d: schema.CloudComponentData): CloudUiData {

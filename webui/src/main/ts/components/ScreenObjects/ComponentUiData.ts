@@ -1,5 +1,4 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import { ComponentNotFoundError } from "../Canvas/BaseCanvas";
 import { getOppositeSide, Point, Side } from "../DrawingUtils";
 import TextObject from "./TextObject";
 
@@ -97,12 +96,12 @@ export abstract class PointerComponent<
 
     public getSource(components: ReadonlyArray<ComponentUiData>): SourceComponent {
         const source = (components.find(c => c.getId() === this.getData().from) as unknown) as SourceComponent;
-        if (!source) throw new ComponentNotFoundError(`Connection ${this.getId()} unable to find id ${this.getData().from} in list ${components.map(c => c.getId())}`);
+        if (!source) throw new Error(`Connection ${this.getId()} unable to find id ${this.getData().from} in list ${components.map(c => c.getId())}`);
         return source;
     }
     public getTarget(components: ReadonlyArray<ComponentUiData>): TargetComponent {
         const target = (components.find(c => c.getId() === this.getData().to) as unknown) as TargetComponent;
-        if (!target) throw new ComponentNotFoundError(`Unable to find id ${this.getData().to} in list ${Object.values(components)}`);
+        if (!target) throw new Error(`Unable to find id ${this.getData().to} in list ${Object.values(components)}`);
         return target;
     }
 
