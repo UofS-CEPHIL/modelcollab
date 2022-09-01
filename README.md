@@ -10,15 +10,25 @@ ModelCollab is written by Eric Redekopp, Xiaoyan Li, and Long Pham of the
 University of Saskatchewan CEPHIL lab, with support from Dr. Nathaniel
 Osgood.
 
+## Design
+
+Modelcollab currently consists of 3 components:
+- The React frontend, found in the 'webui' directory
+- The server which invokes the Julia code, found in the 'server' directory
+- The Firebase database, for which we use the API. Classes describing the database structure are found in the 'database' directory. 
+
 ## Build
-
-This project was bootstrapped with CreateReactApp and has all of its
-default commands, including:
-
-- npm start
-  - start the react server on port 3000
-- npm test
-  - run the jest unit test suite
-- npm run test:watch
-  - run the unit tests and re-run tests when source or test
-    files are edited.
+- webui
+  - `npm start` to run a development version of the frontend on localhost:3000
+  - `npm run build` to compile an optimized version of the frontend
+  - `num test` to run the Jest unit tests
+- server
+  - `npm run build` to build
+  - `npm run start` to start the https server
+  - `npm test` to run the Jest unit tests
+- database
+  - `npm run build` to build
+  - No code to run, and no unit tests. 
+  - Must be built before running webui or server
+  
+You must also create a Firebase project and insert its config information into src/main/ts/config/FirebaseConfig.ts under the server and webui directories.
