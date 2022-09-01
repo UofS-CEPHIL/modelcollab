@@ -15,7 +15,7 @@ export interface Props {
 export default class Flow extends React.Component<Props> {
 
     render(): ReactElement {
-        const arrowPoints = this.props.flowData.getArrowPoints(this.props.components);
+        const arrowPoints = this.props.flowData.getAngleArrowPoints(this.props.components);
         const textLocation = this.props.flowData.computeLabelPosition(arrowPoints);
         return (
             <Group>
@@ -34,8 +34,8 @@ export default class Flow extends React.Component<Props> {
         const INNER_STROKE_WIDTH = 4;
         const OUTER_STROKE_WIDTH = 3;
         const STROKE_SIZE = INNER_STROKE_WIDTH + (2 * OUTER_STROKE_WIDTH);
-        const [x1, y1, x2, y2] = points;
-        const lineAngleRads = Math.atan2(y2 - y1, x2 - x1);
+        const [x1, y1, x2,y2 , x3, y3] = points;
+        const lineAngleRads = Math.atan2(y3 - y2, x3 - x2);
         const dx = Math.cos(lineAngleRads);
         const dy = Math.sin(lineAngleRads);
         // Black arrow with a white line to give it the 'double lined' look
@@ -46,8 +46,10 @@ export default class Flow extends React.Component<Props> {
                     points={[
                         x1,
                         y1,
-                        x2 - (dx * STROKE_SIZE),
-                        y2 - (dy * STROKE_SIZE)
+                        x2,
+                        y2,
+                        x3 - (dx * STROKE_SIZE),
+                        y3 - (dy * STROKE_SIZE)
                     ]}
                     stroke={this.props.color}
                     strokeWidth={STROKE_SIZE}
@@ -59,8 +61,10 @@ export default class Flow extends React.Component<Props> {
                     points={[
                         x1,
                         y1,
-                        x2 - (dx * (ARROW_HEAD_SIZE_PX + STROKE_SIZE + INNER_STROKE_WIDTH)),
-                        y2 - (dy * (ARROW_HEAD_SIZE_PX + STROKE_SIZE + INNER_STROKE_WIDTH))
+                        x2,
+                        y2,
+                        x3 - (dx * (ARROW_HEAD_SIZE_PX + STROKE_SIZE + INNER_STROKE_WIDTH)),
+                        y3 - (dy * (ARROW_HEAD_SIZE_PX + STROKE_SIZE + INNER_STROKE_WIDTH))
                     ]}
                     stroke={"white"}
                     strokeWidth={INNER_STROKE_WIDTH}

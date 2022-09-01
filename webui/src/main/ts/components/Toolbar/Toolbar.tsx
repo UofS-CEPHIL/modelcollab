@@ -2,12 +2,14 @@ import React, { ReactElement } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import { UiMode, modeFromString } from '../../UiMode';
-import RestClient from '../../rest/RestClient';
-import { CircularProgress } from '@mui/material';
+import { CircularProgress, ListItemIcon, Menu, MenuItem } from '@mui/material';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Axios from 'axios';
 
 import applicationConfig from "../../config/applicationConfig";
+import { UiMode, modeFromString } from '../../UiMode';
+import RestClient from '../../rest/RestClient';
+
 
 export interface Props {
     mode: UiMode,
@@ -19,13 +21,17 @@ export interface Props {
 
 export interface State {
     waitingForResults: boolean;
+    anchorEl: null | HTMLElement;
 }
 
 export default class Toolbar extends React.Component<Props, State> {
 
     public constructor(props: Props) {
         super(props);
-        this.state = { waitingForResults: false };
+        this.state = {
+            waitingForResults: false,
+            anchorEl: null
+        };
     }
 
     render(): ReactElement {
@@ -122,13 +128,25 @@ export default class Toolbar extends React.Component<Props, State> {
                 );
             }
         }
-        const getComputeModelButtonLabel = () => {
+        const getButtonLabel = (label: string) => {
             if (this.state.waitingForResults) {
-                return (<CircularProgress />);
+                return (
+                    <ListItemIcon>
+                        <CircularProgress />
+                    </ListItemIcon>);
             }
             else {
-                return ("Compute Model");
+                return (label);
             }
+        }
+
+        const open = Boolean(this.state.anchorEl);
+
+        const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+            this.setState({ ...this.state, anchorEl: event.currentTarget });
+        }
+        const handleClose = () => {
+            this.setState({ ...this.state, anchorEl: null });
         }
         return (
             <Box sx={{ width: '100%' }} >
@@ -201,10 +219,12 @@ export default class Toolbar extends React.Component<Props, State> {
                             data-testid={"GetCode"}
                         />
                         <Tab
-                            icon={getComputeModelButtonLabel()}
-                            value={"ComputeModel"}
-                            onClick={computeModel}
-                            data-testid={"ComputeModel"}
+                            label="Run"
+                            id="Run-tab"
+                            value={"Run"}
+                            icon={<ArrowDropDownIcon />}
+                            iconPosition="end"
+                            onClick={handleClick}
                         />
                         <Tab
                             label="Go Back"
@@ -213,9 +233,17 @@ export default class Toolbar extends React.Component<Props, State> {
                             data-testid={"GoBack"}
                         />
                     </Tabs>
-                </Box>
+                    <Menu
+                        id="basic-menux"
+                        anchorEl={this.state.anchorEl}
+                        open={open}
+                        onClose={handleClose}
+                        MenuListProps={{ 'aria-labelledby': 'basic-button', }}
+                    >
+                        <MenuItem onClick={computeModel}> {getButtonLabel("ODE")} </MenuItem>
+                    </Menu>
+                </Box >
             </Box >
         );
     }
-
 }

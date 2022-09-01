@@ -5,7 +5,7 @@ import IdGenerator from "../../IdGenerator";
 import SumVariableUiData from "../ScreenObjects/SumVariableUiData";
 
 export default class SumVariableModeCanvas extends BaseCanvas {
-    protected onCanvasClicked(x: number, y: number) {
+    protected onCanvasClicked(isRightClick: boolean, x: number, y: number) {
         const componentId = IdGenerator.generateUniqueId(this.props.children);
         const newVar = new SumVariableUiData(new schema.SumVariableFirebaseComponent(
             componentId,

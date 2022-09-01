@@ -10,6 +10,8 @@ export interface PointableComponent extends VisibleComponent {
 
     getArrowPoint(side: Side, components: ReadonlyArray<ComponentUiData>): Point;
     getRelativeSide(other: VisibleComponent, components: ReadonlyArray<ComponentUiData>): Side;
+    getAngleRelativeSide(other: VisibleComponent, components: ReadonlyArray<ComponentUiData>): Side;
+
 
 }
 
@@ -78,6 +80,41 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
         }
     }
 
+    public getAngleRelativeSide(other: VisibleComponent, components: ReadonlyArray<ComponentUiData>): Side {
+        const from = other.getCentrePoint(components);
+        const to = this.getCentrePoint(components);
+ 
+        const verticalLine = (x: number) => to.x - x;
+        const horizontalLine = (y: number) => to.y - y;
+
+        const isNotNearVerticalLine = () => Math.abs(to.x - from.x) > Math.abs(to.y - from.y);
+
+        const above = horizontalLine(from.y) < 0;
+        const below = horizontalLine(from.y) > 0;
+
+        const right = verticalLine(from.x) > 0;
+        const left = verticalLine(from.x) < 0;
+        
+        if (isNotNearVerticalLine()){
+            if (above)
+                return Side.BOTTOM;
+            else if (below){
+                return Side.TOP;
+            }
+        }
+        else{
+            if (right){
+                return Side.LEFT;  
+            }
+            else if (left){
+                return Side.RIGHT;
+            }
+        }
+        return this.getRelativeSide(other,components);
+    }
+
+
+    
     public toString(): string {
         return this.getDatabaseObject().toString();
     }
@@ -99,6 +136,8 @@ export abstract class PointerComponent<
         if (!source) throw new Error(`Connection ${this.getId()} unable to find id ${this.getData().from} in list ${components.map(c => c.getId())}`);
         return source;
     }
+
+
     public getTarget(components: ReadonlyArray<ComponentUiData>): TargetComponent {
         const target = (components.find(c => c.getId() === this.getData().to) as unknown) as TargetComponent;
         if (!target) throw new Error(`Unable to find id ${this.getData().to} in list ${Object.values(components)}`);
@@ -109,6 +148,29 @@ export abstract class PointerComponent<
         const fromPoint: Point = this.getSource(components).getArrowPoint(this.getSideStartingFrom(components), components);
         const toPoint: Point = this.getTarget(components).getArrowPoint(this.getSidePointingTo(components), components);
         return [fromPoint.x, fromPoint.y, toPoint.x, toPoint.y];
+    }
+
+    public getAngleArrowPoints(components: ReadonlyArray<ComponentUiData>): number[] {
+        const fromSide = this.getAngleSideStartingFrom(components);
+        const toSide = this.getSidePointingTo(components);
+
+        const fromPoint: Point = this.getSource(components).getArrowPoint(fromSide, components);
+        const toPoint: Point = this.getTarget(components).getArrowPoint(toSide, components);
+
+        let middlePoint: Point = {x: fromPoint.x, y: fromPoint.y};
+
+        if (getOppositeSide(fromSide) != toSide){ 
+            if (fromSide == Side.TOP || fromSide == Side.BOTTOM){
+                middlePoint.x = fromPoint.x;
+                middlePoint.y = toPoint.y;
+            }
+            else{
+                middlePoint.x = toPoint.x;
+                middlePoint.y = fromPoint.y;
+            }
+        }
+ 
+        return [fromPoint.x, fromPoint.y, middlePoint.x, middlePoint.y, toPoint.x, toPoint.y];
     }
 
     public getCentrePoint(components: ReadonlyArray<ComponentUiData>): Point {
@@ -126,8 +188,13 @@ export abstract class PointerComponent<
         return this.getTarget(components).getArrowPoint(this.getSidePointingTo(components), components);
     }
 
+
     public getSideStartingFrom(components: ReadonlyArray<ComponentUiData>): Side {
         return this.getSource(components).getRelativeSide(this.getTarget(components), components);
+    }
+
+    public getAngleSideStartingFrom(components: ReadonlyArray<ComponentUiData>): Side {
+        return this.getSource(components).getAngleRelativeSide(this.getTarget(components), components);
     }
 
     public getSidePointingTo(components: ReadonlyArray<ComponentUiData>): Side {

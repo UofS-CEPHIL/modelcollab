@@ -23,7 +23,7 @@ const firebaseConfig: FirebaseConfig = {
     appId: "",
     measurementId: "G-LC8NJC38E9",
 
-    useEmulators: false,
+    useEmulators: true,
     emulatorHost: "127.0.0.1",
     emulatorPort: 9000
 };

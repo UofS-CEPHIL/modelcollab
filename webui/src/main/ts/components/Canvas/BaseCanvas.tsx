@@ -20,6 +20,7 @@ import DynamicVariable from '../ScreenObjects/DynamicVariable';
 import CloudUiData from '../ScreenObjects/CloudUiData';
 import Cloud, { Props as CloudProps } from '../ScreenObjects/Cloud';
 
+const RIGHT_CLICK = 2;
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
     sessionId: string;
@@ -42,7 +43,7 @@ export interface Props {
     makeConnection?: (_: ConnectionProps) => ReactElement;
     makeCloud?: (_: CloudProps) => ReactElement;
     registerComponentClickedHandler?: (callback: ((c: ComponentUiData) => void)) => void;
-    registerCanvasClickedHandler?: (callback: ((x: number, y: number) => void)) => void;
+    registerCanvasClickedHandler?: (callback: ((isRightClick: boolean, x: number, y: number) => void)) => void;
 }
 
 export class ComponentNotFoundError extends Error { }
@@ -50,8 +51,12 @@ export class ComponentNotFoundError extends Error { }
 
 export default abstract class BaseCanvas extends React.Component<Props> {
 
-    protected onCanvasClicked(x: number, y: number): void {
-        if (this.props.selectedComponentId) this.props.setSelected(null);
+    protected constructor(props: Props) {
+        super(props);
+    }
+
+    protected onCanvasClicked(isRightClick: boolean, x: number, y: number): void {
+        if (this.props.selectedComponentId && isRightClick) this.props.setSelected(null);
     }
 
     protected onComponentClicked(comp: ComponentUiData): void {
@@ -259,17 +264,24 @@ export default abstract class BaseCanvas extends React.Component<Props> {
         const onClick = (event: any) => {
             const target = this.props.children.find(c => c.getId() === event.target.attrs.name);
             const pointerPos = event.currentTarget.getPointerPosition();
+
+            const isRightClick = event.evt.button === RIGHT_CLICK;
             target
                 ? this.onComponentClicked(target)
-                : this.onCanvasClicked(pointerPos.x, pointerPos.y);
+                : this.onCanvasClicked(isRightClick, pointerPos.x, pointerPos.y);
         }
         this.registerArtificialClickListeners();
+
         return (
             <Stage
                 width={window.innerWidth}
                 height={15000}
                 data-testid={"CanvasStage"}
                 onClick={onClick}
+                onContextMenu={e => {
+                    e.evt.preventDefault();
+                }}
+
             >
                 <Layer>
                     {this.renderFlows()}
@@ -286,7 +298,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
 
     private registerArtificialClickListeners(): void {
         if (this.props.registerCanvasClickedHandler)
-            this.props.registerCanvasClickedHandler((x, y) => this.onCanvasClicked(x, y));
+            this.props.registerCanvasClickedHandler((rightClick, x, y) => this.onCanvasClicked(rightClick, x, y));
         if (this.props.registerComponentClickedHandler)
             this.props.registerComponentClickedHandler(c => this.onComponentClicked(c));
     }

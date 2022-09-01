@@ -5,6 +5,7 @@ import { Button, Grid, TextField } from '@mui/material';
 import React, { ReactElement } from 'react';
 import { FirebaseComponentModel as schema } from "database/build/export";
 
+const ERROR_MESSAGE = "Error: unknown component type"
 export interface Props {
     initialComponent: schema.FirebaseDataComponent<any>;
     handleSave: (c: schema.FirebaseDataComponent<any>) => void;
