@@ -34,7 +34,7 @@ export default class Flow extends React.Component<Props> {
         const INNER_STROKE_WIDTH = 4;
         const OUTER_STROKE_WIDTH = 3;
         const STROKE_SIZE = INNER_STROKE_WIDTH + (2 * OUTER_STROKE_WIDTH);
-        const [x1, y1, x2,y2 , x3, y3] = points;
+        const [x1, y1, x2, y2, x3, y3] = points;
         const lineAngleRads = Math.atan2(y3 - y2, x3 - x2);
         const dx = Math.cos(lineAngleRads);
         const dy = Math.sin(lineAngleRads);

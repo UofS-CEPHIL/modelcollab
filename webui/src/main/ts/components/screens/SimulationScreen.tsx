@@ -123,6 +123,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                         setMode: setMode,
                         returnToSessionSelect: this.props.returnToSessionSelect,
                         sessionId: this.props.sessionId,
+                        downloadData: b => this.downloadData(b),
                         restClient: new RestClientImpl()
                     })
                 }
@@ -247,5 +248,15 @@ export default class SimulationScreen extends React.Component<Props, State> {
             case schema.ComponentType.CLOUD:
                 return new CloudUiData(dbComponent);
         }
+    }
+
+    private downloadData(blob: Blob): void {
+        let a = document.createElement('a');
+        a.href = window.URL.createObjectURL(blob);
+        a.download = "ModelResults.png";
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 }

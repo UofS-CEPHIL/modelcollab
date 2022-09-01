@@ -83,7 +83,7 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
     public getAngleRelativeSide(other: VisibleComponent, components: ReadonlyArray<ComponentUiData>): Side {
         const from = other.getCentrePoint(components);
         const to = this.getCentrePoint(components);
- 
+
         const verticalLine = (x: number) => to.x - x;
         const horizontalLine = (y: number) => to.y - y;
 
@@ -94,27 +94,27 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
 
         const right = verticalLine(from.x) > 0;
         const left = verticalLine(from.x) < 0;
-        
-        if (isNotNearVerticalLine()){
+
+        if (isNotNearVerticalLine()) {
             if (above)
                 return Side.BOTTOM;
-            else if (below){
+            else if (below) {
                 return Side.TOP;
             }
         }
-        else{
-            if (right){
-                return Side.LEFT;  
+        else {
+            if (right) {
+                return Side.LEFT;
             }
-            else if (left){
+            else if (left) {
                 return Side.RIGHT;
             }
         }
-        return this.getRelativeSide(other,components);
+        return this.getRelativeSide(other, components);
     }
 
 
-    
+
     public toString(): string {
         return this.getDatabaseObject().toString();
     }
@@ -147,6 +147,7 @@ export abstract class PointerComponent<
     public getArrowPoints(components: ReadonlyArray<ComponentUiData>): number[] {
         const fromPoint: Point = this.getSource(components).getArrowPoint(this.getSideStartingFrom(components), components);
         const toPoint: Point = this.getTarget(components).getArrowPoint(this.getSidePointingTo(components), components);
+        console.log('getarrowpoints returning ' + fromPoint + " " + toPoint)
         return [fromPoint.x, fromPoint.y, toPoint.x, toPoint.y];
     }
 
@@ -157,19 +158,19 @@ export abstract class PointerComponent<
         const fromPoint: Point = this.getSource(components).getArrowPoint(fromSide, components);
         const toPoint: Point = this.getTarget(components).getArrowPoint(toSide, components);
 
-        let middlePoint: Point = {x: fromPoint.x, y: fromPoint.y};
+        let middlePoint: Point = { x: fromPoint.x, y: fromPoint.y };
 
-        if (getOppositeSide(fromSide) != toSide){ 
-            if (fromSide == Side.TOP || fromSide == Side.BOTTOM){
+        if (getOppositeSide(fromSide) != toSide) {
+            if (fromSide == Side.TOP || fromSide == Side.BOTTOM) {
                 middlePoint.x = fromPoint.x;
                 middlePoint.y = toPoint.y;
             }
-            else{
+            else {
                 middlePoint.x = toPoint.x;
                 middlePoint.y = fromPoint.y;
             }
         }
- 
+
         return [fromPoint.x, fromPoint.y, middlePoint.x, middlePoint.y, toPoint.x, toPoint.y];
     }
 

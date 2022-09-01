@@ -29,7 +29,6 @@ class ConnectModeCanvasTest extends CanvasTest {
 
     protected makeSpecificTests(): void {
         describe("Mode-specific tests", () => {
-            this.describeClickCanvasDeselctsSelectedItem();
             this.describeClickingCanvasShouldDoNothingIfNothingSelected();
             this.describeClickingComponentShouldSelectItAndNotCreateAnything();
 

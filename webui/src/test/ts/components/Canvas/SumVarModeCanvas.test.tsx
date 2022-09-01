@@ -32,7 +32,7 @@ class SumVarModeCanvasTest extends CanvasTest {
                 const canvas = this.makeCanvasMock({});
                 act(() => this.root?.render(canvas.render()));
 
-                canvas.clickCanvas(x, y);
+                canvas.leftClickCanvas(x, y);
                 expect(canvas.addComponentSpy).toHaveBeenCalled();
                 const newComponent = canvas.addComponentSpy?.mock.lastCall[0] as SumVariableUiData;
                 expect(newComponent.getType()).toBe(schema.ComponentType.SUM_VARIABLE);

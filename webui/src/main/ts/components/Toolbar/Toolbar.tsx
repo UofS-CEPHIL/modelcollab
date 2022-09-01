@@ -4,7 +4,7 @@ import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import { CircularProgress, ListItemIcon, Menu, MenuItem } from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import Axios from 'axios';
+import Axios, { AxiosResponse } from 'axios';
 
 import applicationConfig from "../../config/applicationConfig";
 import { UiMode, modeFromString } from '../../UiMode';
@@ -16,12 +16,13 @@ export interface Props {
     setMode: (_: UiMode) => void
     sessionId: string;
     returnToSessionSelect: () => void;
+    downloadData: (b: Blob) => void;
     restClient: RestClient;
 }
 
 export interface State {
     waitingForResults: boolean;
-    anchorEl: null | HTMLElement;
+    anchorElement: null | HTMLElement;
 }
 
 export default class Toolbar extends React.Component<Props, State> {
@@ -30,9 +31,11 @@ export default class Toolbar extends React.Component<Props, State> {
         super(props);
         this.state = {
             waitingForResults: false,
-            anchorEl: null
+            anchorElement: null
         };
     }
+
+    public static readonly POLLING_TIME_MS = 2000;
 
     render(): ReactElement {
         const handleChange = (event: React.MouseEvent) => {
@@ -59,39 +62,24 @@ export default class Toolbar extends React.Component<Props, State> {
         }
 
         const computeModel = () => {
-            const POLLING_TIME_MS = 2000;
-            const pollForResults = (id: string) => {
-                Axios.get(
-                    `${applicationConfig.serverAddress}/getModelResults/${id}`,
-                    {
-                        method: 'get',
-                        headers: {
-                            "Content-Type": "application/x-www-urlencoded"
-                        },
-                        responseType: "arraybuffer"
-                    }
-                ).then(
+            const pollOnce = (id: string) => {
+                this.props.restClient.getResults(
+                    id,
                     res => {
                         if (res.status === 200) {
                             try {
-                                let a = document.createElement('a');
                                 const blob = new Blob(
                                     [res.data],
                                     { type: res.headers['content-type'] }
                                 );
-                                a.href = window.URL.createObjectURL(blob);
-                                a.download = "ModelResults.png";
-                                a.style.display = 'none';
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
+                                this.props.downloadData(blob);
                             }
                             finally {
                                 this.setState({ ...this.state, waitingForResults: false });
                             }
                         }
                         else if (res.status === 204) {
-                            pollOnce(id);
+                            startPolling(id);
                         }
                         else {
                             console.error("Received bad response from server");
@@ -99,35 +87,23 @@ export default class Toolbar extends React.Component<Props, State> {
                             this.setState({ ...this.state, waitingForResults: false });
                         }
                     }
-                ).catch(e => {
-                    console.error(e);
-                    this.setState({ ...this.state, waitingForResults: false });
-                });
-            }
-            const pollOnce = (id: string) => setTimeout(() => pollForResults(id), POLLING_TIME_MS);
-            if (!this.state.waitingForResults) {
-                Axios.post(
-                    `${applicationConfig.serverAddress}/computeModel/${this.props.sessionId}`,
-                    {
-                        method: 'post',
-                        headers: {
-                            "Content-Type": "application/x-www-urlencoded"
-                        }
-                    }
-                ).then(
-                    res => {
-                        if (res.status === 200) {
-                            this.setState({ ...this.state, waitingForResults: true });
-                            pollOnce(res.data);
-                        }
-                        else {
-                            console.error("Received bad response from server");
-                            console.error(res);
-                        }
-                    }
                 );
             }
+            const startPolling = (id: string) => setTimeout(() => pollOnce(id), Toolbar.POLLING_TIME_MS);
+            if (!this.state.waitingForResults) {
+                this.props.restClient.computeModel(this.props.sessionId, (res: AxiosResponse) => {
+                    if (res.status === 200) {
+                        this.setState({ ...this.state, waitingForResults: true });
+                        startPolling(res.data);
+                    }
+                    else {
+                        console.error("Received bad response from server");
+                        console.error(res);
+                    }
+                });
+            }
         }
+
         const getButtonLabel = (label: string) => {
             if (this.state.waitingForResults) {
                 return (
@@ -140,13 +116,13 @@ export default class Toolbar extends React.Component<Props, State> {
             }
         }
 
-        const open = Boolean(this.state.anchorEl);
+        const open = Boolean(this.state.anchorElement);
 
         const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-            this.setState({ ...this.state, anchorEl: event.currentTarget });
+            this.setState({ ...this.state, anchorElement: event.currentTarget });
         }
         const handleClose = () => {
-            this.setState({ ...this.state, anchorEl: null });
+            this.setState({ ...this.state, anchorElement: null });
         }
         return (
             <Box sx={{ width: '100%' }} >
@@ -219,7 +195,7 @@ export default class Toolbar extends React.Component<Props, State> {
                             data-testid={"GetCode"}
                         />
                         <Tab
-                            label="Run"
+                            label={getButtonLabel("Run")}
                             id="Run-tab"
                             value={"Run"}
                             icon={<ArrowDropDownIcon />}
@@ -235,12 +211,12 @@ export default class Toolbar extends React.Component<Props, State> {
                     </Tabs>
                     <Menu
                         id="basic-menux"
-                        anchorEl={this.state.anchorEl}
+                        anchorEl={this.state.anchorElement}
                         open={open}
                         onClose={handleClose}
                         MenuListProps={{ 'aria-labelledby': 'basic-button', }}
                     >
-                        <MenuItem onClick={computeModel}> {getButtonLabel("ODE")} </MenuItem>
+                        <MenuItem onClick={computeModel}> {"ODE"} </MenuItem>
                     </Menu>
                 </Box >
             </Box >

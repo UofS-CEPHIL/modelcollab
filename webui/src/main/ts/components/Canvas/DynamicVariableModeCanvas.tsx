@@ -5,7 +5,7 @@ import IdGenerator from "../../IdGenerator";
 import DynamicVariableUiData from "../ScreenObjects/DynamicVariableUiData";
 
 export default class DynamicVariableModeCanvas extends BaseCanvas {
-    protected onCanvasClicked(isRightClick: boolean, x: number, y: number) {
+    protected onCanvasLeftClicked(x: number, y: number) {
         const componentId = IdGenerator.generateUniqueId(this.props.children);
         const newVar = new DynamicVariableUiData(new schema.VariableFirebaseComponent(
             componentId,

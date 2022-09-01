@@ -33,7 +33,7 @@ export default class FlowModeCanvas extends BaseCanvas {
         }
     }
 
-    protected onCanvasClicked(isRightClick: boolean, x: number, y: number): void {
+    protected onCanvasLeftClicked(x: number, y: number): void {
 
         if (this.props.selectedComponentId) {
             const cloudID = IdGenerator.generateUniqueId(this.props.children);
@@ -41,7 +41,7 @@ export default class FlowModeCanvas extends BaseCanvas {
                 cloudID,
                 { x, y }
             ));
-            this.props.addComponent(newCloud);           
+            this.props.addComponent(newCloud);
 
             const flowID = IdGenerator.generateUniqueId(this.props.children);
             const newFlow = new FlowUiData(
@@ -54,7 +54,7 @@ export default class FlowModeCanvas extends BaseCanvas {
                         text: ""
                     }
                 )
-            );            
+            );
             this.props.addComponent(newFlow);
         }
     }

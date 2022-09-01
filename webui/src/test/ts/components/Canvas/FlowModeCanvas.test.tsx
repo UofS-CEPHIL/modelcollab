@@ -29,7 +29,6 @@ class FlowModeCanvasTest extends CanvasTest {
 
             this.describeClickingComponentShouldSelectItAndNotCreateAnything();
             this.describeClickingCanvasShouldDoNothingIfNothingSelected();
-            this.describeClickCanvasDeselctsSelectedItem();
 
             const stock1 = new StockUiData(
                 new schema.StockFirebaseComponent(

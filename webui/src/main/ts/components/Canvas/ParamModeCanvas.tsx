@@ -5,7 +5,7 @@ import IdGenerator from "../../IdGenerator";
 import ParameterUiData from "../ScreenObjects/ParameterUiData";
 
 export default class ParamModeCanvas extends BaseCanvas {
-    protected onCanvasClicked(isRightClick: boolean, x: number, y: number) {
+    protected onCanvasLeftClicked(x: number, y: number) {
         const componentId = IdGenerator.generateUniqueId(this.props.children);
         const newParam = new ParameterUiData(new schema.ParameterFirebaseComponent(
             componentId,

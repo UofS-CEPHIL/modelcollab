@@ -1,4 +1,3 @@
-import { fireEvent, getByRole } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
@@ -33,7 +32,7 @@ class CloudModeCanvasTest extends CanvasTest {
                 const y = 113;
                 const canvas = this.makeCanvasMock({});
                 act(() => this.root?.render(canvas.render()));
-                canvas.clickCanvas(x, y);
+                canvas.leftClickCanvas(x, y);
                 expect(canvas.addComponentSpy).toHaveBeenCalledTimes(1);
                 const cloud = canvas.addComponentSpy?.mock.lastCall[0] as CloudUiData;
                 expect(cloud).toBeDefined();
@@ -49,7 +48,7 @@ class CloudModeCanvasTest extends CanvasTest {
                 );
                 act(() => this.root?.render(canvas.render()));
 
-                canvas.clickCanvas(newX, newY);
+                canvas.leftClickCanvas(newX, newY);
                 expect(canvas.addComponentSpy).toHaveBeenCalledTimes(1);
                 const stock = canvas.addComponentSpy?.mock.lastCall[0] as CloudUiData;
                 expect(stock.getData().x).toBe(newX);

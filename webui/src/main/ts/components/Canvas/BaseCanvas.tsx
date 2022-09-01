@@ -43,7 +43,8 @@ export interface Props {
     makeConnection?: (_: ConnectionProps) => ReactElement;
     makeCloud?: (_: CloudProps) => ReactElement;
     registerComponentClickedHandler?: (callback: ((c: ComponentUiData) => void)) => void;
-    registerCanvasClickedHandler?: (callback: ((isRightClick: boolean, x: number, y: number) => void)) => void;
+    registerCanvasLeftClickedHandler?: (callback: ((x: number, y: number) => void)) => void;
+    registerCanvasRightClickedHandler?: (callback: ((x: number, y: number) => void)) => void;
 }
 
 export class ComponentNotFoundError extends Error { }
@@ -55,8 +56,12 @@ export default abstract class BaseCanvas extends React.Component<Props> {
         super(props);
     }
 
-    protected onCanvasClicked(isRightClick: boolean, x: number, y: number): void {
-        if (this.props.selectedComponentId && isRightClick) this.props.setSelected(null);
+    protected onCanvasLeftClicked(x: number, y: number): void {
+        if (this.props.selectedComponentId) this.props.setSelected(null);
+    }
+
+    protected onCanvasRightClicked(x: number, y: number): void {
+        if (this.props.selectedComponentId) this.props.setSelected(null);
     }
 
     protected onComponentClicked(comp: ComponentUiData): void {
@@ -266,11 +271,17 @@ export default abstract class BaseCanvas extends React.Component<Props> {
             const pointerPos = event.currentTarget.getPointerPosition();
 
             const isRightClick = event.evt.button === RIGHT_CLICK;
-            target
-                ? this.onComponentClicked(target)
-                : this.onCanvasClicked(isRightClick, pointerPos.x, pointerPos.y);
+            if (target) {
+                this.onComponentClicked(target)
+            }
+            else if (isRightClick) {
+                this.onCanvasRightClicked(pointerPos.x, pointerPos.y);
+            }
+            else {
+                this.onCanvasLeftClicked(pointerPos.x, pointerPos.y);
+            }
         }
-        this.registerArtificialClickListeners();
+        this.registerArtificialClickListeners(); // for testing
 
         return (
             <Stage
@@ -297,8 +308,10 @@ export default abstract class BaseCanvas extends React.Component<Props> {
     }
 
     private registerArtificialClickListeners(): void {
-        if (this.props.registerCanvasClickedHandler)
-            this.props.registerCanvasClickedHandler((rightClick, x, y) => this.onCanvasClicked(rightClick, x, y));
+        if (this.props.registerCanvasLeftClickedHandler)
+            this.props.registerCanvasLeftClickedHandler((x, y) => this.onCanvasLeftClicked(x, y));
+        if (this.props.registerCanvasRightClickedHandler)
+            this.props.registerCanvasRightClickedHandler((x, y) => this.onCanvasRightClicked(x, y));
         if (this.props.registerComponentClickedHandler)
             this.props.registerComponentClickedHandler(c => this.onComponentClicked(c));
     }

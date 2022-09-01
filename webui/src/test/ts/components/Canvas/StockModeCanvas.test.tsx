@@ -22,26 +22,20 @@ class StockModeCanvasTest extends CanvasTest {
 
     protected makeSpecificTests(): void {
         describe("Mode-specific tests", () => {
-
-            const A_STOCK = new StockUiData(new schema.StockFirebaseComponent(
-                "12345",
-                { x: 0, y: 0, text: "stocktext", initvalue: "1" }
-            ));
+            this.describeClickingComponentShouldSelectItAndNotCreateAnything();
 
             test("Clicking on canvas should create new stock", async () => {
                 const x = 15;
                 const y = 15;
                 const canvas = this.makeCanvasMock({});
                 act(() => this.root?.render(canvas.render()));
-                canvas.clickCanvas(x, y);
+                canvas.leftClickCanvas(x, y);
                 expect(canvas.addComponentSpy).toHaveBeenCalledTimes(1);
                 const stock = canvas.addComponentSpy?.mock.lastCall[0] as StockUiData;
                 expect(stock).toBeDefined();
                 expect(stock.getData().x).toBe(x);
                 expect(stock.getData().y).toBe(y);
             });
-
-            this.describeClickingComponentShouldSelectItAndNotCreateAnything();
         });
     }
 

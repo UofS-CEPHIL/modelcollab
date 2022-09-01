@@ -1,3 +1,4 @@
+import Axios, { AxiosResponse } from "axios";
 import applicationConfig from '../config/applicationConfig';
 
 export default class RestClientImpl {
@@ -13,5 +14,30 @@ export default class RestClientImpl {
             }
         }
         xhr.send();
+    }
+
+    public computeModel(sessionId: string, onResponseReceived: ((res: AxiosResponse) => void)): void {
+        Axios.post(
+            `${applicationConfig.serverAddress}/computeModel/${sessionId}`,
+            {
+                method: 'post',
+                headers: {
+                    "Content-Type": "application/x-www-urlencoded"
+                }
+            }
+        ).then(res => onResponseReceived(res));
+    }
+
+    public getResults(resultId: string, onResultsReceived: ((res: AxiosResponse) => void)): void {
+        Axios.get(
+            `${applicationConfig.serverAddress}/getModelResults/${resultId}`,
+            {
+                method: 'get',
+                headers: {
+                    "Content-Type": "application/x-www-urlencoded"
+                },
+                responseType: "arraybuffer"
+            }
+        ).then(res => onResultsReceived(res));
     }
 }

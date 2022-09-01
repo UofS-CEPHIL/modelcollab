@@ -32,7 +32,7 @@ class ParameterModeCanvasTest extends CanvasTest {
                 const canvas = this.makeCanvasMock({});
                 act(() => this.root?.render(canvas.render()));
 
-                act(() => canvas.clickCanvas(x, y));
+                act(() => canvas.leftClickCanvas(x, y));
                 expect(canvas.addComponentSpy).toHaveBeenCalledTimes(1);
                 const newComponent = canvas.addComponentSpy?.mock.lastCall[0] as ParameterUiData;
                 expect(newComponent.getType()).toBe(schema.ComponentType.PARAMETER);

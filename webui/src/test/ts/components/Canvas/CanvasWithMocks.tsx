@@ -8,7 +8,6 @@ import ConnectionModeCanvas from "../../../../main/ts/components/Canvas/ConnectM
 import VariableModeCanvas from "../../../../main/ts/components/Canvas/DynamicVariableModeCanvas";
 import SumVariableModeCanvas from "../../../../main/ts/components/Canvas/SumVariableModeCanvas";
 import ParameterModeCanvas from "../../../../main/ts/components/Canvas/ParamModeCanvas";
-import CanvasUtils from "./CanvasUtils";
 import CloudModeCanvas from "../../../../main/ts/components/Canvas/CloudModeCanvas";
 import EditModeCanvas from "../../../../main/ts/components/Canvas/EditModeCanvas";
 import DeleteModeCanvas from "../../../../main/ts/components/Canvas/DeleteModeCanvas";
@@ -37,7 +36,8 @@ export default abstract class CanvasWithMocks {
     public readonly makeCloudSpy: jest.Mock<ReactElement> | undefined;
 
     public readonly registerComponentClickedSpy: jest.Mock<void> | undefined;
-    public readonly registerCanvasClickedSpy: jest.Mock<void> | undefined;
+    public readonly registerCanvasLeftClickedSpy: jest.Mock<void> | undefined;
+    public readonly registerCanvasRightClickedSpy: jest.Mock<void> | undefined;
 
     public abstract render(): ReactElement;
 
@@ -54,7 +54,8 @@ export default abstract class CanvasWithMocks {
         this.makeParamSpy = jest.fn();
         this.makeCloudSpy = jest.fn();
         this.registerComponentClickedSpy = jest.fn();
-        this.registerCanvasClickedSpy = jest.fn();
+        this.registerCanvasLeftClickedSpy = jest.fn();
+        this.registerCanvasRightClickedSpy = jest.fn();
 
         const DEFAULT_PROPS: CanvasProps = {
             firebaseDataModel: new MockFirebaseDataModel(),
@@ -73,7 +74,8 @@ export default abstract class CanvasWithMocks {
             makeParam: this.makeParamSpy,
             makeCloud: this.makeCloudSpy,
             makeDynVar: this.makeDynVarSpy,
-            registerCanvasClickedHandler: this.registerCanvasClickedSpy,
+            registerCanvasLeftClickedHandler: this.registerCanvasLeftClickedSpy,
+            registerCanvasRightClickedHandler: this.registerCanvasRightClickedSpy,
             registerComponentClickedHandler: this.registerComponentClickedSpy
         };
         this.props = { ...DEFAULT_PROPS, ...props };
@@ -145,10 +147,17 @@ export default abstract class CanvasWithMocks {
         expect(this.makeCloudSpy.mock.calls.length).toBe(0);
     }
 
-    public clickCanvas(x: number, y: number): void {
-        if (!this.registerCanvasClickedSpy) throw new Error();
-        expect(this.registerCanvasClickedSpy).toHaveBeenCalled();
-        const canvasClickedCallback = this.registerCanvasClickedSpy.mock.lastCall[0];
+    public leftClickCanvas(x: number, y: number): void {
+        if (!this.registerCanvasLeftClickedSpy) throw new Error();
+        expect(this.registerCanvasLeftClickedSpy).toHaveBeenCalled();
+        const canvasClickedCallback = this.registerCanvasLeftClickedSpy.mock.lastCall[0];
+        act(() => canvasClickedCallback(x, y));
+    }
+
+    public rightClickCanvas(x: number, y: number): void {
+        if (!this.registerCanvasRightClickedSpy) throw new Error();
+        expect(this.registerCanvasRightClickedSpy).toHaveBeenCalled();
+        const canvasClickedCallback = this.registerCanvasRightClickedSpy.mock.lastCall[0];
         act(() => canvasClickedCallback(x, y));
     }
 

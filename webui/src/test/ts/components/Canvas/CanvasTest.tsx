@@ -331,7 +331,14 @@ export default abstract class CanvasTest {
                             )[0];
                         expect(connectionProps).toBeDefined();
                         testConnection(connectionProps, varToFlowConnId, dynVarId, flowId);
-                    });
+                    }
+                );
+
+                test("Right-clicking canvas should deselect selected component", async () => {
+                    canvas.rightClickCanvas(333, 333);
+                    expect(canvas.setSelectedSpy).toHaveBeenCalledTimes(1);
+                    expect(canvas.setSelectedSpy).toHaveBeenCalledWith(null);
+                });
             });
         });
     }
@@ -347,7 +354,7 @@ export default abstract class CanvasTest {
             );
             act(() => this.root?.render(canvas.render()));
 
-            canvas.clickCanvas(0, 0);
+            canvas.leftClickCanvas(0, 0);
             expect(canvas.setSelectedSpy).toHaveBeenCalledTimes(1);
             expect(canvas.setSelectedSpy).toHaveBeenCalledWith(null);
         });
@@ -371,10 +378,30 @@ export default abstract class CanvasTest {
     }
 
     protected describeClickingCanvasShouldDoNothingIfNothingSelected(): void {
-        test("Clicking on canvas should do nothing when nothing selected selected", async () => {
+        test("Clicking on canvas should do nothing when no component is selected", async () => {
             const canvas = this.makeCanvasMock({});
             act(() => this.root?.render(canvas.render()));
-            canvas.clickCanvas(0, 0);
+            canvas.leftClickCanvas(0, 0);
+            canvas.expectNothingHappened();
+        });
+    }
+
+    protected describeClickingCanvasShouldDoNothingIfComponentSelected(): void {
+        test("Clicking on canvas should do nothing when a component is selected", async () => {
+            const stock = new StockUiData(
+                new schema.StockFirebaseComponent(
+                    "0",
+                    { x: 0, y: 0, text: "text", initvalue: "value" }
+                )
+            );
+            const canvas = this.makeCanvasMock({
+                children: [stock],
+                selectedComponentId: stock.getId()
+            });
+            act(() => {
+                this.root?.render(canvas.render());
+            });
+            canvas.leftClickCanvas(123, 456);
             canvas.expectNothingHappened();
         });
     }

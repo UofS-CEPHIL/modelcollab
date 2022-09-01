@@ -41,7 +41,6 @@ export default class SessionSelectScreen extends React.Component<Props, State> {
                     <Button
                         onClick={() => this.addSession(this.state.newSessionText)}
                         variant={"contained"}>
-                        data-testid={"addSessionButton"}
                         <AddIcon />
                     </Button>
                 </ListItem>
