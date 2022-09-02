@@ -302,6 +302,8 @@ export abstract class ExtendableBaseCanvas
                     {this.renderDynamicVariables()}
                     {this.renderConnections()}
                     {this.renderClouds()}
+                </Layer>
+                <Layer>
                     {this.renderModeSpecificLayer()}
                 </Layer>
             </Stage>

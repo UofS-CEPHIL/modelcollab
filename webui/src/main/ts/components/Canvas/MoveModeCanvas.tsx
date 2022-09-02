@@ -33,7 +33,6 @@ export default class MoveModeCanvas extends ExtendableBaseCanvas<CanvasProps, St
             );
         else
             return super.renderModeSpecificLayer();
-
     }
 
     protected onCanvasMouseMoved(x: number, y: number): void {
@@ -46,16 +45,24 @@ export default class MoveModeCanvas extends ExtendableBaseCanvas<CanvasProps, St
 
     protected onCanvasMouseUp(x: number, y: number): void {
         if (this.state.anchorX && this.state.anchorY) {
+            const topLeftCorner = {
+                x: Math.min(this.state.anchorX, x),
+                y: Math.min(this.state.anchorY, y)
+            };
+            const bottomRightCorner = {
+                x: Math.max(this.state.anchorX, x),
+                y: Math.max(this.state.anchorY, y)
+            };
             this.props.setSelected(
-                this.getComponentIdsInsideBoundingBox(
-                    { x, y },
-                    { x: this.state.anchorX, y: this.state.anchorY }
-                )
+                this.getComponentIdsInsideBoundingBox(topLeftCorner, bottomRightCorner)
             );
+            this.setState({ ...this.state, anchorX: null, anchorY: null });
         }
     }
 
-    private getComponentIdsInsideBoundingBox(p1: Point, p2: Point): string[] {
-        return [];
+    private getComponentIdsInsideBoundingBox(topLeft: Point, bottomRight: Point): string[] {
+        return this.props.children
+            .filter(c => c.isInsideBoundingBox(topLeft, bottomRight, this.props.children))
+            .map(c => c.getId());
     }
 }
