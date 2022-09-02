@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react';
-import { Stage, Layer } from 'react-konva';
+import { Stage, Layer, Group } from 'react-konva';
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import FirebaseDataModel from '../../data/FirebaseDataModel';
@@ -25,13 +25,13 @@ export interface Props {
     firebaseDataModel: FirebaseDataModel;
     sessionId: string;
     children: ReadonlyArray<ComponentUiData>;
-    selectedComponentId: string | null;
+    selectedComponentIds: string[];
     showConnectionHandles: boolean;
 
     addComponent: (_: ComponentUiData) => void;
     editComponent: (_: ComponentUiData) => void;
     deleteComponent: (id: string) => void;
-    setSelected: (id: string | null) => void;
+    setSelected: (ids: string[]) => void;
 
     // visible for testing
     // TODO make these non-optional and send them up by 1 layer
@@ -64,19 +64,23 @@ export abstract class ExtendableBaseCanvas
     }
 
     protected onCanvasLeftClicked(x: number, y: number): void {
-        if (this.props.selectedComponentId) this.props.setSelected(null);
+        this.setNoneSelected();
     }
 
     protected onCanvasRightClicked(x: number, y: number): void {
-        if (this.props.selectedComponentId) this.props.setSelected(null);
+        this.setNoneSelected();
+    }
+
+    protected setNoneSelected(): void {
+        this.props.setSelected([]);
     }
 
     protected onComponentClicked(comp: ComponentUiData): void {
-        this.props.setSelected(comp.getId());
+        this.props.setSelected([comp.getId()]);
     }
 
     protected renderModeSpecificLayer(): ReactElement {
-        return (<div />);
+        return (<Group />);
     }
 
     protected onCanvasMouseDown(x: number, y: number): void { }
@@ -98,9 +102,7 @@ export abstract class ExtendableBaseCanvas
             return {
                 flowData: flow,
                 components: this.props.children,
-                color:
-                    this.props.selectedComponentId === flow.getId()
-                        ? SELECTED_COLOR : DEFAULT_COLOR,
+                color: this.getComponentColour(flow),
                 key: i
             } as FlowProps;
         }
@@ -128,9 +130,7 @@ export abstract class ExtendableBaseCanvas
             return {
                 stock: stock,
                 components: this.props.children,
-                color:
-                    this.props.selectedComponentId === stock.getId()
-                        ? SELECTED_COLOR : DEFAULT_COLOR,
+                color: this.getComponentColour(stock),
                 draggable: true,
                 text: stock.getData().text,
                 updateState: this.props.editComponent,
@@ -174,10 +174,7 @@ export abstract class ExtendableBaseCanvas
             data: data,
             draggable: true,
             updateState: this.props.editComponent,
-            color:
-                this.props.selectedComponentId === data.getId()
-                    ? SELECTED_COLOR : DEFAULT_COLOR,
-
+            color: this.getComponentColour(data),
             key: i
         } as TextProps;
     }
@@ -259,9 +256,7 @@ export abstract class ExtendableBaseCanvas
             return {
                 data: cloud,
                 updateState: this.props.editComponent,
-                color:
-                    this.props.selectedComponentId === cloud.getId()
-                        ? SELECTED_COLOR : DEFAULT_COLOR,
+                color: this.getComponentColour(cloud),
                 key: i
             } as CloudProps;
         };
@@ -355,6 +350,11 @@ export abstract class ExtendableBaseCanvas
             this.props.registerCanvasRightClickedHandler((x, y) => this.onCanvasRightClicked(x, y));
         if (this.props.registerComponentClickedHandler)
             this.props.registerComponentClickedHandler(c => this.onComponentClicked(c));
+    }
+
+    private getComponentColour(component: ComponentUiData): string {
+        return this.props.selectedComponentIds.includes(component.getId())
+            ? SELECTED_COLOR : DEFAULT_COLOR;
     }
 }
 

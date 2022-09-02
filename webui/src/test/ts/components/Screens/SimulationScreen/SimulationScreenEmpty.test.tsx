@@ -63,7 +63,7 @@ export default class SimulationScreenEmpty extends SimulationScreenTest {
 
             test("Should start with none selected", async () => {
                 const canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock).mock.calls[0][1];
-                expect(canvasProps.selectedComponentId).toBeNull();
+                expect(canvasProps.selectedComponentIds.length).toBe(0);
             });
 
             describe("Canvas", () => {
@@ -97,7 +97,7 @@ export default class SimulationScreenEmpty extends SimulationScreenTest {
                     expect(canvasProps.children[0].getData()).toEqual(stock.getData());
                     expect(canvasProps.children[0].getId()).toBe(stock.getId());
                     expect(canvasProps.children[0].getType()).toBe(ComponentType.STOCK);
-                    expect(canvasProps.selectedComponentId).toBeNull();
+                    expect(canvasProps.selectedComponentIds.length).toBe(0);
                 });
 
                 test("Should notify Firebase when component created on UI", async () => {

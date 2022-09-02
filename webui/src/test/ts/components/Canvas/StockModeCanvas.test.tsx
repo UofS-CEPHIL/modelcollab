@@ -3,7 +3,7 @@ import { act } from "react-dom/test-utils";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
 import StockUiData from "../../../../main/ts/components/ScreenObjects/StockUiData";
-import CanvasWithMocks, { StockModeCanvasMock } from "./CanvasWithMocks";
+import CanvasSpy, { StockModeCanvasSpy } from "./CanvasSpy";
 import CanvasTest from "./CanvasTest";
 
 class StockModeCanvasTest extends CanvasTest {
@@ -12,8 +12,8 @@ class StockModeCanvasTest extends CanvasTest {
         return "StockModeCanvas";
     }
 
-    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasWithMocks {
-        return new StockModeCanvasMock(props);
+    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy {
+        return new StockModeCanvasSpy(props);
     }
 
     protected shouldShowConnectionHandles(): boolean {

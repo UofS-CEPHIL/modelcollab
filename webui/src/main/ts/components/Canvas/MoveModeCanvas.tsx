@@ -50,7 +50,7 @@ export default class MoveModeCanvas extends ExtendableBaseCanvas<CanvasProps, St
                 this.getComponentIdsInsideBoundingBox(
                     { x, y },
                     { x: this.state.anchorX, y: this.state.anchorY }
-                )[0]
+                )
             );
         }
     }

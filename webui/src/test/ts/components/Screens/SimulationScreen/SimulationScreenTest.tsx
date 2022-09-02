@@ -6,7 +6,7 @@ import { ReactElement } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { fireEvent, getByText } from "@testing-library/react";
-import CanvasWithMocks, { CloudModeCanvasMock, EditModeCanvasMock, FlowModeCanvasMock, MoveModeCanvasMock, ParameterModeCanvasMock, StockModeCanvasMock, SumVarModeCanvasMock, VariableModeCanvasMock } from "../../Canvas/CanvasWithMocks";
+import CanvasSpy, { CloudModeCanvasSpy, EditModeCanvasSpy, FlowModeCanvasSpy, MoveModeCanvasSpy, ParameterModeCanvasSpy, StockModeCanvasSpy, SumVarModeCanvasSpy, VariableModeCanvasSpy } from "../../Canvas/CanvasSpy";
 import { UiMode } from "../../../../../main/ts/UiMode";
 import ConnectModeCanvas from "../../../../../main/ts/components/Canvas/ConnectModeCanvas";
 import DeleteModeCanvas from "../../../../../main/ts/components/Canvas/DeleteModeCanvas";

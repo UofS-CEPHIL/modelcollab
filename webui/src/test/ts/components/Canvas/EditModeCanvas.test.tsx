@@ -1,7 +1,7 @@
 import { fireEvent, getByRole } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import CanvasWithMocks, { EditModeCanvasMock } from "./CanvasWithMocks";
+import CanvasSpy, { EditModeCanvasSpy } from "./CanvasSpy";
 import CanvasTest from "./CanvasTest";
 
 class EditModeCanvasTest extends CanvasTest {
@@ -10,8 +10,8 @@ class EditModeCanvasTest extends CanvasTest {
         return "EditModeCanvas";
     }
 
-    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasWithMocks {
-        return new EditModeCanvasMock(props);
+    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy {
+        return new EditModeCanvasSpy(props);
     }
 
     protected shouldShowConnectionHandles(): boolean {

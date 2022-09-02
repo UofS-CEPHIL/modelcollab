@@ -2,7 +2,7 @@ import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/Base
 import { SELECTED_COLOR, DEFAULT_COLOR } from "../../../../main/ts/components/ScreenObjects/Stock";
 import { createRoot, Root } from "react-dom/client";
 import { act } from "react-dom/test-utils";
-import CanvasWithMocks from "./CanvasWithMocks";
+import CanvasSpy from "./CanvasSpy";
 import { Props as TextProps } from "../../../../main/ts/components/ScreenObjects/TextObject";
 import StockUiData from "../../../../main/ts/components/ScreenObjects/StockUiData";
 import { Props as StockProps } from "../../../../main/ts/components/ScreenObjects/Stock";
@@ -38,7 +38,7 @@ export default abstract class CanvasTest {
 
     protected abstract shouldShowConnectionHandles(): boolean;
 
-    protected abstract makeCanvasMock(props: Partial<CanvasProps>): CanvasWithMocks;
+    protected abstract makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy;
 
     protected containerNode: HTMLElement | null = null;
     protected root: Root | null = null;
@@ -87,7 +87,7 @@ export default abstract class CanvasTest {
                     );
                     const canvas = this.makeCanvasMock({
                         children: [stock],
-                        selectedComponentId: selected ? stock.getId() : null
+                        selectedComponentIds: selected ? [stock.getId()] : []
                     });
                     act(() => {
                         this.root?.render(canvas.render());
@@ -198,20 +198,20 @@ export default abstract class CanvasTest {
                         { from: dynVarId, to: flowId, handleXOffset: X, handleYOffset: Y }
                     )
                 );
-                const selectedComponentId = stockId;
+                const selectedComponentIds = [stockId];
                 const children = [
                     stock, cloud, flow, sumVar, dynVar, param,
                     svToVarConn, paramToVarConn, varToFlowConn
                 ];
 
-                let canvas: CanvasWithMocks = this.makeCanvasMock({});
+                let canvas: CanvasSpy = this.makeCanvasMock({});
                 function getExpectedColor(component: ComponentUiData): string {
-                    return component.getId() === selectedComponentId
+                    return selectedComponentIds.includes(component.getId())
                         ? SELECTED_COLOR : DEFAULT_COLOR;
                 }
 
                 beforeEach(() => {
-                    canvas = this.makeCanvasMock({ children, selectedComponentId });
+                    canvas = this.makeCanvasMock({ children, selectedComponentIds });
                     act(() => this.root?.render(canvas.render()));
                 });
 
@@ -337,7 +337,7 @@ export default abstract class CanvasTest {
                 test("Right-clicking canvas should deselect selected component", async () => {
                     canvas.rightClickCanvas(333, 333);
                     expect(canvas.setSelectedSpy).toHaveBeenCalledTimes(1);
-                    expect(canvas.setSelectedSpy).toHaveBeenCalledWith(null);
+                    expect(canvas.setSelectedSpy).toHaveBeenCalledWith([]);
                 });
             });
         });
@@ -350,13 +350,13 @@ export default abstract class CanvasTest {
                 { x: 0, y: 0, text: "stocktext", initvalue: "1" }
             ));
             const canvas = this.makeCanvasMock(
-                { selectedComponentId: child.getId(), children: [child] }
+                { selectedComponentIds: [child.getId()], children: [child] }
             );
             act(() => this.root?.render(canvas.render()));
 
             canvas.leftClickCanvas(0, 0);
             expect(canvas.setSelectedSpy).toHaveBeenCalledTimes(1);
-            expect(canvas.setSelectedSpy).toHaveBeenCalledWith(null);
+            expect(canvas.setSelectedSpy).toHaveBeenCalledWith([]);
         });
     }
 
@@ -367,12 +367,12 @@ export default abstract class CanvasTest {
                 { x: 0, y: 0 }
             ));
             const canvas = this.makeCanvasMock(
-                { selectedComponentId: null, children: [child] }
+                { selectedComponentIds: [], children: [child] }
             );
             act(() => this.root?.render(canvas.render()));
             canvas.clickComponent(child);
             expect(canvas.setSelectedSpy).toHaveBeenCalledTimes(1);
-            expect(canvas.setSelectedSpy).toHaveBeenCalledWith(child.getId());
+            expect(canvas.setSelectedSpy).toHaveBeenCalledWith([child.getId()]);
             expect(canvas.addComponentSpy).not.toHaveBeenCalled();
         })
     }
@@ -396,7 +396,7 @@ export default abstract class CanvasTest {
             );
             const canvas = this.makeCanvasMock({
                 children: [stock],
-                selectedComponentId: stock.getId()
+                selectedComponentIds: [stock.getId()]
             });
             act(() => {
                 this.root?.render(canvas.render());
