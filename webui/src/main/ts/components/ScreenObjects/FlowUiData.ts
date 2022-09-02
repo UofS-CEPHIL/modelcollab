@@ -13,7 +13,7 @@ export const BOUNDING_BOX_ELEMENT_BUFFER = 70;
 export default class FlowUiData extends PointerComponent<schema.FlowComponentData, schema.FlowFirebaseComponent, StockUiData, StockUiData> implements PointableComponent {
 
     public getArrowPoint(side: Side, components: ComponentUiData[]): Point {
-        const linePoints = this.getArrowPoints(components);
+        const linePoints = this.getAngleArrowPoints(components);
         const labelTopLeft = this.computeLabelPosition(linePoints);
         const labelWidth = this.computeLabelWidth();
         const labelHeight = this.computeLabelHeight();
