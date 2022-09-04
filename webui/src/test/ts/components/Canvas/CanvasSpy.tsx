@@ -18,7 +18,7 @@ import ComponentUiData from "../../../../main/ts/components/ScreenObjects/Compon
 
 export const DEFAULT_ID = "0";
 
-export default abstract class CanvasWithMocks {
+export default abstract class CanvasSpy {
 
     public readonly props: CanvasProps;
 
@@ -59,7 +59,7 @@ export default abstract class CanvasWithMocks {
 
         const DEFAULT_PROPS: CanvasProps = {
             firebaseDataModel: new MockFirebaseDataModel(),
-            selectedComponentId: null,
+            selectedComponentIds: [],
             sessionId: DEFAULT_ID,
             children: [],
             editComponent: this.editComponentSpy,
@@ -93,12 +93,11 @@ export default abstract class CanvasWithMocks {
         };
     }
 
-    public getActionFunctions(): object {
+    public getComponentUpdateCallbacks(): object {
         return {
             editComponent: this.editComponentSpy,
             addComponent: this.addComponentSpy,
             deleteComponent: this.deleteComponentSpy,
-            setSelected: this.setSelectedSpy
         };
     }
 
@@ -169,68 +168,76 @@ export default abstract class CanvasWithMocks {
     }
 
     public expectNothingHappened(): void {
-        Object.values(this.getActionFunctions()).forEach(f =>
+        Object.values(this.getComponentUpdateCallbacks()).forEach(f =>
             expect(f).not.toHaveBeenCalled()
+        );
+        this.expectNothingEverSelected();
+    }
+
+    public expectNothingEverSelected(): void {
+        this.setSelectedSpy?.mock.calls.forEach(
+            c => expect(c[0]).toEqual([])
         );
     }
 }
 
 
-export class StockModeCanvasMock extends CanvasWithMocks {
+
+export class StockModeCanvasSpy extends CanvasSpy {
     public render(): ReactElement {
         return (<StockModeCanvas {...this.props} />);
     }
 }
 
-export class MoveModeCanvasMock extends CanvasWithMocks {
+export class MoveModeCanvasSpy extends CanvasSpy {
     public render(): ReactElement {
         return (<MoveModeCanvas {...this.props} />);
     }
 }
 
-export class FlowModeCanvasMock extends CanvasWithMocks {
+export class FlowModeCanvasSpy extends CanvasSpy {
     public render(): ReactElement {
         return (<FlowModeCanvas {...this.props} />)
     }
 }
 
-export class EditModeCanvasMock extends CanvasWithMocks {
+export class EditModeCanvasSpy extends CanvasSpy {
     public render(): ReactElement {
         return (<EditModeCanvas {...this.props} />);
     }
 }
 
-export class ConnectionModeCanvasMock extends CanvasWithMocks {
+export class ConnectionModeCanvasSpy extends CanvasSpy {
     public render(): ReactElement {
         return (<ConnectionModeCanvas {...this.props} />)
     }
 }
 
-export class VariableModeCanvasMock extends CanvasWithMocks {
+export class VariableModeCanvasSpy extends CanvasSpy {
     public render(): ReactElement {
         return (<VariableModeCanvas {...this.props} />)
     }
 }
 
-export class SumVarModeCanvasMock extends CanvasWithMocks {
+export class SumVarModeCanvasSpy extends CanvasSpy {
     public render(): ReactElement {
         return (<SumVariableModeCanvas {...this.props} />)
     }
 }
 
-export class ParameterModeCanvasMock extends CanvasWithMocks {
+export class ParameterModeCanvasSpy extends CanvasSpy {
     public render(): ReactElement {
         return (<ParameterModeCanvas {...this.props} />)
     }
 }
 
-export class DeleteModeCanvasMock extends CanvasWithMocks {
+export class DeleteModeCanvasSpy extends CanvasSpy {
     public render(): ReactElement {
         return (<DeleteModeCanvas {...this.props} />);
     }
 }
 
-export class CloudModeCanvasMock extends CanvasWithMocks {
+export class CloudModeCanvasSpy extends CanvasSpy {
     public render(): ReactElement {
         return (<CloudModeCanvas {...this.props} />)
     }

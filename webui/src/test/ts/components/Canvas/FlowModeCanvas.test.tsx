@@ -1,5 +1,5 @@
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import CanvasWithMocks, { FlowModeCanvasMock } from "./CanvasWithMocks";
+import CanvasSpy, { FlowModeCanvasSpy } from "./CanvasSpy";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import CanvasTest from "./CanvasTest";
@@ -16,8 +16,8 @@ class FlowModeCanvasTest extends CanvasTest {
         return "FlowModeCanvas";
     }
 
-    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasWithMocks {
-        return new FlowModeCanvasMock(props);
+    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy {
+        return new FlowModeCanvasSpy(props);
     }
 
     protected shouldShowConnectionHandles(): boolean {
@@ -69,9 +69,9 @@ class FlowModeCanvasTest extends CanvasTest {
 
     private testCreateFlow(from: ComponentUiData, to: ComponentUiData): void {
         test(
-            `Should successfully make connection from ${from.getType()} to ${to.getType()}`,
+            `Should successfully make flow from ${from.getType()} to ${to.getType()}`,
             async () => {
-                const canvas = this.makeCanvasMock({ selectedComponentId: from.getId(), children: [from, to] });
+                const canvas = this.makeCanvasMock({ selectedComponentIds: [from.getId()], children: [from, to] });
                 act(() => this.root?.render(canvas.render()));
                 canvas.clickComponent(to);
 

@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react';
-import { Stage, Layer } from 'react-konva';
+import { Stage, Layer, Group } from 'react-konva';
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import FirebaseDataModel from '../../data/FirebaseDataModel';
@@ -25,13 +25,13 @@ export interface Props {
     firebaseDataModel: FirebaseDataModel;
     sessionId: string;
     children: ReadonlyArray<ComponentUiData>;
-    selectedComponentId: string | null;
+    selectedComponentIds: string[];
     showConnectionHandles: boolean;
 
     addComponent: (_: ComponentUiData) => void;
     editComponent: (_: ComponentUiData) => void;
     deleteComponent: (id: string) => void;
-    setSelected: (id: string | null) => void;
+    setSelected: (ids: string[]) => void;
 
     // visible for testing
     // TODO make these non-optional and send them up by 1 layer
@@ -47,25 +47,52 @@ export interface Props {
     registerCanvasRightClickedHandler?: (callback: ((x: number, y: number) => void)) => void;
 }
 
+export interface State {
+
+}
+
 export class ComponentNotFoundError extends Error { }
 
 
-export default abstract class BaseCanvas extends React.Component<Props> {
+export abstract class ExtendableBaseCanvas
+    <CanvasProps extends Props, CanvasState extends State>
+    extends React.Component<CanvasProps, CanvasState>
+{
 
-    protected constructor(props: Props) {
+    protected constructor(props: CanvasProps) {
         super(props);
     }
 
     protected onCanvasLeftClicked(x: number, y: number): void {
-        if (this.props.selectedComponentId) this.props.setSelected(null);
+        this.setNoneSelected();
     }
 
     protected onCanvasRightClicked(x: number, y: number): void {
-        if (this.props.selectedComponentId) this.props.setSelected(null);
+        this.setNoneSelected();
+    }
+
+    protected setNoneSelected(): void {
+        this.props.setSelected([]);
     }
 
     protected onComponentClicked(comp: ComponentUiData): void {
-        this.props.setSelected(comp.getId());
+        this.props.setSelected([comp.getId()]);
+    }
+
+    protected renderModeSpecificLayer(): ReactElement {
+        return (<Group />);
+    }
+
+    protected onCanvasMouseDown(x: number, y: number): void { }
+
+    protected onCanvasMouseUp(x: number, y: number): void { }
+
+    protected onCanvasMouseMoved(x: number, y: number): void { }
+
+    protected onComponentMouseDown(comp: ComponentUiData, x: number, y: number): void { }
+
+    protected isDraggable(comp: ComponentUiData): boolean {
+        return true;
     }
 
     protected getFlows(): FlowUiData[] {
@@ -81,9 +108,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
             return {
                 flowData: flow,
                 components: this.props.children,
-                color:
-                    this.props.selectedComponentId === flow.getId()
-                        ? SELECTED_COLOR : DEFAULT_COLOR,
+                color: this.getComponentColour(flow),
                 key: i
             } as FlowProps;
         }
@@ -111,10 +136,8 @@ export default abstract class BaseCanvas extends React.Component<Props> {
             return {
                 stock: stock,
                 components: this.props.children,
-                color:
-                    this.props.selectedComponentId === stock.getId()
-                        ? SELECTED_COLOR : DEFAULT_COLOR,
-                draggable: true,
+                color: this.getComponentColour(stock),
+                draggable: this.isDraggable(stock),
                 text: stock.getData().text,
                 updateState: this.props.editComponent,
                 key: i
@@ -155,12 +178,9 @@ export default abstract class BaseCanvas extends React.Component<Props> {
     private makeTextProps(data: TextComponent<any>, i: number): TextProps {
         return {
             data: data,
-            draggable: true,
+            draggable: this.isDraggable(data),
             updateState: this.props.editComponent,
-            color:
-                this.props.selectedComponentId === data.getId()
-                    ? SELECTED_COLOR : DEFAULT_COLOR,
-
+            color: this.getComponentColour(data),
             key: i
         } as TextProps;
     }
@@ -242,9 +262,7 @@ export default abstract class BaseCanvas extends React.Component<Props> {
             return {
                 data: cloud,
                 updateState: this.props.editComponent,
-                color:
-                    this.props.selectedComponentId === cloud.getId()
-                        ? SELECTED_COLOR : DEFAULT_COLOR,
+                color: this.getComponentColour(cloud),
                 key: i
             } as CloudProps;
         };
@@ -266,21 +284,6 @@ export default abstract class BaseCanvas extends React.Component<Props> {
     }
 
     public render(): ReactElement {
-        const onClick = (event: any) => {
-            const target = this.props.children.find(c => c.getId() === event.target.attrs.name);
-            const pointerPos = event.currentTarget.getPointerPosition();
-
-            const isRightClick = event.evt.button === RIGHT_CLICK;
-            if (target) {
-                this.onComponentClicked(target)
-            }
-            else if (isRightClick) {
-                this.onCanvasRightClicked(pointerPos.x, pointerPos.y);
-            }
-            else {
-                this.onCanvasLeftClicked(pointerPos.x, pointerPos.y);
-            }
-        }
         this.registerArtificialClickListeners(); // for testing
 
         return (
@@ -288,7 +291,10 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                 width={window.innerWidth}
                 height={15000}
                 data-testid={"CanvasStage"}
-                onClick={onClick}
+                onClick={e => this.onClick(e)}
+                onMouseDown={e => this.onMouseDown(e)}
+                onMouseUp={e => this.onMouseUp(e)}
+                onMouseMove={e => this.onMouseMove(e)}
                 onContextMenu={e => {
                     e.evt.preventDefault();
                 }}
@@ -303,8 +309,49 @@ export default abstract class BaseCanvas extends React.Component<Props> {
                     {this.renderConnections()}
                     {this.renderClouds()}
                 </Layer>
+                <Layer>
+                    {this.renderModeSpecificLayer()}
+                </Layer>
             </Stage>
         );
+    }
+
+    private onClick(event: any): void {
+        const target = this.props.children.find(c => c.getId() === event.target.attrs.name);
+        const pointerPos = event.currentTarget.getPointerPosition();
+
+        const isRightClick = event.evt.button === RIGHT_CLICK;
+        if (target) {
+            this.onComponentClicked(target)
+        }
+        else if (isRightClick) {
+            this.onCanvasRightClicked(pointerPos.x, pointerPos.y);
+        }
+        else {
+            this.onCanvasLeftClicked(pointerPos.x, pointerPos.y);
+        }
+    }
+
+    private onMouseDown(event: any): void {
+        const target = this.props.children.find(c => c.getId() === event.target.attrs.name);
+        const pointerPos = event.currentTarget.getPointerPosition();
+
+        if (!target) {
+            this.onCanvasMouseDown(pointerPos.x, pointerPos.y);
+        }
+        else {
+            this.onComponentMouseDown(target, pointerPos.x, pointerPos.y);
+        }
+    }
+
+    private onMouseUp(event: any): void {
+        const pointerPos = event.currentTarget.getPointerPosition();
+        this.onCanvasMouseUp(pointerPos.x, pointerPos.y);
+    }
+
+    private onMouseMove(event: any): void {
+        const pointerPos = event.currentTarget.getPointerPosition();
+        this.onCanvasMouseMoved(pointerPos.x, pointerPos.y);
     }
 
     private registerArtificialClickListeners(): void {
@@ -315,5 +362,12 @@ export default abstract class BaseCanvas extends React.Component<Props> {
         if (this.props.registerComponentClickedHandler)
             this.props.registerComponentClickedHandler(c => this.onComponentClicked(c));
     }
+
+    private getComponentColour(component: ComponentUiData): string {
+        return this.props.selectedComponentIds.includes(component.getId())
+            ? SELECTED_COLOR : DEFAULT_COLOR;
+    }
 }
+
+export default abstract class BaseCanvas extends ExtendableBaseCanvas<Props, State> { }
 

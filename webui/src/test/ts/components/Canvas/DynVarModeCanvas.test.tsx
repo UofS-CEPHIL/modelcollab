@@ -1,6 +1,6 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import CanvasWithMocks, { VariableModeCanvasMock } from "./CanvasWithMocks";
+import CanvasSpy, { VariableModeCanvasSpy } from "./CanvasSpy";
 
 import CanvasTest from "./CanvasTest";
 import { act } from "react-dom/test-utils";
@@ -13,8 +13,8 @@ class DynVarModeCanvasTest extends CanvasTest {
         return "DynVarModeCanvas";
     }
 
-    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasWithMocks {
-        return new VariableModeCanvasMock(props);
+    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy {
+        return new VariableModeCanvasSpy(props);
     }
 
     protected shouldShowConnectionHandles(): boolean {

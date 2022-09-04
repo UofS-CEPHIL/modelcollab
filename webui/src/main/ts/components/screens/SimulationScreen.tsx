@@ -31,7 +31,7 @@ export interface Props {
 interface State {
     mode: UiMode,
     components: ComponentUiData[];
-    selectedComponentId: string | null;
+    selectedComponentIds: string[];
 }
 
 let lastMode: UiMode = UiMode.MOVE;
@@ -46,7 +46,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
         this.state = {
             mode: UiMode.MOVE,
             components: [],
-            selectedComponentId: null
+            selectedComponentIds: []
         };
         this.dm = props.firebaseDataModel;
         document.title = applicationConfig.appName;
@@ -78,13 +78,10 @@ export default class SimulationScreen extends React.Component<Props, State> {
                     .concat(flowComponents)
                     .concat(nonFlowPointerComponents);
 
-                let selectedComponentId: string | null = this.state.selectedComponentId;
-                if (!dbComponents.find(c => c.getId() === selectedComponentId)) {
-                    selectedComponentId = null;
-                }
                 this.setState({
                     ...this.state,
-                    selectedComponentId,
+                    selectedComponentIds: this.state.selectedComponentIds
+                        .filter(id => dbComponents.find(c => c.getId() === id)),
                     components
                 });
             }
@@ -108,12 +105,12 @@ export default class SimulationScreen extends React.Component<Props, State> {
         const setMode = (mode: UiMode) => {
             this.setState({ ...this.state, mode });
             if (lastMode !== mode)
-                setTimeout(() => { this.setSelected(null) });
+                setTimeout(() => { this.setSelected([]) });
             lastMode = mode;
         }
-        const selectedComponent = this.state.selectedComponentId
-            ? this.state.components.find(c => c.getId() === this.state.selectedComponentId)
-            : undefined;
+        const selectedComponents = this.state.selectedComponentIds.map(
+            id => this.state.components.find(c => c.getId() === id)
+        );
         return (
             <React.Fragment>
                 {
@@ -134,26 +131,26 @@ export default class SimulationScreen extends React.Component<Props, State> {
                             firebaseDataModel: this.dm,
                             sessionId: this.props.sessionId,
                             children: this.state.components,
-                            selectedComponentId: this.state.selectedComponentId,
+                            selectedComponentIds: this.state.selectedComponentIds,
                             showConnectionHandles: false,
                             editComponent: c => this.updateComponent(c),
                             deleteComponent: id => this.removeComponent(id),
                             addComponent: c => this.addComponent(c),
-                            setSelected: id => this.setSelected(id)
+                            setSelected: ids => this.setSelected(ids)
                         }
                     )
                 }
                 {
-                    (selectedComponent && this.shouldShowEditBox()) &&
+                    (selectedComponents.length === 1 && this.shouldShowEditBox()) &&
                     this.props.createEditBox({
-                        initialComponent: selectedComponent.getDatabaseObject(),
-                        handleCancel: () => this.setSelected(null),
+                        initialComponent: selectedComponents[0]?.getDatabaseObject(),
+                        handleCancel: () => this.setSelected([]),
                         handleSave: (comp: schema.FirebaseDataComponent<any>) => {
                             const components: ComponentUiData[] = this.state.components
                                 .filter(c => c.getId() !== comp.getId())
                                 .concat(this.createUiComponent(comp));
                             this.dm.updateComponent(this.props.sessionId, comp);
-                            this.setState({ ...this.state, components, selectedComponentId: null });
+                            this.setState({ ...this.state, components, selectedComponentIds: [] });
                         }
                     })
                 }
@@ -174,7 +171,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                     components: this.state.components.concat([newComponent])
                 }
             );
-            setTimeout(() => { this.setSelected(null) }); // ????? this is required, otherwise it ignores selection change
+            setTimeout(() => { this.setSelected([]) }); // ????? this is required, otherwise it ignores selection change
             this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
         }
     }
@@ -186,7 +183,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 .filter(c => c.getData().from === component.getId() || c.getData().to === component.getId());
         }
         const findOrphansRecursively = (component: ComponentUiData) => {
-            // Lord, what a lot of orphans
+            // What a lot of orphans
             let orphans: ComponentUiData[] = [];
             let newOrphans: ComponentUiData[] = [component];
             while (newOrphans.length > 0) {
@@ -220,15 +217,43 @@ export default class SimulationScreen extends React.Component<Props, State> {
     }
 
     private updateComponent(newComponent: ComponentUiData): void {
-        const components: ComponentUiData[] = this.state.components
-            .filter(c => c.getId() !== newComponent.getId()).concat([newComponent]);
-        this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
-        this.setState({ ...this.state, components });
+        const oldComponent = this.state.components.find(c => c.getId() === newComponent.getId());
+        if (!oldComponent) throw new Error();
+        let newComponentsList: ComponentUiData[];
+        const xDiff = (newComponent.getData().x || 0) - (oldComponent.getData().x || 0);
+        const yDiff = (newComponent.getData().y || 0) - (oldComponent.getData().y || 0);
+        if ((xDiff === 0 && yDiff === 0) || this.state.selectedComponentIds.length < 2) {
+            this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
+            newComponentsList = this.state.components
+                .filter(c => c.getId() !== newComponent.getId()).concat([newComponent])
+        }
+        else {
+            newComponentsList = this.state.components.map(c => {
+                if (c.getId() === newComponent.getId()) {
+                    return newComponent;
+                }
+                else if (this.state.selectedComponentIds.includes(c.getId())) {
+                    const oldX = c.getData().x as number;
+                    const oldY = c.getData().y as number;
+                    if (!oldX || !oldY) {
+                        return c;
+                    }
+                    else {
+                        return c.withData({ ...c.getData(), x: oldX + xDiff, y: oldY + yDiff });
+                    }
+                }
+                else {
+                    return c;
+                }
+            });
+            // todo merge with main forn new dm.updateComponents func then write tests for this            
+        }
+
+        this.setState({ ...this.state, components: newComponentsList });
     }
 
-    private setSelected(selectedComponentId: string | null): void {
-        if (selectedComponentId !== this.state.selectedComponentId)
-            this.setState({ ...this.state, selectedComponentId });
+    private setSelected(selectedComponentIds: string[]): void {
+        this.setState({ ...this.state, selectedComponentIds });
     }
 
     private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>): ComponentUiData {

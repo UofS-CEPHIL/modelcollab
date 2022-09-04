@@ -9,27 +9,37 @@ export default class ConnectModeCanvas extends BaseCanvas {
 
     protected onComponentClicked(component: ComponentUiData): void {
         if (component.isPointable()) {
-            if (!this.props.selectedComponentId) {
-                this.props.setSelected(component.getId());
+            if (this.props.selectedComponentIds.length === 0) {
+                this.props.setSelected([component.getId()]);
             }
-            else if (component.getId() !== this.props.selectedComponentId) {
-                if (
-                    this.getConnections().find(c => c.getData().from === this.props.selectedComponentId
-                        && c.getData().to === component.getId())
-                ) return;
-                const newConn = new ConnectionUiData(
-                    new schema.ConnectionFirebaseComponent(
-                        IdGenerator.generateUniqueId(this.props.children),
-                        {
-                            from: this.props.selectedComponentId,
-                            to: component.getId(),
-                            handleXOffset: 0,
-                            handleYOffset: 0,
-                        }
-                    )
-                );
-                this.props.addComponent(newConn);
+            else if (this.props.selectedComponentIds.length > 1) {
+                console.error("Found selected component list > 1 in Connect mode");
+            }
+            else if (!this.props.selectedComponentIds.includes(component.getId())) {
+                if (!this.connectionAlreadyExists(
+                    this.props.selectedComponentIds[0], component.getId()
+                )) {
+                    const newConn = new ConnectionUiData(
+                        new schema.ConnectionFirebaseComponent(
+                            IdGenerator.generateUniqueId(this.props.children),
+                            {
+                                from: this.props.selectedComponentIds[0],
+                                to: component.getId(),
+                                handleXOffset: 0,
+                                handleYOffset: 0,
+                            }
+                        )
+                    );
+                    this.props.addComponent(newConn);
+                }
             }
         }
+    }
+
+    private connectionAlreadyExists(from: string, to: string): boolean {
+        return Boolean(this.getConnections().find(
+            c => c.getData().from === from
+                && c.getData().to === to
+        ));
     }
 }

@@ -29,6 +29,8 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
     // TO -> FROM is determined by whether it implements PointableComponent
     public abstract isPointable(): boolean;
 
+    public abstract isInsideBoundingBox(topLeft: Point, bottomRight: Point, components: ReadonlyArray<ComponentUiData>): boolean;
+
 
     public constructor(dbObject: DbObject) {
         this.dbObject = dbObject;
@@ -113,10 +115,16 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
         return this.getRelativeSide(other, components);
     }
 
-
-
     public toString(): string {
         return this.getDatabaseObject().toString();
+    }
+
+
+    public static isInsideBox(point: Point, boxTopLeft: Point, boxBottomRight: Point): boolean {
+        return point.x > boxTopLeft.x
+            && point.x < boxBottomRight.x
+            && point.y > boxTopLeft.y
+            && point.y < boxBottomRight.y;
     }
 }
 
@@ -181,6 +189,10 @@ export abstract class PointerComponent<
         );
     }
 
+    public isInsideBoundingBox(topLeft: Point, bottomRight: Point, components: ReadonlyArray<ComponentUiData>): boolean {
+        return ComponentUiData.isInsideBox(this.getCentrePoint(components), topLeft, bottomRight);
+    }
+
     public getStartPoint(components: ReadonlyArray<ComponentUiData>): Point {
         return this.getSource(components).getArrowPoint(this.getSideStartingFrom(components), components);
     }
@@ -206,6 +218,7 @@ export abstract class PointerComponent<
         if (!padPx) padPx = 0;
         return { x: (p1.x + p2.x) / 2 + padPx, y: (p1.y + p2.y) / 2 + padPx };
     }
+
 }
 
 export abstract class RectangularComponent<DataType extends schema.FirebaseDataObject, DbObject extends schema.FirebaseDataComponent<DataType>>
@@ -224,6 +237,13 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
 
     public getArrowPoint(side: Side, _: ReadonlyArray<ComponentUiData>) {
         return RectangularComponent.getCentreOfSideOfRect(this.getTopLeft(), this.getWidthPx(), this.getHeightPx(), side);
+    }
+
+    public isInsideBoundingBox(topLeft: Point, bottomRight: Point, _: ReadonlyArray<ComponentUiData>): boolean {
+        const myTopLeft = this.getTopLeft();
+        const myBottomRight = { x: myTopLeft.x + this.getWidthPx(), y: myTopLeft.y + this.getHeightPx() };
+        return ComponentUiData.isInsideBox(myTopLeft, topLeft, bottomRight)
+            && ComponentUiData.isInsideBox(myBottomRight, topLeft, bottomRight);
     }
 
     public static getCentreOfRect(topLeft: Point, width: number, height: number): Point {

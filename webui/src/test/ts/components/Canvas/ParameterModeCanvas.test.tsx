@@ -1,6 +1,6 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import CanvasWithMocks, { ParameterModeCanvasMock } from "./CanvasWithMocks";
+import CanvasSpy, { ParameterModeCanvasSpy } from "./CanvasSpy";
 
 import CanvasTest from "./CanvasTest";
 import { act } from "react-dom/test-utils";
@@ -13,8 +13,8 @@ class ParameterModeCanvasTest extends CanvasTest {
         return "ParameterModeCanvas";
     }
 
-    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasWithMocks {
-        return new ParameterModeCanvasMock(props);
+    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy {
+        return new ParameterModeCanvasSpy(props);
     }
 
     protected shouldShowConnectionHandles(): boolean {
@@ -39,7 +39,6 @@ class ParameterModeCanvasTest extends CanvasTest {
                 expect(newComponent.getData().x).toBe(x);
                 expect(newComponent.getData().y).toBe(y);
             });
-
         });
     }
 
