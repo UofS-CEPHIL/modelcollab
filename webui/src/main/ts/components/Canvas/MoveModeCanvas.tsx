@@ -18,7 +18,7 @@ export default class MoveModeCanvas extends ExtendableBaseCanvas<CanvasProps, St
             anchorX: null,
             anchorY: null,
             mouseX: 0,
-            mouseY: 0
+            mouseY: 0,
         };
     }
 

@@ -217,10 +217,39 @@ export default class SimulationScreen extends React.Component<Props, State> {
     }
 
     private updateComponent(newComponent: ComponentUiData): void {
-        const components: ComponentUiData[] = this.state.components
-            .filter(c => c.getId() !== newComponent.getId()).concat([newComponent]);
-        this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
-        this.setState({ ...this.state, components });
+        const oldComponent = this.state.components.find(c => c.getId() === newComponent.getId());
+        if (!oldComponent) throw new Error();
+        let newComponentsList: ComponentUiData[];
+        const xDiff = (newComponent.getData().x || 0) - (oldComponent.getData().x || 0);
+        const yDiff = (newComponent.getData().y || 0) - (oldComponent.getData().y || 0);
+        if ((xDiff === 0 && yDiff === 0) || this.state.selectedComponentIds.length < 2) {
+            this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
+            newComponentsList = this.state.components
+                .filter(c => c.getId() !== newComponent.getId()).concat([newComponent])
+        }
+        else {
+            newComponentsList = this.state.components.map(c => {
+                if (c.getId() === newComponent.getId()) {
+                    return newComponent;
+                }
+                else if (this.state.selectedComponentIds.includes(c.getId())) {
+                    const oldX = c.getData().x as number;
+                    const oldY = c.getData().y as number;
+                    if (!oldX || !oldY) {
+                        return c;
+                    }
+                    else {
+                        return c.withData({ ...c.getData(), x: oldX + xDiff, y: oldY + yDiff });
+                    }
+                }
+                else {
+                    return c;
+                }
+            });
+            // todo merge with main forn new dm.updateComponents func then write tests for this            
+        }
+
+        this.setState({ ...this.state, components: newComponentsList });
     }
 
     private setSelected(selectedComponentIds: string[]): void {

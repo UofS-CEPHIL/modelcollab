@@ -89,6 +89,12 @@ export abstract class ExtendableBaseCanvas
 
     protected onCanvasMouseMoved(x: number, y: number): void { }
 
+    protected onComponentMouseDown(comp: ComponentUiData, x: number, y: number): void { }
+
+    protected isDraggable(comp: ComponentUiData): boolean {
+        return true;
+    }
+
     protected getFlows(): FlowUiData[] {
         return this.props.children.filter(
             (c: ComponentUiData) => c.getType() === schema.ComponentType.FLOW
@@ -131,7 +137,7 @@ export abstract class ExtendableBaseCanvas
                 stock: stock,
                 components: this.props.children,
                 color: this.getComponentColour(stock),
-                draggable: true,
+                draggable: this.isDraggable(stock),
                 text: stock.getData().text,
                 updateState: this.props.editComponent,
                 key: i
@@ -172,7 +178,7 @@ export abstract class ExtendableBaseCanvas
     private makeTextProps(data: TextComponent<any>, i: number): TextProps {
         return {
             data: data,
-            draggable: true,
+            draggable: this.isDraggable(data),
             updateState: this.props.editComponent,
             color: this.getComponentColour(data),
             key: i
@@ -332,6 +338,9 @@ export abstract class ExtendableBaseCanvas
 
         if (!target) {
             this.onCanvasMouseDown(pointerPos.x, pointerPos.y);
+        }
+        else {
+            this.onComponentMouseDown(target, pointerPos.x, pointerPos.y);
         }
     }
 
