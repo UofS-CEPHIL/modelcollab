@@ -1,8 +1,9 @@
-import { ref, set, onValue, remove, DataSnapshot, push } from "firebase/database";
+import { ref, set, onValue, remove, DataSnapshot, push, update } from "firebase/database";
 import FirebaseManager from "./FirebaseManager";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import FirebaseDataModel from "./FirebaseDataModel";
+import ComponentUiData from "../components/ScreenObjects/ComponentUiData";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
@@ -12,8 +13,12 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         this.firebaseManager = firebaseManager;
     }
 
+    private makeComponentsListPath(sessionId: string): string {
+        return `components/${sessionId}`;
+    }
+
     private makeComponentPath(sessionId: string, componentId: string) {
-        return `components/${sessionId}/${componentId}`;
+        return `${this.makeComponentsListPath(sessionId)}/${componentId}`;
     }
 
     private triggerCallback(
@@ -76,6 +81,25 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                 this.firebaseManager.getDb(),
                 componentPath
             )
+        );
+    }
+
+    removeComponents(sessionId: string, componentIds: string[], allComponents: ComponentUiData[]): void {
+        const newComponentsList = allComponents.filter(c => !componentIds.includes(c.getId()));
+        set(
+            ref(
+                this.firebaseManager.getDb(),
+                this.makeComponentsListPath(sessionId)
+            ),
+            Object.fromEntries(newComponentsList.map(c => {
+                return [
+                    c.getId(),
+                    {
+                        type: c.getType().toString(),
+                        data: c.getData()
+                    }
+                ]
+            }))
         );
     }
 }

@@ -211,8 +211,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                     components
                 }
             );
-            this.dm.removeComponent(this.props.sessionId, id);
-            orphans.forEach(o => this.dm.removeComponent(this.props.sessionId, o.getId()));
+            this.dm.removeComponents(this.props.sessionId, [...orphans.map(o => o.getId()), component.getId()], this.state.components);
         }
     }
 
@@ -246,9 +245,9 @@ export default class SimulationScreen extends React.Component<Props, State> {
                     return c;
                 }
             });
-            // todo merge with main forn new dm.updateComponents func then write tests for this            
         }
 
+        newComponentsList.forEach(c => this.dm.updateComponent(this.props.sessionId, c.getDatabaseObject()));
         this.setState({ ...this.state, components: newComponentsList });
     }
 
