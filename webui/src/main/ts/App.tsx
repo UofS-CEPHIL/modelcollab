@@ -20,6 +20,7 @@ import DynamicVariableModeCanvas from "./components/Canvas/DynamicVariableModeCa
 import CloudModeCanvas from "./components/Canvas/CloudModeCanvas";
 import EditBox, { Props as EditBoxProps } from './components/EditBox/EditBox';
 import Toolbar, { Props as ToolbarProps } from './components/Toolbar/Toolbar';
+import SaveModelBox, { Props as SaveModelBoxProps } from "./components/SaveModelBox/SaveModelBox";
 
 const firebaseManager = new FirebaseManagerImpl();
 
@@ -81,8 +82,9 @@ export default class App extends React.Component<Props, State> {
                                     sessionId={this.state.currentSession}
                                     returnToSessionSelect={() => this.setState({ ...this.state, currentSession: null })}
                                     createCanvasForMode={(m, p) => this.createCanvasForMode(m, p)}
-                                    createEditBox={(p) => this.createEditBox(p)}
-                                    createToolbar={(p) => this.createToolbar(p)}
+                                    createEditBox={p => this.createEditBox(p)}
+                                    createToolbar={p => this.createToolbar(p)}
+                                    createSaveModelBox={p => this.createSaveModelBox(p)}
                                 />
                             }
                         />
@@ -95,6 +97,12 @@ export default class App extends React.Component<Props, State> {
     private createEditBox(props: EditBoxProps): ReactElement {
         return (
             <EditBox {...props} />
+        );
+    }
+
+    private createSaveModelBox(props: SaveModelBoxProps): ReactElement {
+        return (
+            <SaveModelBox {...props} />
         );
     }
 

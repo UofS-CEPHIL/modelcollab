@@ -17,6 +17,7 @@ export interface Props {
     sessionId: string;
     returnToSessionSelect: () => void;
     downloadData: (b: Blob) => void;
+    saveModel: () => void;
     restClient: RestClient;
 }
 
@@ -203,6 +204,12 @@ export default class Toolbar extends React.Component<Props, State> {
                             onClick={handleClick}
                         />
                         <Tab
+                            label={"Save Model"}
+                            value={"SaveModel"}
+                            onClick={() => this.props.saveModel()}
+                            data-testid={"SaveModel"}
+                        />
+                        <Tab
                             label="Go Back"
                             value={"GoBack"}
                             onClick={_ => this.props.returnToSessionSelect()}
@@ -210,7 +217,7 @@ export default class Toolbar extends React.Component<Props, State> {
                         />
                     </Tabs>
                     <Menu
-                        id="basic-menux"
+                        id="basic-menu"
                         anchorEl={this.state.anchorElement}
                         open={open}
                         onClose={handleClose}

@@ -1,6 +1,6 @@
 import { ref, set, onValue, remove, DataSnapshot, push, update } from "firebase/database";
 import FirebaseManager from "./FirebaseManager";
-import { FirebaseComponentModel as schema } from "database/build/export";
+import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build/export";
 
 import FirebaseDataModel from "./FirebaseDataModel";
 import ComponentUiData from "../components/ScreenObjects/ComponentUiData";
@@ -11,14 +11,6 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
     constructor(firebaseManager: FirebaseManager) {
         this.firebaseManager = firebaseManager;
-    }
-
-    private makeComponentsListPath(sessionId: string): string {
-        return `components/${sessionId}`;
-    }
-
-    private makeComponentPath(sessionId: string, componentId: string) {
-        return `${this.makeComponentsListPath(sessionId)}/${componentId}`;
     }
 
     private triggerCallback(
@@ -40,7 +32,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         set(
             ref(
                 this.firebaseManager.getDb(),
-                this.makeComponentPath(sessionId, data.getId())
+                FirebaseSchema.makeComponentPath(sessionId, data.getId())
             ),
             {
                 type: data.getType().toString(),
@@ -53,14 +45,14 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         onValue(
             ref(
                 this.firebaseManager.getDb(),
-                `components/${sessionId}`
+                FirebaseSchema.makeAllComponentsForSessionPath(sessionId)
             ),
             s => this.triggerCallback(s, callback)
         );
     }
 
     subscribeToSessionList(onChanged: (sessions: string[]) => void) {
-        const listRef = ref(this.firebaseManager.getDb(), "sessionIds/");
+        const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeSessionIdsPath());
         onValue(listRef, snap => {
             let childValues: string[] = [];
             snap.forEach(childSnap => { childValues.push(childSnap.val() as string) })
@@ -68,14 +60,18 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         });
     }
 
+    subscribeToModelList(onChanged: (models: string[]) => void): void {
+        const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeSavedModelsPath());
+    }
+
     addSession(id: string) {
-        const listRef = ref(this.firebaseManager.getDb(), "sessionIds/");
+        const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeSessionIdsPath());
         const newRef = push(listRef);
         set(newRef, id);
     }
 
     removeComponent(sessionId: string, componentId: string) {
-        const componentPath = this.makeComponentPath(sessionId, componentId);
+        const componentPath = FirebaseSchema.makeComponentPath(sessionId, componentId);
         remove(
             ref(
                 this.firebaseManager.getDb(),
@@ -89,7 +85,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         set(
             ref(
                 this.firebaseManager.getDb(),
-                this.makeComponentsListPath(sessionId)
+                FirebaseSchema.makeAllComponentsForSessionPath(sessionId)
             ),
             Object.fromEntries(newComponentsList.map(c => {
                 return [
@@ -100,6 +96,33 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                     }
                 ]
             }))
+        );
+    }
+
+    addModelToLibrary(modelId: string, components: ComponentUiData[]): void {
+        set(
+            ref(
+                this.firebaseManager.getDb(),
+                FirebaseSchema.makeSavedModelPath(modelId)
+            ),
+            Object.fromEntries(components.map(c => {
+                return [
+                    c.getId(),
+                    {
+                        type: c.getType().toString(),
+                        data: c.getData()
+                    }
+                ];
+            }))
+        );
+        set(
+            push(
+                ref(
+                    this.firebaseManager.getDb(),
+                    FirebaseSchema.makeModelIdsPath()
+                )
+            ),
+            modelId
         );
     }
 }

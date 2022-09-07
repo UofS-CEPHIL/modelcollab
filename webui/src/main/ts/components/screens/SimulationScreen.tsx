@@ -10,6 +10,7 @@ import applicationConfig from '../../config/applicationConfig';
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import { DataSnapshot } from 'firebase/database';
 import EditBox, { Props as EditBoxProps } from '../EditBox/EditBox';
+import { Props as SaveModelBoxProps } from "../SaveModelBox/SaveModelBox";
 import StockUiData from '../ScreenObjects/StockUiData';
 import FlowUiData from '../ScreenObjects/FlowUiData';
 import ConnectionUiData from '../ScreenObjects/ConnectionUiData';
@@ -26,12 +27,14 @@ export interface Props {
     createCanvasForMode: (mode: UiMode, props: CanvasProps) => ReactElement;
     createToolbar: (props: ToolbarProps) => ReactElement;
     createEditBox: (props: EditBoxProps) => ReactElement;
+    createSaveModelBox: (props: SaveModelBoxProps) => ReactElement;
 }
 
 interface State {
     mode: UiMode,
     components: ComponentUiData[];
     selectedComponentIds: string[];
+    showingSaveModelBox: boolean;
 }
 
 let lastMode: UiMode = UiMode.MOVE;
@@ -46,7 +49,8 @@ export default class SimulationScreen extends React.Component<Props, State> {
         this.state = {
             mode: UiMode.MOVE,
             components: [],
-            selectedComponentIds: []
+            selectedComponentIds: [],
+            showingSaveModelBox: false
         };
         this.dm = props.firebaseDataModel;
         document.title = applicationConfig.appName;
@@ -101,7 +105,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
         }
     }
 
-    render() {
+    public render() {
         const setMode = (mode: UiMode) => {
             this.setState({ ...this.state, mode });
             if (lastMode !== mode)
@@ -121,6 +125,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                         returnToSessionSelect: this.props.returnToSessionSelect,
                         sessionId: this.props.sessionId,
                         downloadData: b => this.downloadData(b),
+                        saveModel: () => this.saveModel(),
                         restClient: new RestClientImpl()
                     })
                 }
@@ -153,6 +158,17 @@ export default class SimulationScreen extends React.Component<Props, State> {
                             this.setState({ ...this.state, components, selectedComponentIds: [] });
                         }
                     })
+                }
+                {
+                    this.state.showingSaveModelBox &&
+                    this.props.createSaveModelBox({
+                        handleCancel: () => this.setState({ ...this.state, showingSaveModelBox: false }),
+                        handleSave: id => {
+                            this.setState({ ...this.state, showingSaveModelBox: false });
+                            this.dm.addModelToLibrary(id, this.state.components);
+                        }
+                    })
+
                 }
             </React.Fragment >
         );
@@ -282,5 +298,9 @@ export default class SimulationScreen extends React.Component<Props, State> {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+    }
+
+    private saveModel(): void {
+        this.setState({ showingSaveModelBox: true });
     }
 }
