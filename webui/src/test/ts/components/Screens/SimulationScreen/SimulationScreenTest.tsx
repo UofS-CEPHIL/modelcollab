@@ -6,17 +6,20 @@ import { ReactElement } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { fireEvent, getByText } from "@testing-library/react";
-import CanvasSpy, { CloudModeCanvasSpy, EditModeCanvasSpy, FlowModeCanvasSpy, MoveModeCanvasSpy, ParameterModeCanvasSpy, StockModeCanvasSpy, SumVarModeCanvasSpy, VariableModeCanvasSpy } from "../../Canvas/CanvasSpy";
+import MockCanvas, { CloudModeCanvasSpy, EditModeCanvasSpy, FlowModeCanvasSpy, MoveModeCanvasSpy, ParameterModeCanvasSpy, StockModeCanvasSpy, SumVarModeCanvasSpy, VariableModeCanvasSpy } from "../../Canvas/MockCanvas";
 import { UiMode } from "../../../../../main/ts/UiMode";
 import ConnectModeCanvas from "../../../../../main/ts/components/Canvas/ConnectModeCanvas";
 import DeleteModeCanvas from "../../../../../main/ts/components/Canvas/DeleteModeCanvas";
 import EditModeCanvas from "../../../../../main/ts/components/Canvas/EditModeCanvas";
 import Toolbar, { Props as ToolbarProps } from "../../../../../main/ts/components/Toolbar/Toolbar";
+import { Props as SaveModelBoxProps } from "../../../../../main/ts/components/SaveModelBox/SaveModelBox";
 import { Props as EditBoxProps } from "../../../../../main/ts/components/EditBox/EditBox";
 import MockToolbar from "../../Toolbar/MockToolbar";
 import MockEditBox from "../../EditBox/MockEditBox";
 import MockFirebaseDataModel from "../../../data/MockFirebaseDataModel";
 import FirebaseDataModel from "../../../../../main/ts/data/FirebaseDataModel";
+import MockSaveModelBox from "../../SaveModelBox/MockSaveModelBox";
+import MockRenderer from "../../Canvas/MockRenderer";
 
 
 /*
@@ -36,13 +39,16 @@ export default abstract class SimulationScreenTest {
 
     protected containerNode: HTMLElement | null = null;
     protected root: Root | null = null;
-    protected returnToSessionSelect: (() => void) | null = null;
-    protected createCanvasForMode: ((m: UiMode, p: CanvasProps) => ReactElement) | null = null;
-    protected createToolbar: ((p: ToolbarProps) => ReactElement) | null = null;
+    protected returnToSessionSelect: jest.Mock<void> | null = null;
+    protected createCanvasForMode: jest.Mock<ReactElement> | null = null;
+    protected createToolbar: jest.Mock<ReactElement> | null = null;
+    protected createSaveModelBox: jest.Mock<ReactElement> | null = null;
+    protected lastRenderedSaveModelBox: MockSaveModelBox | null = null;
     protected lastRenderedToolbar: MockToolbar | null = null;
-    protected createEditBox: ((p: EditBoxProps) => ReactElement) | null = null;
+    protected createEditBox: jest.Mock<ReactElement> | null = null;
     protected lastRenderedEditBox: MockEditBox | null = null;
-    protected firebaseDataModel: FirebaseDataModel | null = null;
+    protected firebaseDataModel: MockFirebaseDataModel | null = null;
+    protected renderer: MockRenderer | null = null;
 
     public abstract describeTests(): void;
 
@@ -53,7 +59,9 @@ export default abstract class SimulationScreenTest {
             returnToSessionSelect: CanvasUtils.NO_OP,
             createCanvasForMode: CanvasUtils.createCanvasWithMocksForMode,
             createEditBox: p => new MockEditBox(p).render(),
-            createToolbar: p => new MockToolbar(p).render()
+            createToolbar: p => new MockToolbar(p).render(),
+            createSaveModelBox: p => new MockSaveModelBox(p).render(),
+            renderer: new MockRenderer()
         };
         return (
             <SimulationScreen

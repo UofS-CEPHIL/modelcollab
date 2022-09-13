@@ -10,4 +10,5 @@ export default interface FirebaseDataModel {
     removeComponents: (sessionId: string, componentId: string[], allComponents: ComponentUiData[]) => void;
     addModelToLibrary: (modelId: string, components: ComponentUiData[]) => void;
     subscribeToModelList: (onChanged: (models: string[]) => void) => void;
+    getComponentsForSavedModel: (modelId: string, onResults: (components: schema.FirebaseDataComponent<any>[]) => void) => void;
 }

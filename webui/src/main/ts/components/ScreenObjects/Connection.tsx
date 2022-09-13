@@ -8,7 +8,7 @@ import ComponentUiData from './ComponentUiData';
 
 export interface Props {
     conn: ConnectionUiData;
-    components: ReadonlyArray<ComponentUiData>;
+    components: ComponentUiData[];
     showHandle: boolean;
     updateState: (c: ConnectionUiData) => void;
 }

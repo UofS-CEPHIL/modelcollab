@@ -7,7 +7,7 @@ import BaseCanvas from "./BaseCanvas";
 
 export default class CloudModeCanvas extends BaseCanvas {
     protected onCanvasLeftClicked(x: number, y: number): void {
-        const componentID = IdGenerator.generateUniqueId(this.props.children);
+        const componentID = IdGenerator.generateUniqueId(this.props.components);
         const newCloud = new CloudUiData(new schema.CloudFirebaseComponent(
             componentID,
             { x, y }
@@ -15,3 +15,4 @@ export default class CloudModeCanvas extends BaseCanvas {
         this.props.addComponent(newCloud);
     }
 }
+

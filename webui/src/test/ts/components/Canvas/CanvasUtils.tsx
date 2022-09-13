@@ -1,6 +1,6 @@
 import { UiMode } from "../../../../main/ts/UiMode";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import { CloudModeCanvasSpy, VariableModeCanvasSpy, EditModeCanvasSpy, FlowModeCanvasSpy, MoveModeCanvasSpy, ConnectionModeCanvasSpy, ParameterModeCanvasSpy, StockModeCanvasSpy, SumVarModeCanvasSpy, DeleteModeCanvasSpy } from "./CanvasSpy";
+import { CloudModeCanvasSpy, VariableModeCanvasSpy, EditModeCanvasSpy, FlowModeCanvasSpy, MoveModeCanvasSpy, ConnectionModeCanvasSpy, ParameterModeCanvasSpy, StockModeCanvasSpy, SumVarModeCanvasSpy, DeleteModeCanvasSpy } from "./MockCanvas";
 import { ReactElement } from "react";
 
 

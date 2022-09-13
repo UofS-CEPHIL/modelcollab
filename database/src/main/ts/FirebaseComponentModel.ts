@@ -5,7 +5,8 @@ export enum ComponentType {
     VARIABLE = "variable",
     SUM_VARIABLE = "sum_variable",
     CONNECTION = "connection",
-    CLOUD = "cloud"
+    CLOUD = "cloud",
+    STATIC_MODEL = "static_model",
 }
 
 // Represents all components as they are represented inside Firebase
@@ -122,6 +123,17 @@ export function createFirebaseDataComponent(id: string, data: any): FirebaseData
                 {
                     x: dataVal.x as number,
                     y: dataVal.y as number
+                }
+            );
+            break;
+        case ComponentType.STATIC_MODEL.toString():
+            component = new StaticModelComponent(
+                id,
+                {
+                    x: dataVal.x as number,
+                    y: dataVal.y as number,
+                    modelId: dataVal.modelId as string,
+                    color: dataVal.color as string
                 }
             );
             break;
@@ -319,3 +331,22 @@ export class CloudFirebaseComponent extends FirebaseDataComponent<CloudComponent
     }
 }
 
+
+//################################# Static Model #################################
+
+export interface StaticModelComponentData extends FirebaseDataObject {
+    x: number,
+    y: number,
+    color: string,
+    modelId: string
+}
+
+export class StaticModelComponent extends FirebaseDataComponent<StaticModelComponentData> {
+    getType(): ComponentType {
+        return ComponentType.STATIC_MODEL;
+    }
+
+    withData(data: StaticModelComponentData): StaticModelComponent {
+        return new StaticModelComponent(this.getId(), data);
+    }
+}

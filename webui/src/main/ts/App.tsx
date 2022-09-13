@@ -21,6 +21,7 @@ import CloudModeCanvas from "./components/Canvas/CloudModeCanvas";
 import EditBox, { Props as EditBoxProps } from './components/EditBox/EditBox';
 import Toolbar, { Props as ToolbarProps } from './components/Toolbar/Toolbar';
 import SaveModelBox, { Props as SaveModelBoxProps } from "./components/SaveModelBox/SaveModelBox";
+import ComponentRendererImpl from "./components/Canvas/ComponentRendererImpl";
 
 const firebaseManager = new FirebaseManagerImpl();
 
@@ -85,6 +86,7 @@ export default class App extends React.Component<Props, State> {
                                     createEditBox={p => this.createEditBox(p)}
                                     createToolbar={p => this.createToolbar(p)}
                                     createSaveModelBox={p => this.createSaveModelBox(p)}
+                                    renderer={new ComponentRendererImpl()}
                                 />
                             }
                         />

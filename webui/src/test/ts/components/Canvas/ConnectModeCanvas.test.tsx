@@ -1,5 +1,5 @@
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import CanvasSpy, { ConnectionModeCanvasSpy } from "./CanvasSpy";
+import MockCanvas, { ConnectionModeCanvasSpy } from "./MockCanvas";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import CanvasTest from "./CanvasTest";
@@ -11,6 +11,7 @@ import FlowUiData from "../../../../main/ts/components/ScreenObjects/FlowUiData"
 import ParameterUiData from "../../../../main/ts/components/ScreenObjects/ParameterUiData";
 import DynamicVariableUiData from "../../../../main/ts/components/ScreenObjects/DynamicVariableUiData";
 import SumVariableUiData from "../../../../main/ts/components/ScreenObjects/SumVariableUiData";
+import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
 
 
 class ConnectModeCanvasTest extends CanvasTest {
@@ -19,7 +20,7 @@ class ConnectModeCanvasTest extends CanvasTest {
         return "ConnectModeCanvas";
     }
 
-    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy {
+    protected makeCanvasMock(props: Partial<CanvasProps>): MockCanvas {
         return new ConnectionModeCanvasSpy({ ...props, showConnectionHandles: this.shouldShowConnectionHandles() });
     }
 
@@ -120,7 +121,7 @@ class ConnectModeCanvasTest extends CanvasTest {
         test(
             `Should successfully make connection from ${from.getType()}, to ${to.getType()}`,
             async () => {
-                const canvas = this.makeCanvasMock({ selectedComponentIds: [from.getId()], children: componentsList });
+                const canvas = this.makeCanvasMock({ selectedComponentIds: [from.getId()], components: new ComponentCollection(componentsList) });
                 act(() => this.root?.render(canvas.render()));
                 canvas.clickComponent(to);
 

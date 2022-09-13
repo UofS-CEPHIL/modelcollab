@@ -3,7 +3,7 @@ import { act } from "react-dom/test-utils";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
 import StockUiData from "../../../../main/ts/components/ScreenObjects/StockUiData";
-import CanvasSpy, { StockModeCanvasSpy } from "./CanvasSpy";
+import MockCanvas, { StockModeCanvasSpy } from "./MockCanvas";
 import CanvasTest from "./CanvasTest";
 
 class StockModeCanvasTest extends CanvasTest {
@@ -12,7 +12,7 @@ class StockModeCanvasTest extends CanvasTest {
         return "StockModeCanvas";
     }
 
-    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy {
+    protected makeCanvasMock(props: Partial<CanvasProps>): MockCanvas {
         return new StockModeCanvasSpy(props);
     }
 

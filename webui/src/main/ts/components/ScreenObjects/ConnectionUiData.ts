@@ -13,6 +13,22 @@ export default class ConnectionUiData extends PointerComponent<schema.Connection
         );
     }
 
+    public getMinX(components: ComponentUiData[]): number {
+        return Math.min(...this.getArrowPointsXValues(components));
+    }
+
+    public getMaxX(components: ComponentUiData[]): number {
+        return Math.max(...this.getArrowPointsXValues(components));
+    }
+
+    public getMinY(components: ComponentUiData[]): number {
+        return Math.min(...this.getArrowPointsYValues(components));
+    }
+
+    public getMaxY(components: ComponentUiData[]): number {
+        return Math.max(...this.getArrowPointsYValues(components));
+    }
+
     public isPointable(): boolean {
         return false;
     }
@@ -25,7 +41,7 @@ export default class ConnectionUiData extends PointerComponent<schema.Connection
         };
     }
 
-    public getArrowPoints(components: ReadonlyArray<ComponentUiData>): number[] {
+    public getArrowPoints(components: ComponentUiData[]): number[] {
         const straightArrowPoints = super.getArrowPoints(components);
         const handleLocation = this.computeHandleLocation(components);
         return [
@@ -36,7 +52,18 @@ export default class ConnectionUiData extends PointerComponent<schema.Connection
             straightArrowPoints[2],
             straightArrowPoints[3]
         ];
+    }
 
+    private getArrowPointsXValues(components: ComponentUiData[]): number[] {
+        return this
+            .getArrowPoints(components)
+            .filter((_, i) => i % 2 === 0); // X vals live at even idxs
+    }
+
+    private getArrowPointsYValues(components: ComponentUiData[]): number[] {
+        return this
+            .getArrowPoints(components)
+            .filter((_, i) => i % 2 !== 0); // Y vals live at odd idxs
     }
 }
 

@@ -21,7 +21,7 @@ export default class ConnectModeCanvas extends BaseCanvas {
                 )) {
                     const newConn = new ConnectionUiData(
                         new schema.ConnectionFirebaseComponent(
-                            IdGenerator.generateUniqueId(this.props.children),
+                            IdGenerator.generateUniqueId(this.props.components),
                             {
                                 from: this.props.selectedComponentIds[0],
                                 to: component.getId(),
@@ -37,7 +37,7 @@ export default class ConnectModeCanvas extends BaseCanvas {
     }
 
     private connectionAlreadyExists(from: string, to: string): boolean {
-        return Boolean(this.getConnections().find(
+        return Boolean(this.props.components.getConnections().find(
             c => c.getData().from === from
                 && c.getData().to === to
         ));

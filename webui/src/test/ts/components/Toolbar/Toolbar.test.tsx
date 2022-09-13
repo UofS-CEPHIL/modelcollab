@@ -23,7 +23,9 @@ function makeToolbar(props: Partial<Props>): ReactElement {
         returnToSessionSelect: () => { },
         sessionId: A_SESSION_ID,
         restClient: MOCK_REST_CLIENT,
-        downloadData: () => { }
+        downloadData: () => { },
+        saveModel: () => { },
+        importModel: () => { }
     };
     return (
         <Toolbar {...DEFAULT} {...props} />

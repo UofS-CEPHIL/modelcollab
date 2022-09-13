@@ -1,12 +1,9 @@
-import { ReactElement } from "react";
-import { createRoot, Root } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { FirebaseComponentModel as schema } from "database/build/export";
-import FirebaseDataModel from "../../../../../main/ts/data/FirebaseDataModel";
 import { UiMode } from "../../../../../main/ts/UiMode";
 import { Props as ScreenProps } from "../../../../../main/ts/components/screens/SimulationScreen";
 import { Props as CanvasProps } from "../../../../../main/ts/components/Canvas/BaseCanvas";
-import { Props as ToolbarProps } from "../../../../../main/ts/components/Toolbar/Toolbar";
 import { Props as EditBoxProps } from "../../../../../main/ts/components/EditBox/EditBox";
 import MockFirebaseDataModel from "../../../data/MockFirebaseDataModel";
 import CanvasUtils from "../../Canvas/CanvasUtils";
@@ -17,6 +14,8 @@ import CloudUiData from "../../../../../main/ts/components/ScreenObjects/CloudUi
 import FlowUiData from "../../../../../main/ts/components/ScreenObjects/FlowUiData";
 import ConnectionUiData from "../../../../../main/ts/components/ScreenObjects/ConnectionUiData";
 import { waitFor } from "@testing-library/react";
+import MockSaveModelBox from "../../SaveModelBox/MockSaveModelBox";
+import MockRenderer from "../../Canvas/MockRenderer";
 
 
 export default class SimulationScreenWithComponents extends SimulationScreenTest {
@@ -69,13 +68,20 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                 this.lastRenderedEditBox = new MockEditBox(p);
                 return this.lastRenderedEditBox.render();
             });
+            this.createSaveModelBox = jest.fn(p => {
+                this.lastRenderedSaveModelBox = new MockSaveModelBox(p);
+                return this.lastRenderedSaveModelBox.render();
+            });
+            this.renderer = new MockRenderer();
             this.returnToSessionSelect = jest.fn();
             const props: ScreenProps = {
                 createCanvasForMode: this.createCanvasForMode,
                 createToolbar: this.createToolbar,
                 createEditBox: this.createEditBox,
+                createSaveModelBox: this.createSaveModelBox,
                 firebaseDataModel: this.firebaseDataModel,
                 returnToSessionSelect: this.returnToSessionSelect,
+                renderer: this.renderer,
                 sessionId: SimulationScreenTest.AN_ID,
             };
             act(
@@ -83,9 +89,8 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
             );
 
             expect(this.firebaseDataModel.subscribeToSession).toHaveBeenCalledTimes(1);
-            const callback = (this.firebaseDataModel.subscribeToSession as jest.Mock)
-                .mock.calls[0][1];
-            (this.createCanvasForMode as jest.Mock).mockReset();
+            const callback = this.firebaseDataModel.subscribeToSession.mock.calls[0][1];
+            this.createCanvasForMode?.mockReset();
             act(() => callback(this.components));
         });
 
@@ -104,10 +109,9 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
 
         test("Should have rendered screen with components", async () => {
             expect(this.createCanvasForMode).toHaveBeenCalledTimes(1);
-            const canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                .mock.calls[0][1];
-            expect(canvasProps.children.length).toBe(this.components.length);
-            canvasProps.children.forEach(
+            const canvasProps: CanvasProps = this.createCanvasForMode?.mock.calls[0][1];
+            expect(canvasProps.components.length()).toBe(this.components.length);
+            canvasProps.components.getAllComponents().forEach(
                 c1 => expect(
                     this.components.find(
                         c2 => c1.getId() === c2.getId()
@@ -121,27 +125,29 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
         describe("Deletions", () => {
             test("Should notify Firebase when component deleted", async () => {
                 expect(this.createCanvasForMode).toHaveBeenCalledTimes(1);
-                let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                    .mock.calls[0][1];
+                let canvasProps: CanvasProps = this.createCanvasForMode?.mock.calls[0][1];
                 act(() => canvasProps.deleteComponent(this.pToStockConn.getId()));
-                expect(this.firebaseDataModel?.removeComponent).toHaveBeenCalledTimes(1);
-                expect(this.firebaseDataModel?.removeComponent)
-                    .toHaveBeenCalledWith(SimulationScreenTest.AN_ID, this.pToStockConn.getId());
+                expect(this.firebaseDataModel?.removeComponents).toHaveBeenCalledTimes(1);
+                expect(this.firebaseDataModel?.removeComponents)
+                    .toHaveBeenCalledWith(
+                        SimulationScreenTest.AN_ID,
+                        [this.pToStockConn.getId()],
+                        expect.anything()
+                    );
             });
 
             test("Should correctly remove component from canvas when deleted", async () => {
                 expect(this.createCanvasForMode).toHaveBeenCalledTimes(1);
-                let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                    .mock.calls[0][1];
+                let canvasProps: CanvasProps = this.createCanvasForMode?.mock.calls[0][1];
                 act(() => canvasProps.deleteComponent(this.pToStockConn.getId()));
                 expect(this.createCanvasForMode).toHaveBeenCalledTimes(2);
-                canvasProps = (this.createCanvasForMode as jest.Mock).mock.calls[1][1];
-                expect(canvasProps.children.length).toBe(this.components.length - 1);
+                canvasProps = this.createCanvasForMode?.mock.calls[1][1];
+                expect(canvasProps.components.length()).toBe(this.components.length - 1);
                 this.components
                     .filter(c => c.getId() !== this.pToStockConn.getId())
                     .forEach(
                         c1 => expect(
-                            canvasProps.children.find(c2 =>
+                            canvasProps.components.getAllComponents().find(c2 =>
                                 c1.getId() === c2.getId()
                                 && c1.getType() === c2.getType()
                                 && c1.getData() === c2.getData()
@@ -152,8 +158,7 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
 
             test("Should successfully cascade-delete 1 layer of dependent components", async () => {
                 expect(this.createCanvasForMode).toHaveBeenCalledTimes(1);
-                let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                    .mock.calls[0][1];
+                let canvasProps: CanvasProps = this.createCanvasForMode?.mock.calls[0][1];
                 // Flow has dependent components: pToFlowConn and flowToPConn.
                 // Should result in that one being deleted in addition to the flow
                 const expectedDeletedComponentIds = [
@@ -161,20 +166,21 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                 ];
                 act(() => canvasProps.deleteComponent(this.flow.getId()));
 
-                expect(this.firebaseDataModel?.removeComponent)
-                    .toHaveBeenCalledTimes(expectedDeletedComponentIds.length);
+                expect(this.firebaseDataModel?.removeComponents).toHaveBeenCalledTimes(1);
+                const mockArgs = this.firebaseDataModel?.removeComponents.mock.lastCall;
+                expect(mockArgs[0]).toBe(SimulationScreenTest.AN_ID);
                 expectedDeletedComponentIds.forEach(
-                    id => expect(this.firebaseDataModel?.removeComponent)
-                        .toHaveBeenCalledWith(SimulationScreenTest.AN_ID, id)
+                    id => expect(mockArgs[1].includes(id)).toBe(true)
                 );
-                canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
-                expect(canvasProps.children.length)
+
+                canvasProps = this.createCanvasForMode?.mock.lastCall[1];
+                expect(canvasProps.components.length())
                     .toBe(this.components.length - expectedDeletedComponentIds.length);
                 this.components
                     .filter(c => !expectedDeletedComponentIds.includes(c.getId()))
                     .forEach(
                         c1 => expect(
-                            canvasProps.children.find(c2 =>
+                            canvasProps.components.getAllComponents().find(c2 =>
                                 c1.getId() === c2.getId()
                                 && c1.getType() === c2.getType()
                                 && c1.getData() === c2.getData()
@@ -187,8 +193,7 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                 "Should successfully cascade-delete 2 layers of dependent components",
                 async () => {
                     expect(this.createCanvasForMode).toHaveBeenCalledTimes(1);
-                    let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                        .mock.calls[0][1];
+                    let canvasProps: CanvasProps = this.createCanvasForMode?.mock.calls[0][1];
                     // Stock has dependent components: flow and
                     // pToStockConn. Flow has dependent components:
                     // pToFlowConn and flowToPConn.  Should result in
@@ -203,20 +208,20 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                     ];
                     act(() => canvasProps.deleteComponent(this.stock.getId()));
 
-                    expect(this.firebaseDataModel?.removeComponent)
-                        .toHaveBeenCalledTimes(expectedDeletedComponentIds.length);
+                    expect(this.firebaseDataModel?.removeComponents).toHaveBeenCalledTimes(1);
+                    const mockArgs = this.firebaseDataModel?.removeComponents.mock.lastCall;
+                    expect(mockArgs[0]).toBe(SimulationScreenTest.AN_ID);
                     expectedDeletedComponentIds.forEach(
-                        id => expect(this.firebaseDataModel?.removeComponent)
-                            .toHaveBeenCalledWith(SimulationScreenTest.AN_ID, id)
+                        id => expect(mockArgs[1].includes(id)).toBe(true)
                     );
-                    canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
-                    expect(canvasProps.children.length)
+                    canvasProps = this.createCanvasForMode?.mock.lastCall[1];
+                    expect(canvasProps.components.length())
                         .toBe(this.components.length - expectedDeletedComponentIds.length);
                     this.components
                         .filter(c => !expectedDeletedComponentIds.includes(c.getId()))
                         .forEach(
                             c1 => expect(
-                                canvasProps.children.find(c2 =>
+                                canvasProps.components.getAllComponents().find(c2 =>
                                     c1.getId() === c2.getId()
                                     && c1.getType() === c2.getType()
                                     && c1.getData() === c2.getData()
@@ -234,8 +239,7 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
             const newY = oldY + 50;
             const dragCloud = () => {
                 expect(this.createCanvasForMode).toHaveBeenCalledTimes(1);
-                let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                    .mock.calls[0][1];
+                let canvasProps: CanvasProps = this.createCanvasForMode?.mock.calls[0][1];
                 act(
                     () => canvasProps.editComponent(
                         new CloudUiData(
@@ -248,17 +252,16 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
 
             test("Should correctly update screen position when item dragged", async () => {
                 dragCloud();
-                const canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                    .mock.lastCall[1];
-                expect(canvasProps.children.find(c =>
+                const canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
+                expect(canvasProps.components.getAllComponents().find(c =>
                     c.getId() === componentToEdit.getId()
                     && c.getData().x === newX
                     && c.getData().y === newY
                 )).toBeDefined();
-                expect(canvasProps.children.length).toBe(this.components.length);
+                expect(canvasProps.components.length()).toBe(this.components.length);
                 this.components
                     .filter(c => c.getId() !== componentToEdit.getId())
-                    .forEach(c1 => expect(canvasProps.children.find(
+                    .forEach(c1 => expect(canvasProps.components.getAllComponents().find(
                         c2 => c1.getId() === c2.getId()
                             && c1.getType() === c2.getType()
                             && c1.getData() === c2.getData()
@@ -267,7 +270,7 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
 
             test("Should notify firebase when item dragged", async () => {
                 dragCloud();
-                expect(this.firebaseDataModel?.updateComponent).toHaveBeenCalledTimes(1);
+                expect(this.firebaseDataModel?.updateComponent).toHaveBeenCalled();
                 expect(this.firebaseDataModel?.updateComponent).toHaveBeenLastCalledWith(
                     SimulationScreenTest.AN_ID,
                     componentToEdit.withData({ ...componentToEdit.getData(), x: newX, y: newY })
@@ -283,13 +286,11 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                     this.param,
                     this.cloud.withData({ ...this.cloud.getData(), x: newX, y: newY })
                 ];
-                const callback = (this.firebaseDataModel?.subscribeToSession as jest.Mock)
-                    .mock.lastCall[1];
+                const callback = this.firebaseDataModel?.subscribeToSession.mock.lastCall[1];
                 act(() => callback(newComponents));
-                const canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                    .mock.lastCall[1];
-                expect(canvasProps.children.length).toBe(newComponents.length);
-                newComponents.forEach(c1 => expect(canvasProps.children.find(c2 =>
+                const canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
+                expect(canvasProps.components.length()).toBe(newComponents.length);
+                newComponents.forEach(c1 => expect(canvasProps.components.getAllComponents().find(c2 =>
                     c1.getId() === c2.getId()
                     && c1.getType() === c2.getType()
                     && c1.getData() === c2.getData())).toBeDefined()
@@ -300,14 +301,13 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
         describe("Edit Box", () => {
             test("Edit Box should not be rendered when no components selected in Edit mode",
                 async () => {
-                    let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                        .mock.lastCall[1];
+                    let canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     expect(canvasProps.selectedComponentIds.length).toBe(0);
                     expect(this.lastRenderedToolbar).not.toBeNull();
                     act(() => this.lastRenderedToolbar?.setMode(UiMode.EDIT));
                     expect(this.createCanvasForMode)
                         .toHaveBeenLastCalledWith(UiMode.EDIT, expect.anything());
-                    canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                    canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     expect(canvasProps.selectedComponentIds.length).toBe(0);
                     expect(this.createEditBox).not.toHaveBeenCalled();
                     expect(this.lastRenderedEditBox).toBeNull();
@@ -316,17 +316,16 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
 
             const switchToEditModeAndSelect =
                 (selectedComponent: schema.FirebaseDataComponent<any>) => {
-                    let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                        .mock.lastCall[1];
+                    let canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     expect(canvasProps.selectedComponentIds.length).toBe(0);
                     expect(this.lastRenderedToolbar).not.toBeNull();
                     act(() => this.lastRenderedToolbar?.setMode(UiMode.EDIT));
                     expect(this.createCanvasForMode)
                         .toHaveBeenLastCalledWith(UiMode.EDIT, expect.anything());
-                    canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                    canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     expect(canvasProps.selectedComponentIds.length).toBe(0);
                     act(() => canvasProps.setSelected([selectedComponent.getId()]))
-                    canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                    canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     expect(canvasProps.selectedComponentIds).toEqual([selectedComponent.getId()]);
                 }
 
@@ -340,18 +339,16 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
             test("Edit Box should not be rendered after cancel button clicked", async () => {
                 const selectedComponent = this.param;
                 switchToEditModeAndSelect(selectedComponent);
-                const lastEditBoxProps = (this.createEditBox as jest.Mock)
-                    .mock.lastCall[0] as EditBoxProps;
+                const lastEditBoxProps = this.createEditBox?.mock.lastCall[0] as EditBoxProps;
                 this.lastRenderedEditBox = null;
-                (this.createEditBox as jest.Mock).mockReset();
+                this.createEditBox?.mockReset();
                 expect(this.firebaseDataModel).toBeTruthy();
                 if (!this.firebaseDataModel) throw new Error();
-                Object.values(this.firebaseDataModel).forEach(m => (m as jest.Mock).mockReset());
+                Object.values(this.firebaseDataModel).forEach(m => m.mockReset());
                 act(() => lastEditBoxProps.handleCancel());
                 expect(this.createEditBox).not.toHaveBeenCalled();
                 expect(this.lastRenderedEditBox).toBeNull();
-                let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                    .mock.lastCall[1];
+                let canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
                 expect(canvasProps.selectedComponentIds.length).toBe(0);
                 Object.values(this.firebaseDataModel)
                     .forEach(m => expect(m).not.toHaveBeenCalled());
@@ -363,17 +360,15 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                 const updatedComponent = selectedComponent
                     .withData({ ...selectedComponent.getData(), text: newText });
                 switchToEditModeAndSelect(selectedComponent);
-                const lastEditBoxProps = (this.createEditBox as jest.Mock)
-                    .mock.lastCall[0] as EditBoxProps;
+                const lastEditBoxProps = this.createEditBox?.mock.lastCall[0] as EditBoxProps;
                 this.lastRenderedEditBox = null;
-                (this.createEditBox as jest.Mock).mockReset();
+                this.createEditBox?.mockReset();
                 act(() => lastEditBoxProps.handleSave(updatedComponent));
                 expect(this.createEditBox).not.toHaveBeenCalled();
                 expect(this.lastRenderedEditBox).toBeNull();
-                let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                    .mock.lastCall[1];
+                let canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
                 expect(canvasProps.selectedComponentIds.length).toBe(0);
-                const componentAfterUpdate = canvasProps.children
+                const componentAfterUpdate = canvasProps.components.getAllComponents()
                     .find(c => c.getId() === selectedComponent.getId());
                 expect(componentAfterUpdate).toBeDefined();
                 expect(componentAfterUpdate?.getType()).toBe(selectedComponent.getType());
@@ -386,10 +381,9 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                 const updatedComponent = selectedComponent
                     .withData({ ...selectedComponent.getData(), x: newX });
                 switchToEditModeAndSelect(selectedComponent);
-                const lastEditBoxProps = (this.createEditBox as jest.Mock)
-                    .mock.lastCall[0] as EditBoxProps;
+                const lastEditBoxProps = this.createEditBox?.mock.lastCall[0] as EditBoxProps;
                 this.lastRenderedEditBox = null;
-                (this.createEditBox as jest.Mock).mockReset();
+                this.createEditBox?.mockReset();
                 act(() => lastEditBoxProps.handleSave(updatedComponent));
                 expect(this.createEditBox).not.toHaveBeenCalled();
                 expect(this.lastRenderedEditBox).toBeNull();
@@ -407,18 +401,16 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                     `Move mode into ${m} mode`,
                     async () => {
                         const selectedComponent = this.stock;
-                        let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                            .mock.lastCall[1];
+                        let canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
                         act(() => canvasProps.setSelected([selectedComponent.getId()]));
-                        canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                        canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                         expect(canvasProps.selectedComponentIds).toEqual([selectedComponent.getId()]);
                         expect(this.lastRenderedToolbar).not.toBeNull();
                         act(() => this.lastRenderedToolbar?.setMode(m));
                         expect(this.createCanvasForMode)
                             .toHaveBeenLastCalledWith(m, expect.anything());
                         await waitFor(() => {
-                            canvasProps =
-                                (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                            canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                             expect(canvasProps.selectedComponentIds.length).toBe(0);
                         });
                     }
@@ -434,18 +426,16 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                         .toHaveBeenLastCalledWith(UiMode.STOCK, expect.anything());
 
                     const selectedComponent = this.stock;
-                    let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                        .mock.lastCall[1];
+                    let canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     act(() => canvasProps.setSelected([selectedComponent.getId()]));
-                    canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                    canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     expect(canvasProps.selectedComponentIds).toEqual([selectedComponent.getId()]);
 
                     expect(this.lastRenderedToolbar).not.toBeNull();
                     act(() => this.lastRenderedToolbar?.setMode(UiMode.MOVE));
-                    canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                    canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     await waitFor(() => {
-                        canvasProps =
-                            (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                        canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                         expect(canvasProps.selectedComponentIds.length).toBe(0);
                     });
                 });
@@ -456,8 +446,7 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                 expect(this.createCanvasForMode)
                     .toHaveBeenLastCalledWith(UiMode.FLOW, expect.anything());
 
-                let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                    .mock.lastCall[1];
+                let canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
                 const newCloud = new CloudUiData(
                     new schema.CloudFirebaseComponent(
                         "123456",
@@ -479,21 +468,20 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                     )
                 );
                 act(() => canvasProps.addComponent(newCloud));
-                canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
-                expect(canvasProps.children.find(c => c.getId() === newCloud.getId()))
+                canvasProps = this.createCanvasForMode?.mock.lastCall[1];
+                expect(canvasProps.components.getAllComponents().find(c => c.getId() === newCloud.getId()))
                     .toBeDefined();
 
                 act(() => canvasProps.setSelected([newFlow.getData().from]));
-                canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                 expect(canvasProps.selectedComponentIds).toEqual([newFlow.getData().from]);
 
                 act(() => canvasProps.addComponent(newFlow));
-                canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
-                expect(canvasProps.children.find(c => c.getId() === newCloud.getId()))
+                canvasProps = this.createCanvasForMode?.mock.lastCall[1];
+                expect(canvasProps.components.getAllComponents().find(c => c.getId() === newCloud.getId()))
                     .toBeDefined();
                 await waitFor(() => {
-                    canvasProps =
-                        (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                    canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     expect(canvasProps.selectedComponentIds.length).toBe(0);
                 });
             });
@@ -510,18 +498,16 @@ export default class SimulationScreenWithComponents extends SimulationScreenTest
                         }
                     )
                 );
-                let canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock)
-                    .mock.lastCall[1];
+                let canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
                 act(() => canvasProps.setSelected([newConn.getData().from]));
-                canvasProps = (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                canvasProps = this.createCanvasForMode?.mock.lastCall[1];
 
                 act(() => canvasProps.addComponent(newConn));
                 await waitFor(() => {
-                    canvasProps =
-                        (this.createCanvasForMode as jest.Mock).mock.lastCall[1];
+                    canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     expect(canvasProps.selectedComponentIds.length).toBe(0);
                 });
-                expect(canvasProps.children.find(c => c.getId() === newConn.getId()))
+                expect(canvasProps.components.getAllComponents().find(c => c.getId() === newConn.getId()))
                     .toBeDefined();
             });
         });

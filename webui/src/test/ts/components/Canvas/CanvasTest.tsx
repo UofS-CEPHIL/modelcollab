@@ -1,22 +1,21 @@
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import { SELECTED_COLOR, DEFAULT_COLOR } from "../../../../main/ts/components/ScreenObjects/Stock";
 import { createRoot, Root } from "react-dom/client";
 import { act } from "react-dom/test-utils";
-import CanvasSpy from "./CanvasSpy";
-import { Props as TextProps } from "../../../../main/ts/components/ScreenObjects/TextObject";
+import MockCanvas from "./MockCanvas";
 import StockUiData from "../../../../main/ts/components/ScreenObjects/StockUiData";
-import { Props as StockProps } from "../../../../main/ts/components/ScreenObjects/Stock";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import FlowUiData from "../../../../main/ts/components/ScreenObjects/FlowUiData";
-import { Props as FlowProps } from "../../../../main/ts/components/ScreenObjects/Flow";
 import ParameterUiData from "../../../../main/ts/components/ScreenObjects/ParameterUiData";
 import SumVariableUiData from "../../../../main/ts/components/ScreenObjects/SumVariableUiData";
 import DynamicVariableUiData from "../../../../main/ts/components/ScreenObjects/DynamicVariableUiData";
 import ConnectionUiData from "../../../../main/ts/components/ScreenObjects/ConnectionUiData";
-import { Props as ConnectionProps } from "../../../../main/ts/components/ScreenObjects/Connection";
 import CloudUiData from "../../../../main/ts/components/ScreenObjects/CloudUiData";
-import { Props as CloudProps } from "../../../../main/ts/components/ScreenObjects/Cloud";
-import ComponentUiData from "../../../../main/ts/components/ScreenObjects/ComponentUiData";
+import ComponentUiData, { TextComponent } from "../../../../main/ts/components/ScreenObjects/ComponentUiData";
+import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
+import MockRenderer from "./MockRenderer";
+import StaticModelUiData from "../../../../main/ts/components/ScreenObjects/StaticModelUiData";
+import { LoadedStaticModel } from "../../../../main/ts/components/screens/SimulationScreen";
+import { waitFor } from "@testing-library/react";
 
 /*
   This needs to be done in order to make tests with Konva behave
@@ -28,7 +27,9 @@ declare global {
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 
-
+export function getAllComponentsFromFirstRenderCall(r: MockRenderer): ComponentUiData[] {
+    return r.render.mock.calls[0][0].getAllComponents() as ComponentUiData[];
+}
 
 export default abstract class CanvasTest {
 
@@ -38,7 +39,7 @@ export default abstract class CanvasTest {
 
     protected abstract shouldShowConnectionHandles(): boolean;
 
-    protected abstract makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy;
+    protected abstract makeCanvasMock(props: Partial<CanvasProps>): MockCanvas;
 
     protected containerNode: HTMLElement | null = null;
     protected root: Root | null = null;
@@ -76,17 +77,19 @@ export default abstract class CanvasTest {
                 });
 
                 const doSingleStockTest = (selected: boolean) => {
+                    const X = 0;
+                    const Y = 0;
                     const stockText = "stock";
                     const stockValue = "0";
                     const stockId = CanvasTest.AN_ID;
                     const stock = new StockUiData(
                         new schema.StockFirebaseComponent(
                             stockId,
-                            { x: 0, y: 0, text: stockText, initvalue: stockValue }
+                            { x: X, y: Y, text: stockText, initvalue: stockValue }
                         )
                     );
                     const canvas = this.makeCanvasMock({
-                        children: [stock],
+                        components: new ComponentCollection([stock]),
                         selectedComponentIds: selected ? [stock.getId()] : []
                     });
                     act(() => {
@@ -98,18 +101,19 @@ export default abstract class CanvasTest {
                     canvas.expectNoFlowsRendered();
                     canvas.expectNoSumVarsRendered();
                     canvas.expectNoParamsRendered();
-                    expect(canvas.makeStockSpy).toHaveBeenCalledTimes(1);
-                    const stockProps = canvas.makeStockSpy?.mock.calls[0][0];
-                    expect(stockProps).toBeDefined();
-                    expect(stockProps.text).toBe(stockText);
-                    expect(stockProps.stock.dbObject).toEqual(
+                    expect(canvas.mockRenderer?.render).toHaveBeenCalledTimes(1);
+                    const stockUiData = canvas.mockRenderer
+                        ?.render
+                        .mock
+                        .calls[0][0]
+                        .getAllComponents()[0] as StockUiData;
+                    expect(stockUiData).toBeDefined();
+                    expect(stockUiData.getDatabaseObject()).toEqual(
                         {
                             id: stockId,
-                            data: { initvalue: stockValue, text: stockText, x: 0, y: 0 }
+                            data: { initvalue: stockValue, text: stockText, x: X, y: Y }
                         }
                     );
-                    expect(stockProps.draggable).toBe(true);
-                    expect(stockProps.color).toBe(selected ? SELECTED_COLOR : DEFAULT_COLOR);
                 };
 
                 test("Single unselected stock should be rendered with correct props", async () => {
@@ -198,139 +202,173 @@ export default abstract class CanvasTest {
                         { from: dynVarId, to: flowId, handleXOffset: X, handleYOffset: Y }
                     )
                 );
+                const staticModelId = "10";
+                const staticModelColor = "blue";
+                const staticModelModelId = "123";
+                const staticModel = new StaticModelUiData(
+                    new schema.StaticModelComponent(
+                        staticModelId,
+                        { x: X, y: Y, modelId: staticModelModelId, color: staticModelColor }
+                    )
+                );
+                const childComponent = new StockUiData(new schema.StockFirebaseComponent("321", { x: 0, y: 0, text: "", initvalue: "" }));
+                staticModel.setComponents([childComponent]);
                 const selectedComponentIds = [stockId];
-                const children = [
+                const components = new ComponentCollection([
                     stock, cloud, flow, sumVar, dynVar, param,
-                    svToVarConn, paramToVarConn, varToFlowConn
-                ];
+                    svToVarConn, paramToVarConn, varToFlowConn,
+                    staticModel
+                ]);
 
-                let canvas: CanvasSpy = this.makeCanvasMock({});
-                function getExpectedColor(component: ComponentUiData): string {
-                    return selectedComponentIds.includes(component.getId())
-                        ? SELECTED_COLOR : DEFAULT_COLOR;
-                }
+                let canvas: MockCanvas = this.makeCanvasMock({});
 
                 beforeEach(() => {
-                    canvas = this.makeCanvasMock({ children, selectedComponentIds });
+                    canvas = this.makeCanvasMock({ components, selectedComponentIds });
                     act(() => this.root?.render(canvas.render()));
                 });
 
-                Object.keys(canvas.getComponentCreatorFunctions())
-                    .filter(name => name !== "makeConn")
-                    .forEach((name: string) => {
-                        test(`${name} should have been called one time`, async () => {
-                            const mock = Object.entries(
-                                canvas.getComponentCreatorFunctions()
-                            ).find(([n, _]) => name === n)?.[1];
-                            expect(mock).toBeDefined();
-                            expect(mock).toHaveBeenCalledTimes(1);
+                const getAllComponentsFromRenderArgs = () => {
+                    if (canvas.mockRenderer)
+                        return getAllComponentsFromFirstRenderCall(canvas.mockRenderer);
+                    else
+                        return [];
+                }
+
+                Object.values(schema.ComponentType)
+                    .filter(type => type !== schema.ComponentType.CONNECTION)
+                    .forEach((type: schema.ComponentType) => {
+                        test(`Exactly one ${type} should be rendered.`, async () => {
+                            const allComponents = getAllComponentsFromRenderArgs();
+                            expect(allComponents).toBeDefined();
+                            expect(allComponents.filter(c => c.getType() === type).length).toBe(1);
                         });
                     });
-                test("makeConn should have been called 3 times", async () => {
-                    expect(canvas.makeConnSpy).toBeDefined();
-                    expect(canvas.makeConnSpy).toHaveBeenCalledTimes(3);
+
+
+                test("renderConnections should have been called 3 times", async () => {
+                    const allComponents = getAllComponentsFromRenderArgs();
+                    expect(allComponents).toBeDefined();
+                    expect(
+                        allComponents.filter(
+                            c => c.getType() === schema.ComponentType.CONNECTION).length
+                    ).toBe(3);
                 });
 
                 test("Stock should be rendered with correct props", async () => {
-                    const stockProps = canvas.makeStockSpy?.mock.calls[0][0] as StockProps;
-                    expect(stockProps).toBeDefined();
-                    expect(stockProps.draggable).toBe(true);
-                    expect(stockProps.color).toBe(getExpectedColor(stockProps.stock));
-                    expect(stockProps.text).toBe(stockText);
-                    expect(stockProps.stock.getId()).toBe(stockId);
-                    expect(stockProps.stock.getData().x).toBe(X);
-                    expect(stockProps.stock.getData().y).toBe(Y);
+                    const stockData = getAllComponentsFromRenderArgs()
+                        .filter(c => c.getType() === schema.ComponentType.STOCK)[0];
+                    expect(stockData).toBeDefined();
+                    expect(stockData.getData().text).toBe(stockText);
+                    expect(stockData.getId()).toBe(stockId);
+                    expect(stockData.getData().x).toBe(X);
+                    expect(stockData.getData().y).toBe(Y);
                 });
 
                 test("Cloud should be rendered with correct props", async () => {
-                    const cloudProps = canvas.makeCloudSpy?.mock.calls[0][0] as CloudProps;
-                    expect(cloudProps).toBeDefined();
-                    expect(cloudProps.color).toBe(getExpectedColor(cloudProps.data));
-                    expect(cloudProps.data.getId()).toBe(cloudId);
-                    expect(cloudProps.data.getData().x).toBe(X);
-                    expect(cloudProps.data.getData().y).toBe(Y);
+                    const cloudData = getAllComponentsFromRenderArgs()
+                        .filter(c => c.getType() === schema.ComponentType.CLOUD)[0];
+                    expect(cloudData).toBeDefined();
+                    expect(cloudData.getId()).toBe(cloudId);
+                    expect(cloudData.getData().x).toBe(X);
+                    expect(cloudData.getData().y).toBe(Y);
                 });
 
                 test("Flow should be rendered with correct props", async () => {
-                    const flowProps = canvas.makeFlowSpy?.mock.calls[0][0] as FlowProps;
-                    expect(flowProps).toBeDefined();
-                    expect(flowProps.color).toBe(getExpectedColor(flowProps.flowData));
-                    expect(flowProps.components).toEqual(children);
-                    expect(flowProps.flowData.getId()).toBe(flowId);
-                    expect(flowProps.flowData.getData().equation).toBe(flowEqn);
-                    expect(flowProps.flowData.getData().from).toBe(flowFrom);
-                    expect(flowProps.flowData.getData().to).toBe(flowTo);
-                    expect(flowProps.flowData.getData().text).toBe(flowText);
+                    const flowData = getAllComponentsFromRenderArgs()
+                        .filter(c => c.getType() === schema.ComponentType.FLOW)[0];
+                    expect(flowData).toBeDefined();
+                    expect(flowData.getId()).toBe(flowId);
+                    expect(flowData.getData().equation).toBe(flowEqn);
+                    expect(flowData.getData().from).toBe(flowFrom);
+                    expect(flowData.getData().to).toBe(flowTo);
+                    expect(flowData.getData().text).toBe(flowText);
                 });
 
-                const testTextComponent = (props: any, id: string, text: string) => {
-                    const textProps = props as TextProps;
-                    expect(textProps).toBeDefined();
-                    expect(textProps.color).toBe(getExpectedColor(textProps.data));
-                    expect(textProps.draggable).toBe(true);
-                    expect(textProps.data.getId()).toBe(id);
-                    expect(textProps.data.getData().text).toBe(text);
-                    expect(textProps.data.getData().x).toBe(X);
-                    expect(textProps.data.getData().y).toBe(Y);
+                const testTextComponent = (data: any, id: string, text: string) => {
+                    const textData = data as TextComponent<any>;
+                    expect(textData).toBeDefined();
+                    expect(textData.getId()).toBe(id);
+                    expect(textData.getData().text).toBe(text);
+                    expect(textData.getData().x).toBe(X);
+                    expect(textData.getData().y).toBe(Y);
                 };
 
                 test("Dynamic Variable should be rendered with correct props", async () => {
-                    testTextComponent(canvas.makeDynVarSpy?.mock.calls[0][0], dynVarId, dynVarText);
+                    testTextComponent(
+                        getAllComponentsFromRenderArgs()
+                            .filter(c => c.getType() === schema.ComponentType.VARIABLE)[0],
+                        dynVarId,
+                        dynVarText
+                    );
                 });
 
                 test("Sum Variable should be rendered with correct props", async () => {
-                    testTextComponent(canvas.makeSumVarSpy?.mock.calls[0][0], sumVarId, sumVarText);
+                    testTextComponent(
+                        getAllComponentsFromRenderArgs()
+                            .filter(c => c.getType() === schema.ComponentType.SUM_VARIABLE)[0],
+                        sumVarId,
+                        sumVarText
+                    );
                 });
 
                 test("Parameter should be rendered with correct props", async () => {
-                    testTextComponent(canvas.makeParamSpy?.mock.calls[0][0], paramId, paramText);
+                    testTextComponent(
+                        getAllComponentsFromRenderArgs()
+                            .filter(c => c.getType() === schema.ComponentType.PARAMETER)[0],
+                        paramId,
+                        paramText
+                    );
                 });
 
-                const testConnection = (props: any, id: string, from: string, to: string) => {
-                    const connProps = props as ConnectionProps;
-                    expect(connProps).toBeDefined();
-                    expect(connProps.components).toEqual(children);
-                    expect(connProps.showHandle).toBe(this.shouldShowConnectionHandles());
-                    expect(connProps.conn.getId()).toBe(id);
-                    expect(connProps.conn.getData().from).toBe(from);
-                    expect(connProps.conn.getData().to).toBe(to);
-                    expect(connProps.conn.getData().handleXOffset).toBe(X);
-                    expect(connProps.conn.getData().handleYOffset).toBe(Y);
+                const testConnection = (data: any, id: string, from: string, to: string) => {
+                    const connData = data as ConnectionUiData;
+                    expect(connData).toBeDefined();
+                    expect(connData.getId()).toBe(id);
+                    expect(connData.getData().from).toBe(from);
+                    expect(connData.getData().to).toBe(to);
+                    expect(connData.getData().handleXOffset).toBe(X);
+                    expect(connData.getData().handleYOffset).toBe(Y);
                 };
 
                 test(
                     "Sum Variable -> Dynamic Variable connection should be rendered " +
                     "with correct props",
                     async () => {
-                        const connectionProps: ConnectionProps =
-                            canvas.makeConnSpy?.mock.calls.find(
-                                c => (c[0] as ConnectionProps).conn.getData().from === sumVarId
-                            )[0];
-                        expect(connectionProps).toBeDefined();
-                        testConnection(connectionProps, svToVarConnId, sumVarId, dynVarId);
+                        const connectionData: ConnectionUiData | undefined =
+                            getAllComponentsFromRenderArgs()
+                                .filter(c => c.getType() === schema.ComponentType.CONNECTION)
+                                .find(
+                                    c => c.getData().from === sumVarId
+                                ) as ConnectionUiData;
+                        expect(connectionData).toBeDefined();
+                        testConnection(connectionData, svToVarConnId, sumVarId, dynVarId);
                     });
 
                 test(
                     "Param -> Dynamic Variable connection should be rendered " +
                     "with correct props",
                     async () => {
-                        const connectionProps: ConnectionProps =
-                            canvas.makeConnSpy?.mock.calls.find(
-                                c => (c[0] as ConnectionProps).conn.getData().from === paramId
-                            )[0];
-                        expect(connectionProps).toBeDefined();
-                        testConnection(connectionProps, paramToVarConnId, paramId, dynVarId);
+                        const connectionData: ConnectionUiData =
+                            getAllComponentsFromRenderArgs()
+                                .filter(c => c.getType() === schema.ComponentType.CONNECTION)
+                                .find(
+                                    c => c.getData().from === paramId
+                                ) as ConnectionUiData;
+                        expect(connectionData).toBeDefined();
+                        testConnection(connectionData, paramToVarConnId, paramId, dynVarId);
                     });
 
                 test("Dynamic Variable -> Flow connection should be rendered " +
                     "with correct props",
                     async () => {
-                        const connectionProps: ConnectionProps =
-                            canvas.makeConnSpy?.mock.calls.find(
-                                c => (c[0] as ConnectionProps).conn.getData().from === dynVarId
-                            )[0];
-                        expect(connectionProps).toBeDefined();
-                        testConnection(connectionProps, varToFlowConnId, dynVarId, flowId);
+                        const connectionData: ConnectionUiData =
+                            getAllComponentsFromRenderArgs()
+                                .filter(c => c.getType() === schema.ComponentType.CONNECTION)
+                                .find(
+                                    c => c.getData().from === dynVarId
+                                ) as ConnectionUiData;
+                        expect(connectionData).toBeDefined();
+                        testConnection(connectionData, varToFlowConnId, dynVarId, flowId);
                     }
                 );
 
@@ -350,7 +388,7 @@ export default abstract class CanvasTest {
                 { x: 0, y: 0, text: "stocktext", initvalue: "1" }
             ));
             const canvas = this.makeCanvasMock(
-                { selectedComponentIds: [child.getId()], children: [child] }
+                { selectedComponentIds: [child.getId()], components: new ComponentCollection([child]) }
             );
             act(() => this.root?.render(canvas.render()));
 
@@ -367,7 +405,7 @@ export default abstract class CanvasTest {
                 { x: 0, y: 0 }
             ));
             const canvas = this.makeCanvasMock(
-                { selectedComponentIds: [], children: [child] }
+                { selectedComponentIds: [], components: new ComponentCollection([child]) }
             );
             act(() => this.root?.render(canvas.render()));
             canvas.clickComponent(child);
@@ -395,7 +433,7 @@ export default abstract class CanvasTest {
                 )
             );
             const canvas = this.makeCanvasMock({
-                children: [stock],
+                components: new ComponentCollection([stock]),
                 selectedComponentIds: [stock.getId()]
             });
             act(() => {

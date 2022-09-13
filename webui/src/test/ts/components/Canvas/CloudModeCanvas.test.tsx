@@ -2,8 +2,9 @@ import { act } from "react-dom/test-utils";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
 import CloudUiData from "../../../../main/ts/components/ScreenObjects/CloudUiData";
-import CanvasSpy, { CloudModeCanvasSpy } from "./CanvasSpy";
+import MockCanvas, { CloudModeCanvasSpy } from "./MockCanvas";
 import CanvasTest from "./CanvasTest";
+import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
 
 class CloudModeCanvasTest extends CanvasTest {
 
@@ -11,7 +12,7 @@ class CloudModeCanvasTest extends CanvasTest {
         return "CloudModeCanvas";
     }
 
-    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy {
+    protected makeCanvasMock(props: Partial<CanvasProps>): MockCanvas {
         return new CloudModeCanvasSpy(props);
     }
 
@@ -44,7 +45,7 @@ class CloudModeCanvasTest extends CanvasTest {
                 const newX = 123;
                 const newY = 456;
                 const canvas = this.makeCanvasMock(
-                    { selectedComponentIds: [A_CLOUD.getId()], children: [A_CLOUD] }
+                    { selectedComponentIds: [A_CLOUD.getId()], components: new ComponentCollection([A_CLOUD]) }
                 );
                 act(() => this.root?.render(canvas.render()));
 

@@ -1,4 +1,4 @@
-import { ref, set, onValue, remove, DataSnapshot, push, update } from "firebase/database";
+import { ref, set, onValue, remove, DataSnapshot, push, update, get } from "firebase/database";
 import FirebaseManager from "./FirebaseManager";
 import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build/export";
 
@@ -62,6 +62,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
     subscribeToModelList(onChanged: (models: string[]) => void): void {
         const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeSavedModelsPath());
+        throw new Error('not implemented');
     }
 
     addSession(id: string) {
@@ -124,6 +125,15 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             ),
             modelId
         );
+    }
+
+    getComponentsForSavedModel(modelId: string, onData: (components: schema.FirebaseDataComponent<any>[]) => void): void {
+        get(
+            ref(
+                this.firebaseManager.getDb(),
+                FirebaseSchema.makeSavedModelPath(modelId)
+            )
+        ).then(s => this.triggerCallback(s, onData));
     }
 }
 

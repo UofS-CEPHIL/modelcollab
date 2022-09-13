@@ -7,12 +7,9 @@ export interface VisibleComponent {
 }
 
 export interface PointableComponent extends VisibleComponent {
-
     getArrowPoint(side: Side, components: ReadonlyArray<ComponentUiData>): Point;
     getRelativeSide(other: VisibleComponent, components: ReadonlyArray<ComponentUiData>): Side;
     getAngleRelativeSide(other: VisibleComponent, components: ReadonlyArray<ComponentUiData>): Side;
-
-
 }
 
 // This is the actual ComponentUiData class. The one named ComponentUiData is a convenience class so we don't have to write <any, any> all over the place.
@@ -21,9 +18,15 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
     private readonly dbObject: DbObject;
 
 
-    public abstract getCentrePoint(components: ReadonlyArray<ComponentUiData>): Point;
+    public abstract getCentrePoint(components: ComponentUiData[]): Point;
+    public abstract getMaxX(components: ComponentUiData[]): number;
+    public abstract getMinX(components: ComponentUiData[]): number;
+    public abstract getMaxY(components: ComponentUiData[]): number;
+    public abstract getMinY(components: ComponentUiData[]): number;
 
     public abstract withData(data: DataType): ComponentUiDataInternal<DataType, DbObject>;
+
+
 
     // Can we point FROM this object TO another component?
     // TO -> FROM is determined by whether it implements PointableComponent
@@ -52,7 +55,7 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
         return this.dbObject;
     }
 
-    public getRelativeSide(other: VisibleComponent, components: ReadonlyArray<ComponentUiData>): Side {
+    public getRelativeSide(other: VisibleComponent, components: ComponentUiData[]): Side {
         // Which side of this is 'other' on? Basically, if we draw an X
         // with infinite length with the centre at this, which quadrant is
         // 'other' in
@@ -82,7 +85,7 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
         }
     }
 
-    public getAngleRelativeSide(other: VisibleComponent, components: ReadonlyArray<ComponentUiData>): Side {
+    public getAngleRelativeSide(other: VisibleComponent, components: ComponentUiData[]): Side {
         const from = other.getCentrePoint(components);
         const to = this.getCentrePoint(components);
 
@@ -231,8 +234,24 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
 
     public abstract getHeightPx(): number;
 
-    public getCentrePoint(_: ReadonlyArray<ComponentUiData>): Point {
+    public getCentrePoint(_: ComponentUiData[]): Point {
         return RectangularComponent.getCentreOfRect({ x: this.getTopLeft().x, y: this.getTopLeft().y }, this.getWidthPx(), this.getHeightPx());
+    }
+
+    public getMinX(_: ComponentUiData[]): number {
+        return (this.getDatabaseObject().getData() as any).x;
+    }
+
+    public getMaxX(c: ComponentUiData[]): number {
+        return this.getMinX(c) + this.getWidthPx();
+    }
+
+    public getMinY(_: ComponentUiData[]): number {
+        return (this.getDatabaseObject().getData() as any).y;
+    }
+
+    public getMaxY(c: ComponentUiData[]): number {
+        return this.getMinY(c) + this.getHeightPx();
     }
 
     public getArrowPoint(side: Side, _: ReadonlyArray<ComponentUiData>) {

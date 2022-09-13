@@ -15,6 +15,12 @@ import FirebaseDataModel from "../../../../../main/ts/data/FirebaseDataModel";
 import MockFirebaseDataModel from "../../../data/MockFirebaseDataModel";
 import { ComponentType } from "database/build/FirebaseComponentModel";
 import StockUiData from "../../../../../main/ts/components/ScreenObjects/StockUiData";
+import MockSaveModelBox from "../../SaveModelBox/MockSaveModelBox";
+import StaticModelUiData from "../../../../../main/ts/components/ScreenObjects/StaticModelUiData";
+import { waitFor } from "@testing-library/react";
+import MockRenderer from "../../Canvas/MockRenderer";
+import ComponentCollection from "../../../../../main/ts/components/Canvas/ComponentCollection";
+import SumVariableUiData from "../../../../../main/ts/components/ScreenObjects/SumVariableUiData";
 
 export default class SimulationScreenEmpty extends SimulationScreenTest {
     public describeTests(): void {
@@ -34,14 +40,21 @@ export default class SimulationScreenEmpty extends SimulationScreenTest {
                     this.lastRenderedEditBox = new MockEditBox(p);
                     return this.lastRenderedEditBox.render();
                 });
+                this.createSaveModelBox = jest.fn(p => {
+                    this.lastRenderedSaveModelBox = new MockSaveModelBox(p);
+                    return this.lastRenderedSaveModelBox.render();
+                });
+                this.renderer = new MockRenderer();
                 this.returnToSessionSelect = jest.fn();
                 const props: ScreenProps = {
                     createCanvasForMode: this.createCanvasForMode,
                     createToolbar: this.createToolbar,
                     createEditBox: this.createEditBox,
+                    createSaveModelBox: this.createSaveModelBox,
                     firebaseDataModel: this.firebaseDataModel,
                     returnToSessionSelect: this.returnToSessionSelect,
                     sessionId: SimulationScreenTest.AN_ID,
+                    renderer: this.renderer
                 };
                 act(
                     () => this.root?.render(this.createSimulationScreen(props))
@@ -55,15 +68,23 @@ export default class SimulationScreenEmpty extends SimulationScreenTest {
                 this.createCanvasForMode = null;
                 this.createToolbar = null;
                 this.createEditBox = null;
+                this.createSaveModelBox = null;
+                this.lastRenderedSaveModelBox = null;
                 this.returnToSessionSelect = null;
                 this.lastRenderedEditBox = null;
                 this.lastRenderedToolbar = null;
                 jest.resetAllMocks();
             });
 
+            const getCanvasProps = () => this.createCanvasForMode?.mock.lastCall[1] as CanvasProps;
+
             test("Should start with none selected", async () => {
-                const canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock).mock.calls[0][1];
-                expect(canvasProps.selectedComponentIds.length).toBe(0);
+                expect(getCanvasProps().selectedComponentIds.length).toBe(0);
+            });
+
+            test("Should not render an edit box", async () => {
+                expect(this.lastRenderedEditBox).toBeNull();
+                expect(this.createEditBox).not.toHaveBeenCalled();
             });
 
             describe("Canvas", () => {
@@ -76,8 +97,7 @@ export default class SimulationScreenEmpty extends SimulationScreenTest {
                 });
 
                 test("Should start with empty canvas", async () => {
-                    const canvasProps: CanvasProps = (this.createCanvasForMode as jest.Mock).mock.calls[0][1];
-                    expect(canvasProps.children.length).toBe(0);
+                    expect(getCanvasProps().components.length()).toBe(0);
                 });
 
                 test("Should have subscribed to the Firebase session", async () => {
@@ -87,26 +107,101 @@ export default class SimulationScreenEmpty extends SimulationScreenTest {
 
                 test("Should re-render with a new stock when Firebase adds a stock", async () => {
                     expect(this.firebaseDataModel?.subscribeToSession).toHaveBeenCalledTimes(1);
-                    const callback = (this.firebaseDataModel?.subscribeToSession as jest.Mock).mock.calls[0][1];
+                    const callback = this.firebaseDataModel?.subscribeToSession.mock.calls[0][1];
                     const stock = SimulationScreenTest.createArbitraryStock();
                     jest.resetAllMocks();
                     act(() => callback([stock]));
                     expect(this.createCanvasForMode).toHaveBeenCalledTimes(1);
-                    const canvasProps = (this.createCanvasForMode as jest.Mock).mock.calls[0][1] as CanvasProps;
-                    expect(canvasProps.children.length).toBe(1);
-                    expect(canvasProps.children[0].getData()).toEqual(stock.getData());
-                    expect(canvasProps.children[0].getId()).toBe(stock.getId());
-                    expect(canvasProps.children[0].getType()).toBe(ComponentType.STOCK);
+                    const canvasProps = getCanvasProps();
+                    expect(canvasProps.components.length()).toBe(1);
+                    expect(canvasProps.components.getAllComponents()[0].getData()).toEqual(stock.getData());
+                    expect(canvasProps.components.getAllComponents()[0].getId()).toBe(stock.getId());
+                    expect(canvasProps.components.getAllComponents()[0].getType()).toBe(ComponentType.STOCK);
                     expect(canvasProps.selectedComponentIds.length).toBe(0);
                 });
 
                 test("Should notify Firebase when component created on UI", async () => {
                     expect(this.createCanvasForMode).toHaveBeenCalledTimes(1);
-                    const canvasProps = (this.createCanvasForMode as jest.Mock).mock.calls[0][1] as CanvasProps;
+                    const canvasProps = getCanvasProps();
                     const stock = SimulationScreenTest.createArbitraryStock();
                     act(() => canvasProps.addComponent(new StockUiData(stock)));
                     expect(this.firebaseDataModel?.updateComponent).toHaveBeenCalledTimes(1);
                     expect(this.firebaseDataModel?.updateComponent).toHaveBeenCalledWith(SimulationScreenEmpty.AN_ID, stock);
+                });
+
+                describe("Static Model", () => {
+
+                    let staticModel: StaticModelUiData;
+                    const X = 0, Y = 0, COLOR = "blue";
+
+                    beforeEach(() => {
+                        staticModel = new StaticModelUiData(
+                            new schema.StaticModelComponent(
+                                SimulationScreenTest.AN_ID,
+                                {
+                                    x: X,
+                                    y: Y,
+                                    modelId: SimulationScreenTest.AN_ID,
+                                    color: COLOR
+                                }
+                            )
+                        );
+                    });
+
+                    const clickImportModelButton = () => {
+                        expect(this.createToolbar).toHaveBeenCalledTimes(1);
+                        const toolbarProps = this.createToolbar?.mock.lastCall[0] as ToolbarProps;
+                        act(() => toolbarProps.importModel(staticModel.getData().modelId));
+                    }
+
+                    const addModelFromFirebase = () => {
+                        const callback = this.firebaseDataModel?.subscribeToSession.mock.lastCall[1];
+                        act(() => callback([staticModel.getDatabaseObject()]));
+                    }
+
+                    test("Should load model data from Firebase when Static Model created on the UI", async () => {
+                        clickImportModelButton();
+                        expect(this.firebaseDataModel?.getComponentsForSavedModel).toHaveBeenCalled();
+                        expect(this.firebaseDataModel?.getComponentsForSavedModel.mock.lastCall[0]).toBe(SimulationScreenTest.AN_ID);
+                    });
+
+                    test("Should create a UI component when static model imported from toolbar", async () => {
+                        clickImportModelButton();
+                        waitFor(() => { expect(getCanvasProps().components.getAllComponents().length).toBe(1) });
+                        waitFor(() => { expect(getCanvasProps().components.getStaticModels().length).toBe(1) });
+                    });
+
+                    test("Should notify firebase when Static Model created on the UI", async () => {
+                        clickImportModelButton();
+                        expect(this.firebaseDataModel?.updateComponent).toHaveBeenCalledTimes(1);
+                        expect(this.firebaseDataModel?.updateComponent).toHaveBeenCalledWith(staticModel.getId(), expect.anything());
+                    });
+
+                    test("Should load model data from Firebase when Static Model created in Firebase", async () => {
+                        addModelFromFirebase();
+                        expect(this.firebaseDataModel?.getComponentsForSavedModel).toHaveBeenCalledTimes(1);
+                        expect(this.firebaseDataModel?.getComponentsForSavedModel.mock.lastCall[0]).toBe(SimulationScreenTest.AN_ID);
+                    });
+
+                    test("Should not render any child components when no models loaded", async () => {
+                        clickImportModelButton();
+                        expect(this.renderer?.render).toHaveBeenCalledTimes(1);
+                        expect(this.renderer?.render).toHaveBeenLastCalledWith(
+                            new ComponentCollection([]),
+                            expect.anything(), expect.anything(), expect.anything(), expect.anything()
+                        );
+                    });
+
+                    test("Should render child components when matching model loaded", async () => {
+                        const component = new schema.SumVariableFirebaseComponent("321", { x: 123, y: 456, text: "" });
+                        addModelFromFirebase();
+                        const onData = this.firebaseDataModel?.getComponentsForSavedModel.mock.lastCall[1];
+                        act(() => onData([component]));
+                        const lastCallComponents = this.renderer?.render.mock.lastCall[0];
+                        expect(lastCallComponents.length()).toBe(1);
+                        expect(lastCallComponents.getAllComponents()[0]).toBe(new SumVariableUiData(component));
+                        // TODO figure out how to test this                        
+                    });
                 });
             });
 
@@ -128,11 +223,6 @@ export default class SimulationScreenEmpty extends SimulationScreenTest {
                         `Should render an appropriate type of Canvas when mode changes to ${m}`,
                         async () => testSwitchToMode(m)
                     );
-                });
-
-                test("Should not render an edit box", async () => {
-                    expect(this.lastRenderedEditBox).toBeNull();
-                    expect(this.createEditBox).not.toHaveBeenCalled();
                 });
             });
         });

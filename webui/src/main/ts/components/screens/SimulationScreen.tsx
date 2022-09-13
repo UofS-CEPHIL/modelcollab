@@ -4,12 +4,11 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 
 import ComponentUiData from '../ScreenObjects/ComponentUiData';
 import { Props as CanvasProps } from "../Canvas/BaseCanvas";
-import Toolbar, { Props as ToolbarProps } from '../Toolbar/Toolbar';
+import { Props as ToolbarProps } from '../Toolbar/Toolbar';
 import { UiMode } from '../../UiMode';
 import applicationConfig from '../../config/applicationConfig';
 import FirebaseDataModel from '../../data/FirebaseDataModel';
-import { DataSnapshot } from 'firebase/database';
-import EditBox, { Props as EditBoxProps } from '../EditBox/EditBox';
+import { Props as EditBoxProps } from '../EditBox/EditBox';
 import { Props as SaveModelBoxProps } from "../SaveModelBox/SaveModelBox";
 import StockUiData from '../ScreenObjects/StockUiData';
 import FlowUiData from '../ScreenObjects/FlowUiData';
@@ -19,11 +18,22 @@ import SumVariableUiData from '../ScreenObjects/SumVariableUiData';
 import DynamicVariableUiData from '../ScreenObjects/DynamicVariableUiData';
 import CloudUiData from '../ScreenObjects/CloudUiData';
 import RestClientImpl from '../../rest/RestClientImpl';
+import StaticModelUiData from '../ScreenObjects/StaticModelUiData';
+import IdGenerator from '../../IdGenerator';
+import ComponentCollection from '../Canvas/ComponentCollection';
+import ComponentRenderer from '../Canvas/ComponentRenderer';
+
+
+export interface LoadedStaticModel {
+    modelId: string;
+    components: ComponentUiData[];
+}
 
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
     sessionId: string;
     returnToSessionSelect: () => void;
+    renderer: ComponentRenderer;
     createCanvasForMode: (mode: UiMode, props: CanvasProps) => ReactElement;
     createToolbar: (props: ToolbarProps) => ReactElement;
     createEditBox: (props: EditBoxProps) => ReactElement;
@@ -33,6 +43,7 @@ export interface Props {
 interface State {
     mode: UiMode,
     components: ComponentUiData[];
+    loadedModels: LoadedStaticModel[];
     selectedComponentIds: string[];
     showingSaveModelBox: boolean;
 }
@@ -49,6 +60,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
         this.state = {
             mode: UiMode.MOVE,
             components: [],
+            loadedModels: [],
             selectedComponentIds: [],
             showingSaveModelBox: false
         };
@@ -57,15 +69,25 @@ export default class SimulationScreen extends React.Component<Props, State> {
     }
 
     componentDidMount() {
+        // This happens at mount instead of in constructor because
+        // otherwise we end up trying to render the component before
+        // it mounts and React gets upset
         this.dm.subscribeToSession(
             this.props.sessionId,
             (dbComponents: schema.FirebaseDataComponent<any>[]) => {
+                // Load any static models that aren't already loaded
+                dbComponents
+                    .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
+                    .map(c => c as schema.StaticModelComponent)
+                    .forEach(c => this.importStaticModel(c.getData().modelId));
 
                 // Load objects s.t. stocks are loaded before flows,
                 // and all pointable components are loaded before
                 // pointers that reference them.
                 const nonPointerComponents: ComponentUiData[] = dbComponents
-                    .filter(c => !this.isPointerComponentType(c.getType()))
+                    .filter(c =>
+                        !this.isPointerComponentType(c.getType())
+                    )
                     .map(c => this.createUiComponent(c));
 
                 const flowComponents: ComponentUiData[] = dbComponents
@@ -99,6 +121,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
             case schema.ComponentType.VARIABLE.toString(): return false;
             case schema.ComponentType.SUM_VARIABLE.toString(): return false;
             case schema.ComponentType.CLOUD.toString(): return false;
+            case schema.ComponentType.STATIC_MODEL.toString(): return false;
             case schema.ComponentType.FLOW.toString(): return true;
             case schema.ComponentType.CONNECTION.toString(): return true;
             default: throw new Error("Unknown component: " + componentType);
@@ -115,6 +138,8 @@ export default class SimulationScreen extends React.Component<Props, State> {
         const selectedComponents = this.state.selectedComponentIds.map(
             id => this.state.components.find(c => c.getId() === id)
         );
+
+        this.setComponentsForStaticModels();
         return (
             <React.Fragment>
                 {
@@ -126,6 +151,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                         sessionId: this.props.sessionId,
                         downloadData: b => this.downloadData(b),
                         saveModel: () => this.saveModel(),
+                        importModel: s => this.loadStaticModelData(s),
                         restClient: new RestClientImpl()
                     })
                 }
@@ -135,7 +161,8 @@ export default class SimulationScreen extends React.Component<Props, State> {
                         {
                             firebaseDataModel: this.dm,
                             sessionId: this.props.sessionId,
-                            children: this.state.components,
+                            components: new ComponentCollection(this.state.components),
+                            renderer: this.props.renderer,
                             selectedComponentIds: this.state.selectedComponentIds,
                             showConnectionHandles: false,
                             editComponent: c => this.updateComponent(c),
@@ -174,6 +201,15 @@ export default class SimulationScreen extends React.Component<Props, State> {
         );
     }
 
+    private setComponentsForStaticModels(): void {
+        this.state.components
+            .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
+            .forEach(c => {
+                const loadedModel = this.state.loadedModels.find(m => m.modelId === c.getData().modelId);
+                if (loadedModel) (c as StaticModelUiData).setComponents(loadedModel.components);
+            });
+    }
+
 
     private shouldShowEditBox(): boolean {
         return this.state.mode === UiMode.EDIT;
@@ -181,22 +217,69 @@ export default class SimulationScreen extends React.Component<Props, State> {
 
     private addComponent(newComponent: ComponentUiData): void {
         if (!this.state.components.find(c => c.getId() === newComponent.getId())) {
-            this.setState(
-                {
-                    ...this.state,
-                    components: this.state.components.concat([newComponent])
-                }
-            );
+            if (newComponent.getType() === schema.ComponentType.STATIC_MODEL) {
+                this.importStaticModel((newComponent as StaticModelUiData).getData().modelId);
+            }
+            else {
+                this.setState(
+                    {
+                        ...this.state,
+                        components: this.state.components.concat([newComponent])
+                    }
+                );
+            }
             setTimeout(() => { this.setSelected([]) }); // ????? this is required, otherwise it ignores selection change
             this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
         }
+    }
+
+    private importStaticModel(modelId: string): void {
+        this.dm.getComponentsForSavedModel(
+            modelId,
+            components => {
+                if (this.state.loadedModels.find(m => m.modelId === modelId) === undefined) {
+                    const newComponents = components.map(c => this.createUiComponent(c))
+                    this.setState({
+                        ...this.state,
+                        loadedModels: [
+                            ...this.state.loadedModels,
+                            {
+                                modelId,
+                                components: newComponents
+                            }
+
+                        ]
+                    });
+                }
+            }
+        );
+    }
+
+    private loadStaticModelData(modelId: string): void {
+        this.addComponent(
+            new StaticModelUiData(
+                new schema.StaticModelComponent(
+                    IdGenerator.generateUniqueId(this.state.components),
+                    {
+                        x: 0,
+                        y: 0,
+                        color: 'green',
+                        modelId
+                    }
+                )
+            )
+        );
+        this.importStaticModel(modelId);
     }
 
     private removeComponent(id: string): void {
         const findOrphans = (component: ComponentUiData) => {
             return this.state.components
                 .filter(c => this.isPointerComponentType(c.getType()))
-                .filter(c => c.getData().from === component.getId() || c.getData().to === component.getId());
+                .filter(c =>
+                    c.getData().from === component.getId()
+                    || c.getData().to === component.getId()
+                );
         }
         const findOrphansRecursively = (component: ComponentUiData) => {
             // What a lot of orphans
@@ -206,7 +289,9 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 let newNewOrphans: ComponentUiData[] = [];
                 for (const orphan of newOrphans) {
                     const subOrphans = findOrphans(orphan);
-                    const unique = subOrphans.filter(o => { return orphans.find(c => c.getId() === o.getId()) === undefined });
+                    const unique = subOrphans.filter(o => {
+                        return orphans.find(c => c.getId() === o.getId()) === undefined
+                    });
                     orphans = orphans.concat(unique);
                     newNewOrphans = newNewOrphans.concat(unique);
                 }
@@ -227,7 +312,11 @@ export default class SimulationScreen extends React.Component<Props, State> {
                     components
                 }
             );
-            this.dm.removeComponents(this.props.sessionId, [...orphans.map(o => o.getId()), component.getId()], this.state.components);
+            this.dm.removeComponents(
+                this.props.sessionId,
+                [...orphans.map(o => o.getId()), component.getId()],
+                this.state.components
+            );
         }
     }
 
@@ -263,7 +352,9 @@ export default class SimulationScreen extends React.Component<Props, State> {
             });
         }
 
-        newComponentsList.forEach(c => this.dm.updateComponent(this.props.sessionId, c.getDatabaseObject()));
+        newComponentsList.forEach(c =>
+            this.dm.updateComponent(this.props.sessionId, c.getDatabaseObject())
+        );
         this.setState({ ...this.state, components: newComponentsList });
     }
 
@@ -287,6 +378,8 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 return new DynamicVariableUiData(dbComponent);
             case schema.ComponentType.CLOUD:
                 return new CloudUiData(dbComponent);
+            case schema.ComponentType.STATIC_MODEL:
+                return new StaticModelUiData(dbComponent);
         }
     }
 

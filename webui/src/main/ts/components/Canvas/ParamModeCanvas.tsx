@@ -6,7 +6,7 @@ import ParameterUiData from "../ScreenObjects/ParameterUiData";
 
 export default class ParamModeCanvas extends BaseCanvas {
     protected onCanvasLeftClicked(x: number, y: number) {
-        const componentId = IdGenerator.generateUniqueId(this.props.children);
+        const componentId = IdGenerator.generateUniqueId(this.props.components);
         const newParam = new ParameterUiData(new schema.ParameterFirebaseComponent(
             componentId,
             { x, y, text: "NewParam", value: "" }

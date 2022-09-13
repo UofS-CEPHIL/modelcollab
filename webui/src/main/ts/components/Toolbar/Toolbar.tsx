@@ -18,6 +18,7 @@ export interface Props {
     returnToSessionSelect: () => void;
     downloadData: (b: Blob) => void;
     saveModel: () => void;
+    importModel: (id: string) => void;
     restClient: RestClient;
 }
 
@@ -208,6 +209,12 @@ export default class Toolbar extends React.Component<Props, State> {
                             value={"SaveModel"}
                             onClick={() => this.props.saveModel()}
                             data-testid={"SaveModel"}
+                        />
+                        <Tab
+                            label={"Import Model"}
+                            value={"ImportModel"}
+                            onClick={() => this.props.importModel("test")}
+                            data-testid={"ImportModel"}
                         />
                         <Tab
                             label="Go Back"

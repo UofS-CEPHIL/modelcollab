@@ -1,5 +1,7 @@
-
 import { ReactElement } from "react";
+import { act } from "react-dom/test-utils";
+import { FirebaseComponentModel as schema } from "database/build/export";
+
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
 import FlowModeCanvas from "../../../../main/ts/components/Canvas/FlowModeCanvas";
 import MoveModeCanvas from "../../../../main/ts/components/Canvas/MoveModeCanvas";
@@ -12,28 +14,24 @@ import CloudModeCanvas from "../../../../main/ts/components/Canvas/CloudModeCanv
 import EditModeCanvas from "../../../../main/ts/components/Canvas/EditModeCanvas";
 import DeleteModeCanvas from "../../../../main/ts/components/Canvas/DeleteModeCanvas";
 import MockFirebaseDataModel from "../../data/MockFirebaseDataModel";
-import { act } from "react-dom/test-utils";
 import ComponentUiData from "../../../../main/ts/components/ScreenObjects/ComponentUiData";
+import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
+import MockRenderer from "./MockRenderer";
+import { getAllComponentsFromFirstRenderCall } from "./CanvasTest";
 
 
 export const DEFAULT_ID = "0";
 
-export default abstract class CanvasSpy {
+export default abstract class MockCanvas {
 
     public readonly props: CanvasProps;
+
+    public readonly mockRenderer: MockRenderer | undefined;
 
     public readonly editComponentSpy: jest.Mock<void> | undefined;
     public readonly deleteComponentSpy: jest.Mock<void> | undefined;
     public readonly addComponentSpy: jest.Mock<void> | undefined;
     public readonly setSelectedSpy: jest.Mock<void> | undefined;
-
-    public readonly makeStockSpy: jest.Mock<ReactElement> | undefined;
-    public readonly makeFlowSpy: jest.Mock<ReactElement> | undefined;
-    public readonly makeConnSpy: jest.Mock<ReactElement> | undefined;
-    public readonly makeSumVarSpy: jest.Mock<ReactElement> | undefined;
-    public readonly makeDynVarSpy: jest.Mock<ReactElement> | undefined;
-    public readonly makeParamSpy: jest.Mock<ReactElement> | undefined;
-    public readonly makeCloudSpy: jest.Mock<ReactElement> | undefined;
 
     public readonly registerComponentClickedSpy: jest.Mock<void> | undefined;
     public readonly registerCanvasLeftClickedSpy: jest.Mock<void> | undefined;
@@ -46,13 +44,7 @@ export default abstract class CanvasSpy {
         this.deleteComponentSpy = jest.fn();
         this.addComponentSpy = jest.fn();
         this.setSelectedSpy = jest.fn();
-        this.makeStockSpy = jest.fn();
-        this.makeFlowSpy = jest.fn();
-        this.makeConnSpy = jest.fn();
-        this.makeSumVarSpy = jest.fn();
-        this.makeDynVarSpy = jest.fn();
-        this.makeParamSpy = jest.fn();
-        this.makeCloudSpy = jest.fn();
+        this.mockRenderer = new MockRenderer();
         this.registerComponentClickedSpy = jest.fn();
         this.registerCanvasLeftClickedSpy = jest.fn();
         this.registerCanvasRightClickedSpy = jest.fn();
@@ -61,36 +53,18 @@ export default abstract class CanvasSpy {
             firebaseDataModel: new MockFirebaseDataModel(),
             selectedComponentIds: [],
             sessionId: DEFAULT_ID,
-            children: [],
+            components: new ComponentCollection([]),
+            renderer: this.mockRenderer,
             editComponent: this.editComponentSpy,
             deleteComponent: this.deleteComponentSpy,
             addComponent: this.addComponentSpy,
             setSelected: this.setSelectedSpy,
             showConnectionHandles: false,
-            makeStock: this.makeStockSpy,
-            makeFlow: this.makeFlowSpy,
-            makeConnection: this.makeConnSpy,
-            makeSumVar: this.makeSumVarSpy,
-            makeParam: this.makeParamSpy,
-            makeCloud: this.makeCloudSpy,
-            makeDynVar: this.makeDynVarSpy,
             registerCanvasLeftClickedHandler: this.registerCanvasLeftClickedSpy,
             registerCanvasRightClickedHandler: this.registerCanvasRightClickedSpy,
             registerComponentClickedHandler: this.registerComponentClickedSpy
         };
         this.props = { ...DEFAULT_PROPS, ...props };
-    }
-
-    public getComponentCreatorFunctions(): object {
-        return {
-            makeStock: this.makeStockSpy,
-            makeFlow: this.makeFlowSpy,
-            makeConn: this.makeConnSpy,
-            makeSumVar: this.makeSumVarSpy,
-            makeDynVar: this.makeDynVarSpy,
-            makeParam: this.makeParamSpy,
-            makeCloud: this.makeCloudSpy
-        };
     }
 
     public getComponentUpdateCallbacks(): object {
@@ -111,39 +85,40 @@ export default abstract class CanvasSpy {
         this.expectNoCloudsRendered();
     }
 
+    private expectNoneOfTypeRendered(type: schema.ComponentType): void {
+        if (this.mockRenderer === undefined) throw new Error();
+        const allComponents = getAllComponentsFromFirstRenderCall(this.mockRenderer);
+        expect(
+            allComponents.filter(c => c.getType() === type).length
+        ).toBe(0);
+    }
+
     public expectNoStocksRendered(): void {
-        if (this.makeStockSpy === undefined) throw new Error();
-        expect(this.makeStockSpy.mock.calls.length).toBe(0);
+        return this.expectNoneOfTypeRendered(schema.ComponentType.STOCK);
     }
 
     public expectNoFlowsRendered(): void {
-        if (this.makeFlowSpy === undefined) throw new Error();
-        expect(this.makeFlowSpy.mock.calls.length).toBe(0);
+        return this.expectNoneOfTypeRendered(schema.ComponentType.FLOW);
     }
 
     public expectNoConnectionsRendered(): void {
-        if (this.makeConnSpy === undefined) throw new Error();
-        expect(this.makeConnSpy.mock.calls.length).toBe(0);
+        return this.expectNoneOfTypeRendered(schema.ComponentType.CONNECTION);
     }
 
     public expectNoDynVarsRendered(): void {
-        if (this.makeDynVarSpy === undefined) throw new Error();
-        expect(this.makeDynVarSpy.mock.calls.length).toBe(0);
+        return this.expectNoneOfTypeRendered(schema.ComponentType.VARIABLE);
     }
 
     public expectNoSumVarsRendered(): void {
-        if (this.makeSumVarSpy === undefined) throw new Error();
-        expect(this.makeSumVarSpy.mock.calls.length).toBe(0);
+        return this.expectNoneOfTypeRendered(schema.ComponentType.SUM_VARIABLE);
     }
 
     public expectNoParamsRendered(): void {
-        if (this.makeParamSpy === undefined) throw new Error();
-        expect(this.makeParamSpy.mock.calls.length).toBe(0);
+        return this.expectNoneOfTypeRendered(schema.ComponentType.PARAMETER);
     }
 
     public expectNoCloudsRendered(): void {
-        if (this.makeCloudSpy === undefined) throw new Error();
-        expect(this.makeCloudSpy.mock.calls.length).toBe(0);
+        return this.expectNoneOfTypeRendered(schema.ComponentType.CLOUD);
     }
 
     public leftClickCanvas(x: number, y: number): void {
@@ -183,61 +158,61 @@ export default abstract class CanvasSpy {
 
 
 
-export class StockModeCanvasSpy extends CanvasSpy {
+export class StockModeCanvasSpy extends MockCanvas {
     public render(): ReactElement {
         return (<StockModeCanvas {...this.props} />);
     }
 }
 
-export class MoveModeCanvasSpy extends CanvasSpy {
+export class MoveModeCanvasSpy extends MockCanvas {
     public render(): ReactElement {
         return (<MoveModeCanvas {...this.props} />);
     }
 }
 
-export class FlowModeCanvasSpy extends CanvasSpy {
+export class FlowModeCanvasSpy extends MockCanvas {
     public render(): ReactElement {
         return (<FlowModeCanvas {...this.props} />)
     }
 }
 
-export class EditModeCanvasSpy extends CanvasSpy {
+export class EditModeCanvasSpy extends MockCanvas {
     public render(): ReactElement {
         return (<EditModeCanvas {...this.props} />);
     }
 }
 
-export class ConnectionModeCanvasSpy extends CanvasSpy {
+export class ConnectionModeCanvasSpy extends MockCanvas {
     public render(): ReactElement {
         return (<ConnectionModeCanvas {...this.props} />)
     }
 }
 
-export class VariableModeCanvasSpy extends CanvasSpy {
+export class VariableModeCanvasSpy extends MockCanvas {
     public render(): ReactElement {
         return (<VariableModeCanvas {...this.props} />)
     }
 }
 
-export class SumVarModeCanvasSpy extends CanvasSpy {
+export class SumVarModeCanvasSpy extends MockCanvas {
     public render(): ReactElement {
         return (<SumVariableModeCanvas {...this.props} />)
     }
 }
 
-export class ParameterModeCanvasSpy extends CanvasSpy {
+export class ParameterModeCanvasSpy extends MockCanvas {
     public render(): ReactElement {
         return (<ParameterModeCanvas {...this.props} />)
     }
 }
 
-export class DeleteModeCanvasSpy extends CanvasSpy {
+export class DeleteModeCanvasSpy extends MockCanvas {
     public render(): ReactElement {
         return (<DeleteModeCanvas {...this.props} />);
     }
 }
 
-export class CloudModeCanvasSpy extends CanvasSpy {
+export class CloudModeCanvasSpy extends MockCanvas {
     public render(): ReactElement {
         return (<CloudModeCanvas {...this.props} />)
     }

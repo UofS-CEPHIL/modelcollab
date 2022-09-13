@@ -20,6 +20,34 @@ export default class FlowUiData extends PointerComponent<schema.FlowComponentDat
         return RectangularComponent.getCentreOfSideOfRect(labelTopLeft, labelWidth, labelHeight, side);
     }
 
+    public getMinX(components: ComponentUiData[]): number {
+        return Math.min(
+            this.getStartPoint(components).x,
+            this.getTargetPoint(components).x
+        );
+    }
+
+    public getMaxX(components: ComponentUiData[]): number {
+        return Math.max(
+            this.getStartPoint(components).x,
+            this.getTargetPoint(components).x
+        );
+    }
+
+    public getMinY(components: ComponentUiData[]): number {
+        return Math.min(
+            this.getStartPoint(components).y,
+            this.getTargetPoint(components).y
+        );
+    }
+
+    public getMaxY(components: ComponentUiData[]): number {
+        return Math.max(
+            this.getStartPoint(components).y,
+            this.getTargetPoint(components).y
+        );
+    }
+
     public computeLabelWidth(): number {
         if (this.getData().text === "") return FLOW_LABEL_DEFAULT_WIDTH;
         return TextComponent.estimateTextSize(this.getData().text, FLOW_LABEL_DEFAULT_FONT_SIZE).width;

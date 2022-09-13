@@ -18,7 +18,7 @@ export default class FlowModeCanvas extends BaseCanvas {
                 if (!this.flowAlreadyExists(this.props.selectedComponentIds[0], component.getId())) {
                     const newFlow = new FlowUiData(
                         new schema.FlowFirebaseComponent(
-                            IdGenerator.generateUniqueId(this.props.children),
+                            IdGenerator.generateUniqueId(this.props.components),
                             {
                                 from: this.props.selectedComponentIds[0],
                                 to: component.getId(),

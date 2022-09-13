@@ -1,5 +1,5 @@
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import CanvasSpy, { FlowModeCanvasSpy } from "./CanvasSpy";
+import MockCanvas, { FlowModeCanvasSpy } from "./MockCanvas";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import CanvasTest from "./CanvasTest";
@@ -8,6 +8,7 @@ import { act } from "react-dom/test-utils";
 import FlowUiData from "../../../../main/ts/components/ScreenObjects/FlowUiData";
 import CloudUiData from "../../../../main/ts/components/ScreenObjects/CloudUiData";
 import ComponentUiData from "../../../../main/ts/components/ScreenObjects/ComponentUiData";
+import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
 
 
 class FlowModeCanvasTest extends CanvasTest {
@@ -16,7 +17,7 @@ class FlowModeCanvasTest extends CanvasTest {
         return "FlowModeCanvas";
     }
 
-    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy {
+    protected makeCanvasMock(props: Partial<CanvasProps>): MockCanvas {
         return new FlowModeCanvasSpy(props);
     }
 
@@ -71,7 +72,7 @@ class FlowModeCanvasTest extends CanvasTest {
         test(
             `Should successfully make flow from ${from.getType()} to ${to.getType()}`,
             async () => {
-                const canvas = this.makeCanvasMock({ selectedComponentIds: [from.getId()], children: [from, to] });
+                const canvas = this.makeCanvasMock({ selectedComponentIds: [from.getId()], components: new ComponentCollection([from, to]) });
                 act(() => this.root?.render(canvas.render()));
                 canvas.clickComponent(to);
 

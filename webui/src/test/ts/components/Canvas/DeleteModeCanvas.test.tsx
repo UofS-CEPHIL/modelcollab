@@ -1,9 +1,10 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import CanvasSpy, { DeleteModeCanvasSpy } from "./CanvasSpy";
+import MockCanvas, { DeleteModeCanvasSpy } from "./MockCanvas";
 import CanvasTest from "./CanvasTest";
 import StockUiData from "../../../../main/ts/components/ScreenObjects/StockUiData";
 import { act } from "react-dom/test-utils";
+import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
 
 class DeleteModeCanvasTest extends CanvasTest {
 
@@ -11,7 +12,7 @@ class DeleteModeCanvasTest extends CanvasTest {
         return "DeleteModeCanvas";
     }
 
-    protected makeCanvasMock(props: Partial<CanvasProps>): CanvasSpy {
+    protected makeCanvasMock(props: Partial<CanvasProps>): MockCanvas {
         return new DeleteModeCanvasSpy(props);
     }
 
@@ -35,7 +36,7 @@ class DeleteModeCanvasTest extends CanvasTest {
                         }
                     )
                 );
-                const canvas = this.makeCanvasMock({ selectedComponentIds: [], children: [component] });
+                const canvas = this.makeCanvasMock({ selectedComponentIds: [], components: new ComponentCollection([component]) });
                 act(() => this.root?.render(canvas.render()));
 
                 act(() => canvas.clickComponent(component));

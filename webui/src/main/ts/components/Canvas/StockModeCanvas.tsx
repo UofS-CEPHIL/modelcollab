@@ -7,7 +7,7 @@ import BaseCanvas from "./BaseCanvas";
 
 export default class StockModeCanvas extends BaseCanvas {
     protected onCanvasLeftClicked(x: number, y: number): void {
-        const componentID = IdGenerator.generateUniqueId(this.props.children);
+        const componentID = IdGenerator.generateUniqueId(this.props.components);
         const newStock = new StockUiData(new schema.StockFirebaseComponent(
             componentID,
             { x, y, initvalue: "", text: "" }

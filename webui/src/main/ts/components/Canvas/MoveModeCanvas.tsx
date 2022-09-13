@@ -61,8 +61,13 @@ export default class MoveModeCanvas extends ExtendableBaseCanvas<CanvasProps, St
     }
 
     private getComponentIdsInsideBoundingBox(topLeft: Point, bottomRight: Point): string[] {
-        return this.props.children
-            .filter(c => c.isInsideBoundingBox(topLeft, bottomRight, this.props.children))
-            .map(c => c.getId());
+        return this.props.components.getAllComponents()
+            .filter(c =>
+                c.isInsideBoundingBox(
+                    topLeft,
+                    bottomRight,
+                    this.props.components.getAllComponents()
+                )
+            ).map(c => c.getId());
     }
 }
