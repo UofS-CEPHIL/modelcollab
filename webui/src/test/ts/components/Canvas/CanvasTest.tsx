@@ -285,7 +285,7 @@ export default abstract class CanvasTest {
                 });
 
                 const testTextComponent = (data: any, id: string, text: string) => {
-                    const textData = data as TextComponent<any>;
+                    const textData = data as TextComponent<any, any>;
                     expect(textData).toBeDefined();
                     expect(textData.getId()).toBe(id);
                     expect(textData.getData().text).toBe(text);

@@ -12,7 +12,6 @@ import SumVariable from "../ScreenObjects/SumVariable";
 import DynamicVariable from "../ScreenObjects/DynamicVariable";
 import CloudUiData from "../ScreenObjects/CloudUiData";
 import StaticModelUiData from "../ScreenObjects/StaticModelUiData";
-import { LoadedStaticModel } from "../screens/SimulationScreen";
 import ConnectionUiData from "../ScreenObjects/ConnectionUiData";
 import ComponentUiData, { TextComponent } from "../ScreenObjects/ComponentUiData";
 import DynamicVariableUiData from "../ScreenObjects/DynamicVariableUiData";
@@ -21,9 +20,13 @@ import ParameterUiData from "../ScreenObjects/ParameterUiData";
 import StockUiData from "../ScreenObjects/StockUiData";
 import FlowUiData from "../ScreenObjects/FlowUiData";
 import ComponentCollection from "./ComponentCollection";
+import { Group, Layer } from "react-konva";
 
 
 export default class ComponentRendererImpl implements ComponentRenderer {
+
+    private componentKey: number = 0;
+    private static readonly MAX_COMPONENT_KEY = Number.MAX_VALUE - 100000;
 
     public render(
         components: ComponentCollection,
@@ -31,81 +34,65 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         editComponent: (c: ComponentUiData) => void,
         showConnectionHandles: boolean,
         componentsDraggable: boolean,
-        xOffset?: number,
-        yOffset?: number
     ): ReactElement[] {
-        let shiftedComponents = components;
-        if (xOffset && yOffset) {
-            shiftedComponents = new ComponentCollection(
-                components.getAllComponents().map(c => {
-                    if (!c.getData().x || !c.getData().y) {
-                        return c;
-                    }
-                    else {
-                        return c.withData({
-                            ...c.getData(),
-                            x: c.getData().x - xOffset,
-                            y: c.getData().y - yOffset
-                        });
-                    }
-                })
-            );
+        if (this.componentKey > ComponentRendererImpl.MAX_COMPONENT_KEY) {
+            this.componentKey = 0;
         }
-
+        const models = this.renderStaticModels(
+            components.getStaticModels(),
+            editComponent,
+            getColor
+        );
         const stocks = this.renderStocks(
-            shiftedComponents.getStocks(),
-            shiftedComponents.getAllComponents(),
+            components.getStocks(),
+            components.getAllComponents(),
             getColor,
             componentsDraggable,
             editComponent
         );
         const flows = this.renderFlows(
-            shiftedComponents.getFlows(),
-            shiftedComponents.getAllComponents(),
+            components.getFlows(),
+            components.getAllComponents(),
             getColor
         );
         const clouds = this.renderClouds(
-            shiftedComponents.getClouds(),
+            components.getClouds(),
             editComponent,
             getColor
         );
         const params = this.renderParameters(
-            shiftedComponents.getParameters(),
+            components.getParameters(),
             componentsDraggable,
             editComponent,
             getColor
         );
         const dynVars = this.renderDynamicVariables(
-            shiftedComponents.getDynamicVariables(),
+            components.getDynamicVariables(),
             componentsDraggable,
             editComponent,
             getColor
         );
         const sumVars = this.renderSumVariables(
-            shiftedComponents.getSumVariables(),
+            components.getSumVariables(),
             componentsDraggable,
             editComponent,
             getColor
         );
         const connections = this.renderConnections(
-            shiftedComponents.getConnections(),
+            components.getConnections(),
             components.getAllComponents(),
             editComponent,
             showConnectionHandles
         );
-        const models = this.renderStaticModels(
-            shiftedComponents.getStaticModels(),
-            editComponent
-        );
 
-        return stocks
-            .concat(flows)
+        return flows
+            .concat(stocks)
+            .concat(models)
+            .concat(clouds)
             .concat(params)
             .concat(dynVars)
             .concat(sumVars)
-            .concat(connections)
-            .concat(models)
-            .concat(clouds);
+            .concat(connections);
     }
 
     private renderStock(props: StockProps): ReactElement {
@@ -121,7 +108,7 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         draggable: boolean,
         editComponent: (s: StockUiData) => void
     ): ReactElement[] {
-        return stocks.map((stock, i) =>
+        return stocks.map((stock) =>
             this.renderStock({
                 stock: stock,
                 components,
@@ -129,7 +116,7 @@ export default class ComponentRendererImpl implements ComponentRenderer {
                 draggable,
                 text: stock.getData().text,
                 updateState: editComponent,
-                key: i
+                key: this.componentKey++
             } as StockProps)
         );
     }
@@ -145,12 +132,12 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         components: ComponentUiData[],
         getColor: (f: FlowUiData) => string
     ): ReactElement[] {
-        return flows.map((flow, i) =>
+        return flows.map((flow) =>
             this.renderFlow({
                 flowData: flow,
                 components,
                 color: getColor(flow),
-                key: i
+                key: this.componentKey++
             } as FlowProps)
         );
     }
@@ -166,12 +153,12 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         editComponent: (c: CloudUiData) => any,
         getColor: (f: CloudUiData) => string
     ): ReactElement[] {
-        return clouds.map((cloud, i) =>
+        return clouds.map((cloud) =>
             this.renderCloud({
                 data: cloud,
                 updateState: editComponent,
                 color: getColor(cloud),
-                key: i
+                key: this.componentKey++
             } as CloudProps)
         );
     }
@@ -188,13 +175,13 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         editComponent: (c: ConnectionUiData) => void,
         showConnectionHandles: boolean
     ): ReactElement[] {
-        return connections.map((conn, i) =>
+        return connections.map((conn) =>
             this.renderConnection({
                 conn,
                 components,
                 updateState: editComponent,
                 showHandle: showConnectionHandles,
-                key: i
+                key: this.componentKey++
             } as ConnectionProps)
         );
     }
@@ -211,14 +198,14 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         editComponent: (c: ComponentUiData) => void,
         getColor: (c: ParameterUiData) => string
     ): ReactElement[] {
-        return params.map((param, i) =>
+        return params.map((param) =>
             this.renderParameter(
                 this.makeTextProps(
                     param,
                     draggable,
                     editComponent,
                     getColor(param),
-                    i
+                    this.componentKey++
                 )
             )
         );
@@ -236,14 +223,14 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         editComponent: (c: ComponentUiData) => void,
         getColor: (c: SumVariableUiData) => string
     ): ReactElement[] {
-        return variables.map((sv, i) =>
+        return variables.map((sv) =>
             this.renderSumVariable(
                 this.makeTextProps(
                     sv,
                     draggable,
                     editComponent,
                     getColor(sv),
-                    i
+                    this.componentKey++
                 )
             )
         );
@@ -261,14 +248,14 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         editComponent: (c: ComponentUiData) => void,
         getColor: (c: DynamicVariableUiData) => string
     ): ReactElement[] {
-        return variables.map((dv, i) =>
+        return variables.map((dv) =>
             this.renderDynamicVariable(
                 this.makeTextProps(
                     dv,
                     draggable,
                     editComponent,
                     getColor(dv),
-                    i
+                    this.componentKey++
                 )
             )
         );
@@ -282,21 +269,23 @@ export default class ComponentRendererImpl implements ComponentRenderer {
 
     public renderStaticModels(
         staticModels: StaticModelUiData[],
-        editComponent: (p: ComponentUiData) => void
+        editComponent: (c: ComponentUiData) => void,
+        getColor: (c: ComponentUiData) => string
     ): ReactElement[] {
-        return staticModels.map((sm, i) => {
+        return staticModels.map((sm) => {
             return this.renderStaticModel({
                 model: sm,
                 draggable: true,
                 updateState: editComponent,
                 renderer: this,
-                key: i
+                getColor,
+                key: this.componentKey++
             } as StaticModelProps);
         });
     }
 
     private makeTextProps(
-        data: TextComponent<any>,
+        data: TextComponent<any, any>,
         draggable: boolean,
         editComponent: (c: ComponentUiData) => void,
         color: string,

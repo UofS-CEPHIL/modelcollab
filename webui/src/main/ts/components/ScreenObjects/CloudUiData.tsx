@@ -35,4 +35,13 @@ export default class CloudUiData extends RectangularComponent<schema.CloudCompon
     public withData(d: schema.CloudComponentData): CloudUiData {
         return new CloudUiData(this.getDatabaseObject().withData(d));
     }
+
+    public withId(id: string): CloudUiData {
+        return new CloudUiData(
+            new schema.CloudFirebaseComponent(
+                id,
+                this.getData()
+            )
+        );
+    }
 }

@@ -74,6 +74,15 @@ export default class FlowUiData extends PointerComponent<schema.FlowComponentDat
         );
     }
 
+    public withId(id: string): FlowUiData {
+        return new FlowUiData(
+            new schema.FlowFirebaseComponent(
+                id,
+                this.getData()
+            )
+        );
+    }
+
     public isPointable(): boolean {
         return true;
     }

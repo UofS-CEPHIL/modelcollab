@@ -8,6 +8,7 @@ import StaticModelUiData from "./StaticModelUiData";
 export interface Props {
     model: StaticModelUiData;
     renderer: ComponentRenderer;
+    getColor: (c: ComponentUiData) => string;
     draggable: boolean;
     updateState: (c: ComponentUiData) => void;
 }
@@ -39,24 +40,14 @@ export default class StaticModel extends React.Component<Props> {
     }
 
     private makeComponents(): ReactElement[] {
-        const minX = Math.min(...this.props.model
-            .getComponents()
-            .filter(c => c.getData().x !== undefined)
-            .map(c => c.getData().x as number)) - StaticModelUiData.PAD_PX;
-        const minY = Math.min(...this.props.model
-            .getComponents()
-            .filter(c => c.getData().y !== undefined)
-            .map(c => c.getData().y as number)) - StaticModelUiData.PAD_PX;
         return this.props.renderer.render(
             new ComponentCollection(
-                this.props.model.getComponents()
+                this.props.model.getComponentsRelativeToSelf()
             ),
-            _ => "black",
+            c => this.props.getColor(c),
             this.props.updateState,
             false,
             false,
-            minX,
-            minY
         )
     }
 
@@ -70,6 +61,7 @@ export default class StaticModel extends React.Component<Props> {
                 lineJoin={"round"}
                 draggable={false}
                 name={this.props.model.getId()}
+                key={0}
             />
         );
     }
@@ -84,6 +76,7 @@ export default class StaticModel extends React.Component<Props> {
                 lineJoin={"round"}
                 draggable={false}
                 name={this.props.model.getId()}
+                key={1}
             />
         );
     }

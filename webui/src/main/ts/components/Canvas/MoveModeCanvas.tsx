@@ -22,11 +22,15 @@ export default class MoveModeCanvas extends ExtendableBaseCanvas<CanvasProps, St
         };
     }
 
+    private isDraggingSelectionBox(): boolean {
+        return this.state.anchorX !== null && this.state.anchorY !== null;
+    }
+
     protected renderModeSpecificLayer(): ReactElement {
-        if (this.state.anchorX && this.state.anchorY)
+        if (this.isDraggingSelectionBox())
             return (
                 <SelectionBox
-                    anchor={{ x: this.state.anchorX, y: this.state.anchorY }}
+                    anchor={{ x: this.state.anchorX || 0, y: this.state.anchorY || 0 }}
                     mouse={{ x: this.state.mouseX, y: this.state.mouseY }}
                     selectComponentsInsideBox={(p, q) => this.getComponentIdsInsideBoundingBox(p, q)}
                 />
@@ -36,11 +40,12 @@ export default class MoveModeCanvas extends ExtendableBaseCanvas<CanvasProps, St
     }
 
     protected onCanvasMouseMoved(x: number, y: number): void {
-        this.setState({ ...this.state, mouseX: x, mouseY: y });
+        if (this.state.anchorX && this.state.anchorY)
+            this.setState({ ...this.state, mouseX: x, mouseY: y });
     }
 
     protected onCanvasMouseDown(x: number, y: number): void {
-        this.setState({ ...this.state, anchorX: x, anchorY: y });
+        this.setState({ ...this.state, anchorX: x, anchorY: y, mouseX: x, mouseY: y });
     }
 
     protected onCanvasMouseUp(x: number, y: number): void {
@@ -56,7 +61,7 @@ export default class MoveModeCanvas extends ExtendableBaseCanvas<CanvasProps, St
             this.props.setSelected(
                 this.getComponentIdsInsideBoundingBox(topLeftCorner, bottomRightCorner)
             );
-            this.setState({ ...this.state, anchorX: null, anchorY: null });
+            this.setState({ ...this.state, anchorX: null, anchorY: null, mouseX: 0, mouseY: 0 });
         }
     }
 

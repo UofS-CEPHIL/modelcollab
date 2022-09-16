@@ -4,7 +4,7 @@ import Konva, { Group, Text } from 'react-konva';
 import ComponentUiData, { TextComponent } from "./ComponentUiData";
 
 export interface Props {
-    data: TextComponent<any>;
+    data: TextComponent<any, any>;
     draggable: boolean;
     updateState: (c: ComponentUiData) => void;
     color: string;

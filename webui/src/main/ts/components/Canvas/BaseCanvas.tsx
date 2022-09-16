@@ -100,13 +100,15 @@ export abstract class ExtendableBaseCanvas
 
             >
                 <Layer>
-                    {this.props.renderer.render(
-                        this.props.components,
-                        c => this.getComponentColour(c),
-                        c => this.props.editComponent(c),
-                        this.props.showConnectionHandles,
-                        true,
-                    )}
+                    {
+                        this.props.renderer.render(
+                            this.props.components,
+                            c => this.getComponentColor(c),
+                            c => this.props.editComponent(c),
+                            this.props.showConnectionHandles,
+                            true,
+                        )
+                    }
                 </Layer>
                 <Layer>
                     {this.renderModeSpecificLayer()}
@@ -162,7 +164,7 @@ export abstract class ExtendableBaseCanvas
             this.props.registerComponentClickedHandler(c => this.onComponentClicked(c));
     }
 
-    private getComponentColour(component: ComponentUiData): string {
+    private getComponentColor(component: ComponentUiData): string {
         return this.props.selectedComponentIds.includes(component.getId())
             ? SELECTED_COLOR : DEFAULT_COLOR;
     }

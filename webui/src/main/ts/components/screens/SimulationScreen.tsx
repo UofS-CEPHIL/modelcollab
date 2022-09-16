@@ -173,9 +173,9 @@ export default class SimulationScreen extends React.Component<Props, State> {
                     )
                 }
                 {
-                    (selectedComponents.length === 1 && this.shouldShowEditBox()) &&
+                    (selectedComponents.length === 1 && this.shouldShowEditBox() && selectedComponents[0]) &&
                     this.props.createEditBox({
-                        initialComponent: selectedComponents[0]?.getDatabaseObject(),
+                        initialComponent: selectedComponents[0].getDatabaseObject(),
                         handleCancel: () => this.setSelected([]),
                         handleSave: (comp: schema.FirebaseDataComponent<any>) => {
                             const components: ComponentUiData[] = this.state.components
@@ -205,8 +205,11 @@ export default class SimulationScreen extends React.Component<Props, State> {
         this.state.components
             .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
             .forEach(c => {
-                const loadedModel = this.state.loadedModels.find(m => m.modelId === c.getData().modelId);
-                if (loadedModel) (c as StaticModelUiData).setComponents(loadedModel.components);
+                let loadedModel = this.state.loadedModels.find(m => m.modelId === c.getData().modelId);
+                if (loadedModel) {
+                    const modelUiData = c as StaticModelUiData;
+                    modelUiData.setComponents(loadedModel.components);
+                }
             });
     }
 
@@ -395,5 +398,13 @@ export default class SimulationScreen extends React.Component<Props, State> {
 
     private saveModel(): void {
         this.setState({ showingSaveModelBox: true });
+    }
+
+    private getAllComponentsIncludingChildren(): ComponentUiData[] {
+        return this.state.components.concat(
+            ...this.state.components
+                .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
+                .map(c => (c as StaticModelUiData).getComponents())
+        );
     }
 }

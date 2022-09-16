@@ -12,11 +12,52 @@ export default class StaticModelUiData
     private components: ComponentUiData[] | undefined;
 
     public setComponents(components: ComponentUiData[] | undefined): void {
-        this.components = components;
+        this.components = components
+            ?.map(c => {
+                if (c.getData().from && c.getData().to)
+                    return c.withData({
+                        ...c.getData(),
+                        from: `${this.getId()}/${c.getData().from}`,
+                        to: `${this.getId()}/${c.getData().to}`
+                    });
+                else
+                    return c;
+            }).map(c => c.withId(this.getId() + "/" + c.getId()))
     }
 
     public getComponents(): ComponentUiData[] {
         return this.components || [];
+    }
+
+    private getChildComponentsWithOffset(xOffset: number, yOffset: number): ComponentUiData[] {
+        return this.getComponents().map(
+            c => {
+                if (c.getData().x && c.getData().y) {
+                    return c.withData({
+                        ...c.getData(),
+                        x: c.getData().x - xOffset,
+                        y: c.getData().y - yOffset
+                    });
+                }
+                else {
+                    return c
+                }
+            }
+        );
+    }
+
+    public getComponentsRelativeToSelf(): ComponentUiData[] {
+        return this.getChildComponentsWithOffset(
+            this.getChildXOffset(),
+            this.getChildYOffset()
+        );
+    }
+
+    public getComponentsRelativeToCanvas(): ComponentUiData[] {
+        return this.getChildComponentsWithOffset(
+            this.getChildXOffset() - this.getData().x,
+            this.getChildYOffset() - this.getData().y
+        );
     }
 
     public getHeightPx(): number {
@@ -65,5 +106,30 @@ export default class StaticModelUiData
         return new StaticModelUiData(
             this.getDatabaseObject().withData(data)
         );
+    }
+
+    public withId(id: string): StaticModelUiData {
+        return new StaticModelUiData(
+            new schema.StaticModelComponent(
+                id,
+                this.getData()
+            )
+        );
+    }
+
+    private getChildXOffset(): number {
+        return Math.min(
+            ...this.getComponents()
+                .filter(c => c.getData().x !== undefined)
+                .map(c => c.getData().x as number)
+        ) - StaticModelUiData.PAD_PX;
+    }
+
+    private getChildYOffset(): number {
+        return Math.min(
+            ...this.getComponents()
+                .filter(c => c.getData().y !== undefined)
+                .map(c => c.getData().y as number)
+        ) - StaticModelUiData.PAD_PX;
     }
 }

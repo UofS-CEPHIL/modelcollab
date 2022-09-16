@@ -56,7 +56,8 @@ export default class ComponentCollection {
             .concat(this.dynVars)
             .concat(this.clouds)
             .concat(this.connections)
-            .concat(this.staticModels);
+            .concat(this.staticModels)
+            .concat(this.getAllStaticModelChildren());
     }
 
     public length(): number {
@@ -101,5 +102,14 @@ export default class ComponentCollection {
 
     public getStaticModels(): StaticModelUiData[] {
         return this.staticModels;
+    }
+
+    public getAllStaticModelChildren(): ComponentUiData[] {
+        return this.getStaticModels()
+            .map(m => m.getComponentsRelativeToCanvas())
+            .reduce(
+                (prev, cur) => prev.concat(cur),
+                []
+            );
     }
 }

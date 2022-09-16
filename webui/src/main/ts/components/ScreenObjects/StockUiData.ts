@@ -12,6 +12,15 @@ export default class StockUiData extends RectangularComponent<schema.StockCompon
         return new StockUiData(this.getDatabaseObject().withData(data));
     }
 
+    public withId(id: string): StockUiData {
+        return new StockUiData(
+            new schema.StockFirebaseComponent(
+                id,
+                this.getData()
+            )
+        );
+    }
+
     public getTopLeft(): Point {
         return { x: this.getData().x, y: this.getData().y }
     }

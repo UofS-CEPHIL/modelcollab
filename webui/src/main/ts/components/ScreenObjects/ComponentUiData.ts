@@ -25,6 +25,7 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
     public abstract getMinY(components: ComponentUiData[]): number;
 
     public abstract withData(data: DataType): ComponentUiDataInternal<DataType, DbObject>;
+    public abstract withId(id: string): ComponentUiDataInternal<DataType, DbObject>;
 
 
 
@@ -142,35 +143,112 @@ export abstract class PointerComponent<
     extends ComponentUiDataInternal<DataType, DbObject> {
 
 
-    public getSource(components: ReadonlyArray<ComponentUiData>): SourceComponent {
-        const source = (components.find(c => c.getId() === this.getData().from) as unknown) as SourceComponent;
-        if (!source) throw new Error(`Connection ${this.getId()} unable to find id ${this.getData().from} in list ${components.map(c => c.getId())}`);
-        return source;
+    public getSource(components: ComponentUiData[]): SourceComponent | undefined {
+        return (components.find(c => c.getId() === this.getData().from) as unknown) as SourceComponent;
     }
 
 
-    public getTarget(components: ReadonlyArray<ComponentUiData>): TargetComponent {
-        const target = (components.find(c => c.getId() === this.getData().to) as unknown) as TargetComponent;
-        if (!target) throw new Error(`Unable to find id ${this.getData().to} in list ${Object.values(components)}`);
-        return target;
+    public getTarget(components: ComponentUiData[]): TargetComponent | undefined {
+        return (components.find(c => c.getId() === this.getData().to) as unknown) as TargetComponent;
     }
 
-    public getArrowPoints(components: ReadonlyArray<ComponentUiData>): number[] {
-        const fromPoint: Point = this.getSource(components).getArrowPoint(this.getSideStartingFrom(components), components);
-        const toPoint: Point = this.getTarget(components).getArrowPoint(this.getSidePointingTo(components), components);
-        console.log('getarrowpoints returning ' + fromPoint + " " + toPoint)
+    public getArrowPoints(components: ComponentUiData[]): number[] {
+        const fromPoint: Point = this.getStartPoint(components);
+        const toPoint: Point = this.getTargetPoint(components);
         return [fromPoint.x, fromPoint.y, toPoint.x, toPoint.y];
     }
 
-    public getAngleArrowPoints(components: ReadonlyArray<ComponentUiData>): number[] {
+    public getCentrePoint(components: ComponentUiData[]): Point {
+        return PointerComponent.getMiddlePoint(
+            this.getStartPoint(components),
+            this.getTargetPoint(components)
+        );
+    }
+
+    public isInsideBoundingBox(topLeft: Point, bottomRight: Point, components: ComponentUiData[]): boolean {
+        return ComponentUiData.isInsideBox(this.getCentrePoint(components), topLeft, bottomRight);
+    }
+
+    public getStartPoint(components: ComponentUiData[]): Point {
+        // Source component may not exist. If so, try placing the
+        // source just next to the target. If the target doesn't
+        // exist either, just put it at at (0,0)
+        const sourceComponent = this.getSource(components);
+        if (sourceComponent) {
+            return sourceComponent.getArrowPoint(this.getSideStartingFrom(components), components);
+        }
+        else {
+            const targetPoint = this.getTargetPoint(components);
+            if (targetPoint) {
+                return {
+                    x: targetPoint.x - 20,
+                    y: targetPoint.y - 0
+                };
+            }
+            else {
+                return {
+                    x: 0,
+                    y: 0
+                };
+            }
+        }
+    }
+
+    public getTargetPoint(components: ComponentUiData[]): Point {
+        // Target component may not exist. If so, try placing the
+        // source just next to the source. If the source doesn't
+        // exist either, just put it at at (10,10)
+        const targetComponent = this.getTarget(components);
+        if (targetComponent) {
+            return targetComponent.getArrowPoint(this.getSidePointingTo(components), components);
+        }
+        else {
+            const sourceComponent = this.getSource(components);
+            if (sourceComponent) {
+                const sourcePoint = this.getStartPoint(components);
+                return {
+                    x: sourcePoint.x + 20,
+                    y: sourcePoint.y
+                };
+            }
+            else {
+                return {
+                    x: 10,
+                    y: 10
+                };
+            }
+        }
+
+    }
+
+    public getSideStartingFrom(components: ComponentUiData[]): Side {
+        const sourceComponent = this.getSource(components);
+        const targetComponent = this.getTarget(components);
+        if (sourceComponent) {
+            if (targetComponent) {
+                return sourceComponent.getRelativeSide(targetComponent, components);
+            }
+            else {
+                return Side.RIGHT;
+            }
+        }
+        else {
+            return Side.LEFT;
+        }
+    }
+
+    public getSidePointingTo(components: ComponentUiData[]): Side {
+        return getOppositeSide(this.getSideStartingFrom(components));
+    }
+
+    // "Angle" methods = line goes straight with only 90deg bends
+    public getAngleArrowPoints(components: ComponentUiData[]): number[] {
         const fromSide = this.getAngleSideStartingFrom(components);
         const toSide = this.getSidePointingTo(components);
-
-        const fromPoint: Point = this.getSource(components).getArrowPoint(fromSide, components);
-        const toPoint: Point = this.getTarget(components).getArrowPoint(toSide, components);
+        const fromPoint: Point = this.getAngleStartPoint(components, fromSide);
+        const toPoint: Point = this.getTargetPoint(components);
 
         let middlePoint: Point = { x: fromPoint.x, y: fromPoint.y };
-
         if (getOppositeSide(fromSide) != toSide) {
             if (fromSide == Side.TOP || fromSide == Side.BOTTOM) {
                 middlePoint.x = fromPoint.x;
@@ -185,37 +263,36 @@ export abstract class PointerComponent<
         return [fromPoint.x, fromPoint.y, middlePoint.x, middlePoint.y, toPoint.x, toPoint.y];
     }
 
-    public getCentrePoint(components: ReadonlyArray<ComponentUiData>): Point {
-        return PointerComponent.getMiddlePoint(
-            this.getStartPoint(components),
-            this.getTargetPoint(components)
-        );
+    public getAngleStartPoint(components: ComponentUiData[], fromSide: Side): Point {
+        const sourceComponent = this.getSource(components);
+        if (sourceComponent) {
+            return sourceComponent.getArrowPoint(fromSide, components);
+        }
+        else {
+            return {
+                x: 0,
+                y: 0
+            }
+        }
     }
 
-    public isInsideBoundingBox(topLeft: Point, bottomRight: Point, components: ReadonlyArray<ComponentUiData>): boolean {
-        return ComponentUiData.isInsideBox(this.getCentrePoint(components), topLeft, bottomRight);
+    public getAngleSideStartingFrom(components: ComponentUiData[]): Side {
+        const sourceComponent = this.getSource(components);
+        const targetComponent = this.getTarget(components);
+        if (sourceComponent) {
+            if (targetComponent) {
+                return sourceComponent.getAngleRelativeSide(targetComponent, components);
+            }
+            else {
+                return Side.RIGHT;
+            }
+        }
+        else {
+            return Side.LEFT;
+        }
     }
 
-    public getStartPoint(components: ReadonlyArray<ComponentUiData>): Point {
-        return this.getSource(components).getArrowPoint(this.getSideStartingFrom(components), components);
-    }
 
-    public getTargetPoint(components: ReadonlyArray<ComponentUiData>): Point {
-        return this.getTarget(components).getArrowPoint(this.getSidePointingTo(components), components);
-    }
-
-
-    public getSideStartingFrom(components: ReadonlyArray<ComponentUiData>): Side {
-        return this.getSource(components).getRelativeSide(this.getTarget(components), components);
-    }
-
-    public getAngleSideStartingFrom(components: ReadonlyArray<ComponentUiData>): Side {
-        return this.getSource(components).getAngleRelativeSide(this.getTarget(components), components);
-    }
-
-    public getSidePointingTo(components: ReadonlyArray<ComponentUiData>): Side {
-        return getOppositeSide(this.getSideStartingFrom(components));
-    }
 
     public static getMiddlePoint(p1: Point, p2: Point, padPx?: number) {
         if (!padPx) padPx = 0;
@@ -254,11 +331,11 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
         return this.getMinY(c) + this.getHeightPx();
     }
 
-    public getArrowPoint(side: Side, _: ReadonlyArray<ComponentUiData>) {
+    public getArrowPoint(side: Side, _: ComponentUiData[]) {
         return RectangularComponent.getCentreOfSideOfRect(this.getTopLeft(), this.getWidthPx(), this.getHeightPx(), side);
     }
 
-    public isInsideBoundingBox(topLeft: Point, bottomRight: Point, _: ReadonlyArray<ComponentUiData>): boolean {
+    public isInsideBoundingBox(topLeft: Point, bottomRight: Point, _: ComponentUiData[]): boolean {
         const myTopLeft = this.getTopLeft();
         const myBottomRight = { x: myTopLeft.x + this.getWidthPx(), y: myTopLeft.y + this.getHeightPx() };
         return ComponentUiData.isInsideBox(myTopLeft, topLeft, bottomRight)
@@ -296,12 +373,12 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
     }
 }
 
-export abstract class TextComponent<DbObject extends schema.TextFirebaseComponent<any>> extends RectangularComponent<schema.TextComponentData, DbObject> {
+export abstract class TextComponent<DataType extends schema.TextComponentData, DbObject extends schema.TextFirebaseComponent<any>> extends RectangularComponent<DataType, DbObject> {
     public static WIDTH = 150;
     public static HEIGHT = 50;
     private static PAD = 8;
 
-    public getArrowPoint(side: Side, _: ReadonlyArray<ComponentUiData>) {
+    public getArrowPoint(side: Side, _: ComponentUiData[]) {
         const defaultPoint = super.getArrowPoint(side, _);
         let xpad: number;
         let ypad: number;

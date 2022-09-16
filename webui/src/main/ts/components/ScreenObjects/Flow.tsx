@@ -3,12 +3,12 @@ import { Arrow, Group, Line, Rect, Text } from "react-konva";
 import { Point } from '../DrawingUtils';
 import ComponentUiData from './ComponentUiData';
 
-import FlowUiData, { FLOW_LABEL_DEFAULT_HEIGHT, FLOW_LABEL_DEFAULT_WIDTH } from "./FlowUiData";
+import FlowUiData from "./FlowUiData";
 
 
 export interface Props {
     flowData: FlowUiData;
-    components: ReadonlyArray<ComponentUiData>;
+    components: ComponentUiData[];
     color: string;
 };
 

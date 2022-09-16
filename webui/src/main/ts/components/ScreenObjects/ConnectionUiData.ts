@@ -7,9 +7,18 @@ export const HANDLE_WIDTH = 8;
 
 export default class ConnectionUiData extends PointerComponent<schema.ConnectionComponentData, schema.ConnectionFirebaseComponent, PointableComponent, PointableComponent> {
 
-    public withData(data: schema.ConnectionComponentData) {
+    public withData(data: schema.ConnectionComponentData): ConnectionUiData {
         return new ConnectionUiData(
             this.getDatabaseObject().withData(data)
+        );
+    }
+
+    public withId(id: string): ConnectionUiData {
+        return new ConnectionUiData(
+            new schema.ConnectionFirebaseComponent(
+                id,
+                this.getData()
+            )
         );
     }
 
@@ -33,7 +42,7 @@ export default class ConnectionUiData extends PointerComponent<schema.Connection
         return false;
     }
 
-    public computeHandleLocation(components: ComponentUiData[] | ReadonlyArray<ComponentUiData>): Point {
+    public computeHandleLocation(components: ComponentUiData[]): Point {
         const centrePoint: Point = this.getCentrePoint(components);
         return {
             x: centrePoint.x + this.getData().handleXOffset - (HANDLE_WIDTH / 2),
