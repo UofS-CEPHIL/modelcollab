@@ -1,6 +1,6 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import CloudUiData from "../ScreenObjects/CloudUiData";
-import ComponentUiData from "../ScreenObjects/ComponentUiData";
+import ComponentUiData, { PointableComponent, PointerComponent } from "../ScreenObjects/ComponentUiData";
 import ConnectionUiData from "../ScreenObjects/ConnectionUiData";
 import DynamicVariableUiData from "../ScreenObjects/DynamicVariableUiData";
 import FlowUiData from "../ScreenObjects/FlowUiData";
@@ -102,6 +102,10 @@ export default class ComponentCollection {
 
     public getStaticModels(): StaticModelUiData[] {
         return this.staticModels;
+    }
+
+    public getPointerComponents(): PointerComponent<any, any, any, any>[] {
+        return [...this.getConnections(), ...this.getFlows()];
     }
 
     public getAllStaticModelChildren(): ComponentUiData[] {

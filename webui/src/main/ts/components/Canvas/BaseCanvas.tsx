@@ -8,6 +8,7 @@ import FlowUiData from '../ScreenObjects/FlowUiData';
 import { LoadedStaticModel } from '../screens/SimulationScreen';
 import ComponentCollection from './ComponentCollection';
 import ComponentRenderer from './ComponentRenderer';
+import StockUiData from '../ScreenObjects/StockUiData';
 
 const RIGHT_CLICK = 2;
 export interface Props {
@@ -22,6 +23,7 @@ export interface Props {
     editComponent: (_: ComponentUiData) => void;
     deleteComponent: (id: string) => void;
     setSelected: (ids: string[]) => void;
+    identifyStocks: (outStock: StockUiData, inStock: StockUiData) => void;
 
     // visible for testing
     // TODO make these non-optional and send them up by 1 layer

@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react';
 
 import { FirebaseComponentModel as schema } from "database/build/export";
 
-import ComponentUiData from '../ScreenObjects/ComponentUiData';
+import ComponentUiData, { PointerComponent } from '../ScreenObjects/ComponentUiData';
 import { Props as CanvasProps } from "../Canvas/BaseCanvas";
 import { Props as ToolbarProps } from '../Toolbar/Toolbar';
 import { UiMode } from '../../UiMode';
@@ -168,7 +168,8 @@ export default class SimulationScreen extends React.Component<Props, State> {
                             editComponent: c => this.updateComponent(c),
                             deleteComponent: id => this.removeComponent(id),
                             addComponent: c => this.addComponent(c),
-                            setSelected: ids => this.setSelected(ids)
+                            setSelected: ids => this.setSelected(ids),
+                            identifyStocks: (o, i) => this.identifyStocks(o, i)
                         }
                     )
                 }
@@ -406,5 +407,41 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
                 .map(c => (c as StaticModelUiData).getComponents())
         );
+    }
+
+    private identifyStocks(outStock: StockUiData, inStock: StockUiData) {
+        const pointersToOutStock = this.getComponentsPointingTo(outStock);
+        const pointersFromOutStock = this.getComponentsPointingFrom(outStock);
+
+        const updatedComponents = this.state.components
+            .filter(c => c.getId() !== outStock.getId())
+            .map(
+                c => {
+                    if (pointersToOutStock.find(p => p.getId() === c.getId())) {
+                        return c.withData({ ...c.getData(), to: inStock.getId() });
+                    }
+                    else if (pointersFromOutStock.find(p => p.getId() === c.getId())) {
+                        return c.withData({ ...c.getData(), from: inStock.getId() });
+                    }
+                    else {
+                        return c;
+                    }
+                }
+            );
+        this.setState({ ...this.state, components: updatedComponents });
+    }
+
+    public getComponentsPointingTo(component: ComponentUiData): PointerComponent<any, any, any, any>[] {
+        return this.state.components.filter(p =>
+            (p.getType() === schema.ComponentType.FLOW || p.getType() === schema.ComponentType.CONNECTION)
+            && p.getData().to === component.getId()
+        ).map(p => p.getType() === schema.ComponentType.FLOW ? p as FlowUiData : p as ConnectionUiData);
+    }
+
+    public getComponentsPointingFrom(component: ComponentUiData): PointerComponent<any, any, any, any>[] {
+        return this.state.components.filter(p =>
+            (p.getType() === schema.ComponentType.FLOW || p.getType() === schema.ComponentType.CONNECTION)
+            && p.getData().from === component.getId()
+        ).map(p => p.getType() === schema.ComponentType.FLOW ? p as FlowUiData : p as ConnectionUiData);
     }
 }

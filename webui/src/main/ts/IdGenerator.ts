@@ -14,6 +14,7 @@ export default class IdGenerator {
         else {
             components = existing;
         }
+
         do {
             componentID = Math.floor((Math.random() * 100000) + 1).toString();
             isUsed = (components.find(c => c.getId() === componentID)) !== undefined;

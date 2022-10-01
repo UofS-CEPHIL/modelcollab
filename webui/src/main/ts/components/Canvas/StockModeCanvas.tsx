@@ -24,14 +24,10 @@ export default class StockModeCanvas extends BaseCanvas {
             && component.getType() === schema.ComponentType.STOCK
             && component.isChildOfStaticModel()
         ) {
-            this.identifyStocks(selectedComponent as StockUiData, component as StockUiData)
+            this.props.identifyStocks(selectedComponent as StockUiData, component as StockUiData);
         }
         else {
             super.onComponentMouseUp(component, x, y);
         }
-    }
-
-    private identifyStocks(outStock: StockUiData, inStock: StockUiData) {
-        console.log(`Identify ${outStock.getId()} with ${inStock.getId()}`);
     }
 }
