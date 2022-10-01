@@ -429,6 +429,7 @@ export default class SimulationScreen extends React.Component<Props, State> {
                 }
             );
         this.setState({ ...this.state, components: updatedComponents });
+        this.props.firebaseDataModel.setAllComponents(this.props.sessionId, updatedComponents);
     }
 
     public getComponentsPointingTo(component: ComponentUiData): PointerComponent<any, any, any, any>[] {

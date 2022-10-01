@@ -83,12 +83,16 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
     removeComponents(sessionId: string, componentIds: string[], allComponents: ComponentUiData[]): void {
         const newComponentsList = allComponents.filter(c => !componentIds.includes(c.getId()));
+        this.setAllComponents(sessionId, newComponentsList);
+    }
+
+    setAllComponents(sessionId: string, updatedComponentsList: ComponentUiData[]): void {
         set(
             ref(
                 this.firebaseManager.getDb(),
                 FirebaseSchema.makeAllComponentsForSessionPath(sessionId)
             ),
-            Object.fromEntries(newComponentsList.map(c => {
+            Object.fromEntries(updatedComponentsList.map(c => {
                 return [
                     c.getId(),
                     {
