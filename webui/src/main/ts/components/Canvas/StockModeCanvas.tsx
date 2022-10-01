@@ -1,6 +1,7 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import IdGenerator from "../../IdGenerator";
+import ComponentUiData from "../ScreenObjects/ComponentUiData";
 import StockUiData from "../ScreenObjects/StockUiData";
 import BaseCanvas from "./BaseCanvas";
 
@@ -13,5 +14,24 @@ export default class StockModeCanvas extends BaseCanvas {
             { x, y, initvalue: "", text: "" }
         ));
         this.props.addComponent(newStock);
+    }
+
+    protected onComponentMouseUp(component: ComponentUiData, x: number, y: number): void {
+        const selectedComponent = this.props.components.getComponent(this.props.selectedComponentIds[0]);
+        if (
+            this.props.selectedComponentIds.length === 1
+            && selectedComponent?.getType() === schema.ComponentType.STOCK
+            && component.getType() === schema.ComponentType.STOCK
+            && component.isChildOfStaticModel()
+        ) {
+            this.identifyStocks(selectedComponent as StockUiData, component as StockUiData)
+        }
+        else {
+            super.onComponentMouseUp(component, x, y);
+        }
+    }
+
+    private identifyStocks(outStock: StockUiData, inStock: StockUiData) {
+        console.log(`Identify ${outStock.getId()} with ${inStock.getId()}`);
     }
 }

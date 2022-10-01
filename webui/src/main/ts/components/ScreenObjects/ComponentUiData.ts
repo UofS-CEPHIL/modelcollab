@@ -56,6 +56,10 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
         return this.dbObject;
     }
 
+    public isChildOfStaticModel(): boolean {
+        return this.getId().includes('/');
+    }
+
     public getRelativeSide(other: VisibleComponent, components: ComponentUiData[]): Side {
         // Which side of this is 'other' on? Basically, if we draw an X
         // with infinite length with the centre at this, which quadrant is

@@ -74,6 +74,8 @@ export abstract class ExtendableBaseCanvas
 
     protected onComponentMouseDown(comp: ComponentUiData, x: number, y: number): void { }
 
+    protected onComponentMouseUp(comp: ComponentUiData, x: number, y: number): void { }
+
     protected isDraggable(comp: ComponentUiData): boolean {
         return true;
     }
@@ -146,8 +148,15 @@ export abstract class ExtendableBaseCanvas
     }
 
     private onMouseUp(event: any): void {
+        const target = this.props.components.getComponent(event.target.attrs.name);
         const pointerPos = event.currentTarget.getPointerPosition();
-        this.onCanvasMouseUp(pointerPos.x, pointerPos.y);
+
+        if (!target) {
+            this.onCanvasMouseUp(pointerPos.x, pointerPos.y);
+        }
+        else {
+            this.onComponentMouseUp(target, pointerPos.x, pointerPos.y);
+        }
     }
 
     private onMouseMove(event: any): void {

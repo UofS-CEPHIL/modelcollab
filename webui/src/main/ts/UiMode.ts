@@ -8,7 +8,7 @@ export enum UiMode {
     MOVE = "Move",
     EDIT = "Edit",
     CONNECT = "Connect",
-    CLOUD = "Cloud"
+    CLOUD = "Cloud",
 };
 
 export function modeFromString(s: string): UiMode | null {
