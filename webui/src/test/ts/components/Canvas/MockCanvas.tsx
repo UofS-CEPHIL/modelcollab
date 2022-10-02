@@ -3,18 +3,18 @@ import { act } from "react-dom/test-utils";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import FlowModeCanvas from "../../../../main/ts/components/Canvas/FlowModeCanvas";
-import MoveModeCanvas from "../../../../main/ts/components/Canvas/MoveModeCanvas";
-import StockModeCanvas from "../../../../main/ts/components/Canvas/StockModeCanvas";
-import ConnectionModeCanvas from "../../../../main/ts/components/Canvas/ConnectModeCanvas";
-import VariableModeCanvas from "../../../../main/ts/components/Canvas/DynamicVariableModeCanvas";
-import SumVariableModeCanvas from "../../../../main/ts/components/Canvas/SumVariableModeCanvas";
-import ParameterModeCanvas from "../../../../main/ts/components/Canvas/ParamModeCanvas";
-import CloudModeCanvas from "../../../../main/ts/components/Canvas/CloudModeCanvas";
-import EditModeCanvas from "../../../../main/ts/components/Canvas/EditModeCanvas";
-import DeleteModeCanvas from "../../../../main/ts/components/Canvas/DeleteModeCanvas";
+import FlowModeCanvas from "../../../../main/ts/components/Canvas/ModeCanvas/FlowModeCanvas";
+import MoveModeCanvas from "../../../../main/ts/components/Canvas/ModeCanvas/MoveModeCanvas";
+import StockModeCanvas from "../../../../main/ts/components/Canvas/ModeCanvas/StockModeCanvas";
+import ConnectionModeCanvas from "../../../../main/ts/components/Canvas/ModeCanvas/ConnectModeCanvas";
+import VariableModeCanvas from "../../../../main/ts/components/Canvas/ModeCanvas/DynamicVariableModeCanvas";
+import SumVariableModeCanvas from "../../../../main/ts/components/Canvas/ModeCanvas/SumVariableModeCanvas";
+import ParameterModeCanvas from "../../../../main/ts/components/Canvas/ModeCanvas/ParamModeCanvas";
+import CloudModeCanvas from "../../../../main/ts/components/Canvas/ModeCanvas/CloudModeCanvas";
+import EditModeCanvas from "../../../../main/ts/components/Canvas/ModeCanvas/EditModeCanvas";
+import DeleteModeCanvas from "../../../../main/ts/components/Canvas/ModeCanvas/DeleteModeCanvas";
 import MockFirebaseDataModel from "../../data/MockFirebaseDataModel";
-import ComponentUiData from "../../../../main/ts/components/ScreenObjects/ComponentUiData";
+import ComponentUiData from "../../../../main/ts/components/Canvas/ScreenObjects/ComponentUiData";
 import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
 import MockRenderer from "./MockRenderer";
 import { getAllComponentsFromFirstRenderCall } from "./CanvasTest";
@@ -32,6 +32,7 @@ export default abstract class MockCanvas {
     public readonly deleteComponentSpy: jest.Mock<void> | undefined;
     public readonly addComponentSpy: jest.Mock<void> | undefined;
     public readonly setSelectedSpy: jest.Mock<void> | undefined;
+    public readonly identifyStocksSpy: jest.Mock<void> | undefined;
 
     public readonly registerComponentClickedSpy: jest.Mock<void> | undefined;
     public readonly registerCanvasLeftClickedSpy: jest.Mock<void> | undefined;
@@ -44,6 +45,7 @@ export default abstract class MockCanvas {
         this.deleteComponentSpy = jest.fn();
         this.addComponentSpy = jest.fn();
         this.setSelectedSpy = jest.fn();
+        this.identifyStocksSpy = jest.fn();
         this.mockRenderer = new MockRenderer();
         this.registerComponentClickedSpy = jest.fn();
         this.registerCanvasLeftClickedSpy = jest.fn();
@@ -59,6 +61,7 @@ export default abstract class MockCanvas {
             deleteComponent: this.deleteComponentSpy,
             addComponent: this.addComponentSpy,
             setSelected: this.setSelectedSpy,
+            identifyStocks: this.identifyStocksSpy,
             showConnectionHandles: false,
             registerCanvasLeftClickedHandler: this.registerCanvasLeftClickedSpy,
             registerCanvasRightClickedHandler: this.registerCanvasRightClickedSpy,

@@ -3,14 +3,14 @@ import MockCanvas, { ConnectionModeCanvasSpy } from "./MockCanvas";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import CanvasTest from "./CanvasTest";
-import ComponentUiData, { PointableComponent } from "../../../../main/ts/components/ScreenObjects/ComponentUiData";
+import ComponentUiData from "../../../../main/ts/components/Canvas/ScreenObjects/ComponentUiData";
 import { act } from "react-dom/test-utils";
-import ConnectionUiData from "../../../../main/ts/components/ScreenObjects/ConnectionUiData";
-import StockUiData from "../../../../main/ts/components/ScreenObjects/StockUiData";
-import FlowUiData from "../../../../main/ts/components/ScreenObjects/FlowUiData";
-import ParameterUiData from "../../../../main/ts/components/ScreenObjects/ParameterUiData";
-import DynamicVariableUiData from "../../../../main/ts/components/ScreenObjects/DynamicVariableUiData";
-import SumVariableUiData from "../../../../main/ts/components/ScreenObjects/SumVariableUiData";
+import ConnectionUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Connection/ConnectionUiData";
+import StockUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Stock/StockUiData";
+import FlowUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Flow/FlowUiData";
+import ParameterUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Parameter/ParameterUiData";
+import DynamicVariableUiData from "../../../../main/ts/components/Canvas/ScreenObjects/DynamicVariable/DynamicVariableUiData";
+import SumVariableUiData from "../../../../main/ts/components/Canvas/ScreenObjects/SumVariable/SumVariableUiData";
 import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
 
 

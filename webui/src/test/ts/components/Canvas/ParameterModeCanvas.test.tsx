@@ -4,7 +4,7 @@ import MockCanvas, { ParameterModeCanvasSpy } from "./MockCanvas";
 
 import CanvasTest from "./CanvasTest";
 import { act } from "react-dom/test-utils";
-import ParameterUiData from "../../../../main/ts/components/ScreenObjects/ParameterUiData";
+import ParameterUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Parameter/ParameterUiData";
 
 
 class ParameterModeCanvasTest extends CanvasTest {

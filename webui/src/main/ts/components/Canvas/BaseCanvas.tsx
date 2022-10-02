@@ -2,13 +2,12 @@ import React, { ReactElement } from 'react';
 import { Stage, Layer, Group } from 'react-konva';
 
 import FirebaseDataModel from '../../data/FirebaseDataModel';
-import ComponentUiData from '../ScreenObjects/ComponentUiData';
-import { DEFAULT_COLOR, SELECTED_COLOR } from '../ScreenObjects/Stock';
-import FlowUiData from '../ScreenObjects/FlowUiData';
-import { LoadedStaticModel } from '../screens/SimulationScreen';
+import ComponentUiData from './ScreenObjects/ComponentUiData';
+import { DEFAULT_COLOR, SELECTED_COLOR } from './ScreenObjects/Stock/Stock';
+import FlowUiData from './ScreenObjects/Flow/FlowUiData';
 import ComponentCollection from './ComponentCollection';
-import ComponentRenderer from './ComponentRenderer';
-import StockUiData from '../ScreenObjects/StockUiData';
+import ComponentRenderer from './Renderer/ComponentRenderer';
+import StockUiData from './ScreenObjects/Stock/StockUiData';
 
 const RIGHT_CLICK = 2;
 export interface Props {

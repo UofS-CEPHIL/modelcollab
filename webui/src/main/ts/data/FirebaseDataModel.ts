@@ -1,5 +1,5 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import ComponentUiData from "../components/ScreenObjects/ComponentUiData";
+import ComponentUiData from "../components/Canvas/ScreenObjects/ComponentUiData";
 
 export default interface FirebaseDataModel {
     updateComponent: (sessionId: string, data: schema.FirebaseDataComponent<any>) => void;

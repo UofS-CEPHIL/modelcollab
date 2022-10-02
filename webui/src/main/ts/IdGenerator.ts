@@ -1,6 +1,5 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import ComponentCollection from "./components/Canvas/ComponentCollection";
-import ComponentUiData from "./components/ScreenObjects/ComponentUiData";
+import ComponentUiData from "./components/Canvas/ScreenObjects/ComponentUiData";
 
 export default class IdGenerator {
 

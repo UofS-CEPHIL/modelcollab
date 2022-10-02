@@ -3,11 +3,11 @@ import MockCanvas, { FlowModeCanvasSpy } from "./MockCanvas";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import CanvasTest from "./CanvasTest";
-import StockUiData from "../../../../main/ts/components/ScreenObjects/StockUiData";
+import StockUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Stock/StockUiData";
 import { act } from "react-dom/test-utils";
-import FlowUiData from "../../../../main/ts/components/ScreenObjects/FlowUiData";
-import CloudUiData from "../../../../main/ts/components/ScreenObjects/CloudUiData";
-import ComponentUiData from "../../../../main/ts/components/ScreenObjects/ComponentUiData";
+import FlowUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Flow/FlowUiData";
+import CloudUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Cloud/CloudUiData";
+import ComponentUiData from "../../../../main/ts/components/Canvas/ScreenObjects/ComponentUiData";
 import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
 
 

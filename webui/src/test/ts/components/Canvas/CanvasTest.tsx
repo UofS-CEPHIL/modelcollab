@@ -2,20 +2,18 @@ import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/Base
 import { createRoot, Root } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import MockCanvas from "./MockCanvas";
-import StockUiData from "../../../../main/ts/components/ScreenObjects/StockUiData";
+import StockUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Stock/StockUiData";
 import { FirebaseComponentModel as schema } from "database/build/export";
-import FlowUiData from "../../../../main/ts/components/ScreenObjects/FlowUiData";
-import ParameterUiData from "../../../../main/ts/components/ScreenObjects/ParameterUiData";
-import SumVariableUiData from "../../../../main/ts/components/ScreenObjects/SumVariableUiData";
-import DynamicVariableUiData from "../../../../main/ts/components/ScreenObjects/DynamicVariableUiData";
-import ConnectionUiData from "../../../../main/ts/components/ScreenObjects/ConnectionUiData";
-import CloudUiData from "../../../../main/ts/components/ScreenObjects/CloudUiData";
-import ComponentUiData, { TextComponent } from "../../../../main/ts/components/ScreenObjects/ComponentUiData";
+import FlowUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Flow/FlowUiData";
+import ParameterUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Parameter/ParameterUiData";
+import SumVariableUiData from "../../../../main/ts/components/Canvas/ScreenObjects/SumVariable/SumVariableUiData";
+import DynamicVariableUiData from "../../../../main/ts/components/Canvas/ScreenObjects/DynamicVariable/DynamicVariableUiData";
+import ConnectionUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Connection/ConnectionUiData";
+import CloudUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Cloud/CloudUiData";
+import ComponentUiData, { TextComponent } from "../../../../main/ts/components/Canvas/ScreenObjects/ComponentUiData";
 import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
 import MockRenderer from "./MockRenderer";
-import StaticModelUiData from "../../../../main/ts/components/ScreenObjects/StaticModelUiData";
-import { LoadedStaticModel } from "../../../../main/ts/components/screens/SimulationScreen";
-import { waitFor } from "@testing-library/react";
+import StaticModelUiData from "../../../../main/ts/components/Canvas/ScreenObjects/StaticModel/StaticModelUiData";
 
 /*
   This needs to be done in order to make tests with Konva behave

@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from "@testing-library/react";
 import { createRoot, Root } from "react-dom/client";
 import { act } from "react-dom/test-utils";
-import SessionSelectScreen from "../../../../main/ts/components/screens/SessionSelectScreen";
+import SessionSelectScreen from "../../../../main/ts/components/Screens/SessionSelectScreen";
 import FirebaseDataModel from "../../../../main/ts/data/FirebaseDataModel";
 import MockFirebaseDataModel from "../../data/MockFirebaseDataModel";
 

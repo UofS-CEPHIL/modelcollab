@@ -1,11 +1,6 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
-
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
 import MockCanvas, { MoveModeCanvasSpy } from "./MockCanvas";
-
 import CanvasTest from "./CanvasTest";
-import { act } from "react-dom/test-utils";
-import StockUiData from "../../../../main/ts/components/ScreenObjects/StockUiData";
 
 
 class MoveModeCanvasTest extends CanvasTest {

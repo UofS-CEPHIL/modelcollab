@@ -1,13 +1,13 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import CloudUiData from "../ScreenObjects/CloudUiData";
-import ComponentUiData, { PointableComponent, PointerComponent } from "../ScreenObjects/ComponentUiData";
-import ConnectionUiData from "../ScreenObjects/ConnectionUiData";
-import DynamicVariableUiData from "../ScreenObjects/DynamicVariableUiData";
-import FlowUiData from "../ScreenObjects/FlowUiData";
-import ParameterUiData from "../ScreenObjects/ParameterUiData";
-import StaticModelUiData from "../ScreenObjects/StaticModelUiData";
-import StockUiData from "../ScreenObjects/StockUiData";
-import SumVariableUiData from "../ScreenObjects/SumVariableUiData";
+import CloudUiData from "./ScreenObjects/Cloud/CloudUiData";
+import ComponentUiData, { PointableComponent, PointerComponent } from "./ScreenObjects/ComponentUiData";
+import ConnectionUiData from "./ScreenObjects/Connection/ConnectionUiData";
+import DynamicVariableUiData from "./ScreenObjects/DynamicVariable/DynamicVariableUiData";
+import FlowUiData from "./ScreenObjects/Flow/FlowUiData";
+import ParameterUiData from "./ScreenObjects/Parameter/ParameterUiData";
+import StaticModelUiData from "./ScreenObjects/StaticModel/StaticModelUiData";
+import StockUiData from "./ScreenObjects/Stock/StockUiData";
+import SumVariableUiData from "./ScreenObjects/SumVariable/SumVariableUiData";
 
 
 export default class ComponentCollection {

@@ -3,7 +3,7 @@ import FirebaseManager from "./FirebaseManager";
 import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build/export";
 
 import FirebaseDataModel from "./FirebaseDataModel";
-import ComponentUiData from "../components/ScreenObjects/ComponentUiData";
+import ComponentUiData from "../components/Canvas/ScreenObjects/ComponentUiData";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
 

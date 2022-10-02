@@ -4,7 +4,7 @@ import MockCanvas, { VariableModeCanvasSpy } from "./MockCanvas";
 
 import CanvasTest from "./CanvasTest";
 import { act } from "react-dom/test-utils";
-import DynamicVariableUiData from "../../../../main/ts/components/ScreenObjects/DynamicVariableUiData";
+import DynamicVariableUiData from "../../../../main/ts/components/Canvas/ScreenObjects/DynamicVariable/DynamicVariableUiData";
 
 
 class DynVarModeCanvasTest extends CanvasTest {

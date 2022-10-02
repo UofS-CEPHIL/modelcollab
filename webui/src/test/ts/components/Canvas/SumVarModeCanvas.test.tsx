@@ -4,7 +4,7 @@ import MockCanvas, { SumVarModeCanvasSpy } from "./MockCanvas";
 
 import CanvasTest from "./CanvasTest";
 import { act } from "react-dom/test-utils";
-import SumVariableUiData from "../../../../main/ts/components/ScreenObjects/SumVariableUiData";
+import SumVariableUiData from "../../../../main/ts/components/Canvas/ScreenObjects/SumVariable/SumVariableUiData";
 
 
 class SumVarModeCanvasTest extends CanvasTest {

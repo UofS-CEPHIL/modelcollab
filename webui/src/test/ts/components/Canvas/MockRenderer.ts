@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import ComponentRenderer from "../../../../main/ts/components/Canvas/ComponentRenderer";
+import ComponentRenderer from "../../../../main/ts/components/Canvas/Renderer/ComponentRenderer";
 
 export default class MockRenderer implements ComponentRenderer {
 

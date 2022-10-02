@@ -1,7 +1,7 @@
 import { act } from "react-dom/test-utils";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
-import CloudUiData from "../../../../main/ts/components/ScreenObjects/CloudUiData";
+import CloudUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Cloud/CloudUiData";
 import MockCanvas, { CloudModeCanvasSpy } from "./MockCanvas";
 import CanvasTest from "./CanvasTest";
 import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";

@@ -2,7 +2,7 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import { Props as CanvasProps } from "../../../../main/ts/components/Canvas/BaseCanvas";
 import MockCanvas, { DeleteModeCanvasSpy } from "./MockCanvas";
 import CanvasTest from "./CanvasTest";
-import StockUiData from "../../../../main/ts/components/ScreenObjects/StockUiData";
+import StockUiData from "../../../../main/ts/components/Canvas/ScreenObjects/Stock/StockUiData";
 import { act } from "react-dom/test-utils";
 import ComponentCollection from "../../../../main/ts/components/Canvas/ComponentCollection";
 
