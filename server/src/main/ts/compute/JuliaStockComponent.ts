@@ -34,12 +34,18 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
         return this.getTranslatedValue();
     }
 
-    public getInFlowsLine(): string {
-        return this.makeLine(this.inFlowNames, ":F_NONE");
+    public getInFlowsLine(modelComponents: JuliaComponentData[]): string {
+        const relevantComponentNames = this.inFlowNames.filter(
+            name => modelComponents.find(c => c.name === name)
+        );
+        return this.makeLine(relevantComponentNames, ":F_NONE");
     }
 
-    public getOutFlowsLine(): string {
-        return this.makeLine(this.outFlowNames, ":F_NONE");
+    public getOutFlowsLine(modelComponents: JuliaComponentData[]): string {
+        const relevantComponentNames = this.outFlowNames.filter(
+            name => modelComponents.find(c => c.name === name)
+        );
+        return this.makeLine(relevantComponentNames, ":F_NONE");
     }
 
     public getContributingVariablesLine(components: JuliaComponentData[]): string {

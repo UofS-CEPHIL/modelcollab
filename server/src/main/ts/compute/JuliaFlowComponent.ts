@@ -20,7 +20,14 @@ export default class JuliaFlowComponent extends JuliaComponentData {
     public readonly associatedVarName: string;
 
 
-    public constructor(name: string, fromName: string, toName: string, equation: string, declaredStockDependencies: string[], declaredSumVarDependencies: string[]) {
+    public constructor(
+        name: string,
+        fromName: string,
+        toName: string,
+        equation: string,
+        declaredStockDependencies: string[],
+        declaredSumVarDependencies: string[]
+    ) {
         super(name);
         this.fromName = fromName;
         this.toName = toName;
@@ -31,7 +38,12 @@ export default class JuliaFlowComponent extends JuliaComponentData {
     }
 
     public getAssociatedVariable(): JuliaVariableComponent {
-        return new JuliaVariableComponent(this.associatedVarName, this.equation, this.declaredStockDependencies, this.declaredSumVarDependencies);
+        return new JuliaVariableComponent(
+            this.associatedVarName,
+            this.equation,
+            this.declaredStockDependencies,
+            this.declaredSumVarDependencies
+        );
     }
 
     public getTranslatedEquation(components: JuliaComponentData[]): string {

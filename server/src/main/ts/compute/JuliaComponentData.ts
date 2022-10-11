@@ -27,7 +27,7 @@ export default abstract class JuliaComponentData {
         const operators = /[\+-\/\*\(\) ]/g;
         const values = statement.split(operators);
         let out: string = statement;
-	if (!out) throw new Error("replaceSymbols got statement: " + statement);
+        if (!out) throw new Error("replaceSymbols got statement: " + statement);
         for (const value of values) {
             if (!(value === "" || this.isSimpleNumber(value)))
                 out = out.replaceAll(
@@ -58,6 +58,10 @@ export default abstract class JuliaComponentData {
             const commaSepNames = names.map(s => prefix + s).join(',');
             return `(${commaSepNames})`;
         }
+    }
+
+    public toString(): string {
+        return this.name;
     }
 }
 
