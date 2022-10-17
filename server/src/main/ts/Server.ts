@@ -29,24 +29,38 @@ class Server {
         const app: Express = express();
         app.use(cors());
         this.setupRoutes(app);
+        applicationConfig.useHttp && this.createHttpServer(app);
+        applicationConfig.useHttps && this.createHttpsServer(app);
+    }
+
+    private startServer(server: http.Server, port: number): void {
         try {
-            const httpsServer = https.createServer(
-                {
-	            key: fs.readFileSync('/etc/letsencrypt/live/modelcollab-backend.com/privkey.pem'),
-	            cert: fs.readFileSync('/etc/letsencrypt/live/modelcollab-backend.com/cert.pem'),
-	            ca: fs.readFileSync('/etc/letsencrypt/live/modelcollab-backend.com/chain.pem')
-	        },
-	        app
-            );
-	    httpsServer.on('error', console.error);
-	    httpsServer.listen(
-                443,
-                () => console.log(`Listening on port 443`)
+            server.on('error', console.error);
+            server.listen(
+                port,
+                () => console.log(`Listening on port ${port}`)
             );
         }
         catch (e) {
             console.error(e);
         }
+    }
+
+    private createHttpServer(app: Express): void {
+        const server = http.createServer(app);
+        this.startServer(server, applicationConfig.httpPort);
+    }
+
+    private createHttpsServer(app: Express): void {
+        const server = https.createServer(
+            {
+                key: fs.readFileSync(applicationConfig.httpsPrivKeyPath),
+                cert: fs.readFileSync(applicationConfig.httpsCertPath),
+                ca: fs.readFileSync(applicationConfig.httpsChainPath)
+            },
+            app
+        );
+        this.startServer(server, applicationConfig.httpsPort);
     }
 
     private setupRoutes(app: Express): void {
