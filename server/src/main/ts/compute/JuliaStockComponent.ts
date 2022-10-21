@@ -68,7 +68,7 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
 
     public getTranslatedValue(): string {
         const replacementFunction = (s: string) => {
-            return `${JuliaComponentData.PARAMS_VECTOR_NAME}.${s} `;
+            return `${JuliaComponentData.PARAMS_VAR_NAME}.${s} `;
         };
         return JuliaNameValueComponent.replaceSymbols(this.value, replacementFunction);
     }

@@ -110,13 +110,18 @@ export default class JuliaGenerator {
         return (this.components.stocks as JuliaComponentData[])
             .concat(this.components.flows)
             .concat(this.components.sumVariables)
-            .concat(this.components.variables);
+            .concat(this.components.variables)
+            .concat(this.components.parameters);
     }
 
     private getAllInnerComponents(): JuliaComponentData[] {
         return this.components.staticModels
             .map(c => c.innerComponents)
             .reduce((a, b) => a.concat(b), []);
+    }
+
+    private getAllComponents(): JuliaComponentData[] {
+        return this.getAllOuterComponents().concat(this.getAllInnerComponents());
     }
 
     private makeAllStockAndFlowLines(): string {
@@ -223,17 +228,23 @@ export default class JuliaGenerator {
             .filter(c => c instanceof JuliaFlowComponent)
             .map(c => {
                 const flow = c as JuliaFlowComponent;
-                return flow.getAssociatedVariable()
+                return flow.getAssociatedVariable();
             });
         const allVars: JuliaVariableComponent[] = components
             .filter(c => c instanceof JuliaVariableComponent)
             .map(c => c as JuliaVariableComponent)
-            .concat(flowVars);
+            .concat(flowVars)
+            .map(c => new JuliaVariableComponent(
+                c.name,
+                c.getTranslatedValue(),
+                c.dependedStockNames,
+                c.dependedSumVarNames
+            ));
         const makeVarLines = () => allVars.map(
             v => `:${v.name} => (${JuliaComponentData.STOCKS_VARIABLES_VAR_NAME}, `
                 + `${JuliaComponentData.SUM_VARS_VAR_NAME}, `
                 + `${JuliaComponentData.PARAMS_VAR_NAME}, `
-                + `${JuliaComponentData.TIME_VAR_NAME}) -> ${v.getTranslatedValue()}`
+                + `${JuliaComponentData.TIME_VAR_NAME}) -> ${v.value}`
         ).join(', ');
 
         const makeSumVarLines = () => this.components.sumVariables.map(
@@ -329,7 +340,7 @@ export default class JuliaGenerator {
         }
 
         return `${this.relationVarName} = @relation (${allFootNames.join(',')}) begin `
-            + `${allModelStrings.join(' ')} end`;
+            + `${allModelStrings.join('\n')} end`;
     }
 
     private makeOpenLines(): string {

@@ -3,6 +3,7 @@
 
 import JuliaComponentData from "../../../main/ts/compute/JuliaComponentData";
 import JuliaFlowComponent from "../../../main/ts/compute/JuliaFlowComponent";
+import JuliaStaticModelComponent from "../../../main/ts/compute/JuliaStaticModelComponent";
 import JuliaStockComponent from "../../../main/ts/compute/JuliaStockComponent";
 import JuliaSumVariableComponent from "../../../main/ts/compute/JuliaSumVariableComponent";
 import JuliaVariableComponent from "../../../main/ts/compute/JuliaVariableComponent";
@@ -132,11 +133,15 @@ export function checkStockArgument(
     ) {
         checkListIsCorrect(getNames(expected), svListRaw, ":SV_NONE");
     }
-
-    const allInFlows = allComponents
+    const allFlows = allComponents
         .filter(c => c instanceof JuliaFlowComponent) as JuliaFlowComponent[];
-    const allInFlowVars = allInFlows.map(f => f.getAssociatedVariable());
-    const expectedInFlows = allInFlows
+    const allFlowVars = allFlows.map(f => new JuliaVariableComponent(
+        f.associatedVarName,
+        "",
+        f.declaredStockDependencies,
+        f.declaredSumVarDependencies
+    ));
+    const expectedInFlows = allFlows
         .map(c => c as JuliaFlowComponent)
         .filter(c => c.toName === stock.name);
     const expectedOutFlows = allComponents
@@ -146,7 +151,7 @@ export function checkStockArgument(
     const expectedVariables = allComponents
         .filter(c => c instanceof JuliaVariableComponent)
         .map(c => c as JuliaVariableComponent)
-        .concat(allInFlowVars)
+        .concat(allFlowVars)
         .filter(c => c.dependedStockNames.includes(stock.name));
     const expectedSumVars = allComponents
         .filter(c => c instanceof JuliaSumVariableComponent)
@@ -163,7 +168,6 @@ export function checkStockArgument(
     const sumVarStr = getStringUntilFirstCommaNotBetweenParens(
         stockArgsAfterArrow.slice(inflowStr.length + outflowStr.length + varStr.length + 3)
     );
-
 
     checkFlowListIsCorrect(expectedInFlows, inflowStr);
     checkFlowListIsCorrect(expectedOutFlows, outflowStr);
@@ -309,7 +313,7 @@ export function getRelationVarName(result: string): string {
 }
 
 export function checkRelation(result: string, allFootNames: string[], expectedFootNameLists: string[][]): void {
-    const regex = /\w+ *= *@relation *\(([\w\s,]+)\) *begin *(.+) *end;/g;
+    const regex = /\w+ *= *@relation *\(([\w\s,]+)\) *begin *((.|\n)+) *end;/g;
     const match = regex.exec(result);
     expect(match).not.toBeNull();
     if (!match) throw new Error("unreachable");
@@ -321,7 +325,7 @@ export function checkRelation(result: string, allFootNames: string[], expectedFo
 
     // magic number 2 = the index where the model list between 'begin'
     // and 'end' lives
-    const resultModelList = match[2].trimEnd().replaceAll(', ', ',').split(' ');
+    const resultModelList = match[2].trimEnd().split('\n');
     const resultFootNameLists = resultModelList.map(m => {
         const reResult = /\w+\((.+)\)/g.exec(m);
         expect(reResult).not.toBeNull();

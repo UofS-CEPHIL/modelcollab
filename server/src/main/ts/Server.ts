@@ -31,6 +31,9 @@ class Server {
         this.setupRoutes(app);
         applicationConfig.useHttp && this.createHttpServer(app);
         applicationConfig.useHttps && this.createHttpsServer(app);
+        if (!applicationConfig.useHttp && !applicationConfig.useHttps) {
+            throw new Error("Application is not configured to serve on any port.");
+        }
     }
 
     private startServer(server: http.Server, port: number): void {
@@ -82,8 +85,11 @@ class Server {
         try {
             console.log("computeModel");
             const id = Math.floor(Math.random() * 1000).toString();
-            const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
-            new ComputeModelTask(components).start(p => this.pendingResults[id] = p);
+            const components = await this.fbClient.getComponents(sessionId);
+            new ComputeModelTask(
+                components.topLevelComponents,
+                components.staticComponents
+            ).start(p => this.pendingResults[id] = p);
 
             console.log("Started Julia task.");
             delete this.pendingResults[id];
@@ -98,9 +104,12 @@ class Server {
     private async getCode(sessionId: string, res: Response): Promise<void> {
         try {
             console.log("getCode");
-            const components: schema.FirebaseDataComponent<any>[] = await this.fbClient.getComponents(sessionId);
-            const juliaComponents = JuliaComponentDataBuilder.makeJuliaComponents(components);
-            const code = new JuliaGenerator(juliaComponents).generateJulia("/your/path").replaceAll(/(\\s+)?;(\\s+)?/g, "\n");
+            const components = await this.fbClient.getComponents(sessionId);
+            const juliaComponents = JuliaComponentDataBuilder.makeJuliaComponents(
+                components.topLevelComponents,
+                components.staticComponents
+            );
+            const code = new JuliaGenerator(juliaComponents).generateJulia("/your/path").replaceAll(/ *; */g, "\n");
 
             console.log("Sending code for session " + sessionId);
             console.log(code);

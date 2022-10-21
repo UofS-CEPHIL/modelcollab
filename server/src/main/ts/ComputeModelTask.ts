@@ -10,9 +10,14 @@ import JuliaComponentDataBuilder from "./compute/JuliaComponentDataBuilder";
 export default class ComputeModelTask {
 
     private readonly components: schema.FirebaseDataComponent<any>[];
+    private readonly staticComponents: { [id: string]: schema.FirebaseDataComponent<any>[] };
 
-    public constructor(components: schema.FirebaseDataComponent<any>[]) {
+    public constructor(
+        components: schema.FirebaseDataComponent<any>[],
+        staticComponents: { [id: string]: schema.FirebaseDataComponent<any>[] }
+    ) {
         this.components = components;
+        this.staticComponents = staticComponents;
     }
 
     public async start(onResultsReady?: (path: string) => void): Promise<void> {
@@ -20,12 +25,13 @@ export default class ComputeModelTask {
         const filename: string = `./ModelResults_${date}.png`;
         var juliaCode: string;
         try {
-            juliaCode = new JuliaGenerator(JuliaComponentDataBuilder.makeJuliaComponents(this.components)).generateJulia(filename);
+            const juliaComponents = JuliaComponentDataBuilder.makeJuliaComponents(this.components, this.staticComponents);
+            juliaCode = new JuliaGenerator(juliaComponents).generateJulia(filename);
         }
         catch (e) {
             console.error(e);
             juliaCode = "";
-        } 
+        }
         console.log(juliaCode.split(';'));
         let proc = spawn(
             "/home/ericr789/julia-1.7.3/bin/julia",
@@ -33,7 +39,7 @@ export default class ComputeModelTask {
                 stdio: ["pipe", "inherit", "inherit"],
             }
         );
-	proc.stdin.write('ENV["GKSwstype"] = "nul"; ');
+        proc.stdin.write('ENV["GKSwstype"] = "nul"; ');
         proc.stdin.write(juliaCode);
         proc.stdin.write("\n");
         proc.stdin.write("exit()\n");

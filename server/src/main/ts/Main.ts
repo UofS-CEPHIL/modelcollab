@@ -7,4 +7,4 @@ export default class Main {
     }
 }
 
-new Main().main(); 
+new Main().main();

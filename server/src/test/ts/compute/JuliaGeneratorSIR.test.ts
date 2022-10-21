@@ -163,9 +163,10 @@ export default class JuliaGeneratorSIR extends JuliaGeneratorTest {
             });
 
             function testFlow(flowName: string, componentKey: string): void {
-                const flow = flowSplit[flowName];
+                const flowResult = flowSplit[flowName];
+                const flow = COMPONENTS[componentKey] as JuliaFlowComponent;
                 expect(flow).toBeDefined();
-                expect(flow).toEqual(':' + (COMPONENTS[componentKey] as JuliaFlowComponent).associatedVarName);
+                ParsingTools.checkFlowArgument(flow, flowResult);
             }
 
             test("Birth flow should be defined correctly in StockAndFlow args", async () => {
@@ -225,15 +226,12 @@ export default class JuliaGeneratorSIR extends JuliaGeneratorTest {
             });
 
             test("Infection flow's associated variable should have its symbols correctly qualified", async () => {
-                // infection flow = `${S_STOCK_NAME} * ${INF_RATE_NAME} * ${I_STOCK_NAME} / ${TOTAL_POP_NAME}`;
-                const varname = (COMPONENTS["INF_FLOW"] as JuliaFlowComponent).associatedVarName;
-                expect(varname).toBeDefined();
-                let varText = varSplit[varname];
-                expect(varText).toBeDefined();
-                varText = varText.replaceAll(/\s+/g, '');
-                const varNames = getVarNamesFromDynVarFunction(varText);
-                const expected = `${varNames.stocks}\\.${S_STOCK_NAME}( +)?\\*( +)?${varNames.params}\\.${INF_RATE_NAME}( +)?\\*( +)?${varNames.stocks}\\.${I_STOCK_NAME}( +)?/( +)?${varNames.sumVars}\\.${TOTAL_POP_NAME}( +)?\\(( +)?${varNames.stocks}( +)?,( +)?${varNames.time}( +)?\\)`;
-                expect(new RegExp(expected).test(varText)).toBeTruthy();
+                const flow = COMPONENTS["INF_FLOW"] as JuliaFlowComponent;
+                const flowResult = varSplit[flow.associatedVarName];
+                ParsingTools.checkVariableArgument(
+                    flowResult,
+                    `u.${S_STOCK_NAME} * p.${INF_RATE_NAME} * u.${I_STOCK_NAME} / uN.${TOTAL_POP_NAME}(u,t)`
+                );
             });
 
             test("Recovery flow should have an associated variable in StockAndFlow args", async () => {
@@ -241,15 +239,12 @@ export default class JuliaGeneratorSIR extends JuliaGeneratorTest {
             });
 
             test("Recovery flow's associated variable should have its symbols correctly qualified", async () => {
-                // recovery flow = `${I_STOCK_NAME}/${DAYS_INFECTED_NAME}`;
-                const varname = (COMPONENTS["REC_FLOW"] as JuliaFlowComponent).associatedVarName;
-                expect(varname).toBeDefined();
-                let varText = varSplit[varname];
-                expect(varText).toBeDefined();
-                varText = varText.replaceAll(/\s+/g, '');
-                const varNames = getVarNamesFromDynVarFunction(varText);
-                const expected = `${varNames.stocks}\\.${I_STOCK_NAME}/${varNames.params}\\.${DAYS_INFECTED_NAME}`;
-                expect(new RegExp(expected).test(varText)).toBeTruthy();
+                const flow = COMPONENTS["REC_FLOW"] as JuliaFlowComponent;
+                const flowResult = varSplit[flow.associatedVarName];
+                ParsingTools.checkVariableArgument(
+                    flowResult,
+                    `u.${I_STOCK_NAME}/p.${DAYS_INFECTED_NAME}`
+                );
             });
 
             test("WanImm flow should have an associated variable in StockAndFlow args", async () => {
@@ -357,6 +352,13 @@ export default class JuliaGeneratorSIR extends JuliaGeneratorTest {
                 expect(numOccurrences).toBe(1);
             });
 
+            test(
+                "Order of foot variables should stay consistent between relation, open, and oapply calls",
+                async () => {
+                    expect(0).toBe(1);
+                }
+            );
+
 
             test("Should have correct entries for each param", async () => {
                 const expectedParams = {
@@ -386,7 +388,7 @@ export default class JuliaGeneratorSIR extends JuliaGeneratorTest {
                 if (stockVector === undefined) throw new Error("unreachable");
                 stockVector = stockVector.replaceAll(/\s+/g, '');
 
-                const S_QUALIFIED_INIT = `${paramsVectorName}.${INITIAL_POP_NAME}-1`;
+                const S_QUALIFIED_INIT = `p.${INITIAL_POP_NAME}-1`;
                 const I_QUALIFIED_INIT = I_INIT_VALUE;
                 const R_QUALIFIED_INIT = R_INIT_VALUE;
                 const expectedStocks = Object.entries({

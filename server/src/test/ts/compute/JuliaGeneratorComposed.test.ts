@@ -13,7 +13,7 @@ export default class JuliaGeneratorComposed extends JuliaGeneratorTest {
     public describeTests(): void {
         describe("Model using basic composition features", () => {
 
-            // [S1 => S2 =]=> S3 => back to S1.
+            // [ P  S1 => S2 =]=> S3 => back to S1.
             // S2 and S3 contribute to a sum var.
             // The sum var contributes to S3=>S1.
             // A parameter contributes to S2=>S3.
@@ -36,6 +36,11 @@ export default class JuliaGeneratorComposed extends JuliaGeneratorTest {
             const S2S3_EQUATION = `${PARAM_NAME} / 123`;
             const S3S1_NAME = "S3S1";
             const S3S1_EQUATION = `${SUM_VAR_NAME} / 2`;
+            const EXPECTED_FLOW_EQUATIONS: { [s: string]: string } = {
+                S1S2: `0.001`,
+                S2S3: `p.${PARAM_NAME}/123`,
+                S3S1: `uN.${SUM_VAR_NAME}(u,t)/2`
+            };
 
             const S1 = new JuliaStockComponent(
                 S1_NAME,
@@ -123,7 +128,6 @@ export default class JuliaGeneratorComposed extends JuliaGeneratorTest {
                 S3S1,
                 S1,
                 S2,
-                PARAM,
                 SUM_VAR,
                 this.START_TIME_COMPONENT,
                 this.STOP_TIME_COMPONENT
@@ -134,15 +138,14 @@ export default class JuliaGeneratorComposed extends JuliaGeneratorTest {
                 S2,
                 S1S2,
                 SUM_VAR,
+                PARAM,
                 this.START_TIME_COMPONENT,
                 this.STOP_TIME_COMPONENT
             ];
 
             const result: string = new JuliaGenerator(COMPONENTS_ARG)
                 .generateJulia(this.RESULTS_FILENAME);
-            // console.log(result);
-
-
+            console.log(result.replaceAll(';', '\n'));
 
             test("Should have correct includes", async () => {
                 ParsingTools.checkIncludes(result, this.EXPECTED_INCLUDES);
@@ -179,7 +182,6 @@ export default class JuliaGeneratorComposed extends JuliaGeneratorTest {
                     const flowSplit: { [k: string]: string } = ParsingTools.splitByArrowsForList(args.flow);
                     const varSplit: { [k: string]: string } = ParsingTools.splitByArrowsForDynVar(args.dynVar);
                     const svSplit: { [k: string]: string } = ParsingTools.splitByArrowsForList(args.sumVar);
-
                     // Test all stock args
                     expected
                         .filter(c => c instanceof JuliaStockComponent)
@@ -221,12 +223,14 @@ export default class JuliaGeneratorComposed extends JuliaGeneratorTest {
                                     const flowComponent = flow as JuliaFlowComponent;
                                     const flowVarName = flowComponent.associatedVarName;
                                     expect(flowVarName).toBeDefined();
+
                                     const flowVarArgs = varSplit[flowVarName];
                                     expect(flowVarArgs).toBeDefined();
+
+                                    const expectedEquation = EXPECTED_FLOW_EQUATIONS[flow.name];
                                     ParsingTools.checkVariableArgument(
                                         flowVarArgs,
-                                        // TODO make sure this is properly tested vvvv
-                                        flowComponent.getTranslatedEquation(expected)
+                                        expectedEquation
                                     );
                                 }
                             );
@@ -335,6 +339,13 @@ export default class JuliaGeneratorComposed extends JuliaGeneratorTest {
                 ParsingTools.checkOapplyCall(result, relationVarName, [openVarName1, openVarName2]);
             });
 
+            test(
+                "Order of foot variables should stay consistent between relation, open, and oapply calls",
+                async () => {
+                    expect(0).toBe(1);
+                }
+            );
+
             test("Should make a correct call to apex", async () => {
                 const openVarName = ParsingTools.getOapplyVarName(result);
                 ParsingTools.checkApexCall(result, openVarName);
@@ -345,14 +356,6 @@ export default class JuliaGeneratorComposed extends JuliaGeneratorTest {
                     ParsingTools.getParamsLvectorContents(result),
                     [PARAM_NAME, this.START_TIME_NAME, this.STOP_TIME_NAME],
                     [PARAM_VALUE, this.START_TIME_VALUE, this.STOP_TIME_VALUE]
-                );
-            });
-
-            test("Should have correct initial stock values", async () => {
-                ParsingTools.checkLvector(
-                    ParsingTools.getStockInitValuesLvectorContents(result),
-                    [S1_NAME, S2_NAME, S3_NAME],
-                    [S1_INIT_VALUE, S2_INIT_VALUE, S3_INIT_VALUE]
                 );
             });
 

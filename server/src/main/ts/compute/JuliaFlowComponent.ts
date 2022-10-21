@@ -46,32 +46,7 @@ export default class JuliaFlowComponent extends JuliaComponentData {
         );
     }
 
-    public getTranslatedEquation(components: JuliaComponentData[]): string {
-        const replacementFunction = (s: string) => {
-            const replacement = components.find(c => c.name === s);
-            if (!replacement)
-                throw new Error(`Unable to find component for symbol ${s} in equation ${s}`);
-            else if (replacement instanceof JuliaParameterComponent) {
-                return `${JuliaFlowComponent.PARAMS_VAR_NAME}.${replacement.name}`;
-            }
-            else if (replacement instanceof JuliaStockComponent) {
-                return `${JuliaFlowComponent.STOCKS_VARIABLES_VAR_NAME}.${replacement.name}`;
-            }
-            else if (replacement instanceof JuliaVariableComponent) {
-                return `${JuliaFlowComponent.STOCKS_VARIABLES_VAR_NAME}.${replacement.name}`;
-            }
-            else if (replacement instanceof JuliaSumVariableComponent) {
-                return `${JuliaFlowComponent.SUM_VARS_VAR_NAME}.${replacement.name}(${JuliaFlowComponent.STOCKS_VARIABLES_VAR_NAME},${JuliaFlowComponent.TIME_VAR_NAME})`;
-            }
-            else if (replacement instanceof JuliaFlowComponent) {
-                return `${JuliaFlowComponent.STOCKS_VARIABLES_VAR_NAME}.${replacement.associatedVarName}`;
-            }
-            else {
-                throw new Error("Received unknown Julia component: " + typeof replacement);
-            }
-        }
-        return JuliaFlowComponent.replaceSymbols(this.equation, replacementFunction);
+    public getTranslatedEquation(): string {
+        return this.getAssociatedVariable().getTranslatedValue();
     }
-
-
 }

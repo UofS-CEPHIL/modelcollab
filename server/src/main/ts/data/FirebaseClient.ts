@@ -3,6 +3,10 @@ import { initializeApp } from "firebase/app";
 import { connectDatabaseEmulator, Database, getDatabase, ref, get } from "firebase/database";
 import firebaseConfig from "../config/FirebaseConfig";
 
+export interface ComponentsResult {
+    topLevelComponents: FirebaseComponentModel.FirebaseDataComponent<any>[];
+    staticComponents: { [id: string]: FirebaseComponentModel.FirebaseDataComponent<any>[] }
+}
 
 export class FirebaseClient {
 
@@ -20,20 +24,46 @@ export class FirebaseClient {
         }
     }
 
-    async getComponents(sessionId: string): Promise<FirebaseComponentModel.FirebaseDataComponent<any>[]> {
-        const components = await get(
+    async getComponents(sessionId: string): Promise<ComponentsResult> {
+
+        function getComponents(fbResult: any, idPrefix?: string): FirebaseComponentModel.FirebaseDataComponent<any>[] {
+            if (!fbResult.exists()) {
+                return [];
+            }
+            if (!idPrefix) {
+                idPrefix = '';
+            }
+            const data = fbResult.val();
+            return Object.keys(data).map(
+                k => FirebaseComponentModel.createFirebaseDataComponent(idPrefix + k, data[k])
+            );
+        }
+
+        const topLevelResult = await get(
             ref(
                 this.db,
                 FirebaseSchema.makeAllComponentsForSessionPath(sessionId)
             )
         );
-        if (!components.exists()) {
-            return [];
-        }
-        const data = components.val();
-        return Object.keys(data).map(
-            k => FirebaseComponentModel.createFirebaseDataComponent(k, data[k])
-        );
-    }
+        const topLevelComponents = getComponents(topLevelResult);
 
+        const staticModels = topLevelComponents.filter(
+            c => c.getType() === FirebaseComponentModel.ComponentType.STATIC_MODEL
+        );
+        let staticComponents: { [id: string]: FirebaseComponentModel.FirebaseDataComponent<any>[] } = {};
+        for (let i = 0; i < staticModels.length; i++) {
+            const sm = staticModels[i];
+            const fbResult = await get(
+                ref(
+                    this.db,
+                    FirebaseSchema.makeSavedModelPath(sm.getData().modelId)
+                )
+            );
+            if (fbResult.exists()) {
+                const components = getComponents(fbResult, sm.getData().modelId);
+                staticComponents[sm.getData().modelId] = components;
+            }
+        }
+        return { topLevelComponents, staticComponents };
+    }
 }
