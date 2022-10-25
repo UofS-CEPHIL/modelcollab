@@ -4,17 +4,10 @@ import JuliaFlowComponent from "./JuliaFlowComponent";
 import JuliaParameterComponent from "./JuliaParameterComponent";
 import JuliaStaticModelComponent from "./JuliaStaticModelComponent";
 import JuliaStockComponent from "./JuliaStockComponent";
+import JuliaStockFlowModel from "./JuliaStockFlowModel";
 import JuliaSumVariableComponent from "./JuliaSumVariableComponent";
 import JuliaVariableComponent from "./JuliaVariableComponent";
 
-interface Components {
-    stocks: JuliaStockComponent[];
-    flows: JuliaFlowComponent[];
-    parameters: JuliaParameterComponent[];
-    variables: JuliaVariableComponent[];
-    sumVariables: JuliaSumVariableComponent[];
-    staticModels: JuliaStaticModelComponent[];
-}
 
 const IMPORT_LINE = "using StockFlow; " +
     "using Catlab; using Catlab.CategoricalAlgebra; " +
@@ -37,7 +30,7 @@ export default class JuliaGenerator {
 
     private readonly components: Components;
 
-    public constructor(components: JuliaComponentData[]) {
+    public constructor(models: JuliaStockFlowModel[]) {
         const splitComponents = (components: JuliaComponentData[]) => {
             let stocks: JuliaStockComponent[] = [];
             let flows: JuliaFlowComponent[] = [];
@@ -210,8 +203,8 @@ export default class JuliaGenerator {
                     return `:${stock.name} => `
                         + `(${stock.getInFlowsLine(components)}, `
                         + `${stock.getOutFlowsLine(components)}, `
-                        + `${stock.getContributingVariablesLine(this.getAllOuterComponents())}, `
-                        + `${stock.getContributingSumVarsLine()})`
+                        + `${stock.getContributingVariablesLine(components)}, `
+                        + `${stock.getContributingSumVarsLine(components)})`
                 }
             ).join(', ');
 
@@ -247,15 +240,17 @@ export default class JuliaGenerator {
                 + `${JuliaComponentData.TIME_VAR_NAME}) -> ${v.value}`
         ).join(', ');
 
-        const makeSumVarLines = () => this.components.sumVariables.map(
-            sv => {
-                const contributingVarNames = allVars
-                    .filter(v => v.dependedSumVarNames.includes(sv.name))
-                    .map(v => v.name);
-                return `:${sv.name} => `
-                    + `${JuliaComponentData.makeVarList(contributingVarNames, true)}`;
-            }
-        ).join(', ');
+        const makeSumVarLines = () => components
+            .filter(c => c instanceof JuliaSumVariableComponent)
+            .map(
+                sv => {
+                    const contributingVarNames = allVars
+                        .filter(v => v.dependedSumVarNames.includes(sv.name))
+                        .map(v => v.name);
+                    return `:${sv.name} => `
+                        + `${JuliaComponentData.makeVarList(contributingVarNames, true)}`;
+                }
+            ).join(', ');
 
         return `${this.modelName}${varnameSuffix} = StockAndFlow((${makeStockLines()}), (${makeFlowLines()}), `
             + `(${makeVarLines()}), (${makeSumVarLines()}))`;

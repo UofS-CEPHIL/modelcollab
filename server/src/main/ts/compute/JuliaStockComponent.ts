@@ -52,12 +52,19 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
         const contributingFlowNames = components
             .filter(c => c instanceof JuliaFlowComponent)
             .filter(c => this.contributingFlowNames.includes(c.name))
+            .filter(c => components.find(c2 => c2.name === c.name))
             .map(f => (f as JuliaFlowComponent).associatedVarName);
-        return this.makeLine(this.contributingDynVarNames.concat(contributingFlowNames), ":V_NONE");
+        const allContributingVariables = this.contributingDynVarNames.concat(contributingFlowNames);
+        return this.makeLine(allContributingVariables, ":V_NONE");
     }
 
-    public getContributingSumVarsLine(): string {
-        return this.makeLine(this.contributingSumVarNames, ":SV_NONE");
+    public getContributingSumVarsLine(components: JuliaComponentData[]): string {
+        return this
+            .makeLine(
+                this.contributingSumVarNames
+                    .filter(svName => components.find(c => c.name === svName) !== undefined),
+                ":SV_NONE"
+            );
     }
 
     private makeLine(names: string[], alternate: string): string {

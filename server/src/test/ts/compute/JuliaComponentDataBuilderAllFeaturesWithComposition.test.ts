@@ -296,7 +296,7 @@ export default class JuliaComponentDataBuilderAllFeaturesWithComposition extends
     public describeTests(): void {
         let staticModels: { [s: string]: schema.FirebaseDataComponent<any>[] } = {};
         staticModels[this.STATIC_MODELID] = this.INNER_COMPONENTS;
-        const result = JuliaComponentDataBuilder.makeJuliaComponents(
+        const result = JuliaComponentDataBuilder.makeStockFlowModels(
             this.OUTER_COMPONENTS,
             staticModels
         );

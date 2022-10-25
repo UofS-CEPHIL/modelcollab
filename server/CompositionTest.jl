@@ -32,7 +32,7 @@ model1 = StockAndFlow(
     (
         :var_S2S3 => (u, uN, p, t) -> p.P / 123,
         :var_S3S1 => (u, uN, p, t) -> uN.SV(u,t)
-    ),
+    ),   
     (
         :SV => (:var_S3S1)
     )

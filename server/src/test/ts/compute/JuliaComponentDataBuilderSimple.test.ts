@@ -13,7 +13,7 @@ export default class JuliaComponentDataBuilderSimple extends JuliaComponentDataB
     public describeTests(): void {
         describe("JuliaComponentDataBuilder", () => {
             test("Stock with no dependencies", async () => {
-                const result: JuliaComponentData[] = JuliaComponentDataBuilder.makeJuliaComponents(
+                const result: JuliaComponentData[] = JuliaComponentDataBuilder.makeStockFlowModels(
                     [JuliaComponentDataBuilderTest.STOCK1],
                     {}
                 );
@@ -28,7 +28,7 @@ export default class JuliaComponentDataBuilderSimple extends JuliaComponentDataB
             });
 
             test("2 Stocks with a flow between them and no dependencies", async () => {
-                const result: JuliaComponentData[] = JuliaComponentDataBuilder.makeJuliaComponents(
+                const result: JuliaComponentData[] = JuliaComponentDataBuilder.makeStockFlowModels(
                     [
                         JuliaComponentDataBuilderTest.STOCK1,
                         JuliaComponentDataBuilderTest.STOCK2,

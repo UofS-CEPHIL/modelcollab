@@ -105,7 +105,7 @@ class Server {
         try {
             console.log("getCode");
             const components = await this.fbClient.getComponents(sessionId);
-            const juliaComponents = JuliaComponentDataBuilder.makeJuliaComponents(
+            const juliaComponents = JuliaComponentDataBuilder.makeStockFlowModels(
                 components.topLevelComponents,
                 components.staticComponents
             );

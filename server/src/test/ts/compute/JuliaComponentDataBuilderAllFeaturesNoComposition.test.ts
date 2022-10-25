@@ -137,7 +137,7 @@ export default class JuliaComponentDataBuilderAllFeaturesNoComposition extends J
                 svs1Connection,
                 svs2Connection
             ];
-            const result: JuliaComponentData[] = JuliaComponentDataBuilder.makeJuliaComponents(
+            const result: JuliaComponentData[] = JuliaComponentDataBuilder.makeStockFlowModels(
                 components,
                 {}
             );

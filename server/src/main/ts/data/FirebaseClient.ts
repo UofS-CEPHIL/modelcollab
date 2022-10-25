@@ -35,7 +35,7 @@ export class FirebaseClient {
             }
             const data = fbResult.val();
             return Object.keys(data).map(
-                k => FirebaseComponentModel.createFirebaseDataComponent(idPrefix + k, data[k])
+                k => FirebaseComponentModel.createFirebaseDataComponent(k, data[k], idPrefix)
             );
         }
 
@@ -60,7 +60,7 @@ export class FirebaseClient {
                 )
             );
             if (fbResult.exists()) {
-                const components = getComponents(fbResult, sm.getData().modelId);
+                const components = getComponents(fbResult, sm.getId() + "/");
                 staticComponents[sm.getData().modelId] = components;
             }
         }

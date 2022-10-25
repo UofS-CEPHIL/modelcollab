@@ -124,6 +124,7 @@ export default class JuliaGeneratorSIR extends JuliaGeneratorTest {
             };
 
             const result: string = new JuliaGenerator(Object.values(COMPONENTS)).generateJulia("");
+            console.log(result.replaceAll(/; */g, "\n"));
             const resultStockAndFlowArgs = ParsingTools.getStockAndFlowArgs(result);
             const stockSplit: { [k: string]: string } = ParsingTools.splitByArrowsForList(resultStockAndFlowArgs.stock);
             const flowSplit: { [k: string]: string } = ParsingTools.splitByArrowsForList(resultStockAndFlowArgs.flow);
@@ -269,7 +270,8 @@ export default class JuliaGeneratorSIR extends JuliaGeneratorTest {
                 expect(varText).toBeDefined();
                 varText = varText.replaceAll(/\s+/g, '');
                 const varNames = getVarNamesFromDynVarFunction(varText);
-                const expected = `${varNames.stocks}\\.${I_STOCK_NAME}( +)?/( +)?${varNames.sumVars}\\.${TOTAL_POP_NAME}( +)?\\(( +)?${varNames.stocks}( +)?,( +)?${varNames.time}( +)?\\)`;
+                const expected = `${varNames.stocks}\\.${I_STOCK_NAME}( +)?/( +)?${varNames.sumVars}\\.`
+                    + `${TOTAL_POP_NAME}( +)?\\(( +)?${varNames.stocks}( +)?,( +)?${varNames.time}( +)?\\)`;
                 expect(new RegExp(expected).test(varText)).toBeTruthy();
             });
 
@@ -282,7 +284,8 @@ export default class JuliaGeneratorSIR extends JuliaGeneratorTest {
                 expect(totalPopContributingVarsText).toBeDefined();
                 const infVarName = (COMPONENTS["INF_FLOW"] as JuliaFlowComponent).associatedVarName;
                 expect(infVarName).toBeDefined();
-                expect([':' + INF_RATE_NAME, ':' + infVarName].sort()).toStrictEqual(totalPopContributingVarsText.split(',').sort());
+                expect([':' + INF_RATE_NAME, ':' + infVarName].sort())
+                    .toStrictEqual(totalPopContributingVarsText.split(',').sort());
             });
 
             test("NotInfected sum var should have correct entry in StockAndFlow args", async () => {
@@ -355,6 +358,8 @@ export default class JuliaGeneratorSIR extends JuliaGeneratorTest {
             test(
                 "Order of foot variables should stay consistent between relation, open, and oapply calls",
                 async () => {
+                    const relationArgs = null;
+                    const openArgs = null;
                     expect(0).toBe(1);
                 }
             );

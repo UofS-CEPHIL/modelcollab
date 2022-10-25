@@ -44,9 +44,15 @@ export interface FirebasePointerDataObject {
     to: string
 };
 
-export function createFirebaseDataComponent(id: string, data: any): FirebaseDataComponent<any> {
+export function createFirebaseDataComponent(id: string, data: any, idPrefix?: string): FirebaseDataComponent<any> {
     const componentType: string = data.type;
     const dataVal: any = data.data;
+    if (idPrefix) {
+        id = idPrefix + id;
+        if (dataVal.from) dataVal.from = idPrefix + dataVal.from;
+        if (dataVal.to) dataVal.to = idPrefix + dataVal.to;
+    }
+
     let component: FirebaseDataComponent<FirebaseDataObject>;
 
     switch (componentType) {

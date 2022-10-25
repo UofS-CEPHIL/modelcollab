@@ -312,6 +312,13 @@ export function getRelationVarName(result: string): string {
     return match[1];
 }
 
+/**
+ * Check that the call to @relation is correct in a JuliaGenerator result
+ *
+ * @param result The whole result
+ * @param allFootNames The whole list of foot names
+ * @param expectedFootNameLists 
+ */
 export function checkRelation(result: string, allFootNames: string[], expectedFootNameLists: string[][]): void {
     const regex = /\w+ *= *@relation *\(([\w\s,]+)\) *begin *((.|\n)+) *end;/g;
     const match = regex.exec(result);
@@ -336,6 +343,10 @@ export function checkRelation(result: string, allFootNames: string[], expectedFo
 
     expect(resultModelList.length).toBe(expectedFootNameLists.length);
     expect(expectedFootNameLists.sort()).toStrictEqual(resultFootNameLists.sort())
+
+    /*
+      TODO we need to make sure that the stocks aren't being switched around. e.g. 
+     */
 }
 
 // Get the first 2 LVectors encountered and return the contents between their parens

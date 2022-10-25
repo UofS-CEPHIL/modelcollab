@@ -25,7 +25,7 @@ export default class ComputeModelTask {
         const filename: string = `./ModelResults_${date}.png`;
         var juliaCode: string;
         try {
-            const juliaComponents = JuliaComponentDataBuilder.makeJuliaComponents(this.components, this.staticComponents);
+            const juliaComponents = JuliaComponentDataBuilder.makeStockFlowModels(this.components, this.staticComponents);
             juliaCode = new JuliaGenerator(juliaComponents).generateJulia(filename);
         }
         catch (e) {
