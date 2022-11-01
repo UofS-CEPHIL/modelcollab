@@ -4,9 +4,8 @@ import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import { CircularProgress, ListItemIcon, Menu, MenuItem } from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import Axios, { AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 
-import applicationConfig from "../../config/applicationConfig";
 import { UiMode, modeFromString } from '../../UiMode';
 import RestClient from '../../rest/RestClient';
 
@@ -177,6 +176,12 @@ export default class Toolbar extends React.Component<Props, State> {
                             value={UiMode.CONNECT}
                             onClick={handleChange}
                             data-testid={UiMode.CONNECT}
+                        />
+                        <Tab
+                            label="Identify"
+                            value={UiMode.IDENTIFY}
+                            onClick={handleChange}
+                            data-testid={UiMode.IDENTIFY}
                         />
                         <Tab
                             label="Edit"

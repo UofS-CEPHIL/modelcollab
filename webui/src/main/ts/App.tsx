@@ -22,6 +22,7 @@ import EditBox, { Props as EditBoxProps } from './components/EditBox/EditBox';
 import Toolbar, { Props as ToolbarProps } from './components/Toolbar/Toolbar';
 import SaveModelBox, { Props as SaveModelBoxProps } from "./components/SaveModelBox/SaveModelBox";
 import ComponentRendererImpl from "./components/Canvas/Renderer/ComponentRendererImpl";
+import IdentifyModeCanvas from "./components/Canvas/ModeCanvas/IdentifyModeCanvas";
 
 const firebaseManager = new FirebaseManagerImpl();
 
@@ -177,6 +178,13 @@ export default class App extends React.Component<Props, State> {
                         {...props}
                     />
                 );
+            case UiMode.IDENTIFY:
+                return (
+                    <IdentifyModeCanvas
+                        {...props}
+                    />
+                );
+
         }
     }
 

@@ -111,7 +111,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
             expect(this.createCanvasForMode).toHaveBeenCalledTimes(1);
             const canvasProps: CanvasProps = this.createCanvasForMode?.mock.calls[0][1];
             expect(canvasProps.components.length()).toBe(this.components.length);
-            canvasProps.components.getAllComponents().forEach(
+            canvasProps.components.getAllComponentsIncludingChildren().forEach(
                 c1 => expect(
                     this.components.find(
                         c2 => c1.getId() === c2.getId()
@@ -147,7 +147,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
                     .filter(c => c.getId() !== this.pToStockConn.getId())
                     .forEach(
                         c1 => expect(
-                            canvasProps.components.getAllComponents().find(c2 =>
+                            canvasProps.components.getAllComponentsIncludingChildren().find(c2 =>
                                 c1.getId() === c2.getId()
                                 && c1.getType() === c2.getType()
                                 && c1.getData() === c2.getData()
@@ -180,7 +180,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
                     .filter(c => !expectedDeletedComponentIds.includes(c.getId()))
                     .forEach(
                         c1 => expect(
-                            canvasProps.components.getAllComponents().find(c2 =>
+                            canvasProps.components.getAllComponentsIncludingChildren().find(c2 =>
                                 c1.getId() === c2.getId()
                                 && c1.getType() === c2.getType()
                                 && c1.getData() === c2.getData()
@@ -221,7 +221,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
                         .filter(c => !expectedDeletedComponentIds.includes(c.getId()))
                         .forEach(
                             c1 => expect(
-                                canvasProps.components.getAllComponents().find(c2 =>
+                                canvasProps.components.getAllComponentsIncludingChildren().find(c2 =>
                                     c1.getId() === c2.getId()
                                     && c1.getType() === c2.getType()
                                     && c1.getData() === c2.getData()
@@ -253,7 +253,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
             test("Should correctly update screen position when item dragged", async () => {
                 dragCloud();
                 const canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
-                expect(canvasProps.components.getAllComponents().find(c =>
+                expect(canvasProps.components.getAllComponentsIncludingChildren().find(c =>
                     c.getId() === componentToEdit.getId()
                     && c.getData().x === newX
                     && c.getData().y === newY
@@ -261,7 +261,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
                 expect(canvasProps.components.length()).toBe(this.components.length);
                 this.components
                     .filter(c => c.getId() !== componentToEdit.getId())
-                    .forEach(c1 => expect(canvasProps.components.getAllComponents().find(
+                    .forEach(c1 => expect(canvasProps.components.getAllComponentsIncludingChildren().find(
                         c2 => c1.getId() === c2.getId()
                             && c1.getType() === c2.getType()
                             && c1.getData() === c2.getData()
@@ -290,7 +290,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
                 act(() => callback(newComponents));
                 const canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
                 expect(canvasProps.components.length()).toBe(newComponents.length);
-                newComponents.forEach(c1 => expect(canvasProps.components.getAllComponents().find(c2 =>
+                newComponents.forEach(c1 => expect(canvasProps.components.getAllComponentsIncludingChildren().find(c2 =>
                     c1.getId() === c2.getId()
                     && c1.getType() === c2.getType()
                     && c1.getData() === c2.getData())).toBeDefined()
@@ -368,7 +368,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
                 expect(this.lastRenderedEditBox).toBeNull();
                 let canvasProps: CanvasProps = this.createCanvasForMode?.mock.lastCall[1];
                 expect(canvasProps.selectedComponentIds.length).toBe(0);
-                const componentAfterUpdate = canvasProps.components.getAllComponents()
+                const componentAfterUpdate = canvasProps.components.getAllComponentsIncludingChildren()
                     .find(c => c.getId() === selectedComponent.getId());
                 expect(componentAfterUpdate).toBeDefined();
                 expect(componentAfterUpdate?.getType()).toBe(selectedComponent.getType());
@@ -469,7 +469,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
                 );
                 act(() => canvasProps.addComponent(newCloud));
                 canvasProps = this.createCanvasForMode?.mock.lastCall[1];
-                expect(canvasProps.components.getAllComponents().find(c => c.getId() === newCloud.getId()))
+                expect(canvasProps.components.getAllComponentsIncludingChildren().find(c => c.getId() === newCloud.getId()))
                     .toBeDefined();
 
                 act(() => canvasProps.setSelected([newFlow.getData().from]));
@@ -478,7 +478,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
 
                 act(() => canvasProps.addComponent(newFlow));
                 canvasProps = this.createCanvasForMode?.mock.lastCall[1];
-                expect(canvasProps.components.getAllComponents().find(c => c.getId() === newCloud.getId()))
+                expect(canvasProps.components.getAllComponentsIncludingChildren().find(c => c.getId() === newCloud.getId()))
                     .toBeDefined();
                 await waitFor(() => {
                     canvasProps = this.createCanvasForMode?.mock.lastCall[1];
@@ -507,7 +507,7 @@ export default class CanvasScreenWithComponents extends CanvasScreenTest {
                     canvasProps = this.createCanvasForMode?.mock.lastCall[1];
                     expect(canvasProps.selectedComponentIds.length).toBe(0);
                 });
-                expect(canvasProps.components.getAllComponents().find(c => c.getId() === newConn.getId()))
+                expect(canvasProps.components.getAllComponentsIncludingChildren().find(c => c.getId() === newConn.getId()))
                     .toBeDefined();
             });
         });

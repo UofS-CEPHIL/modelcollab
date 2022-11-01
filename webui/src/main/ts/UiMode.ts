@@ -9,6 +9,7 @@ export enum UiMode {
     EDIT = "Edit",
     CONNECT = "Connect",
     CLOUD = "Cloud",
+    IDENTIFY = "Identify"
 };
 
 export function modeFromString(s: string): UiMode | null {
@@ -35,6 +36,8 @@ export function modeFromString(s: string): UiMode | null {
             return UiMode.SUM_VARIABLE;
         case "CONNECT":
             return UiMode.CONNECT;
+        case "IDENTIFY":
+            return UiMode.IDENTIFY;
         default:
             return null;
     }

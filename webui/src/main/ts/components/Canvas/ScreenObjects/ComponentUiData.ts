@@ -12,29 +12,20 @@ export interface PointableComponent extends VisibleComponent {
     getAngleRelativeSide(other: VisibleComponent, components: ReadonlyArray<ComponentUiData>): Side;
 }
 
-// This is the actual ComponentUiData class. The one named ComponentUiData is a convenience class so we don't have to write <any, any> all over the place.
-abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObject, DbObject extends schema.FirebaseDataComponent<DataType>> implements VisibleComponent {
+// This is the actual ComponentUiData class. The one named ComponentUiData is a convenience class so we don't have to
+// write <any, any> all over the place.
+export abstract class ComponentUiDataExtensible
+    <
+    DataType extends schema.FirebaseDataObject,
+    DbObject extends schema.FirebaseDataComponent<DataType>
+    >
+{
 
     private readonly dbObject: DbObject;
 
-
-    public abstract getCentrePoint(components: ComponentUiData[]): Point;
-    public abstract getMaxX(components: ComponentUiData[]): number;
-    public abstract getMinX(components: ComponentUiData[]): number;
-    public abstract getMaxY(components: ComponentUiData[]): number;
-    public abstract getMinY(components: ComponentUiData[]): number;
-
-    public abstract withData(data: DataType): ComponentUiDataInternal<DataType, DbObject>;
-    public abstract withId(id: string): ComponentUiDataInternal<DataType, DbObject>;
-
-
-
-    // Can we point FROM this object TO another component?
-    // TO -> FROM is determined by whether it implements PointableComponent
-    public abstract isPointable(): boolean;
-
-    public abstract isInsideBoundingBox(topLeft: Point, bottomRight: Point, components: ReadonlyArray<ComponentUiData>): boolean;
-
+    public abstract withData(data: DataType): ComponentUiDataExtensible<DataType, DbObject>;
+    public abstract withId(id: string): ComponentUiDataExtensible<DataType, DbObject>;
+    public abstract isVisible(): boolean;
 
     public constructor(dbObject: DbObject) {
         this.dbObject = dbObject;
@@ -55,6 +46,44 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
     public getDatabaseObject(): DbObject {
         return this.dbObject;
     }
+
+    public toString(): string {
+        return this.getDatabaseObject().toString();
+    }
+}
+
+export default abstract class ComponentUiData extends ComponentUiDataExtensible<any, any> { }
+
+
+// This is the actual VisibleUiComponent class. The other one is a convenience class so we don't have to write
+// <any, any> all over the place.
+export abstract class VisibleUiComponentExtensible
+    <
+    DataType extends schema.FirebaseDataObject,
+    DbObject extends schema.FirebaseDataComponent<DataType>
+    >
+    extends ComponentUiDataExtensible<DataType, DbObject>
+    implements VisibleComponent {
+
+
+    public abstract getCentrePoint(components: ComponentUiData[]): Point;
+    public abstract getMaxX(components: ComponentUiData[]): number;
+    public abstract getMinX(components: ComponentUiData[]): number;
+    public abstract getMaxY(components: ComponentUiData[]): number;
+    public abstract getMinY(components: ComponentUiData[]): number;
+
+
+    // Can we point FROM this object TO another component?
+    // TO -> FROM is determined by whether it implements PointableComponent
+    public abstract isPointable(): boolean;
+
+    public abstract isInsideBoundingBox(
+        topLeft: Point,
+        bottomRight: Point,
+        components: ReadonlyArray<ComponentUiData>
+    ): boolean;
+
+    public isVisible(): boolean { return true; }
 
     public isChildOfStaticModel(): boolean {
         return this.getId().includes('/');
@@ -123,11 +152,6 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
         return this.getRelativeSide(other, components);
     }
 
-    public toString(): string {
-        return this.getDatabaseObject().toString();
-    }
-
-
     public static isInsideBox(point: Point, boxTopLeft: Point, boxBottomRight: Point): boolean {
         return point.x > boxTopLeft.x
             && point.x < boxBottomRight.x
@@ -136,7 +160,7 @@ abstract class ComponentUiDataInternal<DataType extends schema.FirebaseDataObjec
     }
 }
 
-export default abstract class ComponentUiData extends ComponentUiDataInternal<any, any> { }
+export abstract class VisibleUiComponent extends VisibleUiComponentExtensible<any, any> { }
 
 export abstract class PointerComponent<
     DataType extends schema.FirebasePointerDataObject,
@@ -144,7 +168,7 @@ export abstract class PointerComponent<
     SourceComponent extends PointableComponent,
     TargetComponent extends PointableComponent
     >
-    extends ComponentUiDataInternal<DataType, DbObject> {
+    extends VisibleUiComponentExtensible<DataType, DbObject> {
 
 
     public getSource(components: ComponentUiData[]): SourceComponent | undefined {
@@ -170,7 +194,7 @@ export abstract class PointerComponent<
     }
 
     public isInsideBoundingBox(topLeft: Point, bottomRight: Point, components: ComponentUiData[]): boolean {
-        return ComponentUiData.isInsideBox(this.getCentrePoint(components), topLeft, bottomRight);
+        return VisibleUiComponent.isInsideBox(this.getCentrePoint(components), topLeft, bottomRight);
     }
 
     public getStartPoint(components: ComponentUiData[]): Point {
@@ -253,8 +277,8 @@ export abstract class PointerComponent<
         const toPoint: Point = this.getTargetPoint(components);
 
         let middlePoint: Point = { x: fromPoint.x, y: fromPoint.y };
-        if (getOppositeSide(fromSide) != toSide) {
-            if (fromSide == Side.TOP || fromSide == Side.BOTTOM) {
+        if (getOppositeSide(fromSide) !== toSide) {
+            if (fromSide === Side.TOP || fromSide === Side.BOTTOM) {
                 middlePoint.x = fromPoint.x;
                 middlePoint.y = toPoint.y;
             }
@@ -305,8 +329,12 @@ export abstract class PointerComponent<
 
 }
 
-export abstract class RectangularComponent<DataType extends schema.FirebaseDataObject, DbObject extends schema.FirebaseDataComponent<DataType>>
-    extends ComponentUiDataInternal<DataType, DbObject>
+export abstract class RectangularComponent
+    <
+    DataType extends schema.FirebaseDataObject,
+    DbObject extends schema.FirebaseDataComponent<DataType>
+    >
+    extends VisibleUiComponentExtensible<DataType, DbObject>
     implements PointableComponent {
 
     public abstract getTopLeft(): Point;
@@ -316,7 +344,11 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
     public abstract getHeightPx(): number;
 
     public getCentrePoint(_: ComponentUiData[]): Point {
-        return RectangularComponent.getCentreOfRect({ x: this.getTopLeft().x, y: this.getTopLeft().y }, this.getWidthPx(), this.getHeightPx());
+        return RectangularComponent.getCentreOfRect(
+            { x: this.getTopLeft().x, y: this.getTopLeft().y },
+            this.getWidthPx(),
+            this.getHeightPx()
+        );
     }
 
     public getMinX(_: ComponentUiData[]): number {
@@ -336,14 +368,19 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
     }
 
     public getArrowPoint(side: Side, _: ComponentUiData[]) {
-        return RectangularComponent.getCentreOfSideOfRect(this.getTopLeft(), this.getWidthPx(), this.getHeightPx(), side);
+        return RectangularComponent.getCentreOfSideOfRect(
+            this.getTopLeft(),
+            this.getWidthPx(),
+            this.getHeightPx(),
+            side
+        );
     }
 
     public isInsideBoundingBox(topLeft: Point, bottomRight: Point, _: ComponentUiData[]): boolean {
         const myTopLeft = this.getTopLeft();
         const myBottomRight = { x: myTopLeft.x + this.getWidthPx(), y: myTopLeft.y + this.getHeightPx() };
-        return ComponentUiData.isInsideBox(myTopLeft, topLeft, bottomRight)
-            && ComponentUiData.isInsideBox(myBottomRight, topLeft, bottomRight);
+        return VisibleUiComponent.isInsideBox(myTopLeft, topLeft, bottomRight)
+            && VisibleUiComponent.isInsideBox(myBottomRight, topLeft, bottomRight);
     }
 
     public static getCentreOfRect(topLeft: Point, width: number, height: number): Point {
@@ -377,7 +414,12 @@ export abstract class RectangularComponent<DataType extends schema.FirebaseDataO
     }
 }
 
-export abstract class TextComponent<DataType extends schema.TextComponentData, DbObject extends schema.TextFirebaseComponent<any>> extends RectangularComponent<DataType, DbObject> {
+export abstract class TextComponent
+    <
+    DataType extends schema.TextComponentData,
+    DbObject extends schema.TextFirebaseComponent<any>
+    >
+    extends RectangularComponent<DataType, DbObject> {
     public static WIDTH = 150;
     public static HEIGHT = 50;
     private static PAD = 8;

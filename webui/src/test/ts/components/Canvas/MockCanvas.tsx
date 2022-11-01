@@ -61,7 +61,7 @@ export default abstract class MockCanvas {
             deleteComponent: this.deleteComponentSpy,
             addComponent: this.addComponentSpy,
             setSelected: this.setSelectedSpy,
-            identifyStocks: this.identifyStocksSpy,
+            identifyComponents: this.identifyStocksSpy,
             showConnectionHandles: false,
             registerCanvasLeftClickedHandler: this.registerCanvasLeftClickedSpy,
             registerCanvasRightClickedHandler: this.registerCanvasRightClickedSpy,

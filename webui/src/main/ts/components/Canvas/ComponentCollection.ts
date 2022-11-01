@@ -7,8 +7,8 @@ import FlowUiData from "./ScreenObjects/Flow/FlowUiData";
 import ParameterUiData from "./ScreenObjects/Parameter/ParameterUiData";
 import StaticModelUiData from "./ScreenObjects/StaticModel/StaticModelUiData";
 import StockUiData from "./ScreenObjects/Stock/StockUiData";
+import SubstitutionUiData from "./ScreenObjects/Substitution/SubstitionUiData";
 import SumVariableUiData from "./ScreenObjects/SumVariable/SumVariableUiData";
-
 
 export default class ComponentCollection {
 
@@ -20,6 +20,7 @@ export default class ComponentCollection {
     private readonly clouds: CloudUiData[];
     private readonly connections: ConnectionUiData[];
     private readonly staticModels: StaticModelUiData[];
+    private readonly substitutions: SubstitutionUiData[];
 
     public constructor(components: ComponentUiData[]) {
         this.stocks = components
@@ -46,26 +47,34 @@ export default class ComponentCollection {
         this.staticModels = components
             .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
             .map(c => c as StaticModelUiData);
+        this.substitutions = components
+            .filter(c => c.getType() === schema.ComponentType.SUBSTITUTION)
+            .map(c => c as SubstitutionUiData);
     }
 
-    public getAllComponents(): ComponentUiData[] {
+    public getAllComponentsWithoutChildren(): ComponentUiData[] {
         return (this.stocks as ComponentUiData[])
+            .concat(this.substitutions)
             .concat(this.flows)
             .concat(this.parameters)
             .concat(this.sumVars)
             .concat(this.dynVars)
             .concat(this.clouds)
             .concat(this.connections)
-            .concat(this.staticModels)
+            .concat(this.staticModels);
+    }
+
+    public getAllComponentsIncludingChildren(): ComponentUiData[] {
+        return this.getAllComponentsWithoutChildren()
             .concat(this.getAllStaticModelChildren());
     }
 
     public length(): number {
-        return this.getAllComponents().length;
+        return this.getAllComponentsIncludingChildren().length;
     }
 
     public findComponent(matcher: (c: ComponentUiData) => boolean): ComponentUiData | undefined {
-        return this.getAllComponents().find(matcher);
+        return this.getAllComponentsIncludingChildren().find(matcher);
     }
 
     public getComponent(id: string): ComponentUiData | undefined {
@@ -115,5 +124,56 @@ export default class ComponentCollection {
                 (prev, cur) => prev.concat(cur),
                 []
             );
+    }
+
+    /**
+       Remove all SubstitutionUiData components and return a
+       new ComponentCollection with those substitutions applied
+     */
+    public applySubstitutions(): ComponentCollection {
+
+        const applySubstitutionsToComponents = (components: ComponentUiData[]) => {
+            let allExceptSubstitutions = components.filter(c => c.getType() !== schema.ComponentType.SUBSTITUTION);
+            this.substitutions.forEach(sub => {
+                allExceptSubstitutions = allExceptSubstitutions
+                    .filter(c => c.getId() !== sub.getData().replacedId)
+                    .map(c => {
+                        if (c.getData().from || c.getData().to) {
+                            const subReplaced = sub.getData().replacedId;
+                            const subReplacement = sub.getData().replacementId;
+                            const newFrom = c.getData().from === subReplaced ? subReplacement : c.getData().from;
+                            const newTo = c.getData().to === subReplaced ? subReplacement : c.getData().to;
+                            return c.withData({ ...c.getData(), from: newFrom, to: newTo });
+                        }
+                        else {
+                            return c;
+                        }
+                    });
+            });
+            return allExceptSubstitutions;
+        }
+
+        if (this.substitutions.length > 0) {
+            const outerComponents = applySubstitutionsToComponents(this.getAllComponentsWithoutChildren());
+            outerComponents.forEach(c => {
+                if (c.getType() === schema.ComponentType.STATIC_MODEL) {
+                    const staticModel = c as StaticModelUiData;
+                    console.log(staticModel.getComponents().join('\n'))
+                    staticModel.setComponents(
+                        applySubstitutionsToComponents(
+                            staticModel.getComponents()
+                        )
+                    );
+                }
+            });
+            return new ComponentCollection(outerComponents);
+        }
+        else {
+            return this;
+        }
+    }
+
+    public toString(): string {
+        return this.getAllComponentsIncludingChildren().map(c => c.toString()).join(',\n');
     }
 }

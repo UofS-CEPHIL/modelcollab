@@ -40,10 +40,9 @@ export default class StaticModel extends React.Component<Props> {
     }
 
     private makeComponents(): ReactElement[] {
+        const components = this.props.model.getComponentsRelativeToSelf();
         return this.props.renderer.render(
-            new ComponentCollection(
-                this.props.model.getComponentsRelativeToSelf()
-            ),
+            new ComponentCollection(components),
             c => this.props.getColor(c),
             this.props.updateState,
             false,

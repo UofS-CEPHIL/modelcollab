@@ -15,19 +15,4 @@ export default class StockModeCanvas extends BaseCanvas {
         ));
         this.props.addComponent(newStock);
     }
-
-    protected onComponentMouseUp(component: ComponentUiData, x: number, y: number): void {
-        const selectedComponent = this.props.components.getComponent(this.props.selectedComponentIds[0]);
-        if (
-            this.props.selectedComponentIds.length === 1
-            && selectedComponent?.getType() === schema.ComponentType.STOCK
-            && component.getType() === schema.ComponentType.STOCK
-            && component.isChildOfStaticModel()
-        ) {
-            this.props.identifyStocks(selectedComponent as StockUiData, component as StockUiData);
-        }
-        else {
-            super.onComponentMouseUp(component, x, y);
-        }
-    }
 }

@@ -111,9 +111,9 @@ export default class CanvasScreenEmpty extends CanvasScreenTest {
                     expect(this.createCanvasForMode).toHaveBeenCalledTimes(1);
                     const canvasProps = getCanvasProps();
                     expect(canvasProps.components.length()).toBe(1);
-                    expect(canvasProps.components.getAllComponents()[0].getData()).toEqual(stock.getData());
-                    expect(canvasProps.components.getAllComponents()[0].getId()).toBe(stock.getId());
-                    expect(canvasProps.components.getAllComponents()[0].getType()).toBe(ComponentType.STOCK);
+                    expect(canvasProps.components.getAllComponentsIncludingChildren()[0].getData()).toEqual(stock.getData());
+                    expect(canvasProps.components.getAllComponentsIncludingChildren()[0].getId()).toBe(stock.getId());
+                    expect(canvasProps.components.getAllComponentsIncludingChildren()[0].getType()).toBe(ComponentType.STOCK);
                     expect(canvasProps.selectedComponentIds.length).toBe(0);
                 });
 
@@ -164,7 +164,7 @@ export default class CanvasScreenEmpty extends CanvasScreenTest {
 
                     test("Should create a UI component when static model imported from toolbar", async () => {
                         clickImportModelButton();
-                        waitFor(() => { expect(getCanvasProps().components.getAllComponents().length).toBe(1) });
+                        waitFor(() => { expect(getCanvasProps().components.getAllComponentsIncludingChildren().length).toBe(1) });
                         waitFor(() => { expect(getCanvasProps().components.getStaticModels().length).toBe(1) });
                     });
 

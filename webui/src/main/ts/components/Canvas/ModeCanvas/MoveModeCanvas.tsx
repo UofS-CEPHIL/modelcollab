@@ -2,6 +2,7 @@ import { ReactElement } from "react";
 import { Point } from "../../DrawingUtils";
 import SelectionBox from "../ScreenObjects/SelectionBox";
 import { State as CanvasState, Props as CanvasProps, ExtendableBaseCanvas } from "../BaseCanvas";
+import { VisibleUiComponent } from "../ScreenObjects/ComponentUiData";
 
 export interface State extends CanvasState {
     anchorX: number | null,
@@ -66,12 +67,12 @@ export default class MoveModeCanvas extends ExtendableBaseCanvas<CanvasProps, St
     }
 
     private getComponentIdsInsideBoundingBox(topLeft: Point, bottomRight: Point): string[] {
-        return this.props.components.getAllComponents()
+        return this.props.components.getAllComponentsIncludingChildren()
             .filter(c =>
-                c.isInsideBoundingBox(
+                c.isVisible() && (c as VisibleUiComponent).isInsideBoundingBox(
                     topLeft,
                     bottomRight,
-                    this.props.components.getAllComponents()
+                    this.props.components.getAllComponentsIncludingChildren()
                 )
             ).map(c => c.getId());
     }

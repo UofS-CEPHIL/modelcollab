@@ -2,12 +2,11 @@ import React, { ReactElement } from 'react';
 import { Stage, Layer, Group } from 'react-konva';
 
 import FirebaseDataModel from '../../data/FirebaseDataModel';
-import ComponentUiData from './ScreenObjects/ComponentUiData';
+import ComponentUiData, { VisibleUiComponent } from './ScreenObjects/ComponentUiData';
 import { DEFAULT_COLOR, SELECTED_COLOR } from './ScreenObjects/Stock/Stock';
 import FlowUiData from './ScreenObjects/Flow/FlowUiData';
 import ComponentCollection from './ComponentCollection';
 import ComponentRenderer from './Renderer/ComponentRenderer';
-import StockUiData from './ScreenObjects/Stock/StockUiData';
 
 const RIGHT_CLICK = 2;
 export interface Props {
@@ -22,11 +21,11 @@ export interface Props {
     editComponent: (_: ComponentUiData) => void;
     deleteComponent: (id: string) => void;
     setSelected: (ids: string[]) => void;
-    identifyStocks: (outStock: StockUiData, inStock: StockUiData) => void;
+    identifyComponents: (replaced: ComponentUiData, replacement: ComponentUiData) => void;
 
     // visible for testing
     // TODO make these non-optional and send them up by 1 layer
-    registerComponentClickedHandler?: (callback: ((c: ComponentUiData) => void)) => void;
+    registerComponentClickedHandler?: (callback: ((c: VisibleUiComponent) => void)) => void;
     registerCanvasLeftClickedHandler?: (callback: ((x: number, y: number) => void)) => void;
     registerCanvasRightClickedHandler?: (callback: ((x: number, y: number) => void)) => void;
 }
@@ -59,7 +58,7 @@ export abstract class ExtendableBaseCanvas
         this.props.setSelected([]);
     }
 
-    protected onComponentClicked(comp: ComponentUiData): void {
+    protected onComponentClicked(comp: VisibleUiComponent): void {
         this.props.setSelected([comp.getId()]);
     }
 
@@ -73,11 +72,11 @@ export abstract class ExtendableBaseCanvas
 
     protected onCanvasMouseMoved(x: number, y: number): void { }
 
-    protected onComponentMouseDown(comp: ComponentUiData, x: number, y: number): void { }
+    protected onComponentMouseDown(comp: VisibleUiComponent, x: number, y: number): void { }
 
-    protected onComponentMouseUp(comp: ComponentUiData, x: number, y: number): void { }
+    protected onComponentMouseUp(comp: VisibleUiComponent, x: number, y: number): void { }
 
-    protected isDraggable(comp: ComponentUiData): boolean {
+    protected isDraggable(comp: VisibleUiComponent): boolean {
         return true;
     }
 
@@ -100,7 +99,6 @@ export abstract class ExtendableBaseCanvas
                 onContextMenu={e => {
                     e.evt.preventDefault();
                 }}
-
             >
                 <Layer>
                     {
@@ -125,8 +123,8 @@ export abstract class ExtendableBaseCanvas
         const pointerPos = event.currentTarget.getPointerPosition();
 
         const isRightClick = event.evt.button === RIGHT_CLICK;
-        if (target) {
-            this.onComponentClicked(target)
+        if (target && target.isVisible()) {
+            this.onComponentClicked(target as VisibleUiComponent)
         }
         else if (isRightClick) {
             this.onCanvasRightClicked(pointerPos.x, pointerPos.y);
@@ -140,11 +138,11 @@ export abstract class ExtendableBaseCanvas
         const target = this.props.components.getComponent(event.target.attrs.name);
         const pointerPos = event.currentTarget.getPointerPosition();
 
-        if (!target) {
-            this.onCanvasMouseDown(pointerPos.x, pointerPos.y);
+        if (target && target.isVisible()) {
+            this.onComponentMouseDown(target as VisibleUiComponent, pointerPos.x, pointerPos.y);
         }
         else {
-            this.onComponentMouseDown(target, pointerPos.x, pointerPos.y);
+            this.onCanvasMouseDown(pointerPos.x, pointerPos.y);
         }
     }
 
@@ -152,11 +150,11 @@ export abstract class ExtendableBaseCanvas
         const target = this.props.components.getComponent(event.target.attrs.name);
         const pointerPos = event.currentTarget.getPointerPosition();
 
-        if (!target) {
-            this.onCanvasMouseUp(pointerPos.x, pointerPos.y);
+        if (target && target.isVisible()) {
+            this.onComponentMouseUp(target as VisibleUiComponent, pointerPos.x, pointerPos.y);
         }
         else {
-            this.onComponentMouseUp(target, pointerPos.x, pointerPos.y);
+            this.onCanvasMouseUp(pointerPos.x, pointerPos.y);
         }
     }
 

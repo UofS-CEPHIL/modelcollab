@@ -22,6 +22,7 @@ import StaticModelUiData from '../Canvas/ScreenObjects/StaticModel/StaticModelUi
 import IdGenerator from '../../IdGenerator';
 import ComponentCollection from '../Canvas/ComponentCollection';
 import ComponentRenderer from '../Canvas/Renderer/ComponentRenderer';
+import SubstitutionUiData from '../Canvas/ScreenObjects/Substitution/SubstitionUiData';
 
 
 export interface LoadedStaticModel {
@@ -78,7 +79,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
                 // Load any static models that aren't already loaded
                 dbComponents
                     .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
-                    .map(c => c as schema.StaticModelComponent)
+                    .map(c => c as schema.StaticModelFirebaseComponent)
                     .forEach(c => this.importStaticModel(c.getData().modelId));
 
                 // Load objects s.t. stocks are loaded before flows,
@@ -124,6 +125,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
             case schema.ComponentType.STATIC_MODEL.toString(): return false;
             case schema.ComponentType.FLOW.toString(): return true;
             case schema.ComponentType.CONNECTION.toString(): return true;
+            case schema.ComponentType.SUBSTITUTION.toString(): return false;
             default: throw new Error("Unknown component: " + componentType);
         }
     }
@@ -140,6 +142,9 @@ export default class CanvasScreen extends React.Component<Props, State> {
         );
 
         this.setComponentsForStaticModels();
+        console.log("state: " + this.state.components.join("\n"));
+        console.log("staticModelsComponents: " + this.state.components.filter(c => c.getType() === schema.ComponentType.STATIC_MODEL).map(c => (c as StaticModelUiData).getComponentsRelativeToCanvas()));
+
         return (
             <React.Fragment>
                 {
@@ -169,7 +174,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
                             deleteComponent: id => this.removeComponent(id),
                             addComponent: c => this.addComponent(c),
                             setSelected: ids => this.setSelected(ids),
-                            identifyStocks: (o, i) => this.identifyStocks(o, i)
+                            identifyComponents: (o, i) => this.identifyComponents(o, i)
                         }
                     )
                 }
@@ -210,6 +215,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
                 if (loadedModel) {
                     const modelUiData = c as StaticModelUiData;
                     modelUiData.setComponents(loadedModel.components);
+                    modelUiData.qualifyComponentIds();
                 }
             });
     }
@@ -262,7 +268,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
     private loadStaticModelData(modelId: string): void {
         this.addComponent(
             new StaticModelUiData(
-                new schema.StaticModelComponent(
+                new schema.StaticModelFirebaseComponent(
                     IdGenerator.generateUniqueId(this.state.components),
                     {
                         x: 0,
@@ -293,6 +299,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
                 let newNewOrphans: ComponentUiData[] = [];
                 for (const orphan of newOrphans) {
                     const subOrphans = findOrphans(orphan);
+                    // eslint-disable-next-line                   
                     const unique = subOrphans.filter(o => {
                         return orphans.find(c => c.getId() === o.getId()) === undefined
                     });
@@ -384,6 +391,8 @@ export default class CanvasScreen extends React.Component<Props, State> {
                 return new CloudUiData(dbComponent);
             case schema.ComponentType.STATIC_MODEL:
                 return new StaticModelUiData(dbComponent);
+            case schema.ComponentType.SUBSTITUTION:
+                return new SubstitutionUiData(dbComponent);
         }
     }
 
@@ -409,27 +418,16 @@ export default class CanvasScreen extends React.Component<Props, State> {
         );
     }
 
-    private identifyStocks(outStock: StockUiData, inStock: StockUiData) {
-        const pointersToOutStock = this.getComponentsPointingTo(outStock);
-        const pointersFromOutStock = this.getComponentsPointingFrom(outStock);
-
-        const updatedComponents = this.state.components
-            .filter(c => c.getId() !== outStock.getId())
-            .map(
-                c => {
-                    if (pointersToOutStock.find(p => p.getId() === c.getId())) {
-                        return c.withData({ ...c.getData(), to: inStock.getId() });
-                    }
-                    else if (pointersFromOutStock.find(p => p.getId() === c.getId())) {
-                        return c.withData({ ...c.getData(), from: inStock.getId() });
-                    }
-                    else {
-                        return c;
-                    }
+    private identifyComponents(replaced: ComponentUiData, replacement: ComponentUiData) {
+        this.addComponent(new SubstitutionUiData(
+            new schema.SubstitutionFirebaseComponent(
+                IdGenerator.generateUniqueId(this.state.components),
+                {
+                    replacedId: replaced.getId(),
+                    replacementId: replacement.getId()
                 }
-            );
-        this.setState({ ...this.state, components: updatedComponents });
-        this.props.firebaseDataModel.setAllComponents(this.props.sessionId, updatedComponents);
+            )
+        ));
     }
 
     public getComponentsPointingTo(component: ComponentUiData): PointerComponent<any, any, any, any>[] {

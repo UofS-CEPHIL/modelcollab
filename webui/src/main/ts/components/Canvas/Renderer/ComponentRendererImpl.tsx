@@ -37,6 +37,24 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         if (this.componentKey > ComponentRendererImpl.MAX_COMPONENT_KEY) {
             this.componentKey = 0;
         }
+
+        console.log("Components In: " + components.getAllComponentsWithoutChildren());
+        console.log("Static Models In: " + components.getAllStaticModelChildren());
+
+        components = components.applySubstitutions();
+        const renderedStaticModelComponents = components.getStaticModels()
+            .map(sm => sm.getComponentsRelativeToSelf())
+            .reduce((a, b) => a.concat(b), []);
+        components = new ComponentCollection(
+            components.getAllComponentsWithoutChildren()
+                .filter(
+                    c => renderedStaticModelComponents.find(c2 => c2.getId() === c.getId()) === undefined
+                )
+        );
+        // console.log("sm" + renderedStaticModelComponents)
+        // console.log(renderedStaticModelComponents.map(c => c.getId()))
+        // console.log("tl" + components);
+        // console.log(components.getAllComponentsWithoutChildren().map(c => c.getId()))
         const models = this.renderStaticModels(
             components.getStaticModels(),
             editComponent,
@@ -44,14 +62,14 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         );
         const stocks = this.renderStocks(
             components.getStocks(),
-            components.getAllComponents(),
+            components.getAllComponentsIncludingChildren(),
             getColor,
             componentsDraggable,
             editComponent
         );
         const flows = this.renderFlows(
             components.getFlows(),
-            components.getAllComponents(),
+            components.getAllComponentsIncludingChildren(),
             getColor
         );
         const clouds = this.renderClouds(
@@ -79,7 +97,7 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         );
         const connections = this.renderConnections(
             components.getConnections(),
-            components.getAllComponents(),
+            components.getAllComponentsIncludingChildren(),
             editComponent,
             showConnectionHandles
         );

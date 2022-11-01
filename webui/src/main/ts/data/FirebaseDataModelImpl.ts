@@ -131,7 +131,10 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    getComponentsForSavedModel(modelId: string, onData: (components: schema.FirebaseDataComponent<any>[]) => void): void {
+    getComponentsForSavedModel(
+        modelId: string,
+        onData: (components: schema.FirebaseDataComponent<any>[]) => void
+    ): void {
         get(
             ref(
                 this.firebaseManager.getDb(),

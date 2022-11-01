@@ -8,7 +8,7 @@ export default class IdGenerator {
         let isUsed: boolean;
         let components: ComponentUiData[];
         if (existing instanceof ComponentCollection) {
-            components = existing.getAllComponents();
+            components = existing.getAllComponentsIncludingChildren();
         }
         else {
             components = existing;

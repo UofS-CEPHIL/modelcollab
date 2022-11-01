@@ -1,10 +1,14 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Point } from "../../../DrawingUtils";
-import ComponentUiData, { RectangularComponent } from "../ComponentUiData";
+import ComponentUiData, { RectangularComponent, VisibleUiComponent } from "../ComponentUiData";
 
 
 export default class StaticModelUiData
-    extends RectangularComponent<schema.StaticModelComponentData, schema.StaticModelComponent>
+    extends RectangularComponent
+    <
+    schema.StaticModelComponentData,
+    schema.StaticModelFirebaseComponent
+    >
 {
 
     public static PAD_PX: number = 20;
@@ -12,7 +16,11 @@ export default class StaticModelUiData
     private components: ComponentUiData[] | undefined;
 
     public setComponents(components: ComponentUiData[] | undefined): void {
-        this.components = components
+        this.components = components;
+    }
+
+    public qualifyComponentIds(): void {
+        this.components = this.components
             ?.map(c => {
                 if (c.getData().from && c.getData().to)
                     return c.withData({
@@ -22,11 +30,15 @@ export default class StaticModelUiData
                     });
                 else
                     return c;
-            }).map(c => c.withId(this.getId() + "/" + c.getId()))
+            }).map(c => c.withId(this.getId() + "/" + c.getId()));
     }
 
     public getComponents(): ComponentUiData[] {
         return this.components || [];
+    }
+
+    public getVisibleComponents(): VisibleUiComponent[] {
+        return this.components?.filter(c => c.isVisible()) as VisibleUiComponent[] || [];
     }
 
     private getChildComponentsWithOffset(xOffset: number, yOffset: number): ComponentUiData[] {
@@ -46,31 +58,40 @@ export default class StaticModelUiData
         );
     }
 
+    private componentShouldRender(component: ComponentUiData): boolean {
+        if (component.getData().from !== undefined || component.getData().to !== undefined) {
+            return this.getComponents().find(c => c.getId() === component.getData().from) !== undefined
+                && this.getComponents().find(c => c.getId() === component.getData().to) !== undefined;
+        }
+        return true;
+    }
+
     public getComponentsRelativeToSelf(): ComponentUiData[] {
         return this.getChildComponentsWithOffset(
             this.getChildXOffset(),
             this.getChildYOffset()
-        );
+        ).filter(c => this.componentShouldRender(c));
     }
 
     public getComponentsRelativeToCanvas(): ComponentUiData[] {
         return this.getChildComponentsWithOffset(
             this.getChildXOffset() - this.getData().x,
             this.getChildYOffset() - this.getData().y
-        );
+        ).filter(c => this.componentShouldRender(c));
     }
 
     public getHeightPx(): number {
-        if (!this.components || this.components.length === 0) {
+        const visibleComponents = this.getVisibleComponents();
+        if (visibleComponents.length === 0) {
             return StaticModelUiData.PAD_PX;
         }
         else {
             const minY: number = Math.min(
-                ...this.components
+                ...visibleComponents
                     .map(c => c.getMinY(this.components || []))
             );
             const maxY: number = Math.max(
-                ...this.components
+                ...visibleComponents
                     .map(c => c.getMaxY(this.components || []))
             );
             return maxY - minY + StaticModelUiData.PAD_PX * 2;
@@ -78,16 +99,17 @@ export default class StaticModelUiData
     }
 
     public getWidthPx(): number {
-        if (!this.components || this.components.length === 0) {
+        const visibleComponents = this.getVisibleComponents();
+        if (visibleComponents.length === 0) {
             return StaticModelUiData.PAD_PX;
         }
         else {
             const minX: number = Math.min(
-                ...this.components
+                ...visibleComponents
                     .map(c => c.getMinX(this.components || []))
             );
             const maxX: number = Math.max(
-                ...this.components
+                ...visibleComponents
                     .map(c => c.getMaxX(this.components || []))
             );
             return maxX - minX + StaticModelUiData.PAD_PX * 2;
@@ -110,7 +132,7 @@ export default class StaticModelUiData
 
     public withId(id: string): StaticModelUiData {
         return new StaticModelUiData(
-            new schema.StaticModelComponent(
+            new schema.StaticModelFirebaseComponent(
                 id,
                 this.getData()
             )

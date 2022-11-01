@@ -1,13 +1,13 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
-import ComponentUiData from "../ScreenObjects/ComponentUiData";
+import { VisibleUiComponent } from "../ScreenObjects/ComponentUiData";
 import ConnectionUiData from "../ScreenObjects/Connection/ConnectionUiData";
 import BaseCanvas from "../BaseCanvas";
 
 
 export default class ConnectModeCanvas extends BaseCanvas {
 
-    protected onComponentClicked(component: ComponentUiData): void {
+    protected onComponentClicked(component: VisibleUiComponent): void {
         if (component.isPointable()) {
             if (this.props.selectedComponentIds.length === 0) {
                 this.props.setSelected([component.getId()]);
