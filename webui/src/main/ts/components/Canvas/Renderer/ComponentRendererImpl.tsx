@@ -29,6 +29,7 @@ export default class ComponentRendererImpl implements ComponentRenderer {
 
     public render(
         components: ComponentCollection,
+        auxiliaryComponents: ComponentCollection | null,
         getColor: (c: ComponentUiData) => string,
         editComponent: (c: ComponentUiData) => void,
         showConnectionHandles: boolean,
@@ -38,10 +39,7 @@ export default class ComponentRendererImpl implements ComponentRenderer {
             this.componentKey = 0;
         }
 
-        console.log("Components In: " + components.getAllComponentsWithoutChildren());
-        console.log("Static Models In: " + components.getAllStaticModelChildren());
-
-        components = components.applySubstitutions();
+        components = components.withSubstitutionsApplied();
         const renderedStaticModelComponents = components.getStaticModels()
             .map(sm => sm.getComponentsRelativeToSelf())
             .reduce((a, b) => a.concat(b), []);
@@ -51,12 +49,10 @@ export default class ComponentRendererImpl implements ComponentRenderer {
                     c => renderedStaticModelComponents.find(c2 => c2.getId() === c.getId()) === undefined
                 )
         );
-        // console.log("sm" + renderedStaticModelComponents)
-        // console.log(renderedStaticModelComponents.map(c => c.getId()))
-        // console.log("tl" + components);
-        // console.log(components.getAllComponentsWithoutChildren().map(c => c.getId()))
+
         const models = this.renderStaticModels(
             components.getStaticModels(),
+            components,
             editComponent,
             getColor
         );
@@ -69,7 +65,8 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         );
         const flows = this.renderFlows(
             components.getFlows(),
-            components.getAllComponentsIncludingChildren(),
+            components.getAllComponentsIncludingChildren()
+                .concat(auxiliaryComponents?.getAllComponentsIncludingChildren() || []),
             getColor
         );
         const clouds = this.renderClouds(
@@ -97,7 +94,8 @@ export default class ComponentRendererImpl implements ComponentRenderer {
         );
         const connections = this.renderConnections(
             components.getConnections(),
-            components.getAllComponentsIncludingChildren(),
+            components.getAllComponentsIncludingChildren()
+                .concat(auxiliaryComponents?.getAllComponentsIncludingChildren() || []),
             editComponent,
             showConnectionHandles
         );
@@ -286,12 +284,14 @@ export default class ComponentRendererImpl implements ComponentRenderer {
 
     public renderStaticModels(
         staticModels: StaticModelUiData[],
+        allComponents: ComponentCollection,
         editComponent: (c: ComponentUiData) => void,
         getColor: (c: ComponentUiData) => string
     ): ReactElement[] {
         return staticModels.map((sm) => {
             return this.renderStaticModel({
                 model: sm,
+                allComponents,
                 draggable: true,
                 updateState: editComponent,
                 renderer: this,

@@ -22,28 +22,44 @@ export default class ComputeModelTask {
 
     public async start(onResultsReady?: (path: string) => void): Promise<void> {
         const date: string = new Date().toISOString().slice(0, 16);
-        const filename: string = `./ModelResults_${date}.png`;
+        const filename: string = `/tmp/ModelResults_${date}.png`;
         var juliaCode: string;
         try {
-            const juliaComponents = JuliaComponentDataBuilder.makeStockFlowModels(this.components, this.staticComponents);
-            juliaCode = new JuliaGenerator(juliaComponents).generateJulia(filename);
+            const models = JuliaComponentDataBuilder.makeStockFlowModels(
+                this.components,
+                this.staticComponents
+            );
+            const identifications = JuliaComponentDataBuilder.makeIdentifications(
+                this.components,
+                this.staticComponents
+            );
+
+            juliaCode = JuliaGenerator.generateJulia(
+                models,
+                identifications,
+                filename
+            )
         }
         catch (e) {
             console.error(e);
             juliaCode = "";
         }
-        console.log(juliaCode.split(';'));
+        console.log(juliaCode);
         let proc = spawn(
-            "/home/ericr789/julia-1.7.3/bin/julia",
+            "julia",
             {
                 stdio: ["pipe", "inherit", "inherit"],
+                cwd: "/home/eric",
             }
         );
+
         proc.stdin.write('ENV["GKSwstype"] = "nul"; ');
+        proc.stdin.write('println("running code"); ');
         proc.stdin.write(juliaCode);
         proc.stdin.write("\n");
         proc.stdin.write("exit()\n");
         proc.stdin.end();
         if (onResultsReady) proc.on("exit", () => onResultsReady(filename));
+
     }
 }

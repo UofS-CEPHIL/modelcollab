@@ -105,11 +105,21 @@ class Server {
         try {
             console.log("getCode");
             const components = await this.fbClient.getComponents(sessionId);
-            const juliaComponents = JuliaComponentDataBuilder.makeStockFlowModels(
+            const models = JuliaComponentDataBuilder.makeStockFlowModels(
                 components.topLevelComponents,
                 components.staticComponents
             );
-            const code = new JuliaGenerator(juliaComponents).generateJulia("/your/path").replaceAll(/ *; */g, "\n");
+            const identifications = JuliaComponentDataBuilder.makeIdentifications(
+                components.topLevelComponents,
+                components.staticComponents
+            );
+
+            const code = JuliaGenerator.generateJulia(
+                models,
+                identifications,
+                "/your/path"
+            ).replaceAll(/ *; */g, "\n");
+
 
             console.log("Sending code for session " + sessionId);
             console.log(code);

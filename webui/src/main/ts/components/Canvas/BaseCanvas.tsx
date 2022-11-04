@@ -85,7 +85,7 @@ export abstract class ExtendableBaseCanvas
     }
 
     public render(): ReactElement {
-        this.registerArtificialClickListeners(); // for testing        
+        this.registerArtificialClickListeners(); // for testing
 
         return (
             <Stage
@@ -104,6 +104,7 @@ export abstract class ExtendableBaseCanvas
                     {
                         this.props.renderer.render(
                             this.props.components,
+                            null,
                             c => this.getComponentColor(c),
                             c => this.props.editComponent(c),
                             this.props.showConnectionHandles,

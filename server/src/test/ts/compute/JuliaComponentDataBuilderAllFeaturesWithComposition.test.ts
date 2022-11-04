@@ -1,5 +1,5 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import JuliaComponentDataBuilder from "../../../main/ts/compute/JuliaComponentDataBuilder";
+import JuliaComponentDataBuilder from "../../../main/ts/compute/JuliaComponentDataBuilderOld";
 import { JuliaComponentDataBuilderTest } from "./JuliaComponentDataBuilderTest";
 import JuliaStockComponent from "../../../main/ts/compute/JuliaStockComponent";
 import JuliaFlowComponent from "../../../main/ts/compute/JuliaFlowComponent";

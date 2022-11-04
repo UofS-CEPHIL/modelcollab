@@ -7,6 +7,7 @@ import StaticModelUiData from "./StaticModelUiData";
 
 export interface Props {
     model: StaticModelUiData;
+    allComponents: ComponentCollection;
     renderer: ComponentRenderer;
     getColor: (c: ComponentUiData) => string;
     draggable: boolean;
@@ -41,8 +42,13 @@ export default class StaticModel extends React.Component<Props> {
 
     private makeComponents(): ReactElement[] {
         const components = this.props.model.getComponentsRelativeToSelf();
+        const dx = this.props.model.getData().x;
+        const dy = this.props.model.getData().y;
+
+        const outerComponentsRelativeToThis = this.props.allComponents.withTranslationApplied(dx, dy);
         return this.props.renderer.render(
             new ComponentCollection(components),
+            outerComponentsRelativeToThis,
             c => this.props.getColor(c),
             this.props.updateState,
             false,

@@ -1,4 +1,4 @@
-import JuliaGenerator from "../../../main/ts/compute/JuliaGenerator";
+import JuliaGenerator from "../../../main/ts/compute/JuliaGeneratorOld";
 import JuliaGeneratorTest from "./JuliaGeneratorTest";
 
 export default class JuliaGeneratorDegenerate extends JuliaGeneratorTest {

@@ -81,6 +81,12 @@ export default class ComponentCollection {
         return this.findComponent(c => c.getId() === id);
     }
 
+    public count(condition: (c: ComponentUiData) => boolean): number {
+        return this.getAllComponentsIncludingChildren()
+            .filter(condition)
+            .length;
+    }
+
     public getStocks(): StockUiData[] {
         return this.stocks;
     }
@@ -113,6 +119,10 @@ export default class ComponentCollection {
         return this.staticModels;
     }
 
+    public getSubstitutions(): SubstitutionUiData[] {
+        return this.substitutions;
+    }
+
     public getPointerComponents(): PointerComponent<any, any, any, any>[] {
         return [...this.getConnections(), ...this.getFlows()];
     }
@@ -127,14 +137,28 @@ export default class ComponentCollection {
     }
 
     /**
+       Return this same componentcollection, where all components with
+       an x,y are shifted by dx,dy
+    */
+    public withTranslationApplied(dx: number, dy: number): ComponentCollection {
+        const components = this.getAllComponentsIncludingChildren();
+        const shiftedComponents = components
+            .map(c => (c.getData().x || c.getData().y)
+                ? c.withData({ ...c.getData(), x: c.getData().x - dx, y: c.getData().y - dy })
+                : c
+            );
+        return new ComponentCollection(shiftedComponents);
+    }
+
+    /**
        Remove all SubstitutionUiData components and return a
        new ComponentCollection with those substitutions applied
      */
-    public applySubstitutions(): ComponentCollection {
+    public withSubstitutionsApplied(): ComponentCollection {
 
-        const applySubstitutionsToComponents = (components: ComponentUiData[]) => {
+        const applySubstitutionsToComponents = (components: ComponentUiData[], subs: SubstitutionUiData[]) => {
             let allExceptSubstitutions = components.filter(c => c.getType() !== schema.ComponentType.SUBSTITUTION);
-            this.substitutions.forEach(sub => {
+            subs.forEach(sub => {
                 allExceptSubstitutions = allExceptSubstitutions
                     .filter(c => c.getId() !== sub.getData().replacedId)
                     .map(c => {
@@ -154,19 +178,22 @@ export default class ComponentCollection {
         }
 
         if (this.substitutions.length > 0) {
-            const outerComponents = applySubstitutionsToComponents(this.getAllComponentsWithoutChildren());
+            const outerComponents = applySubstitutionsToComponents(
+                this.getAllComponentsWithoutChildren(),
+                this.substitutions
+            );
             outerComponents.forEach(c => {
                 if (c.getType() === schema.ComponentType.STATIC_MODEL) {
                     const staticModel = c as StaticModelUiData;
-                    console.log(staticModel.getComponents().join('\n'))
                     staticModel.setComponents(
                         applySubstitutionsToComponents(
-                            staticModel.getComponents()
+                            staticModel.getComponents(),
+                            this.substitutions
                         )
                     );
                 }
             });
-            return new ComponentCollection(outerComponents);
+            return new ComponentCollection(outerComponents).withDuplicateConnectionsRemoved();
         }
         else {
             return this;
@@ -175,5 +202,34 @@ export default class ComponentCollection {
 
     public toString(): string {
         return this.getAllComponentsIncludingChildren().map(c => c.toString()).join(',\n');
+    }
+
+    private withDuplicateConnectionsRemoved(): ComponentCollection {
+        let staticModels = [...this.staticModels];
+        let connections = this.connections;
+        staticModels.forEach(sm =>
+            sm.setComponents(
+                sm.getComponents().filter(c => {
+                    if (c.getType() == schema.ComponentType.CONNECTION) {
+                        const match = connections.find(cn =>
+                            cn.getData().from === c.getData().from && cn.getData().to === c.getData().to
+                        );
+                        if (!match) {
+                            connections.push(c as ConnectionUiData);
+                            return true;
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                    else return true;
+                })
+            )
+        );
+        return new ComponentCollection(
+            this.getAllComponentsWithoutChildren()
+                .filter(c => c.getType() !== schema.ComponentType.STATIC_MODEL)
+                .concat(staticModels)
+        );
     }
 }

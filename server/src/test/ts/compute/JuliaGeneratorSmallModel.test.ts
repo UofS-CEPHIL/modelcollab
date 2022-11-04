@@ -1,4 +1,4 @@
-import JuliaGenerator from "../../../main/ts/compute/JuliaGenerator";
+import JuliaGenerator from "../../../main/ts/compute/JuliaGeneratorOld";
 import JuliaStockComponent from "../../../main/ts/compute/JuliaStockComponent";
 import JuliaGeneratorTest from "./JuliaGeneratorTest";
 import * as ParsingTools from "./JuliaParsingTools";

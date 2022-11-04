@@ -7,6 +7,7 @@ export enum ComponentType {
     CONNECTION = "connection",
     CLOUD = "cloud",
     STATIC_MODEL = "static_model",
+    SUBSTITUTION = "substitution"
 }
 
 // Represents all components as they are represented inside Firebase
@@ -133,13 +134,22 @@ export function createFirebaseDataComponent(id: string, data: any, idPrefix?: st
             );
             break;
         case ComponentType.STATIC_MODEL.toString():
-            component = new StaticModelComponent(
+            component = new StaticModelFirebaseComponent(
                 id,
                 {
                     x: dataVal.x as number,
                     y: dataVal.y as number,
                     modelId: dataVal.modelId as string,
                     color: dataVal.color as string
+                }
+            );
+            break;
+        case ComponentType.SUBSTITUTION.toString():
+            component = new SubstitutionFirebaseComponent(
+                id,
+                {
+                    replacedId: dataVal.replacedId as string,
+                    replacementId: dataVal.replacementId as string
                 }
             );
             break;
@@ -347,12 +357,29 @@ export interface StaticModelComponentData extends FirebaseDataObject {
     modelId: string
 }
 
-export class StaticModelComponent extends FirebaseDataComponent<StaticModelComponentData> {
+export class StaticModelFirebaseComponent extends FirebaseDataComponent<StaticModelComponentData> {
     getType(): ComponentType {
         return ComponentType.STATIC_MODEL;
     }
 
-    withData(data: StaticModelComponentData): StaticModelComponent {
-        return new StaticModelComponent(this.getId(), data);
+    withData(data: StaticModelComponentData): StaticModelFirebaseComponent {
+        return new StaticModelFirebaseComponent(this.getId(), data);
+    }
+}
+
+//################################# Substitution #################################
+
+export interface SubstitutionComponentData extends FirebaseDataObject {
+    replacedId: string,
+    replacementId: string
+}
+
+export class SubstitutionFirebaseComponent extends FirebaseDataComponent<SubstitutionComponentData> {
+    getType(): ComponentType {
+        return ComponentType.SUBSTITUTION;
+    }
+
+    withData(data: SubstitutionComponentData): SubstitutionFirebaseComponent {
+        return new SubstitutionFirebaseComponent(this.getId(), data);
     }
 }

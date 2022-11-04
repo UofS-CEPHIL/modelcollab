@@ -11,9 +11,11 @@ export default abstract class JuliaComponentData {
     public static readonly TIME_VAR_NAME = "t";
 
     public readonly name: string;
+    public readonly firebaseId: string;
 
-    public constructor(name: string) {
+    public constructor(name: string, firebaseId: string) {
         this.name = name;
+        this.firebaseId = firebaseId;
     }
 
     public static extractSymbols(equation: string): string[] {
@@ -69,8 +71,8 @@ export abstract class JuliaNameValueComponent extends JuliaComponentData {
 
     public readonly value: string;
 
-    public constructor(name: string, value: string) {
-        super(name);
+    public constructor(name: string, firebaseId: string, value: string) {
+        super(name, firebaseId);
         this.value = value;
     }
 

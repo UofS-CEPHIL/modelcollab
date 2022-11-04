@@ -1,199 +1,80 @@
-import { StockComponentData } from "database/build/FirebaseComponentModel";
+import Foot from "./Foot";
 import JuliaComponentData from "./JuliaComponentData";
 import JuliaFlowComponent from "./JuliaFlowComponent";
 import JuliaParameterComponent from "./JuliaParameterComponent";
-import JuliaStaticModelComponent from "./JuliaStaticModelComponent";
 import JuliaStockComponent from "./JuliaStockComponent";
 import JuliaStockFlowModel from "./JuliaStockFlowModel";
 import JuliaSumVariableComponent from "./JuliaSumVariableComponent";
 import JuliaVariableComponent from "./JuliaVariableComponent";
-
-
-const IMPORT_LINE = "using StockFlow; " +
-    "using Catlab; using Catlab.CategoricalAlgebra; " +
-    "using LabelledArrays; using OrdinaryDiffEq; using Plots; using Catlab.Graphics; " +
-    "using Catlab.Programs; using Catlab.Theories; using Catlab.WiringDiagrams";
-
-export class InvalidModelError extends Error { }
+import ModelComponentIdentification from "./ModelComponentIdentification";
 
 export default class JuliaGenerator {
 
-    private readonly modelName = "modelName";
-    private readonly openModelName = this.modelName + "Open";
-    private readonly apexModelName = this.modelName + "Apex";
-    private readonly paramsVectorName = "params";
-    private readonly initialValuesVectorName = "u0";
-    private readonly solutionVarName = "sol";
-    private readonly probVarName = "prob";
-    private readonly relationVarName = "relation";
-    private readonly openComposedVarName = "composedOpen";
+    public static readonly IMPORTS = [
+        "StockFlow",
+        "Catlab",
+        "Catlab.CategoricalAlgebra",
+        "LabelledArrays",
+        "OrdinaryDiffEq",
+        "Plots",
+        "Catlab.Graphics",
+        "Catlab.Programs",
+        "Catlab.Theories",
+        "Catlab.WiringDiagrams"
+    ];
+    public static readonly MODEL_NAME = "model";
+    public static readonly APEX_NAME = this.MODEL_NAME + "Apex";
+    public static readonly PARAMS_VEC_NAME = "params";
+    public static readonly INITIAL_STOCKS_VEC_NAME = "u0";
+    public static readonly SOLUTION_VAR_NAME = "sol";
+    public static readonly ODEPROB_VAR_NAME = "prob";
+    public static readonly RELATION_VAR_NAME = "relation";
+    public static readonly COMPOSED_OPEN_MODEL_VAR_NAME = "composedOpen";
 
-    private readonly components: Components;
 
-    public constructor(models: JuliaStockFlowModel[]) {
-        const splitComponents = (components: JuliaComponentData[]) => {
-            let stocks: JuliaStockComponent[] = [];
-            let flows: JuliaFlowComponent[] = [];
-            let parameters: JuliaParameterComponent[] = [];
-            let variables: JuliaVariableComponent[] = [];
-            let sumVariables: JuliaSumVariableComponent[] = [];
-            let staticModels: JuliaStaticModelComponent[] = [];
-            for (const component of components) {
-                if (component instanceof JuliaStockComponent) {
-                    stocks.push(component);
-                }
-                else if (component instanceof JuliaFlowComponent) {
-                    flows.push(component);
-                }
-                else if (component instanceof JuliaParameterComponent) {
-                    parameters.push(component);
-                }
-                else if (component instanceof JuliaSumVariableComponent) {
-                    sumVariables.push(component);
-                }
-                else if (component instanceof JuliaVariableComponent) {
-                    variables.push(component);
-                }
-                else if (component instanceof JuliaStaticModelComponent) {
-                    staticModels.push(component);
-                }
-                else {
-                    throw new Error("Unknown component type: " + typeof component);
-                }
-            }
-            return { stocks, flows, parameters, sumVariables, variables, staticModels };
-        }
-        this.components = splitComponents(components);
-        this.validateComponents();
-    }
+    public static generateJulia(
+        models: JuliaStockFlowModel[],
+        identifications: ModelComponentIdentification[],
+        filename: string
+    ): string {
 
-    private validateComponents(): void {
-        if (!Object.values(this.components).find(l => l.length > 0)) {
-            throw new InvalidModelError("No model components found");
-        }
-        else if (
-            !this.components.parameters.find(
-                p => p.name === "startTime"
-                    || !this.components.parameters.find(p => p.name === "stopTime")
-            )) {
-            throw new InvalidModelError("Unable to find startTime or stopTime parameter");
-        }
-        else if (this.components.stocks.length === 0) {
-            throw new InvalidModelError("Model must contain one or more stocks");
-        }
-    }
+        models.forEach(this.validateModelComponents);
+        const feet = this.makeFeet(identifications, models);
 
-    public generateJulia(filename: string) {
         return [
-            IMPORT_LINE,
-            this.makeAllStockAndFlowLines(),
-            this.makeFootLines(),
-            this.makeRelationLine(),
-            this.makeOpenLines(),
-            this.makeOapplyLine(),
+            ...this.IMPORTS.map(i => `using ${i}`),
+            ...models.map(m => this.makeStockAndFlowLine(m)),
+            ...feet.map(f => this.makeFootLine(f)),
+            this.makeRelationLine(feet, models),
+            ...this.makeOpenLines(feet, models),
+            this.makeOapplyLine(models),
             this.makeApexLine(),
-            this.makeParamsLine(),
-            this.makeInitialStocksLine(),
-            this.makeSolutionLine(),
-            this.makeSaveFigureLine(filename)
-        ].join("; ");
+            this.makeParamsLine(models),
+            this.makeInitialStocksLine(models),
+            ...this.makeSolutionLines(models),
+            ...this.makeSaveFigureLines(filename)
+        ].join(";");
     }
 
-    private getAllOuterComponents(): JuliaComponentData[] {
-        return (this.components.stocks as JuliaComponentData[])
-            .concat(this.components.flows)
-            .concat(this.components.sumVariables)
-            .concat(this.components.variables)
-            .concat(this.components.parameters);
+    private static validateModelComponents(model: JuliaStockFlowModel): void {
+        // TODO
+        // if (!Object.values(this.components).find(l => l.length > 0)) {
+        //     throw new InvalidModelError("No model components found");
+        // }
+        // else if (
+        //     !this.components.parameters.find(
+        //         p => p.name === "startTime"
+        //             || !this.components.parameters.find(p => p.name === "stopTime")
+        //     )) {
+        //     throw new InvalidModelError("Unable to find startTime or stopTime parameter");
+        // }
+        // else if (this.components.stocks.length === 0) {
+        //     throw new InvalidModelError("Model must contain one or more stocks");
+        // }
     }
 
-    private getAllInnerComponents(): JuliaComponentData[] {
-        return this.components.staticModels
-            .map(c => c.innerComponents)
-            .reduce((a, b) => a.concat(b), []);
-    }
-
-    private getAllComponents(): JuliaComponentData[] {
-        return this.getAllOuterComponents().concat(this.getAllInnerComponents());
-    }
-
-    private makeAllStockAndFlowLines(): string {
-        if (this.components.staticModels.length === 0) {
-            return this.makeStockAndFlowLine(this.getAllOuterComponents(), "A");
-        }
-
-        const getAllComponentsForOuterModel = () => {
-            const sharedInnerComponents = this.getAllSharedComponents(
-                this.getAllOuterComponents(),
-                this.getAllInnerComponents()
-            );
-            return this.getAllOuterComponents().concat(sharedInnerComponents);
-        };
-
-        const outerStockAndFlowLine = this.makeStockAndFlowLine(getAllComponentsForOuterModel(), "A");
-        const staticStockAndFlowLine = this.makeStockAndFlowLine(this.getAllInnerComponents(), "B");
-
-        return `${outerStockAndFlowLine}; ${staticStockAndFlowLine}`;
-    }
-
-    private getAllSharedComponents(
-        modelComponents: JuliaComponentData[],
-        potentiallyShared: JuliaComponentData[]
-    ): JuliaComponentData[] {
-        // Component is shared if:
-        //   - has a flow to/from the component from/to a model component
-        //   - has a connection from the component to a model component
-        const modelFlows = modelComponents.filter(
-            c => c instanceof JuliaFlowComponent
-        ) as JuliaFlowComponent[];
-        const sharedViaFlow = potentiallyShared.filter(
-            c => modelFlows.find(f => f.fromName === c.name || f.toName === c.name)
-        );
-        const sharedViaConnection = potentiallyShared.filter(
-            c => modelComponents.find(c2 => {
-                switch (typeof c2) {
-                    case typeof JuliaFlowComponent:
-                        const flow = c2 as JuliaFlowComponent;
-                        if (
-                            flow.declaredStockDependencies.includes(c.name)
-                            || flow.declaredSumVarDependencies.includes(c.name)
-                        ) {
-                            return true;
-                        }
-                        break;
-                    case typeof JuliaVariableComponent:
-                        const vari = c2 as JuliaVariableComponent;
-                        if (
-                            vari.dependedStockNames.includes(c.name)
-                            || vari.dependedSumVarNames.includes(c.name)
-                        ) {
-                            return true;
-                        }
-                        break;
-                    case typeof JuliaSumVariableComponent:
-                        const sumVar = c2 as JuliaSumVariableComponent;
-                        if (sumVar.dependedStockNames.includes(c.name)) {
-                            return true;
-                        }
-                        break;
-                    case typeof JuliaStockComponent:
-                        const stock = c2 as JuliaStockComponent;
-                        if (stock.dependedParameterNames.includes(c.name)) {
-                            return true;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-                return false;
-            })
-        );
-        const dupsRemoved = new Set(sharedViaFlow.concat(sharedViaConnection));
-        return [...dupsRemoved];
-    }
-
-    private makeStockAndFlowLine(components: JuliaComponentData[], varnameSuffix?: string): string {
-        if (!varnameSuffix) varnameSuffix = "";
+    private static makeStockAndFlowLine(model: JuliaStockFlowModel): string {
+        const components = model.getComponents();
         const makeStockLines = () => components
             .filter(
                 c => c instanceof JuliaStockComponent
@@ -229,6 +110,7 @@ export default class JuliaGenerator {
             .concat(flowVars)
             .map(c => new JuliaVariableComponent(
                 c.name,
+                c.firebaseId,
                 c.getTranslatedValue(),
                 c.dependedStockNames,
                 c.dependedSumVarNames
@@ -252,189 +134,131 @@ export default class JuliaGenerator {
                 }
             ).join(', ');
 
-        return `${this.modelName}${varnameSuffix} = StockAndFlow((${makeStockLines()}), (${makeFlowLines()}), `
+        return `${model.getStockAndFlowVarName()} = `
+            + `StockAndFlow((${makeStockLines()}), (${makeFlowLines()}), `
             + `(${makeVarLines()}), (${makeSumVarLines()}))`;
     }
 
-    private makeFootLines(): string {
-        const makeFoot = (stock: JuliaStockComponent) => {
-            const sumVarList = JuliaComponentData.makeVarList(stock.contributingSumVarNames, true);
-            const sumVarArrowList = stock.contributingSumVarNames.map(n => `:${stock.name}=>:${n}`);
-            return `foot(:${stock.name}, ${sumVarList}, (${sumVarArrowList}))`;
-        }
-        const innerStocks = this
-            .getAllInnerComponents()
-            .filter(c => c instanceof JuliaStockComponent) as JuliaStockComponent[];
-        return this.components.stocks.concat(innerStocks).map(
-            s => `${s.footVarName} = ${makeFoot(s)}; `
-        ).reduce((a, b) => a + b);
-    }
 
-    private makeRelationLine(): string {
-        let allFootNames: string[];
-        let allModelStrings: string[];
-        if (this.components.staticModels.length === 0) {
-            // simple case - only one model
-            allFootNames = this.components.stocks.map(s => (s as JuliaStockComponent).footVarName);
-            allModelStrings = [`modelA(${allFootNames})`];
-        }
-        else {
-            // complex case - multiple composed models
-            const makeModelString = (suffix: string, relevantFootNames: string[]) =>
-                `model${suffix}(${relevantFootNames.join(',')})`;
-            const makeInnerModelStrings = () => {
-                const modelStrings: string[] = [];
-                for (let i = 0; i < this.components.staticModels.length; i++) {
-                    const modelComponents = this.components.staticModels[i].innerComponents;
-                    const suffixLetter = this.getIndexOfAlphabet(i);
-                    const allRelevantComponents = [...new Set(
-                        this.getAllSharedComponents(
-                            modelComponents, allComponents
-                        ).concat(modelComponents)
-                    )];
-                    const relevantFootNames: string[] = allRelevantComponents
-                        .filter(c => c instanceof JuliaStockComponent)
-                        .map(c => (c as JuliaStockComponent).footVarName);
-                    modelStrings.push(makeModelString(suffixLetter, relevantFootNames));
+    private static makeFeet(
+        idents: ModelComponentIdentification[],
+        models: JuliaStockFlowModel[]
+    ): Foot[] {
+        const feetPerModel = Object.fromEntries(models.map(m => [m.getName(), m.makeFeet(idents, models)]));
+        const feetWithDupsConsolidated: Foot[] = [];
+        for (let i = 0; i < Object.keys(feetPerModel).length; i++) {
+            const modelName = Object.keys(feetPerModel)[i];
+            const modelFeet = Object.values(feetPerModel)[i];
+            modelFeet.forEach(foot => {
+                const existingFootIdx = feetWithDupsConsolidated.findIndex(f => f.equals(foot));
+                if (existingFootIdx >= 0) {
+                    const existingFoot = feetWithDupsConsolidated[existingFootIdx];
+                    feetWithDupsConsolidated[existingFootIdx] = existingFoot.withAddedModel(modelName);
                 }
-                return modelStrings;
-            }
-            const makeOuterModelString = () => {
-                const relevantFootNamesForOuterModel = [...new Set(
-                    this.getAllSharedComponents(
-                        this.getAllOuterComponents(),
-                        this.getAllInnerComponents()
-                    )
-                )]
-                    .concat(this.getAllOuterComponents())
-                    .filter(c => c instanceof JuliaStockComponent)
-                    .map(c => (c as JuliaStockComponent).footVarName);
-
-                return makeModelString(
-                    this.getIndexOfAlphabet(
-                        this.components.staticModels.length,
-                    ),
-                    relevantFootNamesForOuterModel
-                );
-            }
-
-            const allComponents = this.getAllOuterComponents()
-                .filter(c => !(c instanceof JuliaStaticModelComponent))
-                .concat(this.getAllInnerComponents());
-            const allStocks = this.components.stocks.concat(
-                this.components.staticModels
-                    .map(sm =>
-                        sm.innerComponents
-                            .filter(c => c instanceof JuliaStockComponent)
-                            .map(c => c as JuliaStockComponent)
-                    ).reduce((a, b) => a.concat(b), [])
-            );
-
-            allFootNames = allStocks.map(s => s.footVarName);
-            allModelStrings = makeInnerModelStrings().concat([makeOuterModelString()]);
+                else {
+                    feetWithDupsConsolidated.push(foot);
+                }
+            });
         }
-
-        return `${this.relationVarName} = @relation (${allFootNames.join(',')}) begin `
-            + `${allModelStrings.join('\n')} end`;
+        return feetWithDupsConsolidated;
     }
 
-    private makeOpenLines(): string {
-        const makeOpenLine = (stocks: JuliaStockComponent[], i: number) => {
-            const footVarNames = stocks.map(s => s.footVarName);
-            const suffix = this.getIndexOfAlphabet(i);
-            return `${this.openModelName}${suffix} = Open(${this.modelName}${suffix}, ${footVarNames})`;
-        }
-
-        const allOuterComponents = this.getAllOuterComponents();
-        const allOuterStocks = allOuterComponents
-            .filter(c => c instanceof JuliaStockComponent)
-            .map(c => c as JuliaStockComponent);
-        const allInnerComponents = this.getAllInnerComponents();
-        const allInnerStocks = allInnerComponents
-            .filter(c => c instanceof JuliaStockComponent)
-            .map(c => c as JuliaStockComponent);
-
-        if (allInnerComponents.length === 0) {
-            return makeOpenLine(
-                allOuterComponents
-                    .filter(c => c instanceof JuliaStockComponent) as JuliaStockComponent[],
-                0
-            );
+    private static makeFootLine(foot: Foot): string {
+        const sumVarList = JuliaComponentData.makeVarList(foot.getSumVarNames(), true);
+        if (foot.getStockName()) {
+            const sumVarArrowList = foot.getSumVarNames().map(n => `:${foot.getStockName()}=>:${n}`);
+            return `${foot.getName()} = foot(:${foot.getStockName()}, ${sumVarList}, (${sumVarArrowList}))`;
         }
         else {
-            const outerModelSharedInnerStocks = this
-                .getAllSharedComponents(allOuterComponents, allInnerComponents)
-                .filter(c => c instanceof JuliaStockComponent) as JuliaStockComponent[];
-            const innerModelSharedOuterStocks = this
-                .getAllSharedComponents(allInnerComponents, allOuterComponents)
-                .filter(c => c instanceof JuliaStockComponent) as JuliaStockComponent[];
-
-            const outerOpenLine = makeOpenLine(
-                allOuterStocks.concat(outerModelSharedInnerStocks),
-                0
-            );
-            const innerOpenLine = makeOpenLine(
-                allInnerStocks.concat(innerModelSharedOuterStocks),
-                1
-            );
-            return outerOpenLine + '; ' + innerOpenLine;
+            return `${foot.getName()} = foot((), ${sumVarList}, ())`;
         }
-
     }
 
-    private makeOapplyLine(): string {
-        const range = (i: number) => [...Array(i).keys()];
-        //const allOpenVarNames = [this.openModelName + "A", this.openModelName + "B"].join(',');
-        const allOpenVarNames = range(1 + this.components.staticModels.length)
-            .map(n => `${this.openModelName}${this.getIndexOfAlphabet(n)}`);
-        return `${this.openComposedVarName} = oapply(${this.relationVarName}, [${allOpenVarNames}])`;
+    private static getFootNamesForModel(feet: Foot[], modelName: string): string[] {
+        return feet
+            .filter(f => f.getRelevantModelNames().includes(modelName))
+            .map(f => f.getName())
+            .sort();
     }
 
-
-    private makeApexLine(): string {
-        return `${this.apexModelName} = apex(${this.openComposedVarName})`;
+    private static makeRelationLine(feet: Foot[], models: JuliaStockFlowModel[]): string {
+        const footNamesCommaSep = feet.map(f => f.getName()).sort().join(',');
+        const modelStrings = models.map(m => {
+            const name = m.getName();
+            const modelFeetCommaSep = this.getFootNamesForModel(feet, name).join(',');
+            return `${name}(${modelFeetCommaSep})`;
+        });
+        return `\n${this.RELATION_VAR_NAME} = @relation (${footNamesCommaSep}) begin \n`
+            + `${modelStrings.join('\n')} \nend`;
     }
 
-    private makeParamsLine() {
-        const paramsString = this.components.parameters
-            .map(p => `${p.name}=${p.value} `)
-            .join(", ");
-        return `${this.paramsVectorName} = LVector(${paramsString})`;
+    private static makeOpenLines(feet: Foot[], models: JuliaStockFlowModel[]): string[] {
+        return models.map(model => {
+            const modelFeetCommaSep = this.getFootNamesForModel(feet, model.getName()).join(',');
+            return `${model.getOpenVarName()} = Open(${model.getStockAndFlowVarName()}, ${modelFeetCommaSep})`;
+        });
     }
 
-    private makeInitialStocksLine(): string {
-        const allStocks = this.getAllInnerComponents()
-            .filter(c => c instanceof JuliaStockComponent)
-            .map(c => c as JuliaStockComponent)
-            .concat(this.components.stocks);
-        const stocksString = allStocks
-            .map((s: JuliaStockComponent) => `${s.name}=${s.getTranslatedInitValue()} `)
-            .join(", ");
-        return `${this.initialValuesVectorName} = LVector(${stocksString})`;
+    private static makeOapplyLine(models: JuliaStockFlowModel[]): string {
+        const allOpenVarNames = models.map(m => m.getOpenVarName()).join(',');
+        return `${this.COMPOSED_OPEN_MODEL_VAR_NAME} = `
+            + `oapply(${this.RELATION_VAR_NAME}, [${allOpenVarNames}])`;
     }
 
-    private makeSolutionLine(): string {
-        const startTime = this.components.parameters.find(p => p.name === "startTime")?.value;
-        const stopTime = this.components.parameters.find(p => p.name === "stopTime")?.value;
+    private static makeApexLine(): string {
+        return `${this.APEX_NAME} = apex(${this.COMPOSED_OPEN_MODEL_VAR_NAME})`;
+    }
+
+    private static makeParamsLine(models: JuliaStockFlowModel[]): string {
+        const paramsCommaSep = this.removeDuplicateIds(models
+            .map(m => m.getComponents())
+            .reduce((a, b) => a.concat(b), [])
+            .filter(c => c instanceof JuliaParameterComponent))
+            .map(p => `${p.name}=${(p as JuliaParameterComponent).value}`)
+            .join(',');
+        return `${this.PARAMS_VEC_NAME} = LVector(${paramsCommaSep})`;
+    }
+
+    private static makeInitialStocksLine(models: JuliaStockFlowModel[]): string {
+        const stocksCommaSep = this.removeDuplicateIds(models
+            .map(m => m.getComponents())
+            .reduce((a, b) => a.concat(b), [])
+            .filter(c => c instanceof JuliaStockComponent))
+            .map(s => `${s.name}=${(s as JuliaStockComponent).getTranslatedInitValue()}`)
+            .join(',');
+        return `${this.INITIAL_STOCKS_VEC_NAME} = LVector(${stocksCommaSep})`;
+    }
+
+    private static removeDuplicateIds(components: JuliaComponentData[]): JuliaComponentData[] {
+        const dupsRemoved: JuliaComponentData[] = [];
+        components.forEach(c => dupsRemoved.find(c2 => c2.firebaseId === c.firebaseId) || dupsRemoved.push(c));
+        return dupsRemoved;
+    }
+
+    private static makeSolutionLines(models: JuliaStockFlowModel[]): string[] {
+        const allParams: JuliaParameterComponent[] = models
+            .map(m => m.getComponents())
+            .reduce((a, b) => a.concat(b), [])
+            .filter(c => c instanceof JuliaParameterComponent)
+            .map(c => c as JuliaParameterComponent);
+        const startTime = allParams.find(p => p.name === "startTime")?.value;
+        const stopTime = allParams.find(p => p.name === "stopTime")?.value;
         if (!startTime || !stopTime)
             throw new Error(
                 `Can't find start or stop time: start = ${startTime} stop = ${stopTime}`
             );
-        const odeLine =
-            `${this.probVarName} = ODEProblem(vectorfield(${this.apexModelName})`
-            + `,${this.initialValuesVectorName},`
-            + `(${startTime},${stopTime}),${this.paramsVectorName})`;
-        const solutionLine = `${this.solutionVarName} = solve(${this.probVarName}, `
-            + `Tsit5(), abstol=1e-8)`;
-        return `${odeLine}; ${solutionLine}`;
+
+        const odeLine = `${this.ODEPROB_VAR_NAME} = ODEProblem(vectorfield(${this.APEX_NAME}),`
+            + `${this.INITIAL_STOCKS_VEC_NAME},`
+            + `(${startTime},${stopTime}),`
+            + `${this.PARAMS_VEC_NAME})`;
+        const solutionLine = `${this.SOLUTION_VAR_NAME} = `
+            + `solve(${this.ODEPROB_VAR_NAME}, Tsit5(), abstol=1e-8)`;
+        return [odeLine, solutionLine]
     }
 
-
-    private makeSaveFigureLine(filename: string): string {
-        return `plot(${this.solutionVarName}) ; savefig("${filename}")`;
+    private static makeSaveFigureLines(filename: string): string[] {
+        return [`plot(${this.SOLUTION_VAR_NAME})`, `savefig("${filename}")`];
     }
 
-    private getIndexOfAlphabet(i: number): string {
-        return String.fromCharCode(i + 65);
-    }
 }

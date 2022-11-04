@@ -1,6 +1,6 @@
 import JuliaComponentData from "../../../main/ts/compute/JuliaComponentData";
 import JuliaFlowComponent from "../../../main/ts/compute/JuliaFlowComponent";
-import JuliaGenerator from "../../../main/ts/compute/JuliaGenerator";
+import JuliaGenerator from "../../../main/ts/compute/JuliaGeneratorOld";
 import JuliaParameterComponent from "../../../main/ts/compute/JuliaParameterComponent";
 import JuliaStockComponent from "../../../main/ts/compute/JuliaStockComponent";
 import JuliaSumVariableComponent from "../../../main/ts/compute/JuliaSumVariableComponent";

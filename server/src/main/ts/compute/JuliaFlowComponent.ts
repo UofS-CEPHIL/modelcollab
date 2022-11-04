@@ -1,8 +1,5 @@
 import JuliaComponentData from "./JuliaComponentData";
-import JuliaParameterComponent from "./JuliaParameterComponent";
-import JuliaStockComponent from "./JuliaStockComponent";
 import JuliaVariableComponent from "./JuliaVariableComponent";
-import JuliaSumVariableComponent from "./JuliaSumVariableComponent";
 
 
 export default class JuliaFlowComponent extends JuliaComponentData {
@@ -22,13 +19,14 @@ export default class JuliaFlowComponent extends JuliaComponentData {
 
     public constructor(
         name: string,
+        firebaseId: string,
         fromName: string,
         toName: string,
         equation: string,
         declaredStockDependencies: string[],
         declaredSumVarDependencies: string[]
     ) {
-        super(name);
+        super(name, firebaseId);
         this.fromName = fromName;
         this.toName = toName;
         this.equation = equation;
@@ -40,6 +38,7 @@ export default class JuliaFlowComponent extends JuliaComponentData {
     public getAssociatedVariable(): JuliaVariableComponent {
         return new JuliaVariableComponent(
             this.associatedVarName,
+            this.firebaseId,
             this.equation,
             this.declaredStockDependencies,
             this.declaredSumVarDependencies

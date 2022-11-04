@@ -13,6 +13,7 @@ export type AnyProps = StockProps | FlowProps | TextProps | CloudProps | Connect
 export default interface ComponentRenderer {
     render: (
         components: ComponentCollection,
+        auxiliaryComponents: ComponentCollection | null,
         getColor: (c: ComponentUiData) => string,
         editComponent: (c: ComponentUiData) => void,
         showConnectionHandles: boolean,

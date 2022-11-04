@@ -58,26 +58,18 @@ export default class StaticModelUiData
         );
     }
 
-    private componentShouldRender(component: ComponentUiData): boolean {
-        if (component.getData().from !== undefined || component.getData().to !== undefined) {
-            return this.getComponents().find(c => c.getId() === component.getData().from) !== undefined
-                && this.getComponents().find(c => c.getId() === component.getData().to) !== undefined;
-        }
-        return true;
-    }
-
     public getComponentsRelativeToSelf(): ComponentUiData[] {
         return this.getChildComponentsWithOffset(
             this.getChildXOffset(),
             this.getChildYOffset()
-        ).filter(c => this.componentShouldRender(c));
+        );
     }
 
     public getComponentsRelativeToCanvas(): ComponentUiData[] {
         return this.getChildComponentsWithOffset(
             this.getChildXOffset() - this.getData().x,
             this.getChildYOffset() - this.getData().y
-        ).filter(c => this.componentShouldRender(c));
+        );
     }
 
     public getHeightPx(): number {

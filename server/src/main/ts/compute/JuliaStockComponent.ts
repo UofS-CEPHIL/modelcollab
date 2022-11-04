@@ -1,5 +1,6 @@
 import JuliaComponentData, { JuliaNameValueComponent } from "./JuliaComponentData";
 import JuliaFlowComponent from "./JuliaFlowComponent";
+import JuliaGenerator from "./JuliaGenerator";
 
 export default class JuliaStockComponent extends JuliaNameValueComponent {
     public readonly inFlowNames: string[];
@@ -12,6 +13,7 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
 
     public constructor(
         name: string,
+        firebaseId: string,
         initValue: string,
         inFlowNames: string[],
         outFlowNames: string[],
@@ -20,7 +22,7 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
         contributingDynVarNames: string[],
         contributingSumVarNames: string[]
     ) {
-        super(name, initValue);
+        super(name, firebaseId, initValue);
         this.inFlowNames = inFlowNames;
         this.outFlowNames = outFlowNames;
         this.dependedParameterNames = dependedParameterNames;
@@ -75,7 +77,7 @@ export default class JuliaStockComponent extends JuliaNameValueComponent {
 
     public getTranslatedValue(): string {
         const replacementFunction = (s: string) => {
-            return `${JuliaComponentData.PARAMS_VAR_NAME}.${s} `;
+            return `${JuliaGenerator.PARAMS_VEC_NAME}.${s}`;
         };
         return JuliaNameValueComponent.replaceSymbols(this.value, replacementFunction);
     }

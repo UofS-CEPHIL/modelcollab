@@ -142,9 +142,6 @@ export default class CanvasScreen extends React.Component<Props, State> {
         );
 
         this.setComponentsForStaticModels();
-        console.log("state: " + this.state.components.join("\n"));
-        console.log("staticModelsComponents: " + this.state.components.filter(c => c.getType() === schema.ComponentType.STATIC_MODEL).map(c => (c as StaticModelUiData).getComponentsRelativeToCanvas()));
-
         return (
             <React.Fragment>
                 {
@@ -174,7 +171,8 @@ export default class CanvasScreen extends React.Component<Props, State> {
                             deleteComponent: id => this.removeComponent(id),
                             addComponent: c => this.addComponent(c),
                             setSelected: ids => this.setSelected(ids),
-                            identifyComponents: (o, i) => this.identifyComponents(o, i)
+                            identifyComponents: (replaced, replacement) =>
+                                this.identifyComponents(replaced, replacement)
                         }
                     )
                 }
@@ -237,8 +235,11 @@ export default class CanvasScreen extends React.Component<Props, State> {
                         components: this.state.components.concat([newComponent])
                     }
                 );
+                console.log("State updated to: " + this.state.components.concat([newComponent]))
             }
-            setTimeout(() => { this.setSelected([]) }); // ????? this is required, otherwise it ignores selection change
+            // This is required to make React recognize the state change.
+            // It just does this sometimes; not sure why.
+            setTimeout(() => { this.setSelected([]) });
             this.dm.updateComponent(this.props.sessionId, newComponent.getDatabaseObject());
         }
     }
@@ -419,7 +420,9 @@ export default class CanvasScreen extends React.Component<Props, State> {
     }
 
     private identifyComponents(replaced: ComponentUiData, replacement: ComponentUiData) {
-        this.addComponent(new SubstitutionUiData(
+        // We have to setTimeout or else it doesn't register the updated state.
+        // React is baffling to me sometimes.
+        setTimeout(() => this.addComponent(new SubstitutionUiData(
             new schema.SubstitutionFirebaseComponent(
                 IdGenerator.generateUniqueId(this.state.components),
                 {
@@ -427,7 +430,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
                     replacementId: replacement.getId()
                 }
             )
-        ));
+        )));
     }
 
     public getComponentsPointingTo(component: ComponentUiData): PointerComponent<any, any, any, any>[] {
