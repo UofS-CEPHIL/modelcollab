@@ -1,6 +1,8 @@
 import React, { ReactElement } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
+import { FirebaseComponentModel as schema } from "database/build/export";
+
 import LoginScreen from "./components/Screens/LoginScreen";
 import CanvasScreen from "./components/Screens/CanvasScreen";
 import SessionSelectScreen from "./components/Screens/SessionSelectScreen";
@@ -18,11 +20,19 @@ import SumVariableModeCanvas from "./components/Canvas/ModeCanvas/SumVariableMod
 import ConnectModeCanvas from "./components/Canvas/ModeCanvas/ConnectModeCanvas";
 import DynamicVariableModeCanvas from "./components/Canvas/ModeCanvas/DynamicVariableModeCanvas";
 import CloudModeCanvas from "./components/Canvas/ModeCanvas/CloudModeCanvas";
-import EditBox, { Props as EditBoxProps } from './components/EditBox/EditBox';
+import { Props as EditBoxProps } from './components/EditBox/EditBox';
+import { Props as ScenarioEditBoxProps } from './components/EditBox/ScenarioEditBox';
 import Toolbar, { Props as ToolbarProps } from './components/Toolbar/Toolbar';
+import ImportModelBox, { Props as ImportModelBoxProps } from './components/ImportModelBox/ImportModelBox';
 import SaveModelBox, { Props as SaveModelBoxProps } from "./components/SaveModelBox/SaveModelBox";
 import ComponentRendererImpl from "./components/Canvas/Renderer/ComponentRendererImpl";
 import IdentifyModeCanvas from "./components/Canvas/ModeCanvas/IdentifyModeCanvas";
+import StockEditBox from "./components/EditBox/StockEditBox";
+import FlowEditBox from "./components/EditBox/FlowEditBox";
+import ParameterEditBox from "./components/EditBox/ParameterEditBox";
+import VariableEditBox from "./components/EditBox/DynamicVariableEditBox";
+import ScenarioEditBox from "./components/EditBox/ScenarioEditBox";
+import SumVariableEditBox from "./components/EditBox/SumVariableEditBox";
 
 const firebaseManager = new FirebaseManagerImpl();
 
@@ -86,6 +96,7 @@ export default class App extends React.Component<Props, State> {
                                     createCanvasForMode={(m, p) => this.createCanvasForMode(m, p)}
                                     createEditBox={p => this.createEditBox(p)}
                                     createToolbar={p => this.createToolbar(p)}
+                                    createImportModelBox={p => this.createImportModelBox(p)}
                                     createSaveModelBox={p => this.createSaveModelBox(p)}
                                     renderer={new ComponentRendererImpl()}
                                 />
@@ -97,9 +108,43 @@ export default class App extends React.Component<Props, State> {
         }
     }
 
-    private createEditBox(props: EditBoxProps): ReactElement {
+    private createEditBox(props: EditBoxProps<any>): ReactElement {
+        switch (props.initialComponent.getType()) {
+            case schema.ComponentType.STOCK:
+                return (
+                    <StockEditBox {...props} />
+                );
+            case schema.ComponentType.FLOW:
+                return (
+                    <FlowEditBox{...props} />
+                );
+            case schema.ComponentType.PARAMETER:
+                return (
+                    <ParameterEditBox {...props} />
+                );
+            case schema.ComponentType.VARIABLE:
+                return (
+                    <VariableEditBox {...props} />
+                );
+            case schema.ComponentType.SUM_VARIABLE:
+                return (
+                    <SumVariableEditBox {...props} />
+                );
+            case schema.ComponentType.SCENARIO:
+                return (
+                    <ScenarioEditBox {...props as ScenarioEditBoxProps} />
+                );
+            default:
+                throw new Error(
+                    "Attempted to create edit box for invalid component: " + props.initialComponent
+                );
+        }
+
+    }
+
+    private createImportModelBox(props: ImportModelBoxProps): ReactElement {
         return (
-            <EditBox {...props} />
+            <ImportModelBox {...props} />
         );
     }
 

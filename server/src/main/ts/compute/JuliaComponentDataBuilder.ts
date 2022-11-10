@@ -429,3 +429,4 @@ export default class JuliaComponentDataBuilder {
         return new JuliaParameterComponent(parameter.getData().text, parameter.getId(), parameter.getData().value);
     }
 }
+

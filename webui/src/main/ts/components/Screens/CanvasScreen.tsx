@@ -8,8 +8,9 @@ import { Props as ToolbarProps } from '../Toolbar/Toolbar';
 import { UiMode } from '../../UiMode';
 import applicationConfig from '../../config/applicationConfig';
 import FirebaseDataModel from '../../data/FirebaseDataModel';
-import { Props as EditBoxProps } from '../EditBox/EditBox';
+import { Props as EditBoxProps } from "../EditBox/EditBox";
 import { Props as SaveModelBoxProps } from "../SaveModelBox/SaveModelBox";
+import { Props as ImportModelBoxProps } from "../ImportModelBox/ImportModelBox";
 import StockUiData from '../Canvas/ScreenObjects/Stock/StockUiData';
 import FlowUiData from '../Canvas/ScreenObjects/Flow/FlowUiData';
 import ConnectionUiData from '../Canvas/ScreenObjects/Connection/ConnectionUiData';
@@ -37,7 +38,8 @@ export interface Props {
     renderer: ComponentRenderer;
     createCanvasForMode: (mode: UiMode, props: CanvasProps) => ReactElement;
     createToolbar: (props: ToolbarProps) => ReactElement;
-    createEditBox: (props: EditBoxProps) => ReactElement;
+    createEditBox: (props: EditBoxProps<any>) => ReactElement;
+    createImportModelBox: (props: ImportModelBoxProps) => ReactElement;
     createSaveModelBox: (props: SaveModelBoxProps) => ReactElement;
 }
 
@@ -47,6 +49,7 @@ interface State {
     loadedModels: LoadedStaticModel[];
     selectedComponentIds: string[];
     showingSaveModelBox: boolean;
+    showingImportModelBox: boolean;
 }
 
 let lastMode: UiMode = UiMode.MOVE;
@@ -63,7 +66,8 @@ export default class CanvasScreen extends React.Component<Props, State> {
             components: [],
             loadedModels: [],
             selectedComponentIds: [],
-            showingSaveModelBox: false
+            showingSaveModelBox: false,
+            showingImportModelBox: false
         };
         this.dm = props.firebaseDataModel;
         document.title = applicationConfig.appName;
@@ -89,17 +93,19 @@ export default class CanvasScreen extends React.Component<Props, State> {
                     .filter(c =>
                         !this.isPointerComponentType(c.getType())
                     )
-                    .map(c => this.createUiComponent(c));
+                    .map(c => this.createUiComponent(c))
+                    .filter(c => c !== null) as ComponentUiData[];
 
                 const flowComponents: ComponentUiData[] = dbComponents
                     .filter(c => c.getType() === schema.ComponentType.FLOW)
-                    .map(c => this.createUiComponent(c));
+                    .map(c => this.createUiComponent(c))
+                    .filter(c => c !== null) as ComponentUiData[];
 
                 const nonFlowPointerComponents: ComponentUiData[] = dbComponents
                     .filter(c =>
                         this.isPointerComponentType(c.getType())
                         && c.getType() !== schema.ComponentType.FLOW
-                    ).map(c => this.createUiComponent(c));
+                    ).map(c => this.createUiComponent(c)) as ComponentUiData[];
 
                 const components: ComponentUiData[] = nonPointerComponents
                     .concat(flowComponents)
@@ -153,7 +159,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
                         sessionId: this.props.sessionId,
                         downloadData: b => this.downloadData(b),
                         saveModel: () => this.saveModel(),
-                        importModel: s => this.loadStaticModelData(s),
+                        importModel: () => this.importModel(),
                         restClient: new RestClientImpl()
                     })
                 }
@@ -182,11 +188,15 @@ export default class CanvasScreen extends React.Component<Props, State> {
                         initialComponent: selectedComponents[0].getDatabaseObject(),
                         handleCancel: () => this.setSelected([]),
                         handleSave: (comp: schema.FirebaseDataComponent<any>) => {
-                            const components: ComponentUiData[] = this.state.components
-                                .filter(c => c.getId() !== comp.getId())
-                                .concat(this.createUiComponent(comp));
+                            const newComponent = this.createUiComponent(comp);
+                            if (newComponent) {
+                                const components: ComponentUiData[] = this.state.components
+                                    .filter(c => c.getId() !== comp.getId())
+                                    .concat(newComponent);
+                                this.setState({ ...this.state, components, selectedComponentIds: [] });
+                            }
+
                             this.dm.updateComponent(this.props.sessionId, comp);
-                            this.setState({ ...this.state, components, selectedComponentIds: [] });
                         }
                     })
                 }
@@ -199,7 +209,17 @@ export default class CanvasScreen extends React.Component<Props, State> {
                             this.dm.addModelToLibrary(id, this.state.components);
                         }
                     })
-
+                }
+                {
+                    this.state.showingImportModelBox &&
+                    this.props.createImportModelBox({
+                        handleCancel: () => this.setState({ ...this.state, showingImportModelBox: false }),
+                        handleSubmit: name => {
+                            setTimeout(() => this.setState({ ...this.state, showingImportModelBox: false }));
+                            this.loadStaticModelData(name);
+                        },
+                        database: this.props.firebaseDataModel
+                    })
                 }
             </React.Fragment >
         );
@@ -249,7 +269,9 @@ export default class CanvasScreen extends React.Component<Props, State> {
             modelId,
             components => {
                 if (this.state.loadedModels.find(m => m.modelId === modelId) === undefined) {
-                    const newComponents = components.map(c => this.createUiComponent(c))
+                    const newComponents = components
+                        .map(c => this.createUiComponent(c))
+                        .filter(c => c !== null) as ComponentUiData[];
                     this.setState({
                         ...this.state,
                         loadedModels: [
@@ -258,12 +280,15 @@ export default class CanvasScreen extends React.Component<Props, State> {
                                 modelId,
                                 components: newComponents
                             }
-
                         ]
                     });
                 }
             }
         );
+    }
+
+    private importModel(): void {
+        this.setState({ ...this.state, showingImportModelBox: true })
     }
 
     private loadStaticModelData(modelId: string): void {
@@ -274,13 +299,25 @@ export default class CanvasScreen extends React.Component<Props, State> {
                     {
                         x: 0,
                         y: 0,
-                        color: 'green',
+                        color: this.makeRandomStaticModelColour(),
                         modelId
                     }
                 )
             )
         );
         this.importStaticModel(modelId);
+    }
+
+    private makeRandomStaticModelColour(): string {
+        const colours = ["green", "blue", "yellow", "red", "purple", "gray", "orange"];
+        const unusedIdx = colours
+            .findIndex(colour =>
+                !this.state.components.filter(c =>
+                    c.getType() === schema.ComponentType.STATIC_MODEL
+                ).find(sm => sm.getData().color === colour)
+            );
+        if (unusedIdx < 0) throw new Error("Unable to generate color");
+        return colours[unusedIdx];
     }
 
     private removeComponent(id: string): void {
@@ -374,7 +411,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
         this.setState({ ...this.state, selectedComponentIds });
     }
 
-    private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>): ComponentUiData {
+    private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>): ComponentUiData | null {
         switch (dbComponent.getType()) {
             case schema.ComponentType.STOCK:
                 return new StockUiData(dbComponent);
@@ -394,6 +431,8 @@ export default class CanvasScreen extends React.Component<Props, State> {
                 return new StaticModelUiData(dbComponent);
             case schema.ComponentType.SUBSTITUTION:
                 return new SubstitutionUiData(dbComponent);
+            case schema.ComponentType.SCENARIO:
+                return null;
         }
     }
 

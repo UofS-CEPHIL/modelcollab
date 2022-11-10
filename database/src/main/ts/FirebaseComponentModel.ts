@@ -7,7 +7,8 @@ export enum ComponentType {
     CONNECTION = "connection",
     CLOUD = "cloud",
     STATIC_MODEL = "static_model",
-    SUBSTITUTION = "substitution"
+    SUBSTITUTION = "substitution",
+    SCENARIO = "scenario",
 }
 
 // Represents all components as they are represented inside Firebase
@@ -31,6 +32,12 @@ export abstract class FirebaseDataComponent<DataType extends FirebaseDataObject>
 
     public toString() {
         return `FirebaseDataComponent: id = ${this.getId()}, data = ${Object.entries(this.getData())}`;
+    }
+
+    public getContainingModelId(): string | undefined {
+        const idSplit = this.getId().split('/');
+        if (idSplit.length === 1) return undefined;
+        else return idSplit.slice(0, idSplit.length - 1).join('/');
     }
 
     abstract getType(): ComponentType;
@@ -381,5 +388,21 @@ export class SubstitutionFirebaseComponent extends FirebaseDataComponent<Substit
 
     withData(data: SubstitutionComponentData): SubstitutionFirebaseComponent {
         return new SubstitutionFirebaseComponent(this.getId(), data);
+    }
+}
+
+//################################### Scenario ###################################
+
+export interface ScenarioComponentData extends FirebaseDataObject {
+    paramOverrides: { [paramName: string]: string };
+}
+
+export class ScenarioFirebaseComponent extends FirebaseDataComponent<ScenarioComponentData> {
+    getType(): ComponentType {
+        return ComponentType.SCENARIO;
+    }
+
+    withData(data: ScenarioComponentData): ScenarioFirebaseComponent {
+        return new ScenarioFirebaseComponent(this.getId(), data);
     }
 }

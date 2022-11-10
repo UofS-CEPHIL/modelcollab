@@ -177,6 +177,14 @@ export abstract class ExtendableBaseCanvas
         return this.props.selectedComponentIds.includes(component.getId())
             ? SELECTED_COLOR : DEFAULT_COLOR;
     }
+
+
+    protected belongsToModel(componentId: string, modelId: string | undefined): boolean {
+        const subbedComponents = this.props.components.withSubstitutionsApplied();
+        const model = subbedComponents.getStaticModels().find(sm => sm.getData().modelId === modelId);
+        const components = model?.getComponents() || subbedComponents.getAllComponentsWithoutChildren();
+        return components.findIndex(c => c.getId() === componentId) >= 0;
+    }
 }
 
 export default abstract class BaseCanvas extends ExtendableBaseCanvas<Props, State> { }

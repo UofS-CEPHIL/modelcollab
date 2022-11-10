@@ -15,25 +15,36 @@ export default class ConnectModeCanvas extends BaseCanvas {
             else if (this.props.selectedComponentIds.length > 1) {
                 console.error("Found selected component list > 1 in Connect mode");
             }
-            else if (!this.props.selectedComponentIds.includes(component.getId())) {
-                if (!this.connectionAlreadyExists(
-                    this.props.selectedComponentIds[0], component.getId()
-                )) {
-                    const newConn = new ConnectionUiData(
-                        new schema.ConnectionFirebaseComponent(
-                            IdGenerator.generateUniqueId(this.props.components),
-                            {
-                                from: this.props.selectedComponentIds[0],
-                                to: component.getId(),
-                                handleXOffset: 0,
-                                handleYOffset: 0,
-                            }
-                        )
-                    );
-                    this.props.addComponent(newConn);
-                }
+            else if (this.canConnectComponents(
+                component,
+                this.props.components.getComponent(this.props.selectedComponentIds[0]) as VisibleUiComponent
+            )) {
+                const newConn = new ConnectionUiData(
+                    new schema.ConnectionFirebaseComponent(
+                        IdGenerator.generateUniqueId(this.props.components),
+                        {
+                            from: this.props.selectedComponentIds[0],
+                            to: component.getId(),
+                            handleXOffset: 0,
+                            handleYOffset: 0,
+                        }
+                    )
+                );
+                this.props.addComponent(newConn);
+
             }
         }
+    }
+
+    private canConnectComponents(to: VisibleUiComponent, from?: VisibleUiComponent): boolean {
+        if (!from) return false;
+        if (to.getId() === from.getId()) return false;
+        if (this.connectionAlreadyExists(to.getId(), from.getId())) return false;
+        if (from.getType() === schema.ComponentType.VARIABLE) return false;
+
+        // TODO determine whether the components exist in the same model
+
+        return true;
     }
 
     private connectionAlreadyExists(from: string, to: string): boolean {

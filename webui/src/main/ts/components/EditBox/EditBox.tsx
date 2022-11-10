@@ -6,58 +6,57 @@ import React, { ReactElement } from 'react';
 import { FirebaseComponentModel as schema } from "database/build/export";
 import modalStyle from '../style/modalStyle';
 
-export interface Props {
-    initialComponent: schema.FirebaseDataComponent<any>;
-    handleSave: (c: schema.FirebaseDataComponent<any>) => void;
+export interface Props<Component extends schema.FirebaseDataComponent<any>> {
+    initialComponent: Component;
+    handleSave: (c: Component) => void;
     handleCancel: () => void;
 }
 
-export interface State {
-    component: schema.FirebaseDataComponent<any>;
+export interface State<Component extends schema.FirebaseDataComponent<any>> {
+    component: Component;
 }
 
-export default class EditBox extends React.Component<Props, State> {
+export abstract class ExtensibleEditBox
+    <
+    Component extends schema.FirebaseDataComponent<any>,
+    EditBoxProps extends Props<Component>,
+    EditBoxState extends State<Component>
+    >
+    extends React.Component<EditBoxProps, EditBoxState>
+{
 
-    constructor(props: Props) {
-        super(props);
-        this.state = { component: props.initialComponent };
-    }
+    protected abstract getFieldsAndLabels(): { [field: string]: string };
+
+    public abstract getComponentTypeString(): string;
+
+    public abstract getComponentType(): schema.ComponentType;
 
     private static TEXT_INPUT_CLASS: string = "EditBoxTextInput";
 
     private handleChange(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>): void {
-        const newData = { ...this.state.component.getData(), [event.target.name]: event.target.value };
-        let component: schema.FirebaseDataComponent<any> = this.state.component.withData(newData);
+        let component: Component = this.updateComponent(this.state.component, event.target.name, event.target.value);
         this.setState({ component });
     };
 
+    protected updateComponent(old: Component, field: string, value: string): Component {
+        if (!Object.keys(old).includes(field))
+            throw new Error(
+                "Received updated field "
+                + field
+                + " in object with keys "
+                + Object.keys(old)
+            );
+        return old.withData({ ...old.getData(), [field]: value }) as Component;
+    }
+
+    protected getValueForField(fieldName: string): string {
+        return this.state.component.getData()[fieldName];
+    }
+
     render(): ReactElement {
-        let componentTypeString: string;
-        let fieldsAndLabels: { [field: string]: string };
-        switch (this.props.initialComponent.getType()) {
-            case schema.ComponentType.STOCK:
-                componentTypeString = "Stock";
-                fieldsAndLabels = { text: "Name", initvalue: "Initial Value" };
-                break;
-            case schema.ComponentType.FLOW:
-                componentTypeString = "Flow";
-                fieldsAndLabels = { text: "Name", equation: "Equation" };
-                break;
-            case schema.ComponentType.PARAMETER:
-                componentTypeString = "Parameter";
-                fieldsAndLabels = { text: "Name", value: "Value" };
-                break;
-            case schema.ComponentType.SUM_VARIABLE:
-                componentTypeString = "Sum Variable";
-                fieldsAndLabels = { text: "Name" };
-                break;
-            case schema.ComponentType.VARIABLE:
-                componentTypeString = "Dynamic Variable";
-                fieldsAndLabels = { text: "Name", value: "Value" };
-                break;
-            default:
-                throw new Error("Unable to render edit box for  " + this.props.initialComponent.getType());
-        }
+        const componentTypeString = this.getComponentTypeString();
+        let fieldsAndLabels: { [field: string]: string } = this.getFieldsAndLabels();
+
         return (
             <Modal open={true} data-testid={"EditBox"}>
                 <Box sx={modalStyle}>
@@ -102,10 +101,10 @@ export default class EditBox extends React.Component<Props, State> {
                 {
                     Object.keys(fieldsAndLabels).map((fieldName, i) => {
                         const labelText: string = fieldsAndLabels[fieldName] || "Error: cannot find label text";
-                        const initialText: string = this.state.component.getData()[fieldName];
+                        const boxText: string = this.getValueForField(fieldName);
                         return (
                             <TextField
-                                value={initialText}
+                                value={boxText}
                                 onChange={e => this.handleChange(e)}
                                 name={fieldName}
                                 label={labelText}
@@ -121,6 +120,23 @@ export default class EditBox extends React.Component<Props, State> {
                 }
             </Box >
         );
+    }
+}
+
+export default abstract class EditBox
+    <
+    Component extends schema.FirebaseDataComponent<any>
+    >
+    extends ExtensibleEditBox
+    <
+    Component,
+    Props<Component>,
+    State<Component>
+    >
+{
+    constructor(props: Props<Component>) {
+        super(props);
+        this.state = { component: props.initialComponent };
     }
 }
 

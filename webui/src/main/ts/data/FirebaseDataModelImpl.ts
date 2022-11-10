@@ -4,6 +4,7 @@ import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build
 
 import FirebaseDataModel from "./FirebaseDataModel";
 import ComponentUiData from "../components/Canvas/ScreenObjects/ComponentUiData";
+import ParameterUiData from "../components/Canvas/ScreenObjects/Parameter/ParameterUiData";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
@@ -61,14 +62,44 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
     }
 
     subscribeToModelList(onChanged: (models: string[]) => void): void {
-        const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeSavedModelsPath());
-        throw new Error('not implemented');
+        const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeModelIdsPath());
+        onValue(listRef, snap => {
+            let childValues: string[] = [];
+            snap.forEach(childSnap => { childValues.push(childSnap.val() as string); console.log(childValues) });
+            onChanged(childValues);
+        });
     }
 
     addSession(id: string) {
         const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeSessionIdsPath());
         const newRef = push(listRef);
         set(newRef, id);
+        this.setAllComponents(
+            id,
+            [
+                new ParameterUiData(
+                    new schema.ParameterFirebaseComponent(
+                        "0",
+                        {
+                            x: 40,
+                            y: 20,
+                            text: "startTime",
+                            value: "0.0"
+                        }
+                    )
+                ),
+                new ParameterUiData(
+                    new schema.ParameterFirebaseComponent(
+                        "1",
+                        {
+                            x: 40,
+                            y: 70,
+                            text: "stopTime",
+                            value: "0.0"
+                        }
+                    )
+                ),
+            ]);
     }
 
     removeComponent(sessionId: string, componentId: string) {

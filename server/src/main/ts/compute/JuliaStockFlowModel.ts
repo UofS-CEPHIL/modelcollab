@@ -55,9 +55,8 @@ export default class JuliaStockFlowModel {
             else, create a foot for SV with no stocks and add it to L
         Remove any duplicate objects from L
 
-        Sharing happens in 2 ways:
-          1. Substitutions
-          2. Connections between components of different models        
+        Sharing only happens via substitutions
+        
         */
 
         const relevantIdents = idents
