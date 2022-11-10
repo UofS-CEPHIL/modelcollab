@@ -4,7 +4,7 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import { UiMode } from "../../../../../main/ts/UiMode";
 import { Props as ScreenProps } from "../../../../../main/ts/components/Screens/CanvasScreen";
 import { Props as CanvasProps } from "../../../../../main/ts/components/Canvas/BaseCanvas";
-import { Props as ToolbarProps } from "../../../../../main/ts/components/Toolbar/Toolbar";
+import { Props as ToolbarProps } from "../../../../../main/ts/components/Toolbar/CanvasScreenToolbar";
 import CanvasUtils from "../../Canvas/CanvasUtils";
 import MockToolbar from "../../Toolbar/MockToolbar";
 import CanvasScreenTest from "./CanvasScreenTest";

@@ -81,8 +81,8 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                     new schema.ParameterFirebaseComponent(
                         "0",
                         {
-                            x: 40,
-                            y: 20,
+                            x: 100,
+                            y: 100,
                             text: "startTime",
                             value: "0.0"
                         }
@@ -92,8 +92,8 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                     new schema.ParameterFirebaseComponent(
                         "1",
                         {
-                            x: 40,
-                            y: 70,
+                            x: 100,
+                            y: 130,
                             text: "stopTime",
                             value: "0.0"
                         }

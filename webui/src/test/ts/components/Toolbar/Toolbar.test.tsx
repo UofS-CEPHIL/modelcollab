@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ReactElement } from "react";
 import { AxiosResponse } from "axios";
-import Toolbar, { Props } from "../../../../main/ts/components/Toolbar/Toolbar";
+import CanvasScreenToolbar, { Props } from "../../../../main/ts/components/Toolbar/CanvasScreenToolbar";
 import RestClient from "../../../../main/ts/rest/RestClient";
 import { UiMode } from "../../../../main/ts/UiMode";
 import { act } from "react-dom/test-utils";
@@ -28,7 +28,7 @@ function makeToolbar(props: Partial<Props>): ReactElement {
         importModel: () => { }
     };
     return (
-        <Toolbar {...DEFAULT} {...props} />
+        <CanvasScreenToolbar {...DEFAULT} {...props} />
     );
 }
 
@@ -114,14 +114,14 @@ describe("<Toolbar />", () => {
             expect(computeModelMock).toHaveBeenCalled();
             const onResponse = computeModelMock.mock.lastCall[1];
             act(() => onResponse(response));
-            jest.advanceTimersByTime(Toolbar.POLLING_TIME_MS);
+            jest.advanceTimersByTime(CanvasScreenToolbar.POLLING_TIME_MS);
         }
 
         const sendResponseToGetResultsCallback = (response: AxiosResponse) => {
             expect(getResultsMock).toHaveBeenCalled();
             const onResponse = getResultsMock.mock.lastCall[1];
             act(() => onResponse(response));
-            jest.advanceTimersByTime(Toolbar.POLLING_TIME_MS)
+            jest.advanceTimersByTime(CanvasScreenToolbar.POLLING_TIME_MS)
         }
 
         const expectSpinningWheel = () => {

@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import Toolbar, { Props as ToolbarProps } from "../../../../main/ts/components/Toolbar/Toolbar";
+import CanvasScreenToolbar, { Props as ToolbarProps } from "../../../../main/ts/components/Toolbar/CanvasScreenToolbar";
 import { UiMode } from "../../../../main/ts/UiMode";
 
 
@@ -13,7 +13,7 @@ export default class MockToolbar {
 
     public render(): ReactElement {
         return (
-            <Toolbar {...this.props} />
+            <CanvasScreenToolbar {...this.props} />
         );
     }
 

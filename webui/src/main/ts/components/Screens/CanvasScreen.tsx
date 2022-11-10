@@ -4,7 +4,7 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 
 import ComponentUiData, { PointerComponent } from '../Canvas/ScreenObjects/ComponentUiData';
 import { Props as CanvasProps } from "../Canvas/BaseCanvas";
-import { Props as ToolbarProps } from '../Toolbar/Toolbar';
+import { Props as ToolbarProps } from '../Toolbar/CanvasScreenToolbar';
 import { UiMode } from '../../UiMode';
 import applicationConfig from '../../config/applicationConfig';
 import FirebaseDataModel from '../../data/FirebaseDataModel';

@@ -22,7 +22,7 @@ import DynamicVariableModeCanvas from "./components/Canvas/ModeCanvas/DynamicVar
 import CloudModeCanvas from "./components/Canvas/ModeCanvas/CloudModeCanvas";
 import { Props as EditBoxProps } from './components/EditBox/EditBox';
 import { Props as ScenarioEditBoxProps } from './components/EditBox/ScenarioEditBox';
-import Toolbar, { Props as ToolbarProps } from './components/Toolbar/Toolbar';
+import CanvasScreenToolbar, { Props as ToolbarProps } from './components/Toolbar/CanvasScreenToolbar';
 import ImportModelBox, { Props as ImportModelBoxProps } from './components/ImportModelBox/ImportModelBox';
 import SaveModelBox, { Props as SaveModelBoxProps } from "./components/SaveModelBox/SaveModelBox";
 import ComponentRendererImpl from "./components/Canvas/Renderer/ComponentRendererImpl";
@@ -156,7 +156,7 @@ export default class App extends React.Component<Props, State> {
 
     private createToolbar(props: ToolbarProps): ReactElement {
         return (
-            <Toolbar {...props} />
+            <CanvasScreenToolbar {...props} />
         );
     }
 
