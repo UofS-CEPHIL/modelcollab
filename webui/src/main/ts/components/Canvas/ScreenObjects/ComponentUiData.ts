@@ -466,7 +466,7 @@ export abstract class TextComponent
     }
 
     public static estimateTextSize(text: string, fontSize: number) {
-        return { height: fontSize, width: text.length * fontSize * 0.5 };
+        return { height: fontSize, width: text.length * fontSize * 0.7 };
     }
 }
 

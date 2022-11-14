@@ -24,15 +24,20 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SaveIcon from '@mui/icons-material/Save';
 import DownloadIcon from '@mui/icons-material/Download';
 import LogoutIcon from '@mui/icons-material/Logout';
+import ListIcon from '@mui/icons-material/List';
+import HelpIcon from '@mui/icons-material/Help';
 
 export interface Props {
     mode: UiMode,
     setMode: (_: UiMode) => void
     sessionId: string;
+    selectedScenario: string | null;
     returnToSessionSelect: () => void;
     downloadData: (b: Blob) => void;
     saveModel: () => void;
     importModel: () => void;
+    showScenarios: () => void;
+    showHelpBox: () => void;
     restClient: RestClient;
 }
 
@@ -42,9 +47,6 @@ export interface State {
 }
 
 
-/*
-  This class borrows heavily from the following: https://mui.com/material-ui/react-drawer/
-*/
 export default class CanvasScreenToolbar extends React.Component<Props, State> {
 
     public constructor(props: Props) {
@@ -59,6 +61,7 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
 
     render(): ReactElement {
 
+        // Apply styles to components. Copied from https://mui.com/material-ui/react-drawer/
         const drawerWidth = "240";
         const openedMixin = (theme: Theme): CSSObject => ({
             width: drawerWidth,
@@ -68,7 +71,6 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
             }),
             overflowX: 'hidden',
         });
-
         const closedMixin = (theme: Theme): CSSObject => ({
             transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
@@ -80,7 +82,6 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
                 width: `calc(${theme.spacing(8)} + 1px)`,
             },
         });
-
         const DrawerHeader = styled('div')(({ theme }) => ({
             display: 'flex',
             alignItems: 'center',
@@ -89,7 +90,6 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
             // necessary for content to be below app bar
             ...theme.mixins.toolbar
         }));
-
         const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
             ({ theme, open }) => ({
                 flexShrink: 0,
@@ -105,12 +105,9 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
                 }),
             }),
         );
-
         interface AppBarProps extends MuiAppBarProps {
             open?: boolean;
         }
-
-
         const AppBar = styled(MuiAppBar, {
             shouldForwardProp: (prop) => prop !== 'open',
         })<AppBarProps>(({ theme, open }) => ({
@@ -147,7 +144,7 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
                             <MenuIcon />
                         </IconButton>
                         <Typography variant="h6" noWrap component="div">
-                            {"Modelcollab | " + this.props.sessionId}
+                            {"Modelcollab    |    " + this.props.sessionId}
                         </Typography>
                     </Toolbar>
                 </AppBar>
@@ -176,27 +173,84 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
                 return (<CircularProgress />);
             }
             else {
-                return (<PlayArrowIcon />);
+                return CanvasScreenToolbar.getDefaultComputeModelIcon();
             }
         }
         return Object.values(UiMode)
             .map(mode =>
                 this.makeToolbarButton(
                     mode.toString(),
-                    (e: React.MouseEvent) => this.props.setMode(mode),
-                    this.getIconForMode(mode)
+                    () => this.props.setMode(mode),
+                    CanvasScreenToolbar.getIconForMode(mode)
                 )
             ).concat([
                 (<Divider />),
-                this.makeToolbarButton("Get Code", () => this.getCode(), (<CodeIcon />)),
-                this.makeToolbarButton("Run", () => this.computeModel(), getLabelForRunButton()),
-                this.makeToolbarButton("Save", () => this.props.saveModel(), (<SaveIcon />)),
-                this.makeToolbarButton("Import", () => this.props.importModel(), (<DownloadIcon />)),
-                this.makeToolbarButton("Back", () => this.props.returnToSessionSelect(), (<LogoutIcon />)),
+                this.makeToolbarButton(
+                    "Scenarios",
+                    () => this.props.showScenarios(),
+                    CanvasScreenToolbar.getScenariosIcon()
+                ),
+                this.makeToolbarButton(
+                    "Get Code",
+                    () => this.getCode(),
+                    CanvasScreenToolbar.getGetCodeIcon()
+                ),
+                this.makeToolbarButton(
+                    "Run",
+                    () => this.computeModel(),
+                    getLabelForRunButton()
+                ),
+                this.makeToolbarButton(
+                    "Save",
+                    () => this.props.saveModel(),
+                    CanvasScreenToolbar.getSaveModelIcon()
+                ),
+                this.makeToolbarButton(
+                    "Import",
+                    () => this.props.importModel(),
+                    CanvasScreenToolbar.getImportModelIcon()
+                ),
+                this.makeToolbarButton(
+                    "Help",
+                    () => this.props.showHelpBox(),
+                    CanvasScreenToolbar.getHelpIcon()
+                ),
+                this.makeToolbarButton(
+                    "Back",
+                    () => this.props.returnToSessionSelect(),
+                    CanvasScreenToolbar.getGoBackIcon()
+                ),
             ]);
     }
+    static getHelpIcon(): ReactElement {
+        return (<HelpIcon />);
+    }
 
-    private getIconForMode(mode: UiMode): ReactElement {
+    public static getGoBackIcon(): ReactElement {
+        return (<LogoutIcon />);
+    }
+
+    public static getImportModelIcon(): ReactElement {
+        return (<DownloadIcon />);
+    }
+
+    public static getGetCodeIcon(): ReactElement {
+        return (<CodeIcon />);
+    }
+
+    public static getScenariosIcon(): ReactElement {
+        return (<ListIcon />);
+    }
+
+    public static getDefaultComputeModelIcon(): ReactElement {
+        return (<PlayArrowIcon />);
+    }
+
+    public static getSaveModelIcon(): ReactElement {
+        return (<SaveIcon />);
+    }
+
+    public static getIconForMode(mode: UiMode): ReactElement {
         switch (mode) {
             case UiMode.CLOUD:
                 return (<CloudIcon />);
@@ -265,6 +319,7 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
     }
 
     private computeModel(): void {
+        console.log("Computing model . props.scenario " + this.props.selectedScenario);
         const pollOnce = (id: string) => {
             this.props.restClient.getResults(
                 id,
@@ -294,129 +349,19 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
         }
         const startPolling = (id: string) => setTimeout(() => pollOnce(id), CanvasScreenToolbar.POLLING_TIME_MS);
         if (!this.state.waitingForResults) {
-            this.props.restClient.computeModel(this.props.sessionId, (res: AxiosResponse) => {
-                if (res.status === 200) {
-                    this.setState({ ...this.state, waitingForResults: true });
-                    startPolling(res.data);
-                }
-                else {
-                    console.error("Received bad response from server");
-                    console.error(res);
-                }
-            });
+            this.props.restClient.computeModel(
+                this.props.sessionId,
+                this.props.selectedScenario,
+                (res: AxiosResponse) => {
+                    if (res.status === 200) {
+                        this.setState({ ...this.state, waitingForResults: true });
+                        startPolling(res.data);
+                    }
+                    else {
+                        console.error("Received bad response from server");
+                        console.error(res);
+                    }
+                });
         }
     }
-
-    // <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-    //     <Tabs value={this.props.mode} data-testid='toolbar-tabs' variant="scrollable">
-    //         <Tab
-    //             label="Move"
-    //             value={UiMode.MOVE}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.MOVE}
-    //         />
-    //         <Tab
-    //             label="Parameter"
-    //             value={UiMode.PARAM}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.PARAM}
-    //         />
-    //         <Tab
-    //             label="Sum Variable"
-    //             value={UiMode.SUM_VARIABLE}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.SUM_VARIABLE}
-    //         />
-    //         <Tab
-    //             label="Dynamic Variable"
-    //             value={UiMode.DYN_VARIABLE}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.DYN_VARIABLE}
-    //         />
-    //         <Tab
-    //             label="Cloud"
-    //             value={UiMode.CLOUD}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.CLOUD}
-    //         />
-    //         <Tab
-    //             label="Stock"
-    //             value={UiMode.STOCK}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.STOCK}
-    //         />
-    //         <Tab
-    //             label="Flow"
-    //             value={UiMode.FLOW}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.FLOW}
-    //         />
-    //         <Tab
-    //             label="Connect"
-    //             value={UiMode.CONNECT}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.CONNECT}
-    //         />
-    //         <Tab
-    //             label="Identify"
-    //             value={UiMode.IDENTIFY}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.IDENTIFY}
-    //         />
-    //         <Tab
-    //             label="Edit"
-    //             value={UiMode.EDIT}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.EDIT}
-    //         />
-    //         <Tab
-    //             label="Delete"
-    //             value={UiMode.DELETE}
-    //             onClick={handleChange}
-    //             data-testid={UiMode.DELETE}
-    //         />
-    //         <Tab
-    //             label="Get Code"
-    //             value={"GetCode"}
-    //             onClick={getCode}
-    //             data-testid={"GetCode"}
-    //         />
-    //         <Tab
-    //             label={getButtonLabel("Run")}
-    //             id="Run-tab"
-    //             value={"Run"}
-    //             icon={<ArrowDropDownIcon />}
-    //             iconPosition="end"
-    //             onClick={handleClick}
-    //         />
-    //         <Tab
-    //             label={"Save Model"}
-    //             value={"SaveModel"}
-    //             onClick={() => this.props.saveModel()}
-    //             data-testid={"SaveModel"}
-    //         />
-    //         <Tab
-    //             label={"Import Model"}
-    //             value={"ImportModel"}
-    //             onClick={() => this.props.importModel()}
-    //             data-testid={"ImportModel"}
-    //         />
-    //         <Tab
-    //             label="Go Back"
-    //             value={"GoBack"}
-    //             onClick={_ => this.props.returnToSessionSelect()}
-    //             data-testid={"GoBack"}
-    //         />
-    //     </Tabs>
-    //     <Menu
-    //         id="basic-menu"
-    //         anchorEl={this.state.anchorElement}
-    //         open={open}
-    //         onClose={handleClose}
-    //         MenuListProps={{ 'aria-labelledby': 'basic-button', }}
-    //     >
-    //         <MenuItem onClick={computeModel}> {"ODE"} </MenuItem>
-    //     </Menu>
-    // </Box >
-
 }

@@ -44,16 +44,32 @@ export default class JuliaGenerator {
         return [
             ...this.IMPORTS.map(i => `using ${i}`),
             ...models.map(m => this.makeStockAndFlowLine(m)),
-            ...feet.map(f => this.makeFootLine(f)),
-            this.makeRelationLine(feet, models),
-            ...this.makeOpenLines(feet, models),
-            this.makeOapplyLine(models),
-            this.makeApexLine(),
+            ...this.makeCompositionAndApexLines(feet, models),
             this.makeParamsLine(models),
             this.makeInitialStocksLine(models),
             ...this.makeSolutionLines(models),
             ...this.makeSaveFigureLines(filename)
         ].join(";");
+    }
+
+    private static makeCompositionAndApexLines(feet: Foot[], models: JuliaStockFlowModel[]) {
+        if (models.length === 0) throw new Error('No valid models found');
+        else if (models.length === 1) {
+            const onlyModel = models[0];
+            const emptyFoot = new Foot(null, [], [onlyModel.getName()]);
+            return [
+                this.makeFootLine(emptyFoot),
+                this.makeOpenLine(feet, onlyModel),
+                this.makeApexLine(onlyModel.getOpenVarName())
+            ];
+        }
+        else return [
+            ...feet.map(f => this.makeFootLine(f)),
+            this.makeRelationLine(feet, models),
+            ...this.makeOpenLines(feet, models),
+            this.makeOapplyLine(models),
+            this.makeApexLine(this.COMPOSED_OPEN_MODEL_VAR_NAME)
+        ];
     }
 
     private static validateModelComponents(model: JuliaStockFlowModel): void {
@@ -193,10 +209,12 @@ export default class JuliaGenerator {
     }
 
     private static makeOpenLines(feet: Foot[], models: JuliaStockFlowModel[]): string[] {
-        return models.map(model => {
-            const modelFeetCommaSep = this.getFootNamesForModel(feet, model.getName()).join(',');
-            return `${model.getOpenVarName()} = Open(${model.getStockAndFlowVarName()}, ${modelFeetCommaSep})`;
-        });
+        return models.map(model => this.makeOpenLine(feet, model));
+    }
+
+    private static makeOpenLine(feet: Foot[], model: JuliaStockFlowModel): string {
+        const modelFeetCommaSep = this.getFootNamesForModel(feet, model.getName()).join(',');
+        return `${model.getOpenVarName()} = Open(${model.getStockAndFlowVarName()}, ${modelFeetCommaSep})`;
     }
 
     private static makeOapplyLine(models: JuliaStockFlowModel[]): string {
@@ -205,8 +223,8 @@ export default class JuliaGenerator {
             + `oapply(${this.RELATION_VAR_NAME}, [${allOpenVarNames}])`;
     }
 
-    private static makeApexLine(): string {
-        return `${this.APEX_NAME} = apex(${this.COMPOSED_OPEN_MODEL_VAR_NAME})`;
+    private static makeApexLine(openVarName: string): string {
+        return `${this.APEX_NAME} = apex(${openVarName})`;
     }
 
     private static makeParamsLine(models: JuliaStockFlowModel[]): string {

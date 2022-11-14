@@ -10,7 +10,9 @@ export const FLOW_LABEL_DEFAULT_FONT_SIZE = 12;
 export const FLOW_LABEL_DEFAULT_HEIGHT = 23;
 export const BOUNDING_BOX_ELEMENT_BUFFER = 70;
 
-export default class FlowUiData extends PointerComponent<schema.FlowComponentData, schema.FlowFirebaseComponent, StockUiData, StockUiData> implements PointableComponent {
+export default class FlowUiData
+    extends PointerComponent<schema.FlowComponentData, schema.FlowFirebaseComponent, StockUiData, StockUiData>
+    implements PointableComponent {
 
     public getArrowPoint(side: Side, components: ComponentUiData[]): Point {
         const linePoints = this.getAngleArrowPoints(components);

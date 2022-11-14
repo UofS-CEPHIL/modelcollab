@@ -1,4 +1,5 @@
 import Axios, { AxiosResponse } from "axios";
+import ScenariosBox from "../components/ScenariosBox/ScenariosBox";
 import applicationConfig from '../config/applicationConfig';
 
 export default class RestClientImpl {
@@ -16,9 +17,14 @@ export default class RestClientImpl {
         xhr.send();
     }
 
-    public computeModel(sessionId: string, onResponseReceived: ((res: AxiosResponse) => void)): void {
+    public computeModel(
+        sessionId: string,
+        scenarioName: string | null,
+        onResponseReceived: ((res: AxiosResponse) => void)
+    ): void {
+        if (!scenarioName) scenarioName = ScenariosBox.DEFAULT_SCENARIO_NAME;
         Axios.post(
-            `${applicationConfig.serverAddress}/computeModel/${sessionId}`,
+            `${applicationConfig.serverAddress}/computeModel/${sessionId}/${scenarioName}`,
             {
                 method: 'post',
                 headers: {

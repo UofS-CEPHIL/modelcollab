@@ -10,7 +10,9 @@ import applicationConfig from '../../config/applicationConfig';
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import { Props as EditBoxProps } from "../EditBox/EditBox";
 import { Props as SaveModelBoxProps } from "../SaveModelBox/SaveModelBox";
-import { Props as ImportModelBoxProps } from "../ImportModelBox/ImportModelBox";
+//import { Props as ImportModelBoxProps } from "../ImportModelBox/ImportModelBox";
+import { Props as ImportModelBoxProps } from "../ButtonListBox/ButtonListBox";
+import ScenariosBox, { Props as ScenarioBoxProps } from "../ScenariosBox/ScenariosBox";
 import StockUiData from '../Canvas/ScreenObjects/Stock/StockUiData';
 import FlowUiData from '../Canvas/ScreenObjects/Flow/FlowUiData';
 import ConnectionUiData from '../Canvas/ScreenObjects/Connection/ConnectionUiData';
@@ -24,6 +26,9 @@ import IdGenerator from '../../IdGenerator';
 import ComponentCollection from '../Canvas/ComponentCollection';
 import ComponentRenderer from '../Canvas/Renderer/ComponentRenderer';
 import SubstitutionUiData from '../Canvas/ScreenObjects/Substitution/SubstitionUiData';
+import ScenarioUiData from '../Canvas/ScreenObjects/Scenario/ScenarioUiData';
+import { Props as ScenarioEditBoxProps } from '../EditBox/ScenarioEditBox';
+import HelpBox from '../HelpBox/HelpBox';
 
 
 export interface LoadedStaticModel {
@@ -41,15 +46,20 @@ export interface Props {
     createEditBox: (props: EditBoxProps<any>) => ReactElement;
     createImportModelBox: (props: ImportModelBoxProps) => ReactElement;
     createSaveModelBox: (props: SaveModelBoxProps) => ReactElement;
+    createScenariosBox: (props: ScenarioBoxProps) => ReactElement;
 }
 
 interface State {
     mode: UiMode,
     components: ComponentUiData[];
     loadedModels: LoadedStaticModel[];
+    selectedScenarioName: string | null;  // null means all default values
     selectedComponentIds: string[];
+    // TODO collapse these into one entity
     showingSaveModelBox: boolean;
     showingImportModelBox: boolean;
+    showingScenarioBox: boolean;
+    showingHelpBox: boolean;
 }
 
 let lastMode: UiMode = UiMode.MOVE;
@@ -65,15 +75,18 @@ export default class CanvasScreen extends React.Component<Props, State> {
             mode: UiMode.MOVE,
             components: [],
             loadedModels: [],
+            selectedScenarioName: null,
             selectedComponentIds: [],
             showingSaveModelBox: false,
-            showingImportModelBox: false
+            showingImportModelBox: false,
+            showingScenarioBox: false,
+            showingHelpBox: false,
         };
         this.dm = props.firebaseDataModel;
         document.title = applicationConfig.appName;
     }
 
-    componentDidMount() {
+    public componentDidMount() {
         // This happens at mount instead of in constructor because
         // otherwise we end up trying to render the component before
         // it mounts and React gets upset
@@ -93,13 +106,11 @@ export default class CanvasScreen extends React.Component<Props, State> {
                     .filter(c =>
                         !this.isPointerComponentType(c.getType())
                     )
-                    .map(c => this.createUiComponent(c))
-                    .filter(c => c !== null) as ComponentUiData[];
+                    .map(c => this.createUiComponent(c));
 
                 const flowComponents: ComponentUiData[] = dbComponents
                     .filter(c => c.getType() === schema.ComponentType.FLOW)
-                    .map(c => this.createUiComponent(c))
-                    .filter(c => c !== null) as ComponentUiData[];
+                    .map(c => this.createUiComponent(c));
 
                 const nonFlowPointerComponents: ComponentUiData[] = dbComponents
                     .filter(c =>
@@ -123,16 +134,9 @@ export default class CanvasScreen extends React.Component<Props, State> {
 
     private isPointerComponentType(componentType: string) {
         switch (componentType) {
-            case schema.ComponentType.STOCK.toString(): return false;
-            case schema.ComponentType.PARAMETER.toString(): return false;
-            case schema.ComponentType.VARIABLE.toString(): return false;
-            case schema.ComponentType.SUM_VARIABLE.toString(): return false;
-            case schema.ComponentType.CLOUD.toString(): return false;
-            case schema.ComponentType.STATIC_MODEL.toString(): return false;
             case schema.ComponentType.FLOW.toString(): return true;
             case schema.ComponentType.CONNECTION.toString(): return true;
-            case schema.ComponentType.SUBSTITUTION.toString(): return false;
-            default: throw new Error("Unknown component: " + componentType);
+            default: return false;
         }
     }
 
@@ -148,6 +152,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
         );
 
         this.setComponentsForStaticModels();
+
         return (
             <React.Fragment>
                 {
@@ -160,7 +165,10 @@ export default class CanvasScreen extends React.Component<Props, State> {
                         downloadData: b => this.downloadData(b),
                         saveModel: () => this.saveModel(),
                         importModel: () => this.importModel(),
-                        restClient: new RestClientImpl()
+                        showScenarios: () => this.showScenarios(),
+                        restClient: new RestClientImpl(),
+                        showHelpBox: () => this.showHelpBox(),
+                        selectedScenario: this.state.selectedScenarioName
                     })
                 }
                 {
@@ -197,8 +205,10 @@ export default class CanvasScreen extends React.Component<Props, State> {
                             }
 
                             this.dm.updateComponent(this.props.sessionId, comp);
-                        }
-                    })
+                        },
+                        sessionId: this.props.sessionId,
+                        db: this.props.firebaseDataModel
+                    } as ScenarioEditBoxProps)
                 }
                 {
                     this.state.showingSaveModelBox &&
@@ -221,8 +231,38 @@ export default class CanvasScreen extends React.Component<Props, State> {
                         database: this.props.firebaseDataModel
                     })
                 }
+                {
+                    this.state.showingScenarioBox &&
+                    this.props.createScenariosBox({
+                        handleCancel: () => this.setState({ ...this.state, showingScenarioBox: false }),
+                        handleSubmit: name => this.setState({ ...this.state, showingScenarioBox: false, selectedScenarioName: name }),
+                        initialSelected: this.state.selectedScenarioName,
+                        sessionId: this.props.sessionId,
+                        database: this.props.firebaseDataModel,
+                        handleEdit: name => this.startEditingScenario(name),
+                        generateNewId: () => IdGenerator.generateUniqueId(this.state.components)
+                    })
+                }
+                {
+                    this.state.showingHelpBox &&
+                    (<HelpBox onClose={() => this.setState({ ...this.state, showingHelpBox: false })} width={700} />)
+                }
             </React.Fragment >
         );
+    }
+    private showHelpBox(): void {
+        this.setState({ ...this.state, showingHelpBox: true });
+    }
+
+    private startEditingScenario(name: string): void {
+        setTimeout(() => this.setState({ ...this.state, mode: UiMode.EDIT }));
+        setTimeout(() => {
+            const scenario = this.state.components
+                .filter(c => c.getType() === schema.ComponentType.SCENARIO)
+                .find(c => c.getData().name === name);
+            if (!scenario) throw new Error("Cannot find scenario for editing: " + name);
+            setTimeout(() => this.setSelected([scenario.getId()]));
+        }, 100);
     }
 
     private setComponentsForStaticModels(): void {
@@ -255,7 +295,6 @@ export default class CanvasScreen extends React.Component<Props, State> {
                         components: this.state.components.concat([newComponent])
                     }
                 );
-                console.log("State updated to: " + this.state.components.concat([newComponent]))
             }
             // This is required to make React recognize the state change.
             // It just does this sometimes; not sure why.
@@ -269,9 +308,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
             modelId,
             components => {
                 if (this.state.loadedModels.find(m => m.modelId === modelId) === undefined) {
-                    const newComponents = components
-                        .map(c => this.createUiComponent(c))
-                        .filter(c => c !== null) as ComponentUiData[];
+                    const newComponents = components.map(c => this.createUiComponent(c)) as ComponentUiData[];
                     this.setState({
                         ...this.state,
                         loadedModels: [
@@ -288,7 +325,11 @@ export default class CanvasScreen extends React.Component<Props, State> {
     }
 
     private importModel(): void {
-        this.setState({ ...this.state, showingImportModelBox: true })
+        this.setState({ ...this.state, showingImportModelBox: true });
+    }
+
+    private showScenarios(): void {
+        this.setState({ ...this.state, showingScenarioBox: true });
     }
 
     private loadStaticModelData(modelId: string): void {
@@ -411,7 +452,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
         this.setState({ ...this.state, selectedComponentIds });
     }
 
-    private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>): ComponentUiData | null {
+    private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>): ComponentUiData {
         switch (dbComponent.getType()) {
             case schema.ComponentType.STOCK:
                 return new StockUiData(dbComponent);
@@ -432,7 +473,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
             case schema.ComponentType.SUBSTITUTION:
                 return new SubstitutionUiData(dbComponent);
             case schema.ComponentType.SCENARIO:
-                return null;
+                return new ScenarioUiData(dbComponent);
         }
     }
 

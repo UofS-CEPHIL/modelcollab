@@ -68,12 +68,12 @@ class Server {
 
     private setupRoutes(app: Express): void {
         app.get(
-            "/getCode/:sessionId",
+            "/getCode/:sessionId/",
             (req, res) => this.getCode(req.params.sessionId, res)
         );
         app.post(
-            "/computeModel/:sessionId",
-            (req, res) => this.computeModel(req.params.sessionId, res)
+            "/computeModel/:sessionId/:scenarioName",
+            (req, res) => this.computeModel(req.params.sessionId, req.params.scenarioName, res)
         );
         app.get(
             "/getModelResults/:resultId",
@@ -81,14 +81,15 @@ class Server {
         );
     }
 
-    private async computeModel(sessionId: string, res: Response): Promise<void> {
+    private async computeModel(sessionId: string, scenarioName: string, res: Response): Promise<void> {
         try {
-            console.log("computeModel");
+            console.log(`ComputeModel: Session ${sessionId}, scenario ${scenarioName}`);
             const id = Math.floor(Math.random() * 1000).toString();
             const components = await this.fbClient.getComponents(sessionId);
             new ComputeModelTask(
                 components.topLevelComponents,
-                components.staticComponents
+                components.staticComponents,
+                scenarioName
             ).start(p => this.pendingResults[id] = p);
 
             console.log("Started Julia task.");
@@ -107,7 +108,7 @@ class Server {
             const components = await this.fbClient.getComponents(sessionId);
             const models = JuliaComponentDataBuilder.makeStockFlowModels(
                 components.topLevelComponents,
-                components.staticComponents
+                components.staticComponents,
             );
             const identifications = JuliaComponentDataBuilder.makeIdentifications(
                 components.topLevelComponents,

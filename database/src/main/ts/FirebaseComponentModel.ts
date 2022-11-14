@@ -160,6 +160,17 @@ export function createFirebaseDataComponent(id: string, data: any, idPrefix?: st
                 }
             );
             break;
+        case ComponentType.SCENARIO.toString():
+            component = new ScenarioFirebaseComponent(
+                id,
+                {
+                    name: dataVal.name as string,
+                    paramOverrides: dataVal.paramOverrides
+                        ? dataVal.paramOverrides as { [name: string]: string }
+                        : {}
+                }
+            );
+            break;
         default:
             throw new Error("Unknown component type: " + componentType);
     }
@@ -394,6 +405,7 @@ export class SubstitutionFirebaseComponent extends FirebaseDataComponent<Substit
 //################################### Scenario ###################################
 
 export interface ScenarioComponentData extends FirebaseDataObject {
+    name: string;
     paramOverrides: { [paramName: string]: string };
 }
 

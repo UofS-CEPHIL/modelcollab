@@ -23,7 +23,9 @@ import CloudModeCanvas from "./components/Canvas/ModeCanvas/CloudModeCanvas";
 import { Props as EditBoxProps } from './components/EditBox/EditBox';
 import { Props as ScenarioEditBoxProps } from './components/EditBox/ScenarioEditBox';
 import CanvasScreenToolbar, { Props as ToolbarProps } from './components/Toolbar/CanvasScreenToolbar';
-import ImportModelBox, { Props as ImportModelBoxProps } from './components/ImportModelBox/ImportModelBox';
+import ImportModelBox from './components/ImportModelBox/ImportModelBox';
+import { Props as ImportModelBoxProps } from './components/ButtonListBox/ButtonListBox';
+import ScenariosBox, { Props as ScenariosBoxProps } from "./components/ScenariosBox/ScenariosBox";
 import SaveModelBox, { Props as SaveModelBoxProps } from "./components/SaveModelBox/SaveModelBox";
 import ComponentRendererImpl from "./components/Canvas/Renderer/ComponentRendererImpl";
 import IdentifyModeCanvas from "./components/Canvas/ModeCanvas/IdentifyModeCanvas";
@@ -98,6 +100,7 @@ export default class App extends React.Component<Props, State> {
                                     createToolbar={p => this.createToolbar(p)}
                                     createImportModelBox={p => this.createImportModelBox(p)}
                                     createSaveModelBox={p => this.createSaveModelBox(p)}
+                                    createScenariosBox={p => this.createScenariosBox(p)}
                                     renderer={new ComponentRendererImpl()}
                                 />
                             }
@@ -106,6 +109,10 @@ export default class App extends React.Component<Props, State> {
                 </Router>
             );
         }
+    }
+
+    private createScenariosBox(props: ScenariosBoxProps): ReactElement {
+        return (<ScenariosBox {...props} />);
     }
 
     private createEditBox(props: EditBoxProps<any>): ReactElement {

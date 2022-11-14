@@ -36,7 +36,7 @@ export default class SelectionBox extends React.Component<Props> {
                 stroke={SelectionBox.BORDER_COLOUR}
                 fill={SelectionBox.BORDER_COLOUR}
                 fillEnabled={true}
-                opacity={0.15}
+                opacity={0.1}
 
                 {...topLeftCorner}
                 width={bottomRightCorner.x - topLeftCorner.x}

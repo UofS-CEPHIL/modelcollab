@@ -57,7 +57,8 @@ export default class JuliaComponentDataBuilder {
 
     public static makeStockFlowModels(
         outerComponents: schema.FirebaseDataComponent<any>[],
-        staticModelComponents: { [id: string]: schema.FirebaseDataComponent<any>[] }
+        staticModelComponents: { [id: string]: schema.FirebaseDataComponent<any>[] },
+        scenarioName?: string
     ): JuliaStockFlowModel[] {
 
         const outerModelComponents = this.getAllOuterModelComponents(outerComponents, staticModelComponents);
@@ -81,11 +82,10 @@ export default class JuliaComponentDataBuilder {
 
 
         const allModelComponentLists = this.addOuterComponentsToModelList(outerComponents, staticModelComponents);
-        console.log(allModelComponentLists[this.OUTER_MODEL_ID])
-
         const substitutedModels = this.applySubstitutionsToModels(
             allModelComponentLists,
-            substitutions
+            substitutions,
+            scenarioName
         );
 
         const isRelevantComponent = (c: schema.FirebaseDataComponent<any>) =>
@@ -93,10 +93,10 @@ export default class JuliaComponentDataBuilder {
                 schema.ComponentType.CONNECTION,
                 schema.ComponentType.STATIC_MODEL,
                 schema.ComponentType.SUBSTITUTION,
-                schema.ComponentType.CLOUD
+                schema.ComponentType.CLOUD,
+                schema.ComponentType.SCENARIO
             ].includes(c.getType());
 
-        console.log(substitutedModels[this.OUTER_MODEL_ID])
         return Object.keys(substitutedModels)
             .map(modelName =>
                 new JuliaStockFlowModel(
@@ -144,7 +144,8 @@ export default class JuliaComponentDataBuilder {
 
     private static applySubstitutionsToModels(
         modelComponentLists: { [id: string]: schema.FirebaseDataComponent<any>[] },
-        substitutions: schema.SubstitutionFirebaseComponent[]
+        substitutions: schema.SubstitutionFirebaseComponent[],
+        scenarioName?: string
     ): { [id: string]: schema.FirebaseDataComponent<any>[] } {
 
         function applySubstitutionsToComponentList(
@@ -152,7 +153,6 @@ export default class JuliaComponentDataBuilder {
             allComponents: schema.FirebaseDataComponent<any>[],
             substitutions: schema.SubstitutionFirebaseComponent[]
         ): schema.FirebaseDataComponent<any>[] {
-            console.log("before: " + componentList.map(c => c.getId()))
             let newComponentList = [...componentList];
             substitutions.forEach(sub => {
                 const subComponent = allComponents.find(c => c.getId() === sub.getData().replacementId);
@@ -180,12 +180,38 @@ export default class JuliaComponentDataBuilder {
                     }
                 }
             });
-            console.log("after: " + newComponentList.map(c => c.getId()))
-            console.log()
             return newComponentList;
         }
+        const applyOverrideToParameter = (
+            scenario: schema.ScenarioFirebaseComponent,
+            param: schema.ParameterFirebaseComponent
+        ) => {
+            const overrideValue = scenario.getData().paramOverrides[param.getData().text];
+            if (overrideValue)
+                return param.withData({ ...param.getData(), value: overrideValue });
+            else
+                return param;
+        }
 
-        const allComponents = Object.values(modelComponentLists).reduce((a, b) => a.concat(b), []);
+        let allComponents = Object.values(modelComponentLists).reduce((a, b) => a.concat(b), []);
+        const scenario = allComponents
+            .filter(c => c.getType() === schema.ComponentType.SCENARIO)
+            .find(s => s.getData().name === scenarioName);
+        if (scenario) {
+            modelComponentLists = Object.fromEntries(Object.entries(modelComponentLists)
+                .map(kv =>
+                    [
+                        kv[0],
+                        kv[1].map(c =>
+                            c.getType() === schema.ComponentType.PARAMETER
+                                ? applyOverrideToParameter(scenario, c)
+                                : c
+                        )
+                    ]
+                )
+            );
+            allComponents = Object.values(modelComponentLists).reduce((a, b) => a.concat(b), []);
+        }
         const newComponentLists = Object.fromEntries(
             Object.keys(modelComponentLists)
                 .map(modelName =>
