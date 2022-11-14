@@ -54,9 +54,10 @@ export default class JuliaStockFlowModel {
             if there is already a foot which references SV, do nothing
             else, create a foot for SV with no stocks and add it to L
         Remove any duplicate objects from L
+        If Model has no feet, give one empty foot    
 
         Sharing only happens via substitutions
-        
+         
         */
 
         const relevantIdents = idents
@@ -90,6 +91,12 @@ export default class JuliaStockFlowModel {
             else return null;
         }).filter(c => c !== null) as Foot[];
 
-        return stockFeet.concat(varFeet);
+        const outputArr = stockFeet.concat(varFeet);
+        if (outputArr.length > 0) {
+            return outputArr;
+        }
+        else {
+            return [new Foot(null, [], [this.getName()])]
+        }
     }
 }

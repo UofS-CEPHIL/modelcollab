@@ -50,9 +50,9 @@ export default class Connection extends React.Component<Props> {
                 y={position.y}
                 width={HANDLE_WIDTH}
                 height={HANDLE_WIDTH}
-                fill={"gray"}
+                fill={"white"}
                 stroke={"black"}
-                strokeWidth={2}
+                strokeWidth={1}
                 name={this.props.conn.getId()}
                 draggable
                 onDragEnd={onDragEnd}

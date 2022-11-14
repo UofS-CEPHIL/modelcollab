@@ -11,13 +11,16 @@ export default class ComputeModelTask {
 
     private readonly components: schema.FirebaseDataComponent<any>[];
     private readonly staticComponents: { [id: string]: schema.FirebaseDataComponent<any>[] };
+    private readonly scenarioName: string;
 
     public constructor(
         components: schema.FirebaseDataComponent<any>[],
-        staticComponents: { [id: string]: schema.FirebaseDataComponent<any>[] }
+        staticComponents: { [id: string]: schema.FirebaseDataComponent<any>[] },
+        scenarioName: string
     ) {
         this.components = components;
         this.staticComponents = staticComponents;
+        this.scenarioName = scenarioName;
     }
 
     public async start(onResultsReady?: (path: string) => void): Promise<void> {
@@ -27,7 +30,8 @@ export default class ComputeModelTask {
         try {
             const models = JuliaComponentDataBuilder.makeStockFlowModels(
                 this.components,
-                this.staticComponents
+                this.staticComponents,
+                this.scenarioName
             );
             const identifications = JuliaComponentDataBuilder.makeIdentifications(
                 this.components,

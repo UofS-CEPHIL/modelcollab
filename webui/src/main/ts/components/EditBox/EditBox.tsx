@@ -1,18 +1,17 @@
-import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Button, Grid, TextField } from '@mui/material';
 import React, { ReactElement } from 'react';
 import { FirebaseComponentModel as schema } from "database/build/export";
-import modalStyle from '../style/modalStyle';
+import ModalBox, { Props as BaseProps, State as BaseState } from '../ModalBox/ModalBox';
 
-export interface Props<Component extends schema.FirebaseDataComponent<any>> {
+export interface Props<Component extends schema.FirebaseDataComponent<any>> extends BaseProps {
     initialComponent: Component;
     handleSave: (c: Component) => void;
     handleCancel: () => void;
 }
 
-export interface State<Component extends schema.FirebaseDataComponent<any>> {
+export interface State<Component extends schema.FirebaseDataComponent<any>> extends BaseState {
     component: Component;
 }
 
@@ -22,7 +21,7 @@ export abstract class ExtensibleEditBox
     EditBoxProps extends Props<Component>,
     EditBoxState extends State<Component>
     >
-    extends React.Component<EditBoxProps, EditBoxState>
+    extends ModalBox<EditBoxProps, EditBoxState>
 {
 
     protected abstract getFieldsAndLabels(): { [field: string]: string };
@@ -39,12 +38,12 @@ export abstract class ExtensibleEditBox
     };
 
     protected updateComponent(old: Component, field: string, value: string): Component {
-        if (!Object.keys(old).includes(field))
+        if (!Object.keys(old.getData()).includes(field))
             throw new Error(
                 "Received updated field "
                 + field
                 + " in object with keys "
-                + Object.keys(old)
+                + Object.keys(old.getData())
             );
         return old.withData({ ...old.getData(), [field]: value }) as Component;
     }
@@ -53,42 +52,38 @@ export abstract class ExtensibleEditBox
         return this.state.component.getData()[fieldName];
     }
 
-    render(): ReactElement {
+    protected getBoxContents(): ReactElement {
         const componentTypeString = this.getComponentTypeString();
         let fieldsAndLabels: { [field: string]: string } = this.getFieldsAndLabels();
 
         return (
-            <Modal open={true} data-testid={"EditBox"}>
-                <Box sx={modalStyle}>
-                    <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                            {
-                                this.renderContents(componentTypeString, fieldsAndLabels)
-                            }
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Button
-                                variant="contained"
-                                onClick={() => {
-                                    this.props.handleSave(this.state.component)
-                                }}
-                                data-testid={"SaveButton"}
-                            >
-                                Save
-                            </Button>
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Button
-                                variant="contained"
-                                onClick={this.props.handleCancel}
-                                data-testid={"CancelButton"}
-                            >
-                                Cancel
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </Box>
-            </Modal>
+            <Grid container spacing={2}>
+                <Grid item xs={12}>
+                    {
+                        this.renderContents(componentTypeString, fieldsAndLabels)
+                    }
+                </Grid>
+                <Grid item xs={4}>
+                    <Button
+                        variant="contained"
+                        onClick={() => {
+                            this.props.handleSave(this.state.component)
+                        }}
+                        data-testid={"SaveButton"}
+                    >
+                        Save
+                    </Button>
+                </Grid>
+                <Grid item xs={4}>
+                    <Button
+                        variant="contained"
+                        onClick={this.props.handleCancel}
+                        data-testid={"CancelButton"}
+                    >
+                        Cancel
+                    </Button>
+                </Grid>
+            </Grid>
         );
     }
 
