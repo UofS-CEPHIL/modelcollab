@@ -50,10 +50,10 @@ export default class ComputeModelTask {
         }
         console.log(juliaCode);
         let proc = spawn(
-            "julia",
+            "./julia",
             {
                 stdio: ["pipe", "inherit", "inherit"],
-                cwd: "/home/eric",
+                cwd: "/home/ericr789/julia-1.7.3/bin/",
             }
         );
 
