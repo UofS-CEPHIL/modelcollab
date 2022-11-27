@@ -5,7 +5,7 @@ import { AppBar as MuiAppBar, AppBarProps as MuiAppBarProps, CircularProgress, C
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
 import { AxiosResponse } from 'axios';
 
-import { UiMode, modeFromString } from '../../UiMode';
+import { UiMode } from '../../UiMode';
 import RestClient from '../../rest/RestClient';
 import { ChevronLeft } from '@mui/icons-material';
 import CloudIcon from '@mui/icons-material/Cloud';
@@ -15,17 +15,19 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import EditIcon from '@mui/icons-material/Edit';
 import EastIcon from '@mui/icons-material/East';
-import CopyAllIcon from '@mui/icons-material/CopyAll';
 import OpenWithIcon from '@mui/icons-material/OpenWith';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CodeIcon from '@mui/icons-material/Code';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import SaveIcon from '@mui/icons-material/Save';
 import DownloadIcon from '@mui/icons-material/Download';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ListIcon from '@mui/icons-material/List';
 import HelpIcon from '@mui/icons-material/Help';
+import DeviceHubIcon from '@mui/icons-material/DeviceHub';
+import PublishIcon from '@mui/icons-material/Publish';
+import DataObjectIcon from '@mui/icons-material/DataObject';
+import FirebaseDataModel from '../../data/FirebaseDataModel';
 
 export interface Props {
     mode: UiMode,
@@ -33,12 +35,13 @@ export interface Props {
     sessionId: string;
     selectedScenario: string | null;
     returnToSessionSelect: () => void;
-    downloadData: (b: Blob) => void;
+    downloadData: (b: Blob, filename: string) => void;
     saveModel: () => void;
     importModel: () => void;
     showScenarios: () => void;
     showHelpBox: () => void;
     restClient: RestClient;
+    firebaseDataModel: FirebaseDataModel;
 }
 
 export interface State {
@@ -196,14 +199,19 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
                     CanvasScreenToolbar.getGetCodeIcon()
                 ),
                 this.makeToolbarButton(
+                    "Get Data",
+                    () => this.getData(),
+                    CanvasScreenToolbar.getGetJsonIcon()
+                ),
+                this.makeToolbarButton(
                     "Run",
                     () => this.computeModel(),
                     getLabelForRunButton()
                 ),
                 this.makeToolbarButton(
-                    "Save",
+                    "Publish",
                     () => this.props.saveModel(),
-                    CanvasScreenToolbar.getSaveModelIcon()
+                    CanvasScreenToolbar.getPublishModelIcon()
                 ),
                 this.makeToolbarButton(
                     "Import",
@@ -234,6 +242,10 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
         return (<DownloadIcon />);
     }
 
+    public static getGetJsonIcon(): ReactElement {
+        return (<DataObjectIcon />);
+    }
+
     public static getGetCodeIcon(): ReactElement {
         return (<CodeIcon />);
     }
@@ -246,8 +258,8 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
         return (<PlayArrowIcon />);
     }
 
-    public static getSaveModelIcon(): ReactElement {
-        return (<SaveIcon />);
+    public static getPublishModelIcon(): ReactElement {
+        return (<PublishIcon />);
     }
 
     public static getIconForMode(mode: UiMode): ReactElement {
@@ -267,7 +279,7 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
             case UiMode.FLOW:
                 return (<EastIcon />);
             case UiMode.IDENTIFY:
-                return (<CopyAllIcon />);
+                return (<DeviceHubIcon />);
             case UiMode.MOVE:
                 return (<OpenWithIcon />);
             case UiMode.PARAM:
@@ -278,16 +290,17 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
     }
 
     private makeToolbarButton(text: string, onClick: (e: React.MouseEvent) => void, icon?: ReactElement): ReactElement {
+        const isSelected = (mode: string) => this.props.mode.toString() === mode;
         return (
-            <ListItem key={text} disablePadding sx={{ display: 'block' }} id={text}>
+            <ListItem key={text} disablePadding sx={{ display: 'block' }} id={text} >
                 <ListItemButton
                     sx={{
                         minHeight: 48,
                         justifyContent: this.state.open ? 'initial' : 'center',
-                        px: 2.5,
+                        px: 2.5
                     }}
                     onClick={e => onClick(e)}
-                    selected={this.props.mode.toString() === text}
+                    selected={isSelected(text)}
                     id={text}
                 >
                     <ListItemIcon
@@ -302,20 +315,22 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
                     </ListItemIcon>
                     <ListItemText primary={text} sx={{ opacity: this.state.open ? 1 : 0 }} />
                 </ListItemButton>
-            </ListItem>
+            </ListItem >
         );
     }
 
     private getCode(): void {
-        this.props.restClient.getCode(this.props.sessionId, (code: string) => {
-            let a = document.createElement('a');
-            a.href = window.URL.createObjectURL(new Blob([code]));
-            a.download = "Model.jl";
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        });
+        this.props.restClient.getCode(
+            this.props.sessionId,
+            (code: string) => this.props.downloadData(new Blob([code]), "Model.jl")
+        );
+    }
+
+    private getData(): void {
+        this.props.firebaseDataModel.getDataForSession(
+            this.props.sessionId,
+            (data: any) => this.props.downloadData(new Blob([JSON.stringify(data)]), `${this.props.sessionId}.json`)
+        );
     }
 
     private computeModel(): void {
@@ -330,7 +345,7 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
                                 [res.data],
                                 { type: res.headers['content-type'] }
                             );
-                            this.props.downloadData(blob);
+                            this.props.downloadData(blob, "ModelResults.png");
                         }
                         finally {
                             this.setState({ ...this.state, waitingForResults: false });

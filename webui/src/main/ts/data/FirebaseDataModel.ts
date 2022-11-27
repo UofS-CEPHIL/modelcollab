@@ -4,6 +4,7 @@ import ComponentUiData from "../components/Canvas/ScreenObjects/ComponentUiData"
 export default interface FirebaseDataModel {
     updateComponent: (sessionId: string, data: schema.FirebaseDataComponent<any>) => void;
     subscribeToSession: (sessionId: string, callback: (components: schema.FirebaseDataComponent<any>[]) => void) => void;
+    getDataForSession: (sessionId: string, callback: (components: schema.FirebaseDataComponent<any>[]) => void) => void;
     addSession: (sessionId: string) => void;
     subscribeToSessionList: (onChanged: (sessions: string[]) => void) => void;
     subscribeToModelList: (onChanged: (models: string[]) => void) => void;

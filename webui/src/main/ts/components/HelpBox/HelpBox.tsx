@@ -58,8 +58,9 @@ export default class HelpBox extends ModalBox<Props, State> {
             this.makeIdentifyBulletPoint(),
             this.makeScenariosBulletPoint(),
             this.makeGetCodeBulletPoint(),
+            this.makeGetDataBulletPoint(),
             this.makeRunModelBulletPoint(),
-            this.makeSaveModelBulletPoint(),
+            this.makePublishModelBulletPoint(),
             this.makeImportModelBulletPoint(),
             this.makeGoBackBulletPoint(),
         ];
@@ -96,7 +97,10 @@ export default class HelpBox extends ModalBox<Props, State> {
             + "models - including the outer model - by 'identifying' two components as being identical. Connections and "
             + "flows should only be drawn between components of the same model. To make a connection from the outer "
             + "model to an inner component, create a component of the same type in the outer model, connect it as "
-            + "desired, then identify the outer and inner components.";
+            + "desired, then identify the outer and inner components. Equations should be written using the identifier "
+            + "of any components used regardless of the component's type. E.g. the equation for the 'infection' flow "
+            + "of a simple SIR model might be 'S*rInf*I/N' where S and I are stocks, rInf is a a parameter, and "
+            + "N is a sum variable. Symbols are qualified by the backend using the connection arrows.";
         const icon = (<HelpOutlineIcon />);
         return this.makeBulletPoint(text, icon);
     }
@@ -215,6 +219,14 @@ export default class HelpBox extends ModalBox<Props, State> {
         return this.makeBulletPoint(text, icon);
     }
 
+    private makeGetDataBulletPoint(): ReactElement {
+        const text = "The Get Data button allows the user to download the current model as JSON data. Currently, this "
+            + "data can only be imported by directly modifying the database, but a future version will include the "
+            + "ability to import model data from such JSON files.";
+        const icon = CanvasScreenToolbar.getGetJsonIcon();
+        return this.makeBulletPoint(text, icon);
+    }
+
     private makeRunModelBulletPoint(): ReactElement {
         const text = "The Run Model button allows the user to run the current scenario with ODE semantics. This will "
             + "be updated for other semantics in a future update. Model computation may take up to several minutes, "
@@ -223,11 +235,11 @@ export default class HelpBox extends ModalBox<Props, State> {
         return this.makeBulletPoint(text, icon);
     }
 
-    private makeSaveModelBulletPoint(): ReactElement {
-        const text = "The Save Model button allows the user to save the current model to be imported into another "
+    private makePublishModelBulletPoint(): ReactElement {
+        const text = "The Publish Model button allows the user to publish the current model to be imported into another "
             + "model. The behaviour is undefined for saving models which contain other models, and should not be done."
             + "A future update will allow such models to be saved in a 'flattened' form.";
-        const icon = CanvasScreenToolbar.getSaveModelIcon();
+        const icon = CanvasScreenToolbar.getPublishModelIcon();
         return this.makeBulletPoint(text, icon);
     }
 
