@@ -10,12 +10,7 @@ ModelCollab is written by Eric Redekopp, Xiaoyan Li, and Long Pham of the
 University of Saskatchewan CEPHIL lab, with support from Dr. Nathaniel
 Osgood.
 
-## Design
-
-Modelcollab currently consists of 3 components:
-- The React frontend, found in the 'webui' directory
-- The server which invokes the Julia code, found in the 'server' directory
-- The Firebase database, for which we use the API. Classes describing the database structure are found in the 'database' directory. 
+Design documentation is available in the wiki of this Github repository
 
 ## Build
 - webui
