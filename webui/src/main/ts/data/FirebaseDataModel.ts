@@ -6,6 +6,7 @@ export default interface FirebaseDataModel {
     subscribeToSession: (sessionId: string, callback: (components: schema.FirebaseDataComponent<any>[]) => void) => void;
     getDataForSession: (sessionId: string, callback: (components: schema.FirebaseDataComponent<any>[]) => void) => void;
     addSession: (sessionId: string) => void;
+    getDataForSession: (sessionId: string, callback: (components: schema.FirebaseDataComponent<any>[]) => void) => void;
     subscribeToSessionList: (onChanged: (sessions: string[]) => void) => void;
     subscribeToModelList: (onChanged: (models: string[]) => void) => void;
     removeComponent: (sessionId: string, componentId: string) => void;
