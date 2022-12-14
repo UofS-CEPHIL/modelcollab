@@ -3,32 +3,12 @@
 ## About
 
 ModelCollab is a web-based collaborative modelling application with
-the front end in Typescript, React, and Firebase, and the modelling
-logic in Julia.
+the front end in Typescript, React, and Firebase, and modelling logic
+handled in Julia through StockFlow.jl.
 
-ModelCollab is written by Eric Redekopp, Xiaoyan Li, and Long Pham of the
-University of Saskatchewan CEPHIL lab, with support from Dr. Nathaniel
-Osgood.
+ModelCollab is written by Eric Redekopp and Long Pham of the
+University of Saskatchewan CEPHIL lab with support from Dr. Nathaniel
+Osgood. StockFlow.jl is written by Xiaoyan Li and Nicholas Meadows of CEPHIL
+who have also worked closely with this project.
 
-## Design
-
-Modelcollab currently consists of 3 components:
-- The React frontend, found in the 'webui' directory
-- The server which invokes the Julia code, found in the 'server' directory
-- The Firebase database, for which we use the API. Classes describing the database structure are found in the 'database' directory. 
-
-## Build
-- webui
-  - `npm start` to run a development version of the frontend on localhost:3000
-  - `npm run build` to compile an optimized version of the frontend
-  - `num test` to run the Jest unit tests
-- server
-  - `npm run build` to build
-  - `npm run start` to start the https server
-  - `npm test` to run the Jest unit tests
-- database
-  - `npm run build` to build
-  - No code to run, and no unit tests. 
-  - Must be built before running webui or server
-  
-You must also create a Firebase project and insert its config information into src/main/ts/config/FirebaseConfig.ts under the server and webui directories.
+Design documentation and build instructions are available in the wiki of this Github repository.
