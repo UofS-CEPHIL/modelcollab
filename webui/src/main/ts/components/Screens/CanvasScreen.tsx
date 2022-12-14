@@ -10,9 +10,8 @@ import applicationConfig from '../../config/applicationConfig';
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import { Props as EditBoxProps } from "../EditBox/EditBox";
 import { Props as SaveModelBoxProps } from "../SaveModelBox/SaveModelBox";
-//import { Props as ImportModelBoxProps } from "../ImportModelBox/ImportModelBox";
 import { Props as ImportModelBoxProps } from "../ButtonListBox/ButtonListBox";
-import ScenariosBox, { Props as ScenarioBoxProps } from "../ScenariosBox/ScenariosBox";
+import { Props as ScenarioBoxProps } from "../ScenariosBox/ScenariosBox";
 import StockUiData from '../Canvas/ScreenObjects/Stock/StockUiData';
 import FlowUiData from '../Canvas/ScreenObjects/Flow/FlowUiData';
 import ConnectionUiData from '../Canvas/ScreenObjects/Connection/ConnectionUiData';
@@ -49,17 +48,21 @@ export interface Props {
     createScenariosBox: (props: ScenarioBoxProps) => ReactElement;
 }
 
+enum BoxState {
+    NONE = "NONE",
+    SAVE_MODEL = "SAVE_MODEL",
+    IMPORT_MODEL = "IMPORT_MODEL",
+    SCENARIO = "SCENARIO",
+    HELP = "HELP",
+}
+
 interface State {
     mode: UiMode,
     components: ComponentUiData[];
     loadedModels: LoadedStaticModel[];
     selectedScenarioName: string | null;  // null means all default values
     selectedComponentIds: string[];
-    // TODO combine these into one entity
-    showingSaveModelBox: boolean;
-    showingImportModelBox: boolean;
-    showingScenarioBox: boolean;
-    showingHelpBox: boolean;
+    boxState: BoxState;
 }
 
 let lastMode: UiMode = UiMode.MOVE;
@@ -77,10 +80,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
             loadedModels: [],
             selectedScenarioName: null,
             selectedComponentIds: [],
-            showingSaveModelBox: false,
-            showingImportModelBox: false,
-            showingScenarioBox: false,
-            showingHelpBox: false,
+            boxState: BoxState.NONE
         };
         this.dm = props.firebaseDataModel;
         document.title = applicationConfig.appName;
@@ -212,31 +212,31 @@ export default class CanvasScreen extends React.Component<Props, State> {
                     } as ScenarioEditBoxProps)
                 }
                 {
-                    this.state.showingSaveModelBox &&
+                    this.state.boxState === BoxState.SAVE_MODEL &&
                     this.props.createSaveModelBox({
-                        handleCancel: () => this.setState({ ...this.state, showingSaveModelBox: false }),
+                        handleCancel: () => this.setState({ ...this.state, boxState: BoxState.NONE }),
                         handleSave: id => {
-                            this.setState({ ...this.state, showingSaveModelBox: false });
+                            this.setState({ ...this.state, boxState: BoxState.NONE });
                             this.dm.addModelToLibrary(id, this.state.components);
                         }
                     })
                 }
                 {
-                    this.state.showingImportModelBox &&
+                    this.state.boxState === BoxState.IMPORT_MODEL &&
                     this.props.createImportModelBox({
-                        handleCancel: () => this.setState({ ...this.state, showingImportModelBox: false }),
+                        handleCancel: () => this.setState({ ...this.state, boxState: BoxState.NONE }),
                         handleSubmit: name => {
-                            setTimeout(() => this.setState({ ...this.state, showingImportModelBox: false }));
+                            setTimeout(() => this.setState({ ...this.state, boxState: BoxState.NONE }));
                             this.loadStaticModelData(name);
                         },
                         database: this.props.firebaseDataModel
                     })
                 }
                 {
-                    this.state.showingScenarioBox &&
+                    this.state.boxState === BoxState.SCENARIO &&
                     this.props.createScenariosBox({
-                        handleCancel: () => this.setState({ ...this.state, showingScenarioBox: false }),
-                        handleSubmit: name => this.setState({ ...this.state, showingScenarioBox: false, selectedScenarioName: name }),
+                        handleCancel: () => this.setState({ ...this.state, boxState: BoxState.NONE }),
+                        handleSubmit: name => this.setState({ ...this.state, boxState: BoxState.NONE, selectedScenarioName: name }),
                         initialSelected: this.state.selectedScenarioName,
                         sessionId: this.props.sessionId,
                         database: this.props.firebaseDataModel,
@@ -245,14 +245,14 @@ export default class CanvasScreen extends React.Component<Props, State> {
                     })
                 }
                 {
-                    this.state.showingHelpBox &&
-                    (<HelpBox onClose={() => this.setState({ ...this.state, showingHelpBox: false })} width={700} />)
+                    this.state.boxState === BoxState.HELP &&
+                    (<HelpBox onClose={() => this.setState({ ...this.state, boxState: BoxState.NONE })} width={700} />)
                 }
             </React.Fragment >
         );
     }
     private showHelpBox(): void {
-        this.setState({ ...this.state, showingHelpBox: true });
+        this.setState({ ...this.state, boxState: BoxState.HELP });
     }
 
     private startEditingScenario(name: string): void {
@@ -326,11 +326,11 @@ export default class CanvasScreen extends React.Component<Props, State> {
     }
 
     private importModel(): void {
-        this.setState({ ...this.state, showingImportModelBox: true });
+        this.setState({ ...this.state, boxState: BoxState.IMPORT_MODEL });
     }
 
     private showScenarios(): void {
-        this.setState({ ...this.state, showingScenarioBox: true });
+        this.setState({ ...this.state, boxState: BoxState.SCENARIO });
     }
 
     private loadStaticModelData(modelId: string): void {
@@ -489,7 +489,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
     }
 
     private saveModel(): void {
-        this.setState({ showingSaveModelBox: true });
+        this.setState({ boxState: BoxState.SAVE_MODEL });
     }
 
     private getAllComponentsIncludingChildren(): ComponentUiData[] {
