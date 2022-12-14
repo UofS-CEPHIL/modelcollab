@@ -1,10 +1,11 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import CloudUiData from "./ScreenObjects/Cloud/CloudUiData";
-import ComponentUiData, { PointableComponent, PointerComponent } from "./ScreenObjects/ComponentUiData";
+import ComponentUiData from "./ScreenObjects/ComponentUiData";
 import ConnectionUiData from "./ScreenObjects/Connection/ConnectionUiData";
 import DynamicVariableUiData from "./ScreenObjects/DynamicVariable/DynamicVariableUiData";
 import FlowUiData from "./ScreenObjects/Flow/FlowUiData";
 import ParameterUiData from "./ScreenObjects/Parameter/ParameterUiData";
+import PointerComponent from "./ScreenObjects/PointerComponent";
 import StaticModelUiData from "./ScreenObjects/StaticModel/StaticModelUiData";
 import StockUiData from "./ScreenObjects/Stock/StockUiData";
 import SubstitutionUiData from "./ScreenObjects/Substitution/SubstitionUiData";
@@ -123,7 +124,7 @@ export default class ComponentCollection {
         return this.substitutions;
     }
 
-    public getPointerComponents(): PointerComponent<any, any, any, any>[] {
+    public getPointerComponents(): PointerComponent[] {
         return [...this.getConnections(), ...this.getFlows()];
     }
 

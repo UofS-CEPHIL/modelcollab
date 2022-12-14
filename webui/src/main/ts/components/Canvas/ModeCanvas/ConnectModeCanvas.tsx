@@ -1,6 +1,6 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
-import { VisibleUiComponent } from "../ScreenObjects/ComponentUiData";
+import VisibleUiComponent from "../ScreenObjects/VisibleUiComponent";
 import ConnectionUiData from "../ScreenObjects/Connection/ConnectionUiData";
 import BaseCanvas from "../BaseCanvas";
 

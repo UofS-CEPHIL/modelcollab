@@ -1,11 +1,20 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Point } from "../../../DrawingUtils";
 
-import ComponentUiData, { PointableComponent, PointerComponent } from "../ComponentUiData";
+import ComponentUiData from "../ComponentUiData";
+import PointableComponent from "../PointableComponent";
+import { PointerComponentExtensible } from "../PointerComponent";
 
 export const HANDLE_WIDTH = 8;
 
-export default class ConnectionUiData extends PointerComponent<schema.ConnectionComponentData, schema.ConnectionFirebaseComponent, PointableComponent, PointableComponent> {
+export default class ConnectionUiData
+    extends PointerComponentExtensible<
+    schema.ConnectionComponentData,
+    schema.ConnectionFirebaseComponent,
+    PointableComponent,
+    PointableComponent
+    >
+{
 
     public withData(data: schema.ConnectionComponentData): ConnectionUiData {
         return new ConnectionUiData(

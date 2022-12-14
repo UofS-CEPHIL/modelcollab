@@ -1,9 +1,11 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 
-import { TextComponent } from "../ComponentUiData";
+import { TextComponentExtensible } from "../TextComponent";
 
 
-export default class ParameterUiData extends TextComponent<schema.NameValueComponentData, schema.ParameterFirebaseComponent> {
+export default class ParameterUiData
+    extends TextComponentExtensible<schema.NameValueComponentData, schema.ParameterFirebaseComponent>
+{
     public withData(data: schema.NameValueComponentData): ParameterUiData {
         return new ParameterUiData(this.getDatabaseObject().withData(data));
     }

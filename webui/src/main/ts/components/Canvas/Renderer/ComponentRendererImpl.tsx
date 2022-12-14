@@ -13,13 +13,14 @@ import DynamicVariable from "../ScreenObjects/DynamicVariable/DynamicVariable";
 import CloudUiData from "../ScreenObjects/Cloud/CloudUiData";
 import StaticModelUiData from "../ScreenObjects/StaticModel/StaticModelUiData";
 import ConnectionUiData from "../ScreenObjects/Connection/ConnectionUiData";
-import ComponentUiData, { TextComponent } from "../ScreenObjects/ComponentUiData";
+import ComponentUiData from "../ScreenObjects/ComponentUiData";
 import DynamicVariableUiData from "../ScreenObjects/DynamicVariable/DynamicVariableUiData";
 import SumVariableUiData from "../ScreenObjects/SumVariable/SumVariableUiData";
 import ParameterUiData from "../ScreenObjects/Parameter/ParameterUiData";
 import StockUiData from "../ScreenObjects/Stock/StockUiData";
 import FlowUiData from "../ScreenObjects/Flow/FlowUiData";
 import ComponentCollection from "../ComponentCollection";
+import TextComponent from "../ScreenObjects/TextComponent";
 
 
 export default class ComponentRendererImpl implements ComponentRenderer {
@@ -302,7 +303,7 @@ export default class ComponentRendererImpl implements ComponentRenderer {
     }
 
     private makeTextProps(
-        data: TextComponent<any, any>,
+        data: TextComponent,
         draggable: boolean,
         editComponent: (c: ComponentUiData) => void,
         color: string,

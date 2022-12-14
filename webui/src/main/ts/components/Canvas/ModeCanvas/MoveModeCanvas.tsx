@@ -2,7 +2,7 @@ import { ReactElement } from "react";
 import { Point } from "../../DrawingUtils";
 import SelectionBox from "../ScreenObjects/SelectionBox";
 import { State as CanvasState, Props as CanvasProps, ExtendableBaseCanvas } from "../BaseCanvas";
-import { VisibleUiComponent } from "../ScreenObjects/ComponentUiData";
+import VisibleUiComponent from "../ScreenObjects/VisibleUiComponent";
 
 export interface State extends CanvasState {
     anchorX: number | null,

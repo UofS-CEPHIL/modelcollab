@@ -1,12 +1,14 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Point } from "../../../DrawingUtils";
 
-import { RectangularComponent } from "../ComponentUiData";
+import { RectangularComponentExtensible } from "../RectangularComponent";
 
 export const WIDTH_PX = 100;
 export const HEIGHT_PX = 70;
 
-export default class StockUiData extends RectangularComponent<schema.StockComponentData, schema.StockFirebaseComponent> {
+export default class StockUiData
+    extends RectangularComponentExtensible<schema.StockComponentData, schema.StockFirebaseComponent>
+{
 
     public withData(data: schema.StockComponentData): StockUiData {
         return new StockUiData(this.getDatabaseObject().withData(data));
@@ -36,5 +38,4 @@ export default class StockUiData extends RectangularComponent<schema.StockCompon
     public isPointable(): boolean {
         return true;
     }
-
 }

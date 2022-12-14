@@ -1,14 +1,12 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Point } from "../../../DrawingUtils";
-import ComponentUiData, { RectangularComponent, VisibleUiComponent } from "../ComponentUiData";
+import ComponentUiData from "../ComponentUiData";
+import { RectangularComponentExtensible } from "../RectangularComponent";
+import VisibleUiComponent from "../VisibleUiComponent";
 
 
 export default class StaticModelUiData
-    extends RectangularComponent
-    <
-    schema.StaticModelComponentData,
-    schema.StaticModelFirebaseComponent
-    >
+    extends RectangularComponentExtensible<schema.StaticModelComponentData, schema.StaticModelFirebaseComponent>
 {
 
     public static PAD_PX: number = 20;

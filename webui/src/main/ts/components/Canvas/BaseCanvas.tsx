@@ -2,7 +2,8 @@ import React, { ReactElement } from 'react';
 import { Stage, Layer, Group } from 'react-konva';
 
 import FirebaseDataModel from '../../data/FirebaseDataModel';
-import ComponentUiData, { VisibleUiComponent } from './ScreenObjects/ComponentUiData';
+import ComponentUiData from './ScreenObjects/ComponentUiData';
+import VisibleUiComponent from "./ScreenObjects/VisibleUiComponent";
 import { DEFAULT_COLOR, SELECTED_COLOR } from './ScreenObjects/Stock/Stock';
 import FlowUiData from './ScreenObjects/Flow/FlowUiData';
 import ComponentCollection from './ComponentCollection';

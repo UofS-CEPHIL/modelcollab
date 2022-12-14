@@ -1,8 +1,6 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
-
 import BaseCanvas from "../BaseCanvas";
-import ComponentUiData, { VisibleUiComponent } from "../ScreenObjects/ComponentUiData";
-
+import ComponentUiData from "../ScreenObjects/ComponentUiData";
+import VisibleUiComponent from "../ScreenObjects/VisibleUiComponent";
 
 export default class IdentifyModeCanvas extends BaseCanvas {
 
@@ -33,5 +31,4 @@ export default class IdentifyModeCanvas extends BaseCanvas {
         return aSplit.length === bSplit.length
             && aSplit.slice(0, aSplit.length - 1) === bSplit.slice(0, bSplit.length - 1);
     }
-
 }

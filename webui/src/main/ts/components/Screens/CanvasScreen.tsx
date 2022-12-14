@@ -2,7 +2,8 @@ import React, { ReactElement } from 'react';
 
 import { FirebaseComponentModel as schema } from "database/build/export";
 
-import ComponentUiData, { PointerComponent } from '../Canvas/ScreenObjects/ComponentUiData';
+import ComponentUiData from '../Canvas/ScreenObjects/ComponentUiData';
+import PointerComponent from "../Canvas/ScreenObjects/PointerComponent";
 import { Props as CanvasProps } from "../Canvas/BaseCanvas";
 import { Props as ToolbarProps } from '../Toolbar/CanvasScreenToolbar';
 import { UiMode } from '../../UiMode';
@@ -514,14 +515,14 @@ export default class CanvasScreen extends React.Component<Props, State> {
         )));
     }
 
-    public getComponentsPointingTo(component: ComponentUiData): PointerComponent<any, any, any, any>[] {
+    public getComponentsPointingTo(component: ComponentUiData): PointerComponent[] {
         return this.state.components.filter(p =>
             (p.getType() === schema.ComponentType.FLOW || p.getType() === schema.ComponentType.CONNECTION)
             && p.getData().to === component.getId()
         ).map(p => p.getType() === schema.ComponentType.FLOW ? p as FlowUiData : p as ConnectionUiData);
     }
 
-    public getComponentsPointingFrom(component: ComponentUiData): PointerComponent<any, any, any, any>[] {
+    public getComponentsPointingFrom(component: ComponentUiData): PointerComponent[] {
         return this.state.components.filter(p =>
             (p.getType() === schema.ComponentType.FLOW || p.getType() === schema.ComponentType.CONNECTION)
             && p.getData().from === component.getId()

@@ -1,10 +1,12 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Point } from "../../../DrawingUtils";
 
-import { RectangularComponent } from "../ComponentUiData";
+import { RectangularComponentExtensible } from "../RectangularComponent";
 
 
-export default class CloudUiData extends RectangularComponent<schema.CloudComponentData, schema.CloudFirebaseComponent> {
+export default class CloudUiData
+    extends RectangularComponentExtensible<schema.CloudComponentData, schema.CloudFirebaseComponent>
+{
 
     public static readonly RADIUS = 25;
 

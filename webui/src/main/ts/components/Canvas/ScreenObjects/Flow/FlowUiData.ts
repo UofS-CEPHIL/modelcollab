@@ -1,17 +1,20 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import { Point, Side } from "../../../DrawingUtils";
-import ComponentUiData, { PointerComponent, PointableComponent, RectangularComponent, TextComponent } from "../ComponentUiData";
+import ComponentUiData from "../ComponentUiData";
+import PointableComponent from "../PointableComponent";
+import { PointerComponentExtensible } from "../PointerComponent";
+import RectangularComponent from "../RectangularComponent";
 import StockUiData from "../Stock/StockUiData";
+import TextComponent from "../TextComponent";
 
-const PADDING_PX: number = 20;
 export const FLOW_LABEL_DEFAULT_WIDTH = 80;
 export const FLOW_LABEL_DEFAULT_FONT_SIZE = 12;
 export const FLOW_LABEL_DEFAULT_HEIGHT = 23;
 export const BOUNDING_BOX_ELEMENT_BUFFER = 70;
 
 export default class FlowUiData
-    extends PointerComponent<schema.FlowComponentData, schema.FlowFirebaseComponent, StockUiData, StockUiData>
+    extends PointerComponentExtensible<schema.FlowComponentData, schema.FlowFirebaseComponent, StockUiData, StockUiData>
     implements PointableComponent {
 
     public getArrowPoint(side: Side, components: ComponentUiData[]): Point {

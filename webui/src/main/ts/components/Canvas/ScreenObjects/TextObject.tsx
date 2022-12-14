@@ -1,10 +1,11 @@
-import React, { ReactElement, Ref, useRef } from 'react';
-import Konva, { Group, Text } from 'react-konva';
+import React from 'react';
+import { Text } from 'react-konva';
 
-import ComponentUiData, { TextComponent } from "./ComponentUiData";
+import ComponentUiData from "./ComponentUiData";
+import TextComponent from "./TextComponent";
 
 export interface Props {
-    data: TextComponent<any, any>;
+    data: TextComponent;
     draggable: boolean;
     updateState: (c: ComponentUiData) => void;
     color: string;
