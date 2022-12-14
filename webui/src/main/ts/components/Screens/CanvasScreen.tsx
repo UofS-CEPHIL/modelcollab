@@ -55,7 +55,7 @@ interface State {
     loadedModels: LoadedStaticModel[];
     selectedScenarioName: string | null;  // null means all default values
     selectedComponentIds: string[];
-    // TODO collapse these into one entity
+    // TODO combine these into one entity
     showingSaveModelBox: boolean;
     showingImportModelBox: boolean;
     showingScenarioBox: boolean;
@@ -162,7 +162,8 @@ export default class CanvasScreen extends React.Component<Props, State> {
                         setMode: setMode,
                         returnToSessionSelect: this.props.returnToSessionSelect,
                         sessionId: this.props.sessionId,
-                        downloadData: b => this.downloadData(b),
+                        downloadData: (b, fname) => this.downloadData(b, fname),
+                        firebaseDataModel: this.props.firebaseDataModel,
                         saveModel: () => this.saveModel(),
                         importModel: () => this.importModel(),
                         showScenarios: () => this.showScenarios(),
@@ -477,10 +478,10 @@ export default class CanvasScreen extends React.Component<Props, State> {
         }
     }
 
-    private downloadData(blob: Blob): void {
+    private downloadData(blob: Blob, fileName: string): void {
         let a = document.createElement('a');
         a.href = window.URL.createObjectURL(blob);
-        a.download = "ModelResults.png";
+        a.download = fileName;
         a.style.display = 'none';
         document.body.appendChild(a);
         a.click();

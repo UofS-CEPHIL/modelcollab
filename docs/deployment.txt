@@ -1,6 +1,0 @@
-
-webui
-    firebase deploy
-
-server 
-    gcloud run deploy --port=8080

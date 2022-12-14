@@ -1,31 +1,16 @@
 import React, { ReactElement } from 'react';
 import Box from '@mui/material/Box';
 import MenuIcon from '@mui/icons-material/Menu';
-import { AppBar as MuiAppBar, AppBarProps as MuiAppBarProps, CircularProgress, CssBaseline, Divider, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, Toolbar, Typography, Drawer as MuiDrawer } from '@mui/material';
-import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
-import { AxiosResponse } from 'axios';
+import { AppBar as MuiAppBar, AppBarProps as MuiAppBarProps, CssBaseline, Divider, IconButton, Toolbar, Typography, Drawer as MuiDrawer, List } from '@mui/material';
+import { styled, Theme, CSSObject } from '@mui/material/styles';
 
-import { UiMode, modeFromString } from '../../UiMode';
+import { UiMode } from '../../UiMode';
 import RestClient from '../../rest/RestClient';
 import { ChevronLeft } from '@mui/icons-material';
-import CloudIcon from '@mui/icons-material/Cloud';
-import NorthEastIcon from '@mui/icons-material/NorthEast';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import EditIcon from '@mui/icons-material/Edit';
-import EastIcon from '@mui/icons-material/East';
-import CopyAllIcon from '@mui/icons-material/CopyAll';
-import OpenWithIcon from '@mui/icons-material/OpenWith';
-import FontDownloadIcon from '@mui/icons-material/FontDownload';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import CodeIcon from '@mui/icons-material/Code';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import SaveIcon from '@mui/icons-material/Save';
-import DownloadIcon from '@mui/icons-material/Download';
-import LogoutIcon from '@mui/icons-material/Logout';
-import ListIcon from '@mui/icons-material/List';
-import HelpIcon from '@mui/icons-material/Help';
+import FirebaseDataModel from '../../data/FirebaseDataModel';
+import ToolbarButtons from "./CanvasScreenToolbarButtons";
+import MainToolbarButtons from './MainToolbarButtons';
+import SemanticSelectToolbarButtons from './SemanticsSelectToolbarButtons';
 
 export interface Props {
     mode: UiMode,
@@ -33,17 +18,19 @@ export interface Props {
     sessionId: string;
     selectedScenario: string | null;
     returnToSessionSelect: () => void;
-    downloadData: (b: Blob) => void;
+    downloadData: (b: Blob, fileName: string) => void;
     saveModel: () => void;
     importModel: () => void;
     showScenarios: () => void;
     showHelpBox: () => void;
     restClient: RestClient;
+    firebaseDataModel: FirebaseDataModel;
 }
 
 export interface State {
     waitingForResults: boolean;
     open: boolean;
+    toolbarButtons: ToolbarButtons;
 }
 
 
@@ -53,13 +40,12 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
         super(props);
         this.state = {
             waitingForResults: false,
-            open: false
+            open: false,
+            toolbarButtons: this.makeInitialToolbarButtons()
         };
     }
 
-    public static readonly POLLING_TIME_MS = 2000;
-
-    render(): ReactElement {
+    public render(): ReactElement {
 
         // Apply styles to components. Copied from https://mui.com/material-ui/react-drawer/
         const drawerWidth = "240";
@@ -150,13 +136,13 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
                 </AppBar>
                 <Drawer variant="permanent" open={this.state.open}>
                     <DrawerHeader>
-                        <IconButton onClick={() => this.toggleDrawerOpen()}>
+                        <IconButton onClick={() => this.state.toolbarButtons.handleBackButtonPressed()}>
                             <ChevronLeft />
                         </IconButton>
                     </DrawerHeader>
                     <Divider />
                     <List>
-                        {this.makeToolbarButtons()}
+                        {this.state.toolbarButtons.getButtons(this.state.open)}
                     </List>
                 </Drawer>
             </Box>
@@ -167,201 +153,44 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
         this.setState({ ...this.state, open: !this.state.open });
     }
 
-    private makeToolbarButtons(): ReactElement[] {
-        const getLabelForRunButton = () => {
-            if (this.state.waitingForResults) {
-                return (<CircularProgress />);
-            }
-            else {
-                return CanvasScreenToolbar.getDefaultComputeModelIcon();
-            }
-        }
-        return Object.values(UiMode)
-            .map(mode =>
-                this.makeToolbarButton(
-                    mode.toString(),
-                    () => this.props.setMode(mode),
-                    CanvasScreenToolbar.getIconForMode(mode)
-                )
-            ).concat([
-                (<Divider />),
-                this.makeToolbarButton(
-                    "Scenarios",
-                    () => this.props.showScenarios(),
-                    CanvasScreenToolbar.getScenariosIcon()
-                ),
-                this.makeToolbarButton(
-                    "Get Code",
-                    () => this.getCode(),
-                    CanvasScreenToolbar.getGetCodeIcon()
-                ),
-                this.makeToolbarButton(
-                    "Run",
-                    () => this.computeModel(),
-                    getLabelForRunButton()
-                ),
-                this.makeToolbarButton(
-                    "Save",
-                    () => this.props.saveModel(),
-                    CanvasScreenToolbar.getSaveModelIcon()
-                ),
-                this.makeToolbarButton(
-                    "Import",
-                    () => this.props.importModel(),
-                    CanvasScreenToolbar.getImportModelIcon()
-                ),
-                this.makeToolbarButton(
-                    "Help",
-                    () => this.props.showHelpBox(),
-                    CanvasScreenToolbar.getHelpIcon()
-                ),
-                this.makeToolbarButton(
-                    "Back",
-                    () => this.props.returnToSessionSelect(),
-                    CanvasScreenToolbar.getGoBackIcon()
-                ),
-            ]);
-    }
-    static getHelpIcon(): ReactElement {
-        return (<HelpIcon />);
-    }
-
-    public static getGoBackIcon(): ReactElement {
-        return (<LogoutIcon />);
-    }
-
-    public static getImportModelIcon(): ReactElement {
-        return (<DownloadIcon />);
-    }
-
-    public static getGetCodeIcon(): ReactElement {
-        return (<CodeIcon />);
-    }
-
-    public static getScenariosIcon(): ReactElement {
-        return (<ListIcon />);
-    }
-
-    public static getDefaultComputeModelIcon(): ReactElement {
-        return (<PlayArrowIcon />);
-    }
-
-    public static getSaveModelIcon(): ReactElement {
-        return (<SaveIcon />);
-    }
-
-    public static getIconForMode(mode: UiMode): ReactElement {
-        switch (mode) {
-            case UiMode.CLOUD:
-                return (<CloudIcon />);
-            case UiMode.CONNECT:
-                return (<NorthEastIcon />);
-            case UiMode.DELETE:
-                return (<DeleteIcon />);
-            case UiMode.DYN_VARIABLE:
-                return (<AddCircleIcon />);
-            case UiMode.SUM_VARIABLE:
-                return (<AddCircleOutlineIcon />);
-            case UiMode.EDIT:
-                return (<EditIcon />);
-            case UiMode.FLOW:
-                return (<EastIcon />);
-            case UiMode.IDENTIFY:
-                return (<CopyAllIcon />);
-            case UiMode.MOVE:
-                return (<OpenWithIcon />);
-            case UiMode.PARAM:
-                return (<FontDownloadIcon />);
-            case UiMode.STOCK:
-                return (<CheckBoxOutlineBlankIcon />);
-        }
-    }
-
-    private makeToolbarButton(text: string, onClick: (e: React.MouseEvent) => void, icon?: ReactElement): ReactElement {
-        return (
-            <ListItem key={text} disablePadding sx={{ display: 'block' }} id={text}>
-                <ListItemButton
-                    sx={{
-                        minHeight: 48,
-                        justifyContent: this.state.open ? 'initial' : 'center',
-                        px: 2.5,
-                    }}
-                    onClick={e => onClick(e)}
-                    selected={this.props.mode.toString() === text}
-                    id={text}
-                >
-                    <ListItemIcon
-                        sx={{
-                            minWidth: 0,
-                            mr: this.state.open ? 3 : 'auto',
-                            justifyContent: 'center',
-                        }}
-                        id={text}
-                    >
-                        {icon}
-                    </ListItemIcon>
-                    <ListItemText primary={text} sx={{ opacity: this.state.open ? 1 : 0 }} />
-                </ListItemButton>
-            </ListItem>
+    private makeMainToolbarButtons(
+        props: Props,
+        state: { waitingForResults: boolean, open: boolean }
+    ): MainToolbarButtons {
+        return new MainToolbarButtons(
+            props.mode,
+            state.open,
+            state.waitingForResults,
+            props.restClient,
+            props.sessionId,
+            (b, f) => props.downloadData(b, f),
+            props.firebaseDataModel,
+            m => props.setMode(m),
+            () => props.showScenarios(),
+            () => props.saveModel(),
+            () => props.importModel(),
+            () => props.showHelpBox(),
+            () => props.returnToSessionSelect(),
+            () => this.toggleDrawerOpen(),
+            () => this.setState({ ...this.state, toolbarButtons: this.makeSemanticSelectToolbarButtons() })
         );
     }
 
-    private getCode(): void {
-        this.props.restClient.getCode(this.props.sessionId, (code: string) => {
-            let a = document.createElement('a');
-            a.href = window.URL.createObjectURL(new Blob([code]));
-            a.download = "Model.jl";
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        });
+    private makeInitialToolbarButtons(): MainToolbarButtons {
+        return this.makeMainToolbarButtons(this.props, { open: false, waitingForResults: false });
     }
 
-    private computeModel(): void {
-        console.log("Computing model . props.scenario " + this.props.selectedScenario);
-        const pollOnce = (id: string) => {
-            this.props.restClient.getResults(
-                id,
-                res => {
-                    if (res.status === 200) {
-                        try {
-                            const blob = new Blob(
-                                [res.data],
-                                { type: res.headers['content-type'] }
-                            );
-                            this.props.downloadData(blob);
-                        }
-                        finally {
-                            this.setState({ ...this.state, waitingForResults: false });
-                        }
-                    }
-                    else if (res.status === 204) {
-                        startPolling(id);
-                    }
-                    else {
-                        console.error("Received bad response from server");
-                        console.error(res);
-                        this.setState({ ...this.state, waitingForResults: false });
-                    }
-                }
-            );
-        }
-        const startPolling = (id: string) => setTimeout(() => pollOnce(id), CanvasScreenToolbar.POLLING_TIME_MS);
-        if (!this.state.waitingForResults) {
-            this.props.restClient.computeModel(
-                this.props.sessionId,
-                this.props.selectedScenario,
-                (res: AxiosResponse) => {
-                    if (res.status === 200) {
-                        this.setState({ ...this.state, waitingForResults: true });
-                        startPolling(res.data);
-                    }
-                    else {
-                        console.error("Received bad response from server");
-                        console.error(res);
-                    }
-                });
-        }
+    private makeSemanticSelectToolbarButtons(): SemanticSelectToolbarButtons {
+        return new SemanticSelectToolbarButtons(
+            this.props.mode,
+            this.state.open,
+            this.props.sessionId,
+            () => this.setState({ ...this.state, toolbarButtons: this.makeMainToolbarButtons(this.props, this.state) }),
+            this.props.restClient,
+            this.props.selectedScenario,
+            this.props.downloadData,
+            this.state.waitingForResults,
+            b => this.setState({ ...this.state, waitingForResults: b })
+        );
     }
 }
