@@ -1,16 +1,16 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
-
 import VisibleComponent from "./VisibleComponent";
 import ComponentUiData, { ComponentUiDataExtensible } from "./ComponentUiData";
 import { Point, Side } from "../../DrawingUtils";
+import FirebaseDataObject from "database/build/FirebaseDataObject";
+import FirebaseDataComponent from "database/build/FirebaseDataComponent";
 
 
 // This is the actual VisibleUiComponent class. The other one is a convenience class so we don't have to write
 // <any, any> all over the place.
 export abstract class VisibleUiComponentExtensible
     <
-    DataType extends schema.FirebaseDataObject,
-    DbObject extends schema.FirebaseDataComponent<DataType>
+    DataType extends FirebaseDataObject,
+    DbObject extends FirebaseDataComponent<DataType>
     >
     extends ComponentUiDataExtensible<DataType, DbObject>
     implements VisibleComponent {

@@ -1,7 +1,7 @@
 import React, { ReactElement } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import { FirebaseComponentModel as schema } from "database/build/export";
+import ComponentType from "database/build/ComponentType";
 
 import LoginScreen from "./components/Screens/LoginScreen";
 import CanvasScreen from "./components/Screens/CanvasScreen";
@@ -117,27 +117,27 @@ export default class App extends React.Component<Props, State> {
 
     private createEditBox(props: EditBoxProps<any>): ReactElement {
         switch (props.initialComponent.getType()) {
-            case schema.ComponentType.STOCK:
+            case ComponentType.STOCK:
                 return (
                     <StockEditBox {...props} />
                 );
-            case schema.ComponentType.FLOW:
+            case ComponentType.FLOW:
                 return (
                     <FlowEditBox{...props} />
                 );
-            case schema.ComponentType.PARAMETER:
+            case ComponentType.PARAMETER:
                 return (
                     <ParameterEditBox {...props} />
                 );
-            case schema.ComponentType.VARIABLE:
+            case ComponentType.VARIABLE:
                 return (
                     <VariableEditBox {...props} />
                 );
-            case schema.ComponentType.SUM_VARIABLE:
+            case ComponentType.SUM_VARIABLE:
                 return (
                     <SumVariableEditBox {...props} />
                 );
-            case schema.ComponentType.SCENARIO:
+            case ComponentType.SCENARIO:
                 return (
                     <ScenarioEditBox {...props as ScenarioEditBoxProps} />
                 );

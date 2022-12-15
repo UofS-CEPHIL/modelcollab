@@ -2,22 +2,23 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Button, Grid, TextField } from '@mui/material';
 import React, { ReactElement } from 'react';
-import { FirebaseComponentModel as schema } from "database/build/export";
 import ModalBox, { Props as BaseProps, State as BaseState } from '../ModalBox/ModalBox';
+import FirebaseDataComponent from 'database/build/FirebaseDataComponent';
+import ComponentType from 'database/build/ComponentType';
 
-export interface Props<Component extends schema.FirebaseDataComponent<any>> extends BaseProps {
+export interface Props<Component extends FirebaseDataComponent<any>> extends BaseProps {
     initialComponent: Component;
     handleSave: (c: Component) => void;
     handleCancel: () => void;
 }
 
-export interface State<Component extends schema.FirebaseDataComponent<any>> extends BaseState {
+export interface State<Component extends FirebaseDataComponent<any>> extends BaseState {
     component: Component;
 }
 
 export abstract class ExtensibleEditBox
     <
-    Component extends schema.FirebaseDataComponent<any>,
+    Component extends FirebaseDataComponent<any>,
     EditBoxProps extends Props<Component>,
     EditBoxState extends State<Component>
     >
@@ -28,7 +29,7 @@ export abstract class ExtensibleEditBox
 
     public abstract getComponentTypeString(): string;
 
-    public abstract getComponentType(): schema.ComponentType;
+    public abstract getComponentType(): ComponentType;
 
     private static TEXT_INPUT_CLASS: string = "EditBoxTextInput";
 
@@ -120,7 +121,7 @@ export abstract class ExtensibleEditBox
 
 export default abstract class EditBox
     <
-    Component extends schema.FirebaseDataComponent<any>
+    Component extends FirebaseDataComponent<any>
     >
     extends ExtensibleEditBox
     <

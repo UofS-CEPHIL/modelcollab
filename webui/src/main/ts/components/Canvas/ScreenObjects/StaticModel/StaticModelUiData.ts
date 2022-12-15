@@ -1,12 +1,12 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import { Point } from "../../../DrawingUtils";
 import ComponentUiData from "../ComponentUiData";
 import { RectangularComponentExtensible } from "../RectangularComponent";
 import VisibleUiComponent from "../VisibleUiComponent";
-
+import StaticModelComponentData from "database/build/components/StaticModel/StaticModelComponentData";
+import StaticModelFirebaseComponent from "database/build/components/StaticModel/StaticModelFirebaseComponent";
 
 export default class StaticModelUiData
-    extends RectangularComponentExtensible<schema.StaticModelComponentData, schema.StaticModelFirebaseComponent>
+    extends RectangularComponentExtensible<StaticModelComponentData, StaticModelFirebaseComponent>
 {
 
     public static PAD_PX: number = 20;
@@ -114,7 +114,7 @@ export default class StaticModelUiData
         return false;
     }
 
-    public withData(data: schema.StaticModelComponentData): StaticModelUiData {
+    public withData(data: StaticModelComponentData): StaticModelUiData {
         return new StaticModelUiData(
             this.getDatabaseObject().withData(data)
         );
@@ -122,7 +122,7 @@ export default class StaticModelUiData
 
     public withId(id: string): StaticModelUiData {
         return new StaticModelUiData(
-            new schema.StaticModelFirebaseComponent(
+            new StaticModelFirebaseComponent(
                 id,
                 this.getData()
             )

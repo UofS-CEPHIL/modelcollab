@@ -1,13 +1,13 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
-
 import ComponentUiData from "./ComponentUiData";
 import PointableComponent from "./PointableComponent";
 import { getOppositeSide, Point, Side } from "../../DrawingUtils";
 import VisibleUiComponent, { VisibleUiComponentExtensible } from "./VisibleUiComponent";
+import FirebasePointerDataObject from "database/build/FirebasePointerDataObject";
+import FirebaseDataComponent from "database/build/FirebaseDataComponent";
 
 export abstract class PointerComponentExtensible<
-    DataType extends schema.FirebasePointerDataObject,
-    DbObject extends schema.FirebaseDataComponent<DataType>,
+    DataType extends FirebasePointerDataObject,
+    DbObject extends FirebaseDataComponent<DataType>,
     SourceComponent extends PointableComponent,
     TargetComponent extends PointableComponent
     >

@@ -5,9 +5,7 @@ import https from "https";
 import http from "http";
 
 import applicationConfig from "./config/applicationConfig";
-
 import { FirebaseClient } from "./data/FirebaseClient";
-import { FirebaseComponentModel as schema } from "database/build/export";
 import JuliaGenerator from "./compute/JuliaGenerator";
 import JuliaComponentDataBuilder from "./compute/JuliaComponentDataBuilder";
 import ComputeModelTask from "./ComputeModelTask";

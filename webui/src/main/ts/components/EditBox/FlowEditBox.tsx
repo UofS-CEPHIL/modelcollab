@@ -1,15 +1,15 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import EditBox from "./EditBox";
+import FlowFirebaseComponent from "database/build/components/Flow/FlowFirebaseComponent";
+import ComponentType from "database/build/ComponentType";
 
-
-export default class FlowEditBox extends EditBox<schema.FlowFirebaseComponent> {
+export default class FlowEditBox extends EditBox<FlowFirebaseComponent> {
 
     protected getFieldsAndLabels(): { [field: string]: string } {
         return { text: "Name", equation: "Equation" };
     }
 
-    public getComponentType(): schema.ComponentType {
-        return schema.ComponentType.FLOW;
+    public getComponentType(): ComponentType {
+        return ComponentType.FLOW;
     }
 
     public getComponentTypeString(): string {

@@ -1,17 +1,17 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
-
 import { TextComponentExtensible } from "../TextComponent";
+import NameValueComponentData from "database/build/components/Text/NameValueComponentData";
+import VariableFirebaseComponent from "database/build/components/Text/VariableFirebaseComponent";
 
 export default class DynamicVariableUiData
-    extends TextComponentExtensible<schema.NameValueComponentData, schema.VariableFirebaseComponent>
+    extends TextComponentExtensible<NameValueComponentData, VariableFirebaseComponent>
 {
-    public withData(data: schema.NameValueComponentData): DynamicVariableUiData {
+    public withData(data: NameValueComponentData): DynamicVariableUiData {
         return new DynamicVariableUiData(this.getDatabaseObject().withData(data));
     }
 
     public withId(id: string) {
         return new DynamicVariableUiData(
-            new schema.VariableFirebaseComponent(
+            new VariableFirebaseComponent(
                 id,
                 this.getData()
             )

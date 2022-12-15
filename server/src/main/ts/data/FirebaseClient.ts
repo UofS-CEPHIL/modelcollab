@@ -1,11 +1,13 @@
-import { FirebaseComponentModel, FirebaseSchema } from "database/build/export";
+import ComponentType from "database/build/ComponentType";
+import FirebaseDataComponent from "database/build/FirebaseDataComponent";
+import FirebaseSchema from "database/build/FirebaseSchema";
 import { initializeApp } from "firebase/app";
 import { connectDatabaseEmulator, Database, getDatabase, ref, get } from "firebase/database";
 import firebaseConfig from "../config/FirebaseConfig";
 
 export interface ComponentsResult {
-    topLevelComponents: FirebaseComponentModel.FirebaseDataComponent<any>[];
-    staticComponents: { [id: string]: FirebaseComponentModel.FirebaseDataComponent<any>[] }
+    topLevelComponents: FirebaseDataComponent<any>[];
+    staticComponents: { [id: string]: FirebaseDataComponent<any>[] }
 }
 
 export class FirebaseClient {
@@ -26,7 +28,7 @@ export class FirebaseClient {
 
     async getComponents(sessionId: string): Promise<ComponentsResult> {
 
-        function getComponents(fbResult: any, idPrefix?: string): FirebaseComponentModel.FirebaseDataComponent<any>[] {
+        function getComponents(fbResult: any, idPrefix?: string): FirebaseDataComponent<any>[] {
             if (!fbResult.exists()) {
                 return [];
             }
@@ -35,7 +37,7 @@ export class FirebaseClient {
             }
             const data = fbResult.val();
             return Object.keys(data).map(
-                k => FirebaseComponentModel.createFirebaseDataComponent(k, data[k], idPrefix)
+                k => FirebaseDataComponent.createFirebaseDataComponent(k, data[k], idPrefix)
             );
         }
 
@@ -48,9 +50,9 @@ export class FirebaseClient {
         const topLevelComponents = getComponents(topLevelResult);
 
         const staticModels = topLevelComponents.filter(
-            c => c.getType() === FirebaseComponentModel.ComponentType.STATIC_MODEL
+            c => c.getType() === ComponentType.STATIC_MODEL
         );
-        let staticComponents: { [id: string]: FirebaseComponentModel.FirebaseDataComponent<any>[] } = {};
+        let staticComponents: { [id: string]: FirebaseDataComponent<any>[] } = {};
         for (let i = 0; i < staticModels.length; i++) {
             const sm = staticModels[i];
             const fbResult = await get(

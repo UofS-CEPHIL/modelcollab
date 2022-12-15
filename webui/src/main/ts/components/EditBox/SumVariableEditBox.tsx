@@ -1,13 +1,14 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import EditBox from "./EditBox";
+import SumVariableFirebaseComponent from "database/build/components/Text/SumVariableFirebaseComponent";
+import ComponentType from "database/build/ComponentType";
 
-export default class SumVariableEditBox extends EditBox<schema.SumVariableFirebaseComponent> {
+export default class SumVariableEditBox extends EditBox<SumVariableFirebaseComponent> {
     protected getFieldsAndLabels(): { [field: string]: string } {
         return { text: "Name" };
     }
 
-    public getComponentType(): schema.ComponentType {
-        return schema.ComponentType.SUM_VARIABLE;
+    public getComponentType(): ComponentType {
+        return ComponentType.SUM_VARIABLE;
     }
 
     public getComponentTypeString(): string {

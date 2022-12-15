@@ -1,4 +1,13 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
+import FirebaseDataComponent from "database/build/FirebaseDataComponent";
+import SubstitutionFirebaseComponent from "database/build/components/Substitution/SubstitutionFirebaseComponent";
+import ScenarioFirebaseComponent from "database/build/components/Scenario/ScenarioFirebaseComponent";
+import StockFirebaseComponent from "database/build/components/Stock/StockFirebaseComponent";
+import ConnectionFirebaseComponent from "database/build/components/Connection/ConnectionFirebaseComponent";
+import FlowFirebaseComponent from "database/build/components/Flow/FlowFirebaseComponent";
+import ParameterFirebaseComponent from "database/build/components/Text/ParameterFirebaseComponent";
+import VariableFirebaseComponent from "database/build/components/Text/VariableFirebaseComponent";
+import SumVariableFirebaseComponent from "database/build/components/Text/SumVariableFirebaseComponent";
+import ComponentType from "database/build/ComponentType";
 import Graph from "./ComponentGraph";
 import JuliaComponentData from "./JuliaComponentData";
 import JuliaFlowComponent from "./JuliaFlowComponent";
@@ -14,8 +23,8 @@ export default class JuliaComponentDataBuilder {
     private static readonly OUTER_MODEL_ID = "_outer";
 
     public static makeIdentifications(
-        outerComponents: schema.FirebaseDataComponent<any>[],
-        staticModelComponents: { [id: string]: schema.FirebaseDataComponent<any>[] }
+        outerComponents: FirebaseDataComponent<any>[],
+        staticModelComponents: { [id: string]: FirebaseDataComponent<any>[] }
     ): ModelComponentIdentification[] {
 
         const findModelNameContainingComponentID = (id: string) => {
@@ -31,8 +40,8 @@ export default class JuliaComponentDataBuilder {
         const allComponents = Object.values(staticModelComponents)
             .reduce((a, b) => a.concat(b), [])
             .concat(outerComponents);
-        const subs: schema.SubstitutionFirebaseComponent[] =
-            outerComponents.filter(c => c.getType() === schema.ComponentType.SUBSTITUTION);
+        const subs: SubstitutionFirebaseComponent[] =
+            outerComponents.filter(c => c.getType() === ComponentType.SUBSTITUTION);
 
         return subs.map(sub => {
             const modelA = findModelNameContainingComponentID(sub.getData().replacedId);
@@ -56,14 +65,14 @@ export default class JuliaComponentDataBuilder {
     }
 
     public static makeStockFlowModels(
-        outerComponents: schema.FirebaseDataComponent<any>[],
-        staticModelComponents: { [id: string]: schema.FirebaseDataComponent<any>[] },
+        outerComponents: FirebaseDataComponent<any>[],
+        staticModelComponents: { [id: string]: FirebaseDataComponent<any>[] },
         scenarioName?: string
     ): JuliaStockFlowModel[] {
 
         const outerModelComponents = this.getAllOuterModelComponents(outerComponents, staticModelComponents);
-        const substitutions: schema.SubstitutionFirebaseComponent[] =
-            outerModelComponents.filter(c => c.getType() === schema.ComponentType.SUBSTITUTION);
+        const substitutions: SubstitutionFirebaseComponent[] =
+            outerModelComponents.filter(c => c.getType() === ComponentType.SUBSTITUTION);
 
         // Remove stopTime and startTime params from static models
         Object
@@ -72,9 +81,9 @@ export default class JuliaComponentDataBuilder {
                 staticModelComponents[name] = staticModelComponents[name]
                     .filter(c =>
                         !(
-                            c.getType() === schema.ComponentType.PARAMETER
+                            c.getType() === ComponentType.PARAMETER
                             && ["startTime", "stopTime"].includes(
-                                (c as schema.ParameterFirebaseComponent).getData().text
+                                (c as ParameterFirebaseComponent).getData().text
                             )
                         )
                     )
@@ -88,13 +97,13 @@ export default class JuliaComponentDataBuilder {
             scenarioName
         );
 
-        const isRelevantComponent = (c: schema.FirebaseDataComponent<any>) =>
+        const isRelevantComponent = (c: FirebaseDataComponent<any>) =>
             ![
-                schema.ComponentType.CONNECTION,
-                schema.ComponentType.STATIC_MODEL,
-                schema.ComponentType.SUBSTITUTION,
-                schema.ComponentType.CLOUD,
-                schema.ComponentType.SCENARIO
+                ComponentType.CONNECTION,
+                ComponentType.STATIC_MODEL,
+                ComponentType.SUBSTITUTION,
+                ComponentType.CLOUD,
+                ComponentType.SCENARIO
             ].includes(c.getType());
 
         return Object.keys(substitutedModels)
@@ -112,14 +121,14 @@ export default class JuliaComponentDataBuilder {
     }
 
     private static addOuterComponentsToModelList(
-        outerComponents: schema.FirebaseDataComponent<any>[],
-        staticModelComponents: { [id: string]: schema.FirebaseDataComponent<any>[] }
-    ): { [id: string]: schema.FirebaseDataComponent<any>[] } {
+        outerComponents: FirebaseDataComponent<any>[],
+        staticModelComponents: { [id: string]: FirebaseDataComponent<any>[] }
+    ): { [id: string]: FirebaseDataComponent<any>[] } {
 
-        const isRelevantComponent = (c: schema.FirebaseDataComponent<any>) => ![
-            schema.ComponentType.PARAMETER,
-            schema.ComponentType.SUBSTITUTION,
-            schema.ComponentType.STATIC_MODEL
+        const isRelevantComponent = (c: FirebaseDataComponent<any>) => ![
+            ComponentType.PARAMETER,
+            ComponentType.SUBSTITUTION,
+            ComponentType.STATIC_MODEL
         ].includes(c.getType());
         const hasRelevantComponents = outerComponents.filter(isRelevantComponent).length > 0;
 
@@ -135,7 +144,7 @@ export default class JuliaComponentDataBuilder {
             const staticComponentsCopy = { ...staticModelComponents };
             const [k, v] = Object.entries(staticComponentsCopy)[0];
             staticComponentsCopy[k] = v.concat(
-                outerComponents.filter(c => c.getType() === schema.ComponentType.PARAMETER)
+                outerComponents.filter(c => c.getType() === ComponentType.PARAMETER)
             );
             return staticComponentsCopy;
         }
@@ -143,16 +152,16 @@ export default class JuliaComponentDataBuilder {
 
 
     private static applySubstitutionsToModels(
-        modelComponentLists: { [id: string]: schema.FirebaseDataComponent<any>[] },
-        substitutions: schema.SubstitutionFirebaseComponent[],
+        modelComponentLists: { [id: string]: FirebaseDataComponent<any>[] },
+        substitutions: SubstitutionFirebaseComponent[],
         scenarioName?: string
-    ): { [id: string]: schema.FirebaseDataComponent<any>[] } {
+    ): { [id: string]: FirebaseDataComponent<any>[] } {
 
         function applySubstitutionsToComponentList(
-            componentList: schema.FirebaseDataComponent<any>[],
-            allComponents: schema.FirebaseDataComponent<any>[],
-            substitutions: schema.SubstitutionFirebaseComponent[]
-        ): schema.FirebaseDataComponent<any>[] {
+            componentList: FirebaseDataComponent<any>[],
+            allComponents: FirebaseDataComponent<any>[],
+            substitutions: SubstitutionFirebaseComponent[]
+        ): FirebaseDataComponent<any>[] {
             let newComponentList = [...componentList];
             substitutions.forEach(sub => {
                 const subComponent = allComponents.find(c => c.getId() === sub.getData().replacementId);
@@ -183,8 +192,8 @@ export default class JuliaComponentDataBuilder {
             return newComponentList;
         }
         const applyOverrideToParameter = (
-            scenario: schema.ScenarioFirebaseComponent,
-            param: schema.ParameterFirebaseComponent
+            scenario: ScenarioFirebaseComponent,
+            param: ParameterFirebaseComponent
         ) => {
             const overrideValue = scenario.getData().paramOverrides[param.getData().text];
             if (overrideValue)
@@ -195,7 +204,7 @@ export default class JuliaComponentDataBuilder {
 
         let allComponents = Object.values(modelComponentLists).reduce((a, b) => a.concat(b), []);
         const scenario = allComponents
-            .filter(c => c.getType() === schema.ComponentType.SCENARIO)
+            .filter(c => c.getType() === ComponentType.SCENARIO)
             .find(s => s.getData().name === scenarioName);
         if (scenario) {
             modelComponentLists = Object.fromEntries(Object.entries(modelComponentLists)
@@ -203,7 +212,7 @@ export default class JuliaComponentDataBuilder {
                     [
                         kv[0],
                         kv[1].map(c =>
-                            c.getType() === schema.ComponentType.PARAMETER
+                            c.getType() === ComponentType.PARAMETER
                                 ? applyOverrideToParameter(scenario, c)
                                 : c
                         )
@@ -230,9 +239,9 @@ export default class JuliaComponentDataBuilder {
     }
 
     private static getAllOuterModelComponents(
-        outerComponents: schema.FirebaseDataComponent<any>[],
-        staticModelComponents: { [id: string]: schema.FirebaseDataComponent<any>[] }
-    ): schema.FirebaseDataComponent<any>[] {
+        outerComponents: FirebaseDataComponent<any>[],
+        staticModelComponents: { [id: string]: FirebaseDataComponent<any>[] }
+    ): FirebaseDataComponent<any>[] {
         // Create a graph where edges are connections and flows, and nodes are everything
         // except connections (including flows).
         // Any inner model components that are adjacent to an outer component are added to
@@ -241,18 +250,18 @@ export default class JuliaComponentDataBuilder {
         const allStaticModelComponents = Object.values(staticModelComponents)
             .reduce((a, b) => a.concat(b), []);
         const outerNodeComponents = outerComponents.filter(c =>
-            c.getType() !== schema.ComponentType.SUBSTITUTION
-            && c.getType() !== schema.ComponentType.CONNECTION
+            c.getType() !== ComponentType.SUBSTITUTION
+            && c.getType() !== ComponentType.CONNECTION
         );
         const allVisibleComponents = outerComponents
             .concat(allStaticModelComponents)
-            .filter(c => c.getType() !== schema.ComponentType.SUBSTITUTION);
+            .filter(c => c.getType() !== ComponentType.SUBSTITUTION);
         const nodeComponents = allVisibleComponents
-            .filter(c => c.getType() !== schema.ComponentType.CONNECTION);
+            .filter(c => c.getType() !== ComponentType.CONNECTION);
         const edgeComponents = allVisibleComponents
             .filter(
-                c => c.getType() === schema.ComponentType.CONNECTION
-                    || c.getType() === schema.ComponentType.FLOW
+                c => c.getType() === ComponentType.CONNECTION
+                    || c.getType() === ComponentType.FLOW
             );
 
         const graph = new Graph();
@@ -272,24 +281,24 @@ export default class JuliaComponentDataBuilder {
     }
 
     private static makeJuliaComponent(
-        fbComponent: schema.FirebaseDataComponent<any>,
-        modelComponents: schema.FirebaseDataComponent<any>[]
+        fbComponent: FirebaseDataComponent<any>,
+        modelComponents: FirebaseDataComponent<any>[]
     ): JuliaComponentData {
-        const stocks: schema.StockFirebaseComponent[] =
-            modelComponents.filter(c => c.getType() === schema.ComponentType.STOCK);
-        const flows: schema.FlowFirebaseComponent[] =
-            modelComponents.filter(c => c.getType() === schema.ComponentType.FLOW);
-        const variables: schema.VariableFirebaseComponent[] =
-            modelComponents.filter(c => c.getType() === schema.ComponentType.VARIABLE);
-        const parameters: schema.ParameterFirebaseComponent[] =
-            modelComponents.filter(c => c.getType() == schema.ComponentType.PARAMETER);
-        const sumVars: schema.SumVariableFirebaseComponent[] =
-            modelComponents.filter(c => c.getType() === schema.ComponentType.SUM_VARIABLE);
-        const connections: schema.ConnectionFirebaseComponent[] =
-            modelComponents.filter(c => c.getType() === schema.ComponentType.CONNECTION);
+        const stocks: StockFirebaseComponent[] =
+            modelComponents.filter(c => c.getType() === ComponentType.STOCK);
+        const flows: FlowFirebaseComponent[] =
+            modelComponents.filter(c => c.getType() === ComponentType.FLOW);
+        const variables: VariableFirebaseComponent[] =
+            modelComponents.filter(c => c.getType() === ComponentType.VARIABLE);
+        const parameters: ParameterFirebaseComponent[] =
+            modelComponents.filter(c => c.getType() == ComponentType.PARAMETER);
+        const sumVars: SumVariableFirebaseComponent[] =
+            modelComponents.filter(c => c.getType() === ComponentType.SUM_VARIABLE);
+        const connections: ConnectionFirebaseComponent[] =
+            modelComponents.filter(c => c.getType() === ComponentType.CONNECTION);
 
         switch (fbComponent.getType()) {
-            case schema.ComponentType.STOCK:
+            case ComponentType.STOCK:
                 return this.makeJuliaStockComponent(
                     fbComponent,
                     flows,
@@ -298,27 +307,27 @@ export default class JuliaComponentDataBuilder {
                     sumVars,
                     variables
                 );
-            case schema.ComponentType.FLOW:
+            case ComponentType.FLOW:
                 return this.makeJuliaFlowComponent(
                     fbComponent,
                     stocks,
                     connections,
                     sumVars
                 );
-            case schema.ComponentType.VARIABLE:
+            case ComponentType.VARIABLE:
                 return this.makeJuliaVariableComponent(
                     fbComponent,
                     connections,
                     stocks,
                     sumVars
                 );
-            case schema.ComponentType.SUM_VARIABLE:
+            case ComponentType.SUM_VARIABLE:
                 return this.makeJuliaSumVariableComponent(
                     fbComponent,
                     connections,
                     stocks
                 );
-            case schema.ComponentType.PARAMETER:
+            case ComponentType.PARAMETER:
                 return this.makeJuliaParameterComponent(fbComponent);
             default:
                 throw new Error("Found component with irrelevant type : " + fbComponent)
@@ -326,12 +335,12 @@ export default class JuliaComponentDataBuilder {
     }
 
     private static makeJuliaStockComponent(
-        stock: schema.StockFirebaseComponent,
-        flows: schema.FlowFirebaseComponent[],
-        connections: schema.ConnectionFirebaseComponent[],
-        parameters: schema.ParameterFirebaseComponent[],
-        sumVars: schema.SumVariableFirebaseComponent[],
-        variables: schema.VariableFirebaseComponent[]
+        stock: StockFirebaseComponent,
+        flows: FlowFirebaseComponent[],
+        connections: ConnectionFirebaseComponent[],
+        parameters: ParameterFirebaseComponent[],
+        sumVars: SumVariableFirebaseComponent[],
+        variables: VariableFirebaseComponent[]
     ): JuliaStockComponent {
         const inFlows = flows.filter(f => f.getData().to === stock.getId()).map(f => f.getData().text);
         const outFlows = flows.filter(f => f.getData().from === stock.getId()).map(f => f.getData().text);
@@ -368,10 +377,10 @@ export default class JuliaComponentDataBuilder {
     }
 
     private static makeJuliaFlowComponent(
-        flow: schema.FlowFirebaseComponent,
-        stocks: schema.StockFirebaseComponent[],
-        connections: schema.ConnectionFirebaseComponent[],
-        sumVars: schema.SumVariableFirebaseComponent[],
+        flow: FlowFirebaseComponent,
+        stocks: StockFirebaseComponent[],
+        connections: ConnectionFirebaseComponent[],
+        sumVars: SumVariableFirebaseComponent[],
     ): JuliaFlowComponent {
         const fromComponent: string = stocks.find(s => s.getId() === flow.getData().from)?.getData().text || "";
         const toComponent: string = stocks.find(s => s.getId() === flow.getData().to)?.getData().text || "";
@@ -404,10 +413,10 @@ export default class JuliaComponentDataBuilder {
     }
 
     private static makeJuliaVariableComponent(
-        variable: schema.VariableFirebaseComponent,
-        connections: schema.ConnectionFirebaseComponent[],
-        stocks: schema.StockFirebaseComponent[],
-        sumVars: schema.SumVariableFirebaseComponent[]
+        variable: VariableFirebaseComponent,
+        connections: ConnectionFirebaseComponent[],
+        stocks: StockFirebaseComponent[],
+        sumVars: SumVariableFirebaseComponent[]
     ): JuliaVariableComponent {
 
         const dependedComponentIds = connections.filter(
@@ -432,9 +441,9 @@ export default class JuliaComponentDataBuilder {
     }
 
     private static makeJuliaSumVariableComponent(
-        sv: schema.SumVariableFirebaseComponent,
-        connections: schema.ConnectionFirebaseComponent[],
-        stocks: schema.StockFirebaseComponent[]
+        sv: SumVariableFirebaseComponent,
+        connections: ConnectionFirebaseComponent[],
+        stocks: StockFirebaseComponent[]
     ): JuliaSumVariableComponent {
         const dependedStockIds = connections
             .filter(c => c.getData().to === sv.getId())
@@ -451,7 +460,7 @@ export default class JuliaComponentDataBuilder {
         return new JuliaSumVariableComponent(sv.getData().text, sv.getId(), dependedStockNames);
     }
 
-    private static makeJuliaParameterComponent(parameter: schema.ParameterFirebaseComponent): JuliaParameterComponent {
+    private static makeJuliaParameterComponent(parameter: ParameterFirebaseComponent): JuliaParameterComponent {
         return new JuliaParameterComponent(parameter.getData().text, parameter.getId(), parameter.getData().value);
     }
 }

@@ -1,5 +1,3 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
-
 import { Point, Side } from "../../../DrawingUtils";
 import ComponentUiData from "../ComponentUiData";
 import PointableComponent from "../PointableComponent";
@@ -7,6 +5,8 @@ import { PointerComponentExtensible } from "../PointerComponent";
 import RectangularComponent from "../RectangularComponent";
 import StockUiData from "../Stock/StockUiData";
 import TextComponent from "../TextComponent";
+import FlowComponentData from "database/build/components/Flow/FlowComponentData";
+import FlowFirebaseComponent from "database/build/components/Flow/FlowFirebaseComponent";
 
 export const FLOW_LABEL_DEFAULT_WIDTH = 80;
 export const FLOW_LABEL_DEFAULT_FONT_SIZE = 12;
@@ -14,7 +14,7 @@ export const FLOW_LABEL_DEFAULT_HEIGHT = 23;
 export const BOUNDING_BOX_ELEMENT_BUFFER = 70;
 
 export default class FlowUiData
-    extends PointerComponentExtensible<schema.FlowComponentData, schema.FlowFirebaseComponent, StockUiData, StockUiData>
+    extends PointerComponentExtensible<FlowComponentData, FlowFirebaseComponent, StockUiData, StockUiData>
     implements PointableComponent {
 
     public getArrowPoint(side: Side, components: ComponentUiData[]): Point {
@@ -73,7 +73,7 @@ export default class FlowUiData
         return { x: middlePoint.x - labelWidth / 2, y: middlePoint.y - labelHeight / 2 };
     }
 
-    public withData(data: schema.FlowComponentData): FlowUiData {
+    public withData(data: FlowComponentData): FlowUiData {
         return new FlowUiData(
             this.getDatabaseObject().withData(data),
         );
@@ -81,7 +81,7 @@ export default class FlowUiData
 
     public withId(id: string): FlowUiData {
         return new FlowUiData(
-            new schema.FlowFirebaseComponent(
+            new FlowFirebaseComponent(
                 id,
                 this.getData()
             )

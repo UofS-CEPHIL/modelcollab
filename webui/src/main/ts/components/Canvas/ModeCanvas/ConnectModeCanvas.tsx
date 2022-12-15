@@ -1,8 +1,9 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
 import VisibleUiComponent from "../ScreenObjects/VisibleUiComponent";
 import ConnectionUiData from "../ScreenObjects/Connection/ConnectionUiData";
 import BaseCanvas from "../BaseCanvas";
+import ComponentType from "database/build/ComponentType";
+import ConnectionFirebaseComponent from "database/build/components/Connection/ConnectionFirebaseComponent";
 
 
 export default class ConnectModeCanvas extends BaseCanvas {
@@ -20,7 +21,7 @@ export default class ConnectModeCanvas extends BaseCanvas {
                 this.props.components.getComponent(this.props.selectedComponentIds[0]) as VisibleUiComponent
             )) {
                 const newConn = new ConnectionUiData(
-                    new schema.ConnectionFirebaseComponent(
+                    new ConnectionFirebaseComponent(
                         IdGenerator.generateUniqueId(this.props.components),
                         {
                             from: this.props.selectedComponentIds[0],
@@ -40,7 +41,7 @@ export default class ConnectModeCanvas extends BaseCanvas {
         if (!from) return false;
         if (to.getId() === from.getId()) return false;
         if (this.connectionAlreadyExists(to.getId(), from.getId())) return false;
-        if (from.getType() === schema.ComponentType.VARIABLE) return false;
+        if (from.getType() === ComponentType.VARIABLE) return false;
 
         // TODO determine whether the components exist in the same model
 

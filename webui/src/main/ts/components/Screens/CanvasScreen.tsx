@@ -1,7 +1,4 @@
 import React, { ReactElement } from 'react';
-
-import { FirebaseComponentModel as schema } from "database/build/export";
-
 import ComponentUiData from '../Canvas/ScreenObjects/ComponentUiData';
 import PointerComponent from "../Canvas/ScreenObjects/PointerComponent";
 import { Props as CanvasProps } from "../Canvas/BaseCanvas";
@@ -29,6 +26,10 @@ import SubstitutionUiData from '../Canvas/ScreenObjects/Substitution/SubstitionU
 import ScenarioUiData from '../Canvas/ScreenObjects/Scenario/ScenarioUiData';
 import { Props as ScenarioEditBoxProps } from '../EditBox/ScenarioEditBox';
 import HelpBox from '../HelpBox/HelpBox';
+import ComponentType from 'database/build/ComponentType';
+import StaticModelFirebaseComponent from 'database/build/components/StaticModel/StaticModelFirebaseComponent';
+import FirebaseDataComponent from 'database/build/FirebaseDataComponent';
+import SubstitutionFirebaseComponent from 'database/build/components/Substitution/SubstitutionFirebaseComponent';
 
 
 export interface LoadedStaticModel {
@@ -93,11 +94,11 @@ export default class CanvasScreen extends React.Component<Props, State> {
         // it mounts and React gets upset
         this.dm.subscribeToSession(
             this.props.sessionId,
-            (dbComponents: schema.FirebaseDataComponent<any>[]) => {
+            (dbComponents: FirebaseDataComponent<any>[]) => {
                 // Load any static models that aren't already loaded
                 dbComponents
-                    .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
-                    .map(c => c as schema.StaticModelFirebaseComponent)
+                    .filter(c => c.getType() === ComponentType.STATIC_MODEL)
+                    .map(c => c as StaticModelFirebaseComponent)
                     .forEach(c => this.importStaticModel(c.getData().modelId));
 
                 // Load objects s.t. stocks are loaded before flows,
@@ -110,13 +111,13 @@ export default class CanvasScreen extends React.Component<Props, State> {
                     .map(c => this.createUiComponent(c));
 
                 const flowComponents: ComponentUiData[] = dbComponents
-                    .filter(c => c.getType() === schema.ComponentType.FLOW)
+                    .filter(c => c.getType() === ComponentType.FLOW)
                     .map(c => this.createUiComponent(c));
 
                 const nonFlowPointerComponents: ComponentUiData[] = dbComponents
                     .filter(c =>
                         this.isPointerComponentType(c.getType())
-                        && c.getType() !== schema.ComponentType.FLOW
+                        && c.getType() !== ComponentType.FLOW
                     ).map(c => this.createUiComponent(c)) as ComponentUiData[];
 
                 const components: ComponentUiData[] = nonPointerComponents
@@ -135,8 +136,8 @@ export default class CanvasScreen extends React.Component<Props, State> {
 
     private isPointerComponentType(componentType: string) {
         switch (componentType) {
-            case schema.ComponentType.FLOW.toString(): return true;
-            case schema.ComponentType.CONNECTION.toString(): return true;
+            case ComponentType.FLOW.toString(): return true;
+            case ComponentType.CONNECTION.toString(): return true;
             default: return false;
         }
     }
@@ -197,7 +198,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
                     this.props.createEditBox({
                         initialComponent: selectedComponents[0].getDatabaseObject(),
                         handleCancel: () => this.setSelected([]),
-                        handleSave: (comp: schema.FirebaseDataComponent<any>) => {
+                        handleSave: (comp: FirebaseDataComponent<any>) => {
                             const newComponent = this.createUiComponent(comp);
                             if (newComponent) {
                                 const components: ComponentUiData[] = this.state.components
@@ -260,7 +261,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
         setTimeout(() => this.setState({ ...this.state, mode: UiMode.EDIT }));
         setTimeout(() => {
             const scenario = this.state.components
-                .filter(c => c.getType() === schema.ComponentType.SCENARIO)
+                .filter(c => c.getType() === ComponentType.SCENARIO)
                 .find(c => c.getData().name === name);
             if (!scenario) throw new Error("Cannot find scenario for editing: " + name);
             setTimeout(() => this.setSelected([scenario.getId()]));
@@ -269,7 +270,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
 
     private setComponentsForStaticModels(): void {
         this.state.components
-            .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
+            .filter(c => c.getType() === ComponentType.STATIC_MODEL)
             .forEach(c => {
                 let loadedModel = this.state.loadedModels.find(m => m.modelId === c.getData().modelId);
                 if (loadedModel) {
@@ -287,7 +288,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
 
     private addComponent(newComponent: ComponentUiData): void {
         if (!this.state.components.find(c => c.getId() === newComponent.getId())) {
-            if (newComponent.getType() === schema.ComponentType.STATIC_MODEL) {
+            if (newComponent.getType() === ComponentType.STATIC_MODEL) {
                 this.importStaticModel((newComponent as StaticModelUiData).getData().modelId);
             }
             else {
@@ -337,7 +338,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
     private loadStaticModelData(modelId: string): void {
         this.addComponent(
             new StaticModelUiData(
-                new schema.StaticModelFirebaseComponent(
+                new StaticModelFirebaseComponent(
                     IdGenerator.generateUniqueId(this.state.components),
                     {
                         x: 0,
@@ -356,7 +357,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
         const unusedIdx = colours
             .findIndex(colour =>
                 !this.state.components.filter(c =>
-                    c.getType() === schema.ComponentType.STATIC_MODEL
+                    c.getType() === ComponentType.STATIC_MODEL
                 ).find(sm => sm.getData().color === colour)
             );
         if (unusedIdx < 0) throw new Error("Unable to generate color");
@@ -454,27 +455,27 @@ export default class CanvasScreen extends React.Component<Props, State> {
         this.setState({ ...this.state, selectedComponentIds });
     }
 
-    private createUiComponent(dbComponent: schema.FirebaseDataComponent<any>): ComponentUiData {
+    private createUiComponent(dbComponent: FirebaseDataComponent<any>): ComponentUiData {
         switch (dbComponent.getType()) {
-            case schema.ComponentType.STOCK:
+            case ComponentType.STOCK:
                 return new StockUiData(dbComponent);
-            case schema.ComponentType.FLOW:
+            case ComponentType.FLOW:
                 return new FlowUiData(dbComponent);
-            case schema.ComponentType.CONNECTION:
+            case ComponentType.CONNECTION:
                 return new ConnectionUiData(dbComponent);
-            case schema.ComponentType.PARAMETER:
+            case ComponentType.PARAMETER:
                 return new ParameterUiData(dbComponent);
-            case schema.ComponentType.SUM_VARIABLE:
+            case ComponentType.SUM_VARIABLE:
                 return new SumVariableUiData(dbComponent);
-            case schema.ComponentType.VARIABLE:
+            case ComponentType.VARIABLE:
                 return new DynamicVariableUiData(dbComponent);
-            case schema.ComponentType.CLOUD:
+            case ComponentType.CLOUD:
                 return new CloudUiData(dbComponent);
-            case schema.ComponentType.STATIC_MODEL:
+            case ComponentType.STATIC_MODEL:
                 return new StaticModelUiData(dbComponent);
-            case schema.ComponentType.SUBSTITUTION:
+            case ComponentType.SUBSTITUTION:
                 return new SubstitutionUiData(dbComponent);
-            case schema.ComponentType.SCENARIO:
+            case ComponentType.SCENARIO:
                 return new ScenarioUiData(dbComponent);
         }
     }
@@ -493,19 +494,11 @@ export default class CanvasScreen extends React.Component<Props, State> {
         this.setState({ boxState: BoxState.SAVE_MODEL });
     }
 
-    private getAllComponentsIncludingChildren(): ComponentUiData[] {
-        return this.state.components.concat(
-            ...this.state.components
-                .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
-                .map(c => (c as StaticModelUiData).getComponents())
-        );
-    }
-
     private identifyComponents(replaced: ComponentUiData, replacement: ComponentUiData) {
         // We have to setTimeout or else it doesn't register the updated state.
         // React is baffling to me sometimes.
         setTimeout(() => this.addComponent(new SubstitutionUiData(
-            new schema.SubstitutionFirebaseComponent(
+            new SubstitutionFirebaseComponent(
                 IdGenerator.generateUniqueId(this.state.components),
                 {
                     replacedId: replaced.getId(),
@@ -517,15 +510,15 @@ export default class CanvasScreen extends React.Component<Props, State> {
 
     public getComponentsPointingTo(component: ComponentUiData): PointerComponent[] {
         return this.state.components.filter(p =>
-            (p.getType() === schema.ComponentType.FLOW || p.getType() === schema.ComponentType.CONNECTION)
+            (p.getType() === ComponentType.FLOW || p.getType() === ComponentType.CONNECTION)
             && p.getData().to === component.getId()
-        ).map(p => p.getType() === schema.ComponentType.FLOW ? p as FlowUiData : p as ConnectionUiData);
+        ).map(p => p.getType() === ComponentType.FLOW ? p as FlowUiData : p as ConnectionUiData);
     }
 
     public getComponentsPointingFrom(component: ComponentUiData): PointerComponent[] {
         return this.state.components.filter(p =>
-            (p.getType() === schema.ComponentType.FLOW || p.getType() === schema.ComponentType.CONNECTION)
+            (p.getType() === ComponentType.FLOW || p.getType() === ComponentType.CONNECTION)
             && p.getData().from === component.getId()
-        ).map(p => p.getType() === schema.ComponentType.FLOW ? p as FlowUiData : p as ConnectionUiData);
+        ).map(p => p.getType() === ComponentType.FLOW ? p as FlowUiData : p as ConnectionUiData);
     }
 }

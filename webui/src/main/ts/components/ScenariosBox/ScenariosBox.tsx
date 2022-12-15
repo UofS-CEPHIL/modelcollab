@@ -1,14 +1,14 @@
 import { ReactElement } from 'react';
 import ButtonListBox, { Props as BaseProps, State as BaseState } from "../ButtonListBox/ButtonListBox";
-
-import { FirebaseComponentModel as schema } from "database/build/export";
-
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import { Button, ListItem, ListItemText, TextField } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import ScenarioFirebaseComponent from "database/build/components/Scenario/ScenarioFirebaseComponent";
+import FirebaseDataComponent from "database/build/FirebaseDataComponent";
+import ComponentType from "database/build/ComponentType";
 
 export interface Props extends BaseProps {
     handleCancel: () => void;
@@ -22,7 +22,7 @@ export interface Props extends BaseProps {
 
 export interface State extends BaseState {
     selected: string | null;
-    scenarios: schema.ScenarioFirebaseComponent[];
+    scenarios: ScenarioFirebaseComponent[];
     newScenarioName: string;
 }
 
@@ -42,9 +42,9 @@ export default class ScenariosBox extends ButtonListBox<Props, State> {
         );
     }
 
-    private findScenarios(components: schema.FirebaseDataComponent<any>[]): schema.ScenarioFirebaseComponent[] {
+    private findScenarios(components: FirebaseDataComponent<any>[]): ScenarioFirebaseComponent[] {
         return components
-            .filter(c => c.getType() === schema.ComponentType.SCENARIO);
+            .filter(c => c.getType() === ComponentType.SCENARIO);
     }
 
     private handleDelete(name: string): void {
@@ -64,7 +64,7 @@ export default class ScenariosBox extends ButtonListBox<Props, State> {
     private handleAddScenario(): void {
         this.props.database.updateComponent(
             this.props.sessionId,
-            new schema.ScenarioFirebaseComponent(
+            new ScenarioFirebaseComponent(
                 this.props.generateNewId(),
                 {
                     name: this.state.newScenarioName,

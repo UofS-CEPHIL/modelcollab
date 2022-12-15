@@ -1,13 +1,13 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
 import ComponentUiData from "../ScreenObjects/ComponentUiData";
 import FlowUiData from "../ScreenObjects/Flow/FlowUiData";
 import BaseCanvas from "../BaseCanvas";
-
+import ComponentType from "database/build/ComponentType";
+import FlowFirebaseComponent from "database/build/components/Flow/FlowFirebaseComponent";
 
 export default class FlowModeCanvas extends BaseCanvas {
     protected onComponentClicked(component: ComponentUiData): void {
-        if (component.getType() === schema.ComponentType.STOCK || component.getType() === schema.ComponentType.CLOUD) {
+        if (component.getType() === ComponentType.STOCK || component.getType() === ComponentType.CLOUD) {
             if (this.props.selectedComponentIds.length === 0) {
                 this.props.setSelected([component.getId()]);
             }
@@ -17,7 +17,7 @@ export default class FlowModeCanvas extends BaseCanvas {
             else if (this.props.selectedComponentIds[0] !== component.getId()) {
                 if (!this.flowAlreadyExists(this.props.selectedComponentIds[0], component.getId())) {
                     const newFlow = new FlowUiData(
-                        new schema.FlowFirebaseComponent(
+                        new FlowFirebaseComponent(
                             IdGenerator.generateUniqueId(this.props.components),
                             {
                                 from: this.props.selectedComponentIds[0],

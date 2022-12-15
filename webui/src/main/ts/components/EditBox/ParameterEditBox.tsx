@@ -1,13 +1,14 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import EditBox from "./EditBox";
+import ComponentType from "database/build/ComponentType";
+import ParameterFirebaseComponent from "database/build/components/Text/ParameterFirebaseComponent";
 
-export default class ParameterEditBox extends EditBox<schema.ParameterFirebaseComponent> {
+export default class ParameterEditBox extends EditBox<ParameterFirebaseComponent> {
     protected getFieldsAndLabels(): { [field: string]: string } {
         return { text: "Name", value: "Value" };
     }
 
-    public getComponentType(): schema.ComponentType {
-        return schema.ComponentType.PARAMETER;
+    public getComponentType(): ComponentType {
+        return ComponentType.PARAMETER;
     }
 
     public getComponentTypeString(): string {

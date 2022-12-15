@@ -1,4 +1,3 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import JuliaFlowComponent from "./JuliaFlowComponent";
 import JuliaStockComponent from "./JuliaStockComponent";
 import JuliaVariableComponent from "./JuliaVariableComponent";
@@ -7,7 +6,8 @@ import JuliaParameterComponent from "./JuliaParameterComponent";
 import JuliaComponentData from "./JuliaComponentData";
 import Foot from "./Foot";
 import ModelComponentIdentification from "./ModelComponentIdentification";
-import Graph from "./ComponentGraph";
+import ComponentType from "database/build/ComponentType";
+
 
 export interface Components {
     stocks: JuliaStockComponent[];
@@ -63,9 +63,9 @@ export default class JuliaStockFlowModel {
         const relevantIdents = idents
             .filter(i => i.modelA === this.modelName || i.modelB === this.modelName);
         const sharedStockIdents = relevantIdents
-            .filter(i => i.componentType === schema.ComponentType.STOCK);
+            .filter(i => i.componentType === ComponentType.STOCK);
         const sharedSumVarIdents = relevantIdents
-            .filter(i => i.componentType === schema.ComponentType.SUM_VARIABLE);
+            .filter(i => i.componentType === ComponentType.SUM_VARIABLE);
 
         const stockFeet = sharedStockIdents.map(ident => {
             const stock = this.components.find(c => c.firebaseId === ident.componentFirebaseId);

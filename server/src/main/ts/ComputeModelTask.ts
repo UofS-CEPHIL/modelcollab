@@ -1,21 +1,18 @@
 import { spawn } from "node:child_process";
-
-import { FirebaseComponentModel as schema } from "database/build/export";
+import FirebaseDataComponent from "database/build/FirebaseDataComponent";
 
 import JuliaGenerator from "./compute/JuliaGenerator";
-import applicationConfig from "./config/applicationConfig";
 import JuliaComponentDataBuilder from "./compute/JuliaComponentDataBuilder";
-
 
 export default class ComputeModelTask {
 
-    private readonly components: schema.FirebaseDataComponent<any>[];
-    private readonly staticComponents: { [id: string]: schema.FirebaseDataComponent<any>[] };
+    private readonly components: FirebaseDataComponent<any>[];
+    private readonly staticComponents: { [id: string]: FirebaseDataComponent<any>[] };
     private readonly scenarioName: string;
 
     public constructor(
-        components: schema.FirebaseDataComponent<any>[],
-        staticComponents: { [id: string]: schema.FirebaseDataComponent<any>[] },
+        components: FirebaseDataComponent<any>[],
+        staticComponents: { [id: string]: FirebaseDataComponent<any>[] },
         scenarioName: string
     ) {
         this.components = components;

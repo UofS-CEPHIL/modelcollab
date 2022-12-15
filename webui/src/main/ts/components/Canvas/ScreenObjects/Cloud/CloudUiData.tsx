@@ -1,11 +1,10 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import { Point } from "../../../DrawingUtils";
-
 import { RectangularComponentExtensible } from "../RectangularComponent";
-
+import CloudComponentData from "database/build/components/Cloud/CloudComponentData";
+import CloudFirebaseComponent from "database/build/components/Cloud/CloudFirebaseComponent";
 
 export default class CloudUiData
-    extends RectangularComponentExtensible<schema.CloudComponentData, schema.CloudFirebaseComponent>
+    extends RectangularComponentExtensible<CloudComponentData, CloudFirebaseComponent>
 {
 
     public static readonly RADIUS = 25;
@@ -34,13 +33,13 @@ export default class CloudUiData
         return CloudUiData.RADIUS;
     }
 
-    public withData(d: schema.CloudComponentData): CloudUiData {
+    public withData(d: CloudComponentData): CloudUiData {
         return new CloudUiData(this.getDatabaseObject().withData(d));
     }
 
     public withId(id: string): CloudUiData {
         return new CloudUiData(
-            new schema.CloudFirebaseComponent(
+            new CloudFirebaseComponent(
                 id,
                 this.getData()
             )

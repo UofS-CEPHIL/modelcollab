@@ -1,22 +1,25 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 import { ExtensibleEditBox, Props as BaseProps, State as BaseState } from "./EditBox";
+import ScenarioFirebaseComponent from "database/build/components/Scenario/ScenarioFirebaseComponent";
+import ParameterFirebaseComponent from "database/build/components/Text/ParameterFirebaseComponent";
+import ComponentType from "database/build/ComponentType";
+import FirebaseDataComponent from "database/build/FirebaseDataComponent";
 
-export interface Props extends BaseProps<schema.ScenarioFirebaseComponent> {
-    initialComponent: schema.ScenarioFirebaseComponent;
-    handleSave: (c: schema.ScenarioFirebaseComponent) => void;
+export interface Props extends BaseProps<ScenarioFirebaseComponent> {
+    initialComponent: ScenarioFirebaseComponent;
+    handleSave: (c: ScenarioFirebaseComponent) => void;
     handleCancel: () => void;
     db: FirebaseDataModel;
     sessionId: string;
 }
 
-export interface State extends BaseState<schema.ScenarioFirebaseComponent> {
-    component: schema.ScenarioFirebaseComponent;
-    allModelComponents: schema.FirebaseDataComponent<any>[];
+export interface State extends BaseState<ScenarioFirebaseComponent> {
+    component: ScenarioFirebaseComponent;
+    allModelComponents: FirebaseDataComponent<any>[];
 }
 
 export default class ScenarioEditBox extends ExtensibleEditBox
-    <schema.ScenarioFirebaseComponent, Props, State>
+    <ScenarioFirebaseComponent, Props, State>
 {
 
     public constructor(props: Props) {
@@ -35,12 +38,12 @@ export default class ScenarioEditBox extends ExtensibleEditBox
         return "Scenario";
     }
 
-    public getComponentType(): schema.ComponentType {
-        return schema.ComponentType.SCENARIO;
+    public getComponentType(): ComponentType {
+        return ComponentType.SCENARIO;
     }
 
-    private getParameters(): schema.ParameterFirebaseComponent[] {
-        return this.state.allModelComponents.filter(c => c.getType() === schema.ComponentType.PARAMETER);
+    private getParameters(): ParameterFirebaseComponent[] {
+        return this.state.allModelComponents.filter(c => c.getType() === ComponentType.PARAMETER);
     }
 
     protected getFieldsAndLabels(): { [field: string]: string } {
@@ -61,10 +64,10 @@ export default class ScenarioEditBox extends ExtensibleEditBox
     }
 
     protected updateComponent(
-        old: schema.ScenarioFirebaseComponent,
+        old: ScenarioFirebaseComponent,
         field: string,
         value: string
-    ): schema.ScenarioFirebaseComponent {
+    ): ScenarioFirebaseComponent {
         const paramOverrides = { ...old.getData().paramOverrides, [field]: value };
         return old.withData({ ...old.getData(), paramOverrides });
     }

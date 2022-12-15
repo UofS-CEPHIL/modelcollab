@@ -1,9 +1,11 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
+import ComponentType from "database/build/ComponentType";
+import FirebaseDataComponent from "database/build/FirebaseDataComponent";
+import FirebaseDataObject from "database/build/FirebaseDataObject";
 
 export abstract class ComponentUiDataExtensible
     <
-    DataType extends schema.FirebaseDataObject,
-    DbObject extends schema.FirebaseDataComponent<DataType>
+    DataType extends FirebaseDataObject,
+    DbObject extends FirebaseDataComponent<DataType>
     >
 {
 
@@ -21,7 +23,7 @@ export abstract class ComponentUiDataExtensible
         return this.dbObject.getId();
     }
 
-    public getType(): schema.ComponentType {
+    public getType(): ComponentType {
         return this.dbObject.getType();
     }
 

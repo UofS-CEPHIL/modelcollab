@@ -1,14 +1,14 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
-
 import ComponentUiData from "./ComponentUiData";
 import { Point, Side } from "../../DrawingUtils";
 import { RectangularComponentExtensible } from "./RectangularComponent";
 import TextObject from "./TextObject";
+import TextComponentData from "database/build/components/Text/TextComponentData";
+import TextFirebaseComponent from "database/build/components/Text/TextFirebaseComponent";
 
 export abstract class TextComponentExtensible
     <
-    DataType extends schema.TextComponentData,
-    DbObject extends schema.TextFirebaseComponent<any>
+    DataType extends TextComponentData,
+    DbObject extends TextFirebaseComponent<any>
     >
     extends RectangularComponentExtensible<DataType, DbObject> {
     public static WIDTH = 150;
@@ -62,4 +62,4 @@ export abstract class TextComponentExtensible
 }
 
 export default abstract class TextComponent
-    extends TextComponentExtensible<schema.TextComponentData, schema.TextFirebaseComponent<any>> { }
+    extends TextComponentExtensible<TextComponentData, TextFirebaseComponent<any>> { }

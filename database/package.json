@@ -3,29 +3,22 @@
   "version": "0.0.1",
   "description": "The database module which handles communication with Firebase for the Modelcollab project",
   "scripts": {
-    "build": "tsc && rollup -c",
+    "build": "tsc",
     "test": "jest"
   },
   "author": "",
   "license": "UNLICENSED",
-  "main": "build/index.js",
-  "module": "build/index.es.js",
-  "jsnext:main": "build/index.es.js",
+  "main": "build/",
+  "module": "build/",
   "dependencies": {
     "@firebase/rules-unit-testing": "^2.0.2",
     "@types/jest": "^27.5.1",
     "@types/node": "^16.11.35",
     "firebase": "^9.8.1",
     "jest": "^28.1.0",
-    "rollup": "^2.76.0",
     "ts-jest": "^28.0.2",
     "typescript": "^4.6.4"
   },
   "devDependencies": {
-    "@rollup/plugin-json": "^4.1.0",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-typescript2": "^0.32.1"
   }
 }

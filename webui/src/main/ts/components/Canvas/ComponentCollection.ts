@@ -1,4 +1,3 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import CloudUiData from "./ScreenObjects/Cloud/CloudUiData";
 import ComponentUiData from "./ScreenObjects/ComponentUiData";
 import ConnectionUiData from "./ScreenObjects/Connection/ConnectionUiData";
@@ -10,6 +9,7 @@ import StaticModelUiData from "./ScreenObjects/StaticModel/StaticModelUiData";
 import StockUiData from "./ScreenObjects/Stock/StockUiData";
 import SubstitutionUiData from "./ScreenObjects/Substitution/SubstitionUiData";
 import SumVariableUiData from "./ScreenObjects/SumVariable/SumVariableUiData";
+import ComponentType from "database/build/ComponentType";
 
 export default class ComponentCollection {
 
@@ -25,31 +25,31 @@ export default class ComponentCollection {
 
     public constructor(components: ComponentUiData[]) {
         this.stocks = components
-            .filter(c => c.getType() === schema.ComponentType.STOCK)
+            .filter(c => c.getType() === ComponentType.STOCK)
             .map(c => c as StockUiData);
         this.flows = components
-            .filter(c => c.getType() === schema.ComponentType.FLOW)
+            .filter(c => c.getType() === ComponentType.FLOW)
             .map(c => c as FlowUiData);
         this.parameters = components
-            .filter(c => c.getType() === schema.ComponentType.PARAMETER)
+            .filter(c => c.getType() === ComponentType.PARAMETER)
             .map(c => c as ParameterUiData);
         this.sumVars = components
-            .filter(c => c.getType() === schema.ComponentType.SUM_VARIABLE)
+            .filter(c => c.getType() === ComponentType.SUM_VARIABLE)
             .map(c => c as SumVariableUiData);
         this.dynVars = components
-            .filter(c => c.getType() === schema.ComponentType.VARIABLE)
+            .filter(c => c.getType() === ComponentType.VARIABLE)
             .map(c => c as DynamicVariableUiData);
         this.clouds = components
-            .filter(c => c.getType() === schema.ComponentType.CLOUD)
+            .filter(c => c.getType() === ComponentType.CLOUD)
             .map(c => c as CloudUiData);
         this.connections = components
-            .filter(c => c.getType() === schema.ComponentType.CONNECTION)
+            .filter(c => c.getType() === ComponentType.CONNECTION)
             .map(c => c as ConnectionUiData);
         this.staticModels = components
-            .filter(c => c.getType() === schema.ComponentType.STATIC_MODEL)
+            .filter(c => c.getType() === ComponentType.STATIC_MODEL)
             .map(c => c as StaticModelUiData);
         this.substitutions = components
-            .filter(c => c.getType() === schema.ComponentType.SUBSTITUTION)
+            .filter(c => c.getType() === ComponentType.SUBSTITUTION)
             .map(c => c as SubstitutionUiData);
     }
 
@@ -158,7 +158,7 @@ export default class ComponentCollection {
     public withSubstitutionsApplied(): ComponentCollection {
 
         const applySubstitutionsToComponents = (components: ComponentUiData[], subs: SubstitutionUiData[]) => {
-            let allExceptSubstitutions = components.filter(c => c.getType() !== schema.ComponentType.SUBSTITUTION);
+            let allExceptSubstitutions = components.filter(c => c.getType() !== ComponentType.SUBSTITUTION);
             subs.forEach(sub => {
                 allExceptSubstitutions = allExceptSubstitutions
                     .filter(c => c.getId() !== sub.getData().replacedId)
@@ -184,7 +184,7 @@ export default class ComponentCollection {
                 this.substitutions
             );
             outerComponents.forEach(c => {
-                if (c.getType() === schema.ComponentType.STATIC_MODEL) {
+                if (c.getType() === ComponentType.STATIC_MODEL) {
                     const staticModel = c as StaticModelUiData;
                     staticModel.setComponents(
                         applySubstitutionsToComponents(
@@ -211,7 +211,7 @@ export default class ComponentCollection {
         staticModels.forEach(sm =>
             sm.setComponents(
                 sm.getComponents().filter(c => {
-                    if (c.getType() == schema.ComponentType.CONNECTION) {
+                    if (c.getType() == ComponentType.CONNECTION) {
                         const match = connections.find(cn =>
                             cn.getData().from === c.getData().from && cn.getData().to === c.getData().to
                         );
@@ -229,7 +229,7 @@ export default class ComponentCollection {
         );
         return new ComponentCollection(
             this.getAllComponentsWithoutChildren()
-                .filter(c => c.getType() !== schema.ComponentType.STATIC_MODEL)
+                .filter(c => c.getType() !== ComponentType.STATIC_MODEL)
                 .concat(staticModels)
         );
     }

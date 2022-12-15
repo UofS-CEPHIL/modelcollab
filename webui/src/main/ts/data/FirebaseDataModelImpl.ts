@@ -1,10 +1,11 @@
-import { ref, set, onValue, remove, DataSnapshot, push, update, get } from "firebase/database";
+import { ref, set, onValue, remove, DataSnapshot, push, get } from "firebase/database";
 import FirebaseManager from "./FirebaseManager";
-import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build/export";
-
 import FirebaseDataModel from "./FirebaseDataModel";
 import ComponentUiData from "../components/Canvas/ScreenObjects/ComponentUiData";
 import ParameterUiData from "../components/Canvas/ScreenObjects/Parameter/ParameterUiData";
+import FirebaseDataComponent from "database/build/FirebaseDataComponent";
+import FirebaseSchema from "database/build/FirebaseSchema";
+import ParameterFirebaseComponent from "database/build/components/Text/ParameterFirebaseComponent";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
@@ -16,20 +17,20 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
     private triggerCallback(
         snapshot: DataSnapshot,
-        callback: (data: schema.FirebaseDataComponent<any>[]) => void
+        callback: (data: FirebaseDataComponent<any>[]) => void
     ) {
         if (snapshot.exists() && snapshot.key) {
-            const components: schema.FirebaseDataComponent<any>[] =
+            const components: FirebaseDataComponent<any>[] =
                 Object
                     .entries(snapshot.val())
                     .map(
-                        ([k, v]) => schema.createFirebaseDataComponent(k, v)
+                        ([k, v]) => FirebaseDataComponent.createFirebaseDataComponent(k, v)
                     );
             callback(components);
         }
     }
 
-    updateComponent(sessionId: string, data: schema.FirebaseDataComponent<any>) {
+    updateComponent(sessionId: string, data: FirebaseDataComponent<any>) {
         set(
             ref(
                 this.firebaseManager.getDb(),
@@ -58,7 +59,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    subscribeToSession(sessionId: string, callback: (snapshot: schema.FirebaseDataComponent<any>[]) => void) {
+    subscribeToSession(sessionId: string, callback: (snapshot: FirebaseDataComponent<any>[]) => void) {
         onValue(
             ref(
                 this.firebaseManager.getDb(),
@@ -94,7 +95,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             id,
             [
                 new ParameterUiData(
-                    new schema.ParameterFirebaseComponent(
+                    new ParameterFirebaseComponent(
                         "0",
                         {
                             x: 100,
@@ -105,7 +106,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
                     )
                 ),
                 new ParameterUiData(
-                    new schema.ParameterFirebaseComponent(
+                    new ParameterFirebaseComponent(
                         "1",
                         {
                             x: 100,
@@ -180,7 +181,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
     getComponentsForSavedModel(
         modelId: string,
-        onData: (components: schema.FirebaseDataComponent<any>[]) => void
+        onData: (components: FirebaseDataComponent<any>[]) => void
     ): void {
         get(
             ref(

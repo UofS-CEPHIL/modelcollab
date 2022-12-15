@@ -1,22 +1,22 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
 import { Point } from "../../../DrawingUtils";
-
 import { RectangularComponentExtensible } from "../RectangularComponent";
+import StockComponentData from "database/build/components/Stock/StockComponentData";
+import StockFirebaseComponent from "database/build/components/Stock/StockFirebaseComponent";
 
 export const WIDTH_PX = 100;
 export const HEIGHT_PX = 70;
 
 export default class StockUiData
-    extends RectangularComponentExtensible<schema.StockComponentData, schema.StockFirebaseComponent>
+    extends RectangularComponentExtensible<StockComponentData, StockFirebaseComponent>
 {
 
-    public withData(data: schema.StockComponentData): StockUiData {
+    public withData(data: StockComponentData): StockUiData {
         return new StockUiData(this.getDatabaseObject().withData(data));
     }
 
     public withId(id: string): StockUiData {
         return new StockUiData(
-            new schema.StockFirebaseComponent(
+            new StockFirebaseComponent(
                 id,
                 this.getData()
             )
