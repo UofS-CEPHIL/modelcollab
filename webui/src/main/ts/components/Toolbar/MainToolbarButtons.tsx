@@ -26,8 +26,6 @@ import { UiMode } from "../../UiMode";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 
 export default class MainToolbarButtons extends ToolbarButtons {
-
-    private waitingForResults: boolean;
     private restClient: RestClient;
     private sessionId: string;
     private firebaseDataModel: FirebaseDataModel;
@@ -43,9 +41,6 @@ export default class MainToolbarButtons extends ToolbarButtons {
     private downloadData: (b: Blob, fileName: string) => void;
 
     public constructor(
-        mode: string,
-        open: boolean,
-        waitingForResults: boolean,
         restClient: RestClient,
         sessionId: string,
         downloadData: (b: Blob, fn: string) => void,
@@ -59,8 +54,7 @@ export default class MainToolbarButtons extends ToolbarButtons {
         toggleDrawerOpen: () => void,
         setButtonsToSemanticSelect: () => void
     ) {
-        super(mode, open);
-        this.waitingForResults = waitingForResults;
+        super();
         this.restClient = restClient;
         this.sessionId = sessionId;
         this.firebaseDataModel = firebaseDataModel;
@@ -79,9 +73,9 @@ export default class MainToolbarButtons extends ToolbarButtons {
         this.toggleDrawerOpen();
     }
 
-    public getButtons(isOpen: boolean): ReactElement[] {
+    public getButtons(isOpen: boolean, mode: string, waitingForResults: boolean): ReactElement[] {
         const getLabelForInterpretButton = () => {
-            if (this.waitingForResults) {
+            if (waitingForResults) {
                 return (<CircularProgress />);
             }
             else {
@@ -89,12 +83,13 @@ export default class MainToolbarButtons extends ToolbarButtons {
             }
         }
         return Object.values(UiMode)
-            .map(mode =>
+            .map(uimode =>
                 this.makeToolbarButton(
-                    mode.toString(),
-                    () => this.setMode(mode),
+                    uimode.toString(),
+                    () => this.setMode(uimode),
                     isOpen,
-                    MainToolbarButtons.getIconForMode(mode)
+                    mode,
+                    MainToolbarButtons.getIconForMode(uimode)
                 )
             ).concat([
                 (<Divider />),
@@ -102,48 +97,56 @@ export default class MainToolbarButtons extends ToolbarButtons {
                     "Scenarios",
                     () => this.showScenarios(),
                     isOpen,
+                    mode,
                     MainToolbarButtons.getScenariosIcon()
                 ),
                 this.makeToolbarButton(
                     "Get Code",
                     () => this.getCode(),
                     isOpen,
+                    mode,
                     MainToolbarButtons.getGetCodeIcon()
                 ),
                 this.makeToolbarButton(
                     "Get Data",
                     () => this.getData(),
                     isOpen,
+                    mode,
                     MainToolbarButtons.getGetJsonIcon()
                 ),
                 this.makeToolbarButton(
                     "Interpret",
                     () => this.setButtonsToSemanticSelect(),
                     isOpen,
+                    mode,
                     getLabelForInterpretButton()
                 ),
                 this.makeToolbarButton(
                     "Publish",
                     () => this.saveModel(),
                     isOpen,
+                    mode,
                     MainToolbarButtons.getPublishModelIcon()
                 ),
                 this.makeToolbarButton(
                     "Import",
                     () => this.importModel(),
                     isOpen,
+                    mode,
                     MainToolbarButtons.getImportModelIcon()
                 ),
                 this.makeToolbarButton(
                     "Help",
                     () => this.showHelpBox(),
                     isOpen,
+                    mode,
                     MainToolbarButtons.getHelpIcon()
                 ),
                 this.makeToolbarButton(
                     "Back",
                     () => this.returnToSessionSelect(),
                     isOpen,
+                    mode,
                     MainToolbarButtons.getGoBackIcon()
                 ),
             ]);

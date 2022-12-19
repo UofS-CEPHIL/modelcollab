@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react';
 import Box from '@mui/material/Box';
 import MenuIcon from '@mui/icons-material/Menu';
-import { AppBar as MuiAppBar, AppBarProps as MuiAppBarProps, CssBaseline, Divider, IconButton, Toolbar, Typography, Drawer as MuiDrawer, List } from '@mui/material';
+import { AppBar as MuiAppBar, AppBarProps as MuiAppBarProps, CssBaseline, Divider, IconButton, Toolbar, Typography, Drawer as MuiDrawer, List, makeStyles } from '@mui/material';
 import { styled, Theme, CSSObject } from '@mui/material/styles';
 
 import { UiMode } from '../../UiMode';
@@ -63,7 +63,7 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
                 duration: theme.transitions.duration.leavingScreen,
             }),
             overflowX: 'hidden',
-            width: `calc(${theme.spacing(7)} + 1px)`,
+            width: `calc(${theme.spacing(7)} + 5px)`,
             [theme.breakpoints.up('sm')]: {
                 width: `calc(${theme.spacing(8)} + 1px)`,
             },
@@ -142,7 +142,7 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
                     </DrawerHeader>
                     <Divider />
                     <List>
-                        {this.state.toolbarButtons.getButtons(this.state.open)}
+                        {this.state.toolbarButtons.getButtons(this.state.open, this.props.mode, this.state.waitingForResults)}
                     </List>
                 </Drawer>
             </Box>
@@ -153,14 +153,8 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
         this.setState({ ...this.state, open: !this.state.open });
     }
 
-    private makeMainToolbarButtons(
-        props: Props,
-        state: { waitingForResults: boolean, open: boolean }
-    ): MainToolbarButtons {
+    private makeMainToolbarButtons(props: Props): MainToolbarButtons {
         return new MainToolbarButtons(
-            props.mode,
-            state.open,
-            state.waitingForResults,
             props.restClient,
             props.sessionId,
             (b, f) => props.downloadData(b, f),
@@ -177,15 +171,13 @@ export default class CanvasScreenToolbar extends React.Component<Props, State> {
     }
 
     private makeInitialToolbarButtons(): MainToolbarButtons {
-        return this.makeMainToolbarButtons(this.props, { open: false, waitingForResults: false });
+        return this.makeMainToolbarButtons(this.props);
     }
 
     private makeSemanticSelectToolbarButtons(): SemanticSelectToolbarButtons {
         return new SemanticSelectToolbarButtons(
-            this.props.mode,
-            this.state.open,
             this.props.sessionId,
-            () => this.setState({ ...this.state, toolbarButtons: this.makeMainToolbarButtons(this.props, this.state) }),
+            () => this.setState({ ...this.state, toolbarButtons: this.makeMainToolbarButtons(this.props) }),
             this.props.restClient,
             this.props.selectedScenario,
             this.props.downloadData,

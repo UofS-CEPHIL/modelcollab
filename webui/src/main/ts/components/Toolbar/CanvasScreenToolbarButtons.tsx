@@ -11,42 +11,36 @@ export interface Props {
 
 export default abstract class CanvasScreenToolbarButtons {
 
-    public abstract getButtons(isOpen: boolean): ReactElement[];
+    public abstract getButtons(isOpen: boolean, mode: string, waitingForResults: boolean): ReactElement[];
 
     public abstract handleBackButtonPressed(): void;
 
-    protected mode: string;
-
-    protected open: boolean;
-
-    public constructor(mode: string, open: boolean) {
-        this.mode = mode;
-        this.open = open;
+    public isSelected(buttonText: string, mode: string): boolean {
+        return mode.toString() === buttonText;
     }
 
     protected makeToolbarButton(
         text: string,
         onClick: (e: React.MouseEvent) => void,
         isOpen: boolean,
+        mode: string,
         icon?: ReactElement
     ): ReactElement {
-        const isSelected = (mode: string) => this.mode.toString() === mode;
         return (
             <ListItem key={text} disablePadding sx={{ display: 'block' }} id={text} >
                 <ListItemButton
                     sx={{
                         minHeight: 48,
-                        justifyContent: this.open ? 'initial' : 'center',
+                        justifyContent: isOpen ? 'initial' : 'center',
                         px: 2.5
                     }}
                     onClick={e => onClick(e)}
-                    selected={isSelected(text)}
+                    selected={this.isSelected(text, mode)}
                     id={text}
                 >
                     <ListItemIcon
                         sx={{
-                            minWidth: 0,
-                            mr: this.open ? 3 : 'auto',
+                            mr: isOpen ? 3 : 'auto',
                             justifyContent: 'center',
                         }}
                         id={text}

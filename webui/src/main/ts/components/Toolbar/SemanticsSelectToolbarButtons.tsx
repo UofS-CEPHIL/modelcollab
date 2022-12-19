@@ -19,8 +19,6 @@ export default class SemanticSelectToolbarButtons extends ToolbarButtons {
 
 
     public constructor(
-        mode: string,
-        open: boolean,
         sessionId: string,
         setButtonsToMain: () => void,
         restClient: RestClient,
@@ -29,7 +27,7 @@ export default class SemanticSelectToolbarButtons extends ToolbarButtons {
         waitingForResults: boolean,
         setWaitingForResults: (waiting: boolean) => void,
     ) {
-        super(mode, open);
+        super();
         this.sessionId = sessionId;
         this.setButtonsToMain = setButtonsToMain;
         this.restClient = restClient;
@@ -43,23 +41,28 @@ export default class SemanticSelectToolbarButtons extends ToolbarButtons {
         this.setButtonsToMain();
     }
 
-    public getButtons(): ReactElement[] {
+    public isSelected(_: string): boolean {
+        return false;
+    }
+
+    public getButtons(isOpen: boolean, mode: string): ReactElement[] {
         return [
-            this.getODEButton()
+            this.getODEButton(isOpen, mode)
         ];
     }
 
-    private getODEButton(): ReactElement {
+    private getODEButton(open: boolean, mode: string): ReactElement {
         return this.makeToolbarButton(
             "ODE",
             () => this.computeModel(),
-            this.open,
+            open,
+            mode,
             (<FunctionsIcon />)
         );
     }
 
     private computeModel(): void {
-        console.log("Computing model . scenario " + this.selectedScenario);
+        console.log("Computing model. scenario " + this.selectedScenario);
         const pollOnce = (id: string) => {
             this.restClient.getResults(
                 id,

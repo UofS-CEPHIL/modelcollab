@@ -68,22 +68,6 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    getDataForSession(sessionId: string, callback: (data: any) => void) {
-        function formatDataForExport(snapshot: DataSnapshot): any {
-            return {
-                [`${sessionId}`]: snapshot.val()
-            };
-        }
-        onValue(
-            ref(
-                this.firebaseManager.getDb(),
-                FirebaseSchema.makeAllComponentsForSessionPath(sessionId)
-            ),
-            (s: DataSnapshot) => callback(formatDataForExport(s)),
-            { onlyOnce: true }
-        );
-    }
-
     subscribeToSessionList(onChanged: (sessions: string[]) => void) {
         const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeSessionIdsPath());
         onValue(listRef, snap => {

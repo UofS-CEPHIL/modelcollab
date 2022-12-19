@@ -227,14 +227,6 @@ export default class HelpBox extends ModalBox<Props, State> {
         return this.makeBulletPoint(text, icon);
     }
 
-    private makeGetDataBulletPoint(): ReactElement {
-        const text = "The Get Data button allows the user to download the current model as JSON data. Currently, this "
-            + "data can only be imported by directly modifying the database, but a future version will include the "
-            + "ability to import model data from such JSON files.";
-        const icon = CanvasScreenToolbar.getGetJsonIcon();
-        return this.makeBulletPoint(text, icon);
-    }
-
     private makeRunModelBulletPoint(): ReactElement {
         const text = "The Run Model button allows the user to run the current scenario with ODE semantics. This will "
             + "be updated for other semantics in a future update. Model computation may take up to several minutes, "
