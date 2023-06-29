@@ -204,8 +204,8 @@ export default class JuliaGenerator {
             const modelFeetCommaSep = this.getFootNamesForModel(feet, name).join(',');
             return `${name}(${modelFeetCommaSep})`;
         });
-        return `\n${this.RELATION_VAR_NAME} = @relation (${footNamesCommaSep}) begin \n`
-            + `${modelStrings.join('\n')} \nend`;
+        return `${this.RELATION_VAR_NAME} = @relation (${footNamesCommaSep}) begin `
+            + `${modelStrings.join(';')} end`;
     }
 
     private static makeOpenLines(feet: Foot[], models: JuliaStockFlowModel[]): string[] {
@@ -276,7 +276,7 @@ export default class JuliaGenerator {
     }
 
     private static makeSaveFigureLines(filename: string): string[] {
-        return [`plot(${this.SOLUTION_VAR_NAME})`, `savefig("${filename}")`];
+        return [`plot(${this.SOLUTION_VAR_NAME})`, `savefig("${filename}");`];
     }
 
 }
