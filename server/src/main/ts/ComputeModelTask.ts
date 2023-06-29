@@ -22,7 +22,7 @@ export default class ComputeModelTask {
         this.scenarioName = scenarioName;
     }
 
-    public async start(onResultsReady?: (path: string) => void): Promise<void> {
+    public async start(onResultsReady?: (path: string) => void, onFailed?: (reason: any) => void): Promise<void> {
         const date: string = new Date().toISOString().slice(0, 16);
         const filename: string = `/tmp/ModelResults_${date}.png`;
         var juliaCode: string;
@@ -46,7 +46,8 @@ export default class ComputeModelTask {
             console.log(juliaCode);
 
             axios.post("http://localhost:8088/run", juliaCode)
-                .then(_ => { if (onResultsReady) onResultsReady(filename) });
+                .then(_ => { if (onResultsReady) onResultsReady(filename) })
+                .catch(e => { if (onFailed) onFailed(e) });
 
         }
         catch (e) {
