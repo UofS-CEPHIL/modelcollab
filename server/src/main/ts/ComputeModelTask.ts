@@ -1,6 +1,5 @@
-import { spawn } from "node:child_process";
-
 import { FirebaseComponentModel as schema } from "database/build/export";
+import axios from 'axios'
 
 import JuliaGenerator from "./compute/JuliaGenerator";
 import applicationConfig from "./config/applicationConfig";
@@ -43,27 +42,16 @@ export default class ComputeModelTask {
                 identifications,
                 filename
             )
+
+            console.log(juliaCode);
+
+            axios.post("http://localhost:8088/run", juliaCode)
+                .then(_ => { if (onResultsReady) onResultsReady(filename) });
+
         }
         catch (e) {
             console.error(e);
             juliaCode = "";
         }
-        console.log(juliaCode);
-        let proc = spawn(
-            "./julia",
-            {
-                stdio: ["pipe", "inherit", "inherit"],
-                cwd: "/home/ericr789/julia-1.7.3/bin/",
-            }
-        );
-
-        proc.stdin.write('ENV["GKSwstype"] = "nul"; ');
-        proc.stdin.write('println("running code"); ');
-        proc.stdin.write(juliaCode);
-        proc.stdin.write("\n");
-        proc.stdin.write("exit()\n");
-        proc.stdin.end();
-        if (onResultsReady) proc.on("exit", () => onResultsReady(filename));
-
     }
 }
