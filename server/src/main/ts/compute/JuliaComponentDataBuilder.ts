@@ -23,7 +23,8 @@ export default class JuliaComponentDataBuilder {
                 return this.OUTER_MODEL_ID;
             }
 
-            const modelEntry = Object.entries(staticModelComponents).find(kv => kv[1].find(c => c.getId() === id));
+            const modelEntry = Object.entries(staticModelComponents)
+                .find(kv => kv[1].find(c => c.getId() === id));
             if (!modelEntry) throw new Error(`Could not find id ${id}`);
             return modelEntry[0];
         }
@@ -32,15 +33,20 @@ export default class JuliaComponentDataBuilder {
             .reduce((a, b) => a.concat(b), [])
             .concat(outerComponents);
         const subs: schema.SubstitutionFirebaseComponent[] =
-            outerComponents.filter(c => c.getType() === schema.ComponentType.SUBSTITUTION);
+            outerComponents
+                .filter(c => c.getType() === schema.ComponentType.SUBSTITUTION);
 
         return subs.map(sub => {
-            const modelA = findModelNameContainingComponentID(sub.getData().replacedId);
-            const modelB = findModelNameContainingComponentID(sub.getData().replacementId);
-            const component = allComponents.find(c => c.getId() === sub.getData().replacementId);
+            const modelA =
+                findModelNameContainingComponentID(sub.getData().replacedId);
+            const modelB =
+                findModelNameContainingComponentID(sub.getData().replacementId);
+            const component = allComponents
+                .find(c => c.getId() === sub.getData().replacementId);
             if (!component)
                 throw new Error(
-                    `Unable to find component with id ${sub.getData().replacementId} in ${allComponents}`
+                    `Unable to find component with id `
+                    + `${sub.getData().replacementId} in ${allComponents}`
                 );
             const name = component.getData().text;
             const fbId = component.getId();
@@ -61,9 +67,11 @@ export default class JuliaComponentDataBuilder {
         scenarioName?: string
     ): JuliaStockFlowModel[] {
 
-        const outerModelComponents = this.getAllOuterModelComponents(outerComponents, staticModelComponents);
+        const outerModelComponents =
+            this.getAllOuterModelComponents(outerComponents, staticModelComponents);
         const substitutions: schema.SubstitutionFirebaseComponent[] =
-            outerModelComponents.filter(c => c.getType() === schema.ComponentType.SUBSTITUTION);
+            outerModelComponents
+                .filter(c => c.getType() === schema.ComponentType.SUBSTITUTION);
 
         // Remove stopTime and startTime params from static models
         Object
@@ -81,7 +89,8 @@ export default class JuliaComponentDataBuilder {
             );
 
 
-        const allModelComponentLists = this.addOuterComponentsToModelList(outerComponents, staticModelComponents);
+        const allModelComponentLists =
+            this.addOuterComponentsToModelList(outerComponents, staticModelComponents);
         const substitutedModels = this.applySubstitutionsToModels(
             allModelComponentLists,
             substitutions,
@@ -121,7 +130,8 @@ export default class JuliaComponentDataBuilder {
             schema.ComponentType.SUBSTITUTION,
             schema.ComponentType.STATIC_MODEL
         ].includes(c.getType());
-        const hasRelevantComponents = outerComponents.filter(isRelevantComponent).length > 0;
+        const hasRelevantComponents =
+            outerComponents.filter(isRelevantComponent).length > 0;
 
         if (hasRelevantComponents) {
             const allModelComponentLists = { ...staticModelComponents };
@@ -130,12 +140,15 @@ export default class JuliaComponentDataBuilder {
         }
         else {
             if (Object.keys(staticModelComponents).length === 0) {
-                throw new Error("Found degenerate outer model and no inner models.");
+                throw new Error(
+                    "Found degenerate outer model and no inner models."
+                );
             }
             const staticComponentsCopy = { ...staticModelComponents };
             const [k, v] = Object.entries(staticComponentsCopy)[0];
             staticComponentsCopy[k] = v.concat(
-                outerComponents.filter(c => c.getType() === schema.ComponentType.PARAMETER)
+                outerComponents
+                    .filter(c => c.getType() === schema.ComponentType.PARAMETER)
             );
             return staticComponentsCopy;
         }
@@ -155,7 +168,8 @@ export default class JuliaComponentDataBuilder {
         ): schema.FirebaseDataComponent<any>[] {
             let newComponentList = [...componentList];
             substitutions.forEach(sub => {
-                const subComponent = allComponents.find(c => c.getId() === sub.getData().replacementId);
+                const subComponent = allComponents
+                    .find(c => c.getId() === sub.getData().replacementId);
                 if (!subComponent)
                     throw new Error(
                         `Component with ID ${sub.getData().replacementId} not found `
@@ -163,7 +177,8 @@ export default class JuliaComponentDataBuilder {
                     );
 
                 const sizeBefore = newComponentList.length;
-                newComponentList = newComponentList.filter(c => c.getId() !== sub.getData().replacedId);
+                newComponentList = newComponentList
+                    .filter(c => c.getId() !== sub.getData().replacedId);
                 if (newComponentList.length !== sizeBefore) {
                     newComponentList.push(subComponent);
                 }
@@ -455,4 +470,3 @@ export default class JuliaComponentDataBuilder {
         return new JuliaParameterComponent(parameter.getData().text, parameter.getId(), parameter.getData().value);
     }
 }
-

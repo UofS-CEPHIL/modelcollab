@@ -396,7 +396,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
                 let newNewOrphans: ComponentUiData[] = [];
                 for (const orphan of newOrphans) {
                     const subOrphans = findOrphans(orphan);
-                    // eslint-disable-next-line                   
+                    // eslint-disable-next-line
                     const unique = subOrphans.filter(o => {
                         return orphans.find(c => c.getId() === o.getId()) === undefined
                     });

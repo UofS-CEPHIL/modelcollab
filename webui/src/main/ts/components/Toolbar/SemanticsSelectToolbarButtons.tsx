@@ -87,7 +87,8 @@ export default class SemanticSelectToolbarButtons extends ToolbarButtons {
                         console.error(res);
                         this.setWaitingForResults(false);
                     }
-                }
+                },
+                e => { console.error("error: " + e); this.setWaitingForResults(false); }
             );
         }
         const startPolling = (id: string) => setTimeout(() => pollOnce(id), SemanticSelectToolbarButtons.POLLING_TIME_MS);
@@ -103,8 +104,11 @@ export default class SemanticSelectToolbarButtons extends ToolbarButtons {
                     else {
                         console.error("Received bad response from server");
                         console.error(res);
+                        this.setWaitingForResults(false);
                     }
-                });
+                },
+                e => { console.error("error: " + e); this.setWaitingForResults(false); }
+            );
         }
     }
 }

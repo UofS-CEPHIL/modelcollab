@@ -20,7 +20,8 @@ export default class RestClientImpl {
     public computeModel(
         sessionId: string,
         scenarioName: string | null,
-        onResponseReceived: ((res: AxiosResponse) => void)
+        onResponseReceived: ((res: AxiosResponse) => void),
+        onFailed: ((reason: any) => void)
     ): void {
         if (!scenarioName) scenarioName = ScenariosBox.DEFAULT_SCENARIO_NAME;
         Axios.post(
@@ -31,10 +32,15 @@ export default class RestClientImpl {
                     "Content-Type": "application/x-www-urlencoded"
                 }
             }
-        ).then(res => onResponseReceived(res));
+        ).then(res => onResponseReceived(res))
+            .catch(e => onFailed(e));
     }
 
-    public getResults(resultId: string, onResultsReceived: ((res: AxiosResponse) => void)): void {
+    public getResults(
+        resultId: string,
+        onResultsReceived: ((res: AxiosResponse) => void),
+        onFailed: ((reason: any) => void)
+    ): void {
         Axios.get(
             `${applicationConfig.serverAddress}/getModelResults/${resultId}`,
             {
@@ -44,6 +50,7 @@ export default class RestClientImpl {
                 },
                 responseType: "arraybuffer"
             }
-        ).then(res => onResultsReceived(res));
+        ).then(res => onResultsReceived(res))
+            .catch(e => onFailed(e));
     }
 }
