@@ -74,4 +74,14 @@ struct StaticModel <: Component
 end
 export StaticModel
 
+struct StockFlowModel
+    name::String
+    stocks::Tuple{Stock}
+    flows::Tuple{Flow}
+    parameters::Tuple{Parameter}
+    dynvars::Tuple{DynamicVariable}
+    sumvars::Tuple{SumVariable}
+end
+export StockFlowModel
+
 end # ModelComponents namespace

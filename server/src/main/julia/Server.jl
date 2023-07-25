@@ -1,3 +1,4 @@
+include("./firebase/FirebaseComponents.jl")
 include("./http/FirebaseClient.jl")
 
 using HTTP
@@ -10,18 +11,21 @@ using StockFlow
 using Sockets
 
 using .FirebaseClient
-
+using .FirebaseComponents
 
 ResponseCode = (
     OK = 200,
 )
-
 
 function handle_getcode(req::HTTP.Request)
     println("getcode")
     sessionid = HTTP.getparams(req)["sessionid"]
     result = FirebaseClient.get_components(sessionid)
     resultstring = JSON.json(result)
+    for (k,v) in result
+        println("$k: $v")
+        println()
+    end
     return HTTP.Response(ResponseCode.OK, resultstring)
 end
 
