@@ -1,6 +1,6 @@
 import React, { ReactElement } from 'react';
 import { UiMode } from '../../UiMode';
-import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 
 
 export interface Props {
@@ -26,8 +26,17 @@ export default abstract class CanvasScreenToolbarButtons {
         mode: string,
         icon?: ReactElement
     ): ReactElement {
+        const selected = this.isSelected(text, mode)
         return (
-            <ListItem key={text} disablePadding sx={{ display: 'block' }} id={text} >
+            <ListItem
+                key={text}
+                disablePadding
+                sx={{
+                    display: 'block',
+                    background: selected ? "LightGrey" : "White"
+                }}
+                id={text}
+            >
                 <ListItemButton
                     sx={{
                         minHeight: 48,
@@ -35,8 +44,8 @@ export default abstract class CanvasScreenToolbarButtons {
                         px: 2.5
                     }}
                     onClick={e => onClick(e)}
-                    selected={this.isSelected(text, mode)}
                     id={text}
+                    selected={selected}
                 >
                     <ListItemIcon
                         sx={{

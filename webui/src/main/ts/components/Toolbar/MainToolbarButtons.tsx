@@ -6,10 +6,11 @@ import ToolbarButtons from "./CanvasScreenToolbarButtons";
 import CloudIcon from '@mui/icons-material/Cloud';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ForwardIcon from '@mui/icons-material/Forward';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import EditIcon from '@mui/icons-material/Edit';
-import EastIcon from '@mui/icons-material/East';
+import FunctionsIcon from '@mui/icons-material/Functions';
 import OpenWithIcon from '@mui/icons-material/OpenWith';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
@@ -82,16 +83,34 @@ export default class MainToolbarButtons extends ToolbarButtons {
                 return MainToolbarButtons.getDefaultComputeModelIcon();
             }
         }
-        return Object.values(UiMode)
-            .map(uimode =>
-                this.makeToolbarButton(
+        const EDIT_MODES = [
+            UiMode.MOVE,
+            UiMode.EDIT,
+            UiMode.DELETE,
+            UiMode.IDENTIFY
+        ]
+        const CREATE_MODES = [
+            UiMode.STOCK,
+            UiMode.CLOUD,
+            UiMode.PARAM,
+            UiMode.DYN_VARIABLE,
+            UiMode.SUM_VARIABLE
+        ]
+        const CONNECT_MODES = [
+            UiMode.FLOW,
+            UiMode.CONNECT,
+        ]
+        return [EDIT_MODES, CONNECT_MODES, CREATE_MODES]
+            .map(modeList =>
+                modeList.map(uimode => this.makeToolbarButton(
                     uimode.toString(),
                     () => this.setMode(uimode),
                     isOpen,
                     mode,
                     MainToolbarButtons.getIconForMode(uimode)
-                )
-            ).concat([
+                )).concat([(<Divider />)]))
+            .reduce((a, b) => a.concat(b), [])
+            .concat([
                 (<Divider />),
                 this.makeToolbarButton(
                     "Scenarios",
@@ -209,11 +228,11 @@ export default class MainToolbarButtons extends ToolbarButtons {
             case UiMode.DYN_VARIABLE:
                 return (<AddCircleIcon />);
             case UiMode.SUM_VARIABLE:
-                return (<AddCircleOutlineIcon />);
+                return (<FunctionsIcon />);
             case UiMode.EDIT:
                 return (<EditIcon />);
             case UiMode.FLOW:
-                return (<EastIcon />);
+                return (<ForwardIcon />);
             case UiMode.IDENTIFY:
                 return (<DeviceHubIcon />);
             case UiMode.MOVE:
