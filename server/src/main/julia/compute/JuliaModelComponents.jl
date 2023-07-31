@@ -3,29 +3,29 @@
 
 module ModelComponents
 
-include("../firebase/FirebaseComponents.jl")
+using ..FirebaseComponents
 
-abstract type Component
-
-OptionalString = Union{String, Nothing}
+abstract type Component end
+export Component
 
 struct Foot <: Component
-    stock_name::OptionalString
+    stock_name::Union{String, Nothing}
     sumvar_names::Vector{String}
     model_names::Vector{String}
 end
 export Foot
 
 struct Identification <: Component
-    modela::String
-    modelb::String
-    name::String
-    firebaseid::String
-    type::ComponentType
+    modelA::String # model containing the replaced component
+    modelB::String # model containing the replacement component
+    component_name::String # The name of the replacement component
+    component_firebase_id::String # The firebase id of the replacement component
+    component_type::ComponentType # The type of the components
 end
 export Identification
 
 struct Stock <: Component
+    name::String
     inflow_names::Vector{String}
     outflow_names::Vector{String}
     depended_param_names::Vector{String}
@@ -70,7 +70,7 @@ export Parameter
 struct StaticModel <: Component
     firebaseid::String
     name::String
-    components::Vector{FirebaseComponents.Component}
+    components::Vector{Component}
 end
 export StaticModel
 

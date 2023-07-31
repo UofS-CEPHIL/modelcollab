@@ -1,9 +1,7 @@
 module FirebaseClient
-include("../firebase/FirebaseComponents.jl")
-include("./realtime.jl")
 
-using .FirebaseComponents
-using .RTDB
+using ..FirebaseComponents
+using ..RTDB
 
 # TODO make a config file
 CONFIG_FILE_PATH = "../../../../firebase-config.json"
@@ -55,11 +53,16 @@ function get_inner_models(
     return inners
 end
 
-function get_components(sessionid::String)::Dict{String, Vector{FirebaseDataObject}}
+struct InitialFirebaseResult
+    outers::Vector{FirebaseDataObject}
+    inners::Dict{String, Vector{FirebaseDataObject}}
+end
+export InitialFirebaseResult
+
+function get_components(sessionid::String)::InitialFirebaseResult
     outers = get_outer_components(sessionid)
     inners = get_inner_models(outers)
-    inners["_outer"] = outers
-    return inners
+    return InitialFirebaseResult(outers, inners)
 end
 export get_components
 

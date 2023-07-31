@@ -5,8 +5,7 @@ module FirebaseComponents
 #################################### Basics ####################################
 
 # FirebaseDataObject is an empty superclass that represents all of the different
-# types of things that we store in Firebase. Specifically, this should directly
-# match the "data" field of each different type.
+# types of things that we store in Firebase
 abstract type FirebaseDataObject end
 export FirebaseDataObject
 
@@ -78,6 +77,55 @@ function firebase_gettype(s::String)::Union{ComponentType, Nothing}
 end
 export firebase_gettype
 
+function firebase_isstock(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == STOCK
+end
+export firebase_isstock
+
+function firebase_isflow(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == FLOW
+end
+export firebase_isflow
+
+function firebase_isparam(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == PARAMETER
+end
+export firebase_isparam
+
+function firebase_isdynvar(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == VARIABLE
+end
+export firebase_isdynvar
+
+function firebase_issumvar(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == SUM_VARIABLE
+end
+export firebase_issumvar
+
+function firebase_isconnection(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == CONNECTION
+end
+export firebase_isconnection
+
+function firebase_iscloud(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == CLOUD
+end
+export firebase_iscloud
+
+function firebase_isstaticmodel(c::FirebaseDataObject)
+    return firebase_gettype(c) == STATIC_MODEL
+end
+export firebase_isstaticmodel
+
+function firebase_issubstitution(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == SUBSTITUTION
+end
+export firebase_issubstitution
+
+function firebase_isscenario(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == SCENARIO
+end
+export firebase_isscenario
 
 ## Some basic objects that we can compose into the actual ones
 struct FirebasePointer
@@ -141,8 +189,8 @@ export FirebaseConnection
 struct FirebaseFlow <: FirebaseDataObject
     id::String
     pointer::FirebasePointer
-    equation::FirebaseValue
-    label::FirebaseText
+    value::FirebaseValue
+    text::FirebaseText
 end
 export FirebaseFlow
 
@@ -152,8 +200,8 @@ export FirebaseFlow
 struct FirebaseStock <: FirebaseDataObject
     id::String
     location::FirebasePoint
-    label::FirebaseText
-    initvalue::FirebaseValue
+    text::FirebaseText
+    value::FirebaseValue
 end
 export FirebaseStock
 
@@ -177,14 +225,15 @@ export FirebaseStaticModel
 
 struct FirebaseSubstitution <: FirebaseDataObject
     id::String
-    replacedId::String
-    replacementId::String
+    replacedid::String
+    replacementid::String
 end
 export FirebaseSubstitution
 
 struct FirebaseScenario <: FirebaseDataObject
     id::String
-    paramOverrides::Dict{String, String}
+    name::String
+    param_overrides::Dict{String, String}
 end
 export FirebaseScenario
 
@@ -198,8 +247,6 @@ function firebase_create_object(
 
     type = firebase_gettype(data["type"])
     data = data["data"]
-
-    # println("id: $id, type: $type")
 
     if (type == STOCK)
         return FirebaseStock(
@@ -260,8 +307,12 @@ function firebase_create_object(
             data["replacedId"]
         )
     elseif (type == SCENARIO)
+        if (!in("paramOverrides", keys(data)))
+            data["paramOverrides"] = Dict{String, String}()
+        end
         return FirebaseScenario(
             id,
+            data["name"],
             data["paramOverrides"]
         )
     else

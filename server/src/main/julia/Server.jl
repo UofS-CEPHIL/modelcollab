@@ -1,5 +1,10 @@
 include("./firebase/FirebaseComponents.jl")
+include("./http/realtime.jl")
 include("./http/FirebaseClient.jl")
+include("./compute/JuliaModelComponents.jl")
+include("./compute/ComponentBuilder.jl")
+include("./compute/ModelBuilder.jl")
+include("./compute/IdentificationBuilder.jl")
 
 using HTTP
 using JSON
@@ -11,22 +16,35 @@ using StockFlow
 using Sockets
 
 using .FirebaseClient
-using .FirebaseComponents
+using .ModelBuilder
+using .IdentificationBuilder
 
 ResponseCode = (
     OK = 200,
 )
 
 function handle_getcode(req::HTTP.Request)
-    println("getcode")
     sessionid = HTTP.getparams(req)["sessionid"]
-    result = FirebaseClient.get_components(sessionid)
-    resultstring = JSON.json(result)
-    for (k,v) in result
-        println("$k: $v")
-        println()
-    end
-    return HTTP.Response(ResponseCode.OK, resultstring)
+    fb_components = FirebaseClient.get_components(sessionid)
+    models = ModelBuilder.make_stockflow_models(
+        fb_components.outers,
+        fb_components.inners,
+        nothing
+    )
+    identifications = IdentificationBuilder.make_identifications(
+        fb_components.outers,
+        fb_components.inners
+    )
+
+    outers = fb_compohnents.outers
+    inners = fb_compohnents.inners
+    println("Outers: $outers")
+    println()
+    println("Inners: $inners")
+    println()
+    println("IDs: $identifications")
+
+    return HTTP.Response(ResponseCode.OK)
 end
 
 function handle_computemodel(req::HTTP.Request)
