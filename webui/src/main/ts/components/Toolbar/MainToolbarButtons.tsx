@@ -36,7 +36,6 @@ export default class MainToolbarButtons extends ToolbarButtons {
     private importModel: () => void;
     private showHelpBox: () => void;
     private returnToSessionSelect: () => void;
-    private toggleDrawerOpen: () => void;
     private setButtonsToSemanticSelect: () => void;
     private setMode: (mode: UiMode) => void;
     private downloadData: (b: Blob, fileName: string) => void;
@@ -52,7 +51,6 @@ export default class MainToolbarButtons extends ToolbarButtons {
         importModel: () => void,
         showHelpBox: () => void,
         returnToSessionSelect: () => void,
-        toggleDrawerOpen: () => void,
         setButtonsToSemanticSelect: () => void
     ) {
         super();
@@ -64,17 +62,16 @@ export default class MainToolbarButtons extends ToolbarButtons {
         this.saveModel = saveModel;
         this.importModel = importModel;
         this.returnToSessionSelect = returnToSessionSelect;
-        this.toggleDrawerOpen = toggleDrawerOpen;
         this.setButtonsToSemanticSelect = setButtonsToSemanticSelect;
         this.setMode = setMode;
         this.downloadData = downloadData;
     }
 
     public handleBackButtonPressed(): void {
-        this.toggleDrawerOpen();
+        // Nothing
     }
 
-    public getButtons(isOpen: boolean, mode: string, waitingForResults: boolean): ReactElement[] {
+    public getButtons(mode: string, waitingForResults: boolean): ReactElement[] {
         const getLabelForInterpretButton = () => {
             if (waitingForResults) {
                 return (<CircularProgress />);
@@ -105,7 +102,6 @@ export default class MainToolbarButtons extends ToolbarButtons {
                 modeList.map(uimode => this.makeToolbarButton(
                     uimode.toString(),
                     () => this.setMode(uimode),
-                    isOpen,
                     mode,
                     MainToolbarButtons.getIconForMode(uimode)
                 )).concat([(<Divider />)]))
@@ -115,56 +111,48 @@ export default class MainToolbarButtons extends ToolbarButtons {
                 this.makeToolbarButton(
                     "Scenarios",
                     () => this.showScenarios(),
-                    isOpen,
                     mode,
                     MainToolbarButtons.getScenariosIcon()
                 ),
                 this.makeToolbarButton(
                     "Get Code",
                     () => this.getCode(),
-                    isOpen,
                     mode,
                     MainToolbarButtons.getGetCodeIcon()
                 ),
                 this.makeToolbarButton(
                     "Get Data",
                     () => this.getData(),
-                    isOpen,
                     mode,
                     MainToolbarButtons.getGetJsonIcon()
                 ),
                 this.makeToolbarButton(
                     "Interpret",
                     () => this.setButtonsToSemanticSelect(),
-                    isOpen,
                     mode,
                     getLabelForInterpretButton()
                 ),
                 this.makeToolbarButton(
                     "Publish",
                     () => this.saveModel(),
-                    isOpen,
                     mode,
                     MainToolbarButtons.getPublishModelIcon()
                 ),
                 this.makeToolbarButton(
                     "Import",
                     () => this.importModel(),
-                    isOpen,
                     mode,
                     MainToolbarButtons.getImportModelIcon()
                 ),
                 this.makeToolbarButton(
                     "Help",
                     () => this.showHelpBox(),
-                    isOpen,
                     mode,
                     MainToolbarButtons.getHelpIcon()
                 ),
                 this.makeToolbarButton(
                     "Back",
                     () => this.returnToSessionSelect(),
-                    isOpen,
                     mode,
                     MainToolbarButtons.getGoBackIcon()
                 ),
@@ -181,7 +169,10 @@ export default class MainToolbarButtons extends ToolbarButtons {
     private getData(): void {
         this.firebaseDataModel.getDataForSession(
             this.sessionId,
-            (data: any) => this.downloadData(new Blob([JSON.stringify(data)]), `${this.sessionId}.json`)
+            (data: any) => this.downloadData(
+                new Blob([JSON.stringify(data)]),
+                `${this.sessionId}.json`
+            )
         );
     }
 

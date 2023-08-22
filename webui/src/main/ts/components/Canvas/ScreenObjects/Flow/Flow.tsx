@@ -77,6 +77,8 @@ export default class Flow extends React.Component<Props> {
     private makeLabel(position: Point): ReactElement {
         const height = this.props.flowData.computeLabelHeight();
         const width = this.props.flowData.computeLabelWidth();
+        if (this.props.flowData.getData().text === "")
+            return (<div />);
         return (
             <Group
                 x={position.x}

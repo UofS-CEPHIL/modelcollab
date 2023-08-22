@@ -11,7 +11,10 @@ export interface Props {
 
 export default abstract class CanvasScreenToolbarButtons {
 
-    public abstract getButtons(isOpen: boolean, mode: string, waitingForResults: boolean): ReactElement[];
+    public abstract getButtons(
+        mode: string,
+        waitingForResults: boolean
+    ): ReactElement[];
 
     public abstract handleBackButtonPressed(): void;
 
@@ -22,7 +25,6 @@ export default abstract class CanvasScreenToolbarButtons {
     protected makeToolbarButton(
         text: string,
         onClick: (e: React.MouseEvent) => void,
-        isOpen: boolean,
         mode: string,
         icon?: ReactElement
     ): ReactElement {
@@ -40,7 +42,7 @@ export default abstract class CanvasScreenToolbarButtons {
                 <ListItemButton
                     sx={{
                         minHeight: 48,
-                        justifyContent: isOpen ? 'initial' : 'center',
+                        justifyContent: 'center',
                         px: 2.5
                     }}
                     onClick={e => onClick(e)}
@@ -49,14 +51,14 @@ export default abstract class CanvasScreenToolbarButtons {
                 >
                     <ListItemIcon
                         sx={{
-                            mr: isOpen ? 3 : 'auto',
+                            mr: 'auto',
                             justifyContent: 'center',
                         }}
                         id={text}
                     >
                         {icon}
                     </ListItemIcon>
-                    <ListItemText primary={text} sx={{ opacity: isOpen ? 1 : 0 }} />
+                    <ListItemText primary={text} />
                 </ListItemButton>
             </ListItem >
         );

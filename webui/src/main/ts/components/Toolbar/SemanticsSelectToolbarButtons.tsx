@@ -1,13 +1,14 @@
 import { ReactElement } from "react";
 import FunctionsIcon from '@mui/icons-material/Functions';
+import LogoutIcon from '@mui/icons-material/Logout';
 import ToolbarButtons from "./CanvasScreenToolbarButtons";
 import RestClient from "../../rest/RestClient";
 import { AxiosResponse } from "axios";
+import { UiMode } from "../../UiMode"
 
 export default class SemanticSelectToolbarButtons extends ToolbarButtons {
 
     public static readonly POLLING_TIME_MS = 2000;
-
 
     public sessionId: string;
     public setButtonsToMain: () => void;
@@ -45,19 +46,28 @@ export default class SemanticSelectToolbarButtons extends ToolbarButtons {
         return false;
     }
 
-    public getButtons(isOpen: boolean, mode: string): ReactElement[] {
+    public getButtons(mode: string): ReactElement[] {
         return [
-            this.getODEButton(isOpen, mode)
+            this.getODEButton(mode),
+            this.getBackButton()
         ];
     }
 
-    private getODEButton(open: boolean, mode: string): ReactElement {
+    private getODEButton(mode: string): ReactElement {
         return this.makeToolbarButton(
             "ODE",
             () => this.computeModel(),
-            open,
             mode,
             (<FunctionsIcon />)
+        );
+    }
+
+    private getBackButton(): ReactElement {
+        return this.makeToolbarButton(
+            "Back",
+            () => this.setButtonsToMain(),
+            UiMode.MOVE,
+            (<LogoutIcon />)
         );
     }
 
