@@ -11,7 +11,7 @@ export Component
 struct Foot <: Component
     stock_name::Union{String, Nothing}
     sumvar_names::Vector{String}
-    model_names::Vector{String}
+    model_ids::Vector{String}
 end
 export Foot
 
@@ -26,6 +26,8 @@ export Identification
 
 struct Stock <: Component
     name::String
+    firebaseid::String
+    value::String
     inflow_names::Vector{String}
     outflow_names::Vector{String}
     depended_param_names::Vector{String}
@@ -36,12 +38,13 @@ end
 export Stock
 
 struct Flow <: Component
-    from::String
-    to::String
+    name::String
+    firebaseid::String
+    from::Union{String, Nothing}
+    to::Union{String, Nothing}
     equation::String
-    stock_dependencies::Vector{String}
-    sumvar_dependencies::Vector{String}
-    associated_varname::String
+    depended_stock_names::Vector{String}
+    depended_sumvar_names::Vector{String}
 end
 export Flow
 
@@ -54,8 +57,8 @@ export SumVariable
 
 struct DynamicVariable <: Component
     name::String
-    value::String
     firebaseid::String
+    value::String
     depended_stock_names::Vector{String}
     depended_sumvar_names::Vector{String}
 end
@@ -63,24 +66,25 @@ export DynamicVariable
 
 struct Parameter <: Component
     name::String
+    firebaseid::String
     value::String
 end
 export Parameter
 
 struct StaticModel <: Component
-    firebaseid::String
     name::String
+    firebaseid::String
     components::Vector{Component}
 end
 export StaticModel
 
 struct StockFlowModel
-    name::String
-    stocks::Tuple{Stock}
-    flows::Tuple{Flow}
-    parameters::Tuple{Parameter}
-    dynvars::Tuple{DynamicVariable}
-    sumvars::Tuple{SumVariable}
+    firebaseid::String
+    stocks::Vector{Stock}
+    flows::Vector{Flow}
+    parameters::Vector{Parameter}
+    dynvars::Vector{DynamicVariable}
+    sumvars::Vector{SumVariable}
 end
 export StockFlowModel
 

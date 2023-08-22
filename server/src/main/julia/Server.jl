@@ -3,8 +3,13 @@ include("./http/realtime.jl")
 include("./http/FirebaseClient.jl")
 include("./compute/JuliaModelComponents.jl")
 include("./compute/ComponentBuilder.jl")
+include("./compute/StringGraph.jl")
 include("./compute/ModelBuilder.jl")
+include("./compute/FootBuilder.jl")
+include("./compute/CodeGenerator.jl")
 include("./compute/IdentificationBuilder.jl")
+
+module Server
 
 using HTTP
 using JSON
@@ -17,7 +22,9 @@ using Sockets
 
 using .FirebaseClient
 using .ModelBuilder
+using .FootBuilder
 using .IdentificationBuilder
+using .CodeGenerator
 
 ResponseCode = (
     OK = 200,
@@ -26,25 +33,19 @@ ResponseCode = (
 function handle_getcode(req::HTTP.Request)
     sessionid = HTTP.getparams(req)["sessionid"]
     fb_components = FirebaseClient.get_components(sessionid)
+
     models = ModelBuilder.make_stockflow_models(
         fb_components.outers,
-        fb_components.inners,
-        nothing
+        fb_components.inners
     )
     identifications = IdentificationBuilder.make_identifications(
         fb_components.outers,
         fb_components.inners
     )
+    feet = FootBuilder.make_feet(models, identifications)
+    code = CodeGenerator.generate_code(models, feet)
 
-    outers = fb_compohnents.outers
-    inners = fb_compohnents.inners
-    println("Outers: $outers")
-    println()
-    println("Inners: $inners")
-    println()
-    println("IDs: $identifications")
-
-    return HTTP.Response(ResponseCode.OK)
+    return HTTP.Response(ResponseCode.OK, code)
 end
 
 function handle_computemodel(req::HTTP.Request)
@@ -57,30 +58,27 @@ function handle_getmodelresults(req::HTTP.Request)
     return HTTP.Response(ResponseCode.OK)
 end
 
-# Set up firebase
-FirebaseClient.initialize()
+function create_server()::HTTP.Server
+    # Set up the server
+    router = HTTP.Router()
+    HTTP.register!(
+        router,
+        "GET",
+        "/getCode/{sessionid}",
+        handle_getcode
+    )
+    HTTP.register!(
+        router,
+        "POST",
+        "/computeModel/{sessionid}/{scenario}",
+        handle_computemodel
+    )
+    HTTP.register!(
+        router,
+        "GET",
+        "/getModelResults/{resultid}",
+        handle_getmodelresults
+    )
+end
 
-# Set up the server
-router = HTTP.Router()
-HTTP.register!(
-    router,
-    "GET",
-    "/getCode/{sessionid}",
-    handle_getcode
-)
-HTTP.register!(
-    router,
-    "POST",
-    "/computeModel/{sessionid}/{scenario}",
-    handle_computemodel
-)
-HTTP.register!(
-    router,
-    "GET",
-    "/getModelResults/{resultid}",
-    handle_getmodelresults
-)
-
-# Start up
-println("Starting server")
-server = HTTP.serve(router, Sockets.localhost, 8088)
+end # Server namespace

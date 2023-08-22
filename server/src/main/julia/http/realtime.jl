@@ -26,7 +26,7 @@ Initialize the realtimedb with baseurl to make things easier
 realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
 ```
 """
-function realdb_init(base_url; query = Dict())
+function realdb_init(base_url)
     global BASE_URL = base_url
     println("BASE_URL set:", BASE_URL)
 end
@@ -43,7 +43,7 @@ realdb_get("/users/jack/name")
 ```
 
 """
-function realdb_get(url, authheader = ""; query = Dict())
+function realdb_get(url, authheader = "")
     pagesize = 300
     pagetoken = ""
     final_url = "$BASE_URL$url.json"
@@ -84,7 +84,7 @@ you should use a PUT instead. This is the equivalent of using "set"
 operation with the client SDKs.
 
 """
-function realdb_post(url, authheader = "", body = Dict("name" => "real_db_test"); query = Dict())
+function realdb_post(url, authheader = "", body = Dict("name" => "real_db_test"))
     pagesize = 300
     pagetoken = ""
     final_url = "$BASE_URL$url.json"
@@ -114,7 +114,7 @@ body =Dict("last"=>"Jones")
 realdb_patch("/users/jack/name/",body)
 ```
 """
-function realdb_patch(url, authheader = "", body = Dict("name" => "real_db_test"); query = Dict())
+function realdb_patch(url, authheader = "", body = Dict("name" => "real_db_test"))
     pagesize = 300
     pagetoken = ""
     final_url = "$BASE_URL$url.json"
@@ -142,7 +142,7 @@ realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
 realdb_delete("/users/jack/name/last")
 ```
 """
-function realdb_delete(url, authheader = "", body = Dict("name" => "real_db_test"); query = Dict())
+function realdb_delete(url, authheader = "", body = Dict("name" => "real_db_test"))
     pagesize = 300
     pagetoken = ""
     final_url = "$BASE_URL$url.json"
@@ -172,7 +172,7 @@ body = Dict("first"=>"Ash", "last"=>"Sparrow")
 realdb_put("/users/jack/name",body)
 ```
 """
-function realdb_put(url, authheader = "", body = Dict("name" => "real_db_test"); query = Dict())
+function realdb_put(url, authheader = "", body = Dict("name" => "real_db_test"))
     pagesize = 300
     pagetoken = ""
     final_url = "$BASE_URL$url.json"
@@ -193,14 +193,8 @@ end
 readdb_download(url, filename = "test"; query = Dict())
 
 Download request
-
-# Example
-
-```julia
-
-```
 """
-function readdb_download(url, authheader = "", filename = "test"; query = Dict())
+function readdb_download(url, authheader = "", filename = "test")
     pagesize = 300
     pagetoken = ""
     final_url = "$BASE_URL$url.json?download=$filename.txt"

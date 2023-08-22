@@ -4,17 +4,19 @@ using ..ModelComponents
 using ..FirebaseComponents
 
 function make_julia_components(
+    name::String,
     model_components::Vector{FirebaseDataObject}
-)::Vector{Component}
-    components = organize_components(model_components)
-    return map(
-        c -> make_julia_component(c, components),
+)::StockFlowModel
+    fbcomponents = organize_components(model_components)
+    nativecomponents = map(
+        c -> make_julia_component(c, fbcomponents),
         model_components
     )
+    return organize_components(name, nativecomponents)
 end
 export make_julia_components
 
-struct FirebaseComponents
+struct FirebaseComponentsCollection
     all::Vector{FirebaseDataObject}
     stocks::Vector{FirebaseStock}
     flows::Vector{FirebaseFlow}
@@ -25,9 +27,28 @@ struct FirebaseComponents
 end
 
 function organize_components(
+    name::String,
+    model_components::Vector{Component}
+)::StockFlowModel
+
+    function filter_type(t::Type{T})::Vector{T} where T<:Component
+        return filter(c -> c isa t, model_components)
+    end
+
+    return StockFlowModel(
+        name,
+        filter_type(Stock),
+        filter_type(Flow),
+        filter_type(Parameter),
+        filter_type(DynamicVariable),
+        filter_type(SumVariable)
+    )
+end
+
+function organize_components(
     model_components::Vector{FirebaseDataObject}
-)::FirebaseComponents
-    return FirebaseComponents(
+)::FirebaseComponentsCollection
+    return FirebaseComponentsCollection(
         model_components,
         filter(firebase_isstock, model_components),
         filter(firebase_isflow, model_components),
@@ -60,7 +81,7 @@ end
 
 function get_depended_ids(
     component::FirebaseDataObject,
-    components::FirebaseComponents
+    components::FirebaseComponentsCollection
 )::Vector{String}
     return map(
         c -> c.pointer.from,
@@ -74,7 +95,7 @@ end
 
 function make_julia_component(
     stock::FirebaseStock,
-    components::FirebaseComponents
+    components::FirebaseComponentsCollection
 )::Component
 
     inflow_names = map(
@@ -123,6 +144,8 @@ function make_julia_component(
     )
     return Stock(
         stock.text.text,
+        stock.id,
+        stock.value.value,
         inflow_names,
         outflow_names,
         depended_parameter_names,
@@ -134,15 +157,15 @@ end
 
 function make_julia_component(
     flow::FirebaseFlow,
-    components::FirebaseComponents
+    components::FirebaseComponentsCollection
 )::Component
 
     fromstockidx = findfirst(s -> s.id == flow.pointer.from, components.stocks)
-    fromstock = components.stocks[fromstockidx]
-    fromname = fromstock == nothing ? "" : fromstock.text.text
+    fromstock = fromstockidx === nothing ? nothing : components.stocks[fromstockidx]
+    fromname = fromstock === nothing ? "" : fromstock.text.text
     tostockidx = findfirst(s -> s.id == flow.pointer.to, components.stocks)
-    tostock = components.stocks[tostockidx]
-    toname = tostock == nothing ? "" : tostock.text.text
+    tostock = tostockidx === nothing ? nothing : components.stocks[tostockidx]
+    toname = tostock === nothing ? "" : tostock.text.text
 
     depended_ids = get_depended_ids(flow, components)
     depended_stock_names = get_names_of_components_in_idlist(
@@ -154,21 +177,20 @@ function make_julia_component(
         components.sumvars
     )
 
-    varname = "var_" * flow.text.text
-
     return Flow(
+        flow.text.text,
+        flow.id,
         fromname,
         toname,
         flow.value.value,
         depended_stock_names,
-        depended_sumvar_names,
-        varname
+        depended_sumvar_names
     )
 end
 
 function make_julia_component(
     dynvar::FirebaseDynamicVariable,
-    components::FirebaseComponents
+    components::FirebaseComponentsCollection
 )::Component
     depended_ids = get_depended_ids(dynvar, components)
 
@@ -178,13 +200,13 @@ function make_julia_component(
     )
     depended_sumvar_names = get_names_of_components_in_idlist(
         depended_ids,
-        components.sumvar
+        components.sumvars
     )
 
     return DynamicVariable(
         dynvar.text.text,
-        dynvar.value.value,
         dynvar.id,
+        dynvar.value.value,
         depended_stock_names,
         depended_sumvar_names
     )
@@ -192,7 +214,7 @@ end
 
 function make_julia_component(
     sumvar::FirebaseSumVariable,
-    components::FirebaseComponents
+    components::FirebaseComponentsCollection
 )::Component
     depended_ids = get_depended_ids(sumvar, components)
     depended_stock_names = get_names_of_components_in_idlist(
@@ -209,10 +231,11 @@ end
 
 function make_julia_component(
     param::FirebaseParameter,
-    components::FirebaseComponents
+    components::FirebaseComponentsCollection
 )::Component
     return Parameter(
         param.text.text,
+        param.id,
         param.value.value
     )
 end

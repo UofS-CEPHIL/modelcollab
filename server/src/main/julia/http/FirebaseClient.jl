@@ -28,6 +28,7 @@ function make_firebase_objects(
     return objects
 end
 
+
 function get_outer_components(sessionid::String)::Vector{FirebaseDataObject}
     result = RTDB.realdb_get("$COMPONENTS_PATH_PREFIX/$sessionid")
     return make_firebase_objects(result)
@@ -41,15 +42,25 @@ end
 function get_inner_models(
     outers::Vector{FirebaseDataObject}
 )::Dict{String, Vector{FirebaseDataObject}}
+    # Get the inner components
     models = filter(
         c -> firebase_gettype(c) == FirebaseComponents.STATIC_MODEL,
         outers
     )
     inners = Dict{String, Vector{FirebaseDataObject}}()
     for model in models
-        modelid = model.modelid
-        inners[model.modelid] = get_saved_model_components(modelid)
+        inners[model.id] = get_saved_model_components(model.modelid)
     end
+
+    # Prefix the inner components' ids with their model ID
+    for (modelid, components) in inners
+        for i in 1:length(components)
+            component = inners[modelid][i]
+            id = component.id
+            inners[modelid][i] = newid("$modelid/$id", component)
+        end
+    end
+
     return inners
 end
 

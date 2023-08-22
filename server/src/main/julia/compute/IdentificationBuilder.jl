@@ -22,7 +22,7 @@ function make_identifications(
             sub,
             outers,
             inners,
-            all_componentsd
+            all_components
         ),
         subs
     )
@@ -33,8 +33,8 @@ export make_identifications
 function model_contains_id(
     id::String,
     model::Vector{FirebaseDataObject}
-)::Boolean
-    return findfirst(c -> c.id == id, model) != nothing
+)::Bool
+    return findfirst(c -> c.id == id, model) !== nothing
 end
 
 function find_model_containing_id(
@@ -42,21 +42,21 @@ function find_model_containing_id(
     outers::Vector{FirebaseDataObject},
     inners::Dict{String, Vector{FirebaseDataObject}}
 )::Union{String, Nothing}
-    if (findfirst(c -> c.id == id, outers))
+    if (findfirst(c -> c.id == id, outers) !== nothing)
         return OUTER_MODEL_ID
     end
-    model_pair = findfirst(
-        kv -> model_contains_id(kv.second),
-        pairs(inners)
+
+    innerkeys = collect(keys(inners))
+    innervals = collect(values(inners))
+
+    model_idx = findfirst(
+        v -> model_contains_id(id, v),
+        innervals
     )
-    if (model_pair == nothing)
-        ids = map(
-            vec -> map(c -> c.id, vec),
-                values(inners)
-        )
+    if (model_idx === nothing)
         return nothing
     else
-        return model_pair.first
+        return innerkeys[model_idx]
     end
 end
 
@@ -66,14 +66,20 @@ function make_identification(
     inners::Dict{String, Vector{FirebaseDataObject}},
     all_components::Vector{FirebaseDataObject}
 )::Identification
-    modelA = find_model_containing_id(sub.replacedid)
-    modelB = find_model_containing_id(sub.replacementid)
-    component = findfirst(c -> c.id == sub.replacementid, all_components)
-    if (modelA == nothing)
-        throw(KeyError("Unable to find model containg id $sub.replacedid"))
-    elseif (modelB == nothing)
-        throw(KeyError("Unable to find model containg id $sub.replacementid"))
-    elseif (component == nothing)
+    modelA = find_model_containing_id(sub.replacedid, outers, inners)
+    modelB = find_model_containing_id(sub.replacementid, outers, inners)
+    componentidx = findfirst(c -> c.id == sub.replacementid, all_components)
+    component = all_components[componentidx]
+    if (modelA === nothing)
+        println("Outers: $(map(c -> c.id, outers))")
+        println("Inners: ")
+        for (k, v) in inners
+            println("  $k: $(map(c -> c.id, v))")
+        end
+        throw(KeyError("Unable to find model containg id $(sub.replacedid)"))
+    elseif (modelB === nothing)
+        throw(KeyError("Unable to find model containg id $(sub.replacementid)"))
+    elseif (component === nothing)
         ids = map(c -> c.id, all_components)
         throw(KeyError("Unable to find component $id in list $ids"))
     end

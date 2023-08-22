@@ -159,6 +159,10 @@ struct FirebaseSumVariable <: FirebaseDataObject
     text::FirebaseText
 end
 export FirebaseSumVariable
+function newid(id::String, o::FirebaseSumVariable)::FirebaseSumVariable
+    return FirebaseSumVariable(id, o.location, o.text)
+end
+export newid
 
 struct FirebaseParameter <: FirebaseDataObject
     id::String
@@ -167,6 +171,9 @@ struct FirebaseParameter <: FirebaseDataObject
     value::FirebaseValue
 end
 export FirebaseParameter
+function newid(id::String, o::FirebaseParameter)::FirebaseParameter
+    return FirebaseParameter(id, o.location, o.text, o.value)
+end
 
 struct FirebaseDynamicVariable <: FirebaseDataObject
     id::String
@@ -175,7 +182,9 @@ struct FirebaseDynamicVariable <: FirebaseDataObject
     value::FirebaseValue
 end
 export FirebaseDynamicVariable
-
+function newid(id::String, o::FirebaseDynamicVariable)::FirebaseDynamicVariable
+    return FirebaseDynamicVariable(id, o.location, o.text, o.value)
+end
 
 ############################## Flow / Connection ###############################
 
@@ -185,6 +194,9 @@ struct FirebaseConnection <: FirebaseDataObject
     handleoffset::FirebasePoint
 end
 export FirebaseConnection
+function newid(id::String, o::FirebaseConnection)::FirebaseConnection
+    return FirebaseConnection(id, o.pointer, o.handleoffset)
+end
 
 struct FirebaseFlow <: FirebaseDataObject
     id::String
@@ -193,7 +205,9 @@ struct FirebaseFlow <: FirebaseDataObject
     text::FirebaseText
 end
 export FirebaseFlow
-
+function newid(id::String, o::FirebaseFlow)::FirebaseFlow
+    return FirebaseFlow(id, o.pointer, o.value, o.text)
+end
 
 #################################### Stock #####################################
 
@@ -204,12 +218,18 @@ struct FirebaseStock <: FirebaseDataObject
     value::FirebaseValue
 end
 export FirebaseStock
+function newid(id::String, o::FirebaseStock)::FirebaseStock
+    return FirebaseStock(id, o.location, o.text, o.value)
+end
 
 struct FirebaseCloud <: FirebaseDataObject
     id::String
     location::FirebasePoint
 end
 export FirebaseCloud
+function newid(id::String, o::FirebaseCloud)::FirebaseCloud
+    return FirebaseCloud(id, o.location)
+end
 
 ################################# Static Model #################################
 
@@ -220,6 +240,9 @@ struct FirebaseStaticModel <: FirebaseDataObject
     location::FirebasePoint
 end
 export FirebaseStaticModel
+function newid(id::String, o::FirebaseStaticModel)::FirebaseStaticModel
+    return FirebaseStaticModel(id, o.modelid, o.color, o.location)
+end
 
 ############################# Invisible Components #############################
 
@@ -229,6 +252,9 @@ struct FirebaseSubstitution <: FirebaseDataObject
     replacementid::String
 end
 export FirebaseSubstitution
+function newid(id::String, o::FirebaseSubstitution)::FirebaseSubstitution
+    return FirebaseSubstitution(id, o.replacedid, o.replacementid)
+end
 
 struct FirebaseScenario <: FirebaseDataObject
     id::String
@@ -236,6 +262,9 @@ struct FirebaseScenario <: FirebaseDataObject
     param_overrides::Dict{String, String}
 end
 export FirebaseScenario
+function newid(id::String, o::FirebaseScenario)::FirebaseScenario
+    return FirebaseScenario(id, o.name, o.param_overrides)
+end
 
 
 ################################### Creation ###################################

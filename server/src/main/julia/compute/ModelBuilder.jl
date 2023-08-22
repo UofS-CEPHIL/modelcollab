@@ -1,10 +1,9 @@
 module ModelBuilder
 
-using Graphs
-
 using ..FirebaseComponents
 using ..ModelComponents
 using ..ComponentBuilder
+using ..StringGraph
 
 struct InvalidModelException <: Exception end
 export InvalidModelException
@@ -12,11 +11,13 @@ export InvalidModelException
 function make_stockflow_models(
     outers::Vector{FirebaseDataObject},
     inners::Dict{String, Vector{FirebaseDataObject}},
-    scenario_name::Union{String, Nothing}
-)::Dict{String, Vector{Component}}
+    scenario_name::Union{String, Nothing}=nothing
+)::Vector{StockFlowModel}
+
     inners = Dict(inners)
+
     filter_irrelevant_params!(outers, inners)
-    all_outers = get_all_outer_components(outers, inners)
+        
     substitutions::Vector{FirebaseSubstitution} =
         filter(c -> firebase_issubstitution(c), outers)
     scenarios = filter(c -> firebase_isscenario(c), outers)
@@ -24,9 +25,9 @@ function make_stockflow_models(
     add_outers_to_models_dict!(outers, inners)
     all_models = inners # rename the var to reflect the change
 
-    if (scenario_name != nothing)
+    if (scenario_name !== nothing)
         scenario = findfirst(s -> s.name == scenario_name)
-        if (scenario == nothing)
+        if (scenario === nothing)
             scenario_names = map(s -> s.name, scenarios)
             throw(ArgumentError(
                 "Unable to find scenario $scenario_name in list $scenario_names"
@@ -37,11 +38,10 @@ function make_stockflow_models(
     apply_substitutions!(all_models, substitutions)
     filter_for_julia_components!(all_models)
 
-    out = Dict()
-    for (name::String, components::Vector{FirebaseDataObject}) in all_models
-        out[name] = make_julia_components(components)
-    end
-    return out
+    return map(
+        pair -> make_julia_components(pair.first, pair.second),
+        collect(pairs(all_models))
+    )
 end
 export make_stockflow_models
 
@@ -60,22 +60,26 @@ function get_components_adjacent_to_outer_model(
     # everything except connections (including flows).
     # Any inner model components that are adjacent to an outer component
     # are added to the outer model
-    function isvisible(c::FirebaseDataObject)::Boolean
+    function isvisible(c::FirebaseDataObject)::Bool
         return !firebase_issubstitution(c) && !firebase_isscenario(c)
     end
 
-    function isnode(c::FirebaseDataObject)::Boolean
+    function isnode(c::FirebaseDataObject)::Bool
         return !firebase_isconnection(c)
     end
 
-    function isedge(c::FirebaseDataObject)::Boolean
+    function isedge(c::FirebaseDataObject)::Bool
         return firebase_isconnection(c) || firebase_isflow(c)
+    end
+
+    function is_inner_component(id::String)::Bool
+        return findfirst(c -> c.id == id, outer_components) === nothing
     end
 
     # Collect the info we need
     inners = filter(
         isvisible,
-        reduce(vcat, inner_components)
+        reduce(vcat, values(inner_components))
     )
     outers = filter(
         isvisible,
@@ -86,21 +90,24 @@ function get_components_adjacent_to_outer_model(
     edges = filter(isedge, all_components)
 
     # Create the graph
-    graph = SimpleGraph{String}()
-    addnode = n -> add_vertex!(graph, n.id)
-    addnode.(nodes)
-    addedge = e -> add_edge!(graph, e.pointer.from, e.pointer.to)
-    addedge.(edges)
+    graph = make_strgraph(
+        map(n -> n.id, nodes),
+        map(e -> Pair{String, String}(e.pointer.from, e.pointer.to), edges)
+    )
 
     # Find all nodes adjacent to outer components
     outerids = map(c -> c.id, outers)
-    allneighbors = Set(reduce(
+    allneighbours = collect(Set(reduce(
         vcat,
-        map(id -> all_neighbors(graph, id), outerids)
-    ))
-    static_neighbours = filter(
-        is_inner_component, # TODO implement this
+        map(id -> strgraph_all_neighbors(id, graph), outerids)
+    )))
+    static_neighbour_ids = filter(
+        is_inner_component,
         allneighbours
+    )
+    static_neighbours = map(
+        id -> nodes.findfirst(n -> n.id == id, nodes),
+        static_neighbour_ids
     )
 
     return static_neighbours
@@ -132,7 +139,7 @@ function filter_irrelevant_params!(
 
     function filter_one(vec::Vector{FirebaseDataObject})
         return filter(
-            c -> firebase_isparam(c) && !contains(irrelevant_names, c.text.text),
+            c -> !firebase_isparam(c) || !in(c.text.text, irrelevant_names),
             vec
         )
     end
@@ -146,12 +153,14 @@ function add_outers_to_models_dict!(
     outers::Vector{FirebaseDataObject},
     dict::Dict{String, Vector{FirebaseDataObject}}
 )::Nothing
+
     function has_relevant_components(v::Vector{FirebaseDataObject})::Bool
         irrelevant_types = (
             FirebaseComponents.PARAMETER,
             FirebaseComponents.SUBSTITUTION,
             FirebaseComponents.STATIC_MODEL
         )
+
         relevant = filter(
             c -> !in(firebase_gettype(c), irrelevant_types),
             v
@@ -172,12 +181,11 @@ function add_outers_to_models_dict!(
                 )
             )
         end
-        # The only components we care about in this case are parameters
-        outerparams = filter(c -> firebase_gettype(c) == PARAMETER)
-        key = keys(dict)[0]
-        dict[key] = vcat(dict[key], outerparams)
+        outers = filter(c -> !(firebase_gettype(c) == FirebaseComponents.STATIC_MODEL), outers)
+        key = collect(keys(dict))[1]
+        dict[key] = vcat(dict[key], outers)
     end
-    return
+    return nothing
 end
 
 function apply_substitution(
@@ -186,11 +194,11 @@ function apply_substitution(
     sub::FirebaseSubstitution
 )::Vector{FirebaseDataObject}
     # Find the component that will be used as the substitute
-    sub_component = findfirst(
+    sub_idx = findfirst(
         c -> c.id == sub.replacementid,
         all_components
     )
-    if (sub_component == nothing)
+    if (sub_idx === nothing)
         all_ids = map(c -> c.id, all_components)
         id = sub.replacementid
         throw(KeyError(
@@ -200,19 +208,19 @@ function apply_substitution(
 
     # Replace the component if it exists directly in the model components
     sizebefore = length(model_components)
-    new_components = filter(c -> c.id != sub.replacedid)
+    new_components = filter(c -> c.id != sub.replacedid, model_components)
     if (sizebefore != length(new_components))
-        push!(new_components, sub_component)
+        push!(new_components, all_components[sub_idx])
     end
 
     # Replace the component if it is referenced by a model component
-    for i in range(length(model_components))
-        if (hasproperty(new_components[i], "from"))
+    for i in 1:length(model_components)
+        if (hasproperty(new_components[i], :from))
             if (new_components[i].from == sub.replacedid)
                 new_components[i].from = sub.replacementid
             end
         end
-        if (hasproperty(new_components[i], "to"))
+        if (hasproperty(new_components[i], :to))
             if (new_components[i].to == sub.replacedid)
                 new_components[i].to = sub.replacementid
             end
@@ -228,6 +236,7 @@ function apply_substitutions!(
     subs::Vector{FirebaseSubstitution}
 )::Nothing
     all_components = reduce(vcat, values(models))
+
     for sub in subs
         for k in keys(models)
             models[k] = apply_substitution(
@@ -260,7 +269,7 @@ function apply_scenario!(
     models::Dict{String, Vector{FirebaseDataObject}}
 )::Nothing
     for model in models
-        apply_scenario!(model)
+        apply_scenario!(scenario, model)
     end
 end
 
