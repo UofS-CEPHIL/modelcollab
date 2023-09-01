@@ -7,7 +7,6 @@ function make_feet(
     models::Vector{StockFlowModel},
     idents::Vector{Identification}
 )::Vector{Foot}
-    # TODO ended off for the night figuring out whether to use name or id for firebase static models
     model_feet = Dict(map(m -> (m.firebaseid, make_feet(m, idents)), models))
     return consolidate_duplicates(model_feet)
 end
@@ -37,7 +36,7 @@ function make_feet(
     if (length(all_feet) > 0)
         return all_feet
     else
-        return [Foot(null, [], [model.name,]),]
+        return [Foot(nothing, [], [model.name]),]
     end
 end
 export make_feet

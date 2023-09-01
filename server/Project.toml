@@ -1,5 +1,5 @@
 name = "modelcollab"
-path = "server/src/main/julia"
+version = "0.1.0"
 
 [deps]
 Catlab = "134e5e36-593f-5add-ad60-77f754baafbe"
@@ -13,3 +13,10 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 StockFlow = "58c4a0e8-2944-4d18-9fa2-e17726aee9e5"
 SymbolServer = "cf896787-08d5-524d-9de7-132aaa0cb996"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

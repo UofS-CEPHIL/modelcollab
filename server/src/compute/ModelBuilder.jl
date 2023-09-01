@@ -5,8 +5,14 @@ using ..ModelComponents
 using ..ComponentBuilder
 using ..StringGraph
 
-struct InvalidModelException <: Exception end
+struct InvalidModelException <: Exception
+    reason::String
+end
 export InvalidModelException
+Base.showerror(io::IO, e::InvalidModelException) = print(
+    io,
+    "InvalidModelException: $(e.reason)"
+)
 
 function make_stockflow_models(
     outers::Vector{FirebaseDataObject},
@@ -17,7 +23,7 @@ function make_stockflow_models(
     inners = Dict(inners)
 
     filter_irrelevant_params!(outers, inners)
-        
+
     substitutions::Vector{FirebaseSubstitution} =
         filter(c -> firebase_issubstitution(c), outers)
     scenarios = filter(c -> firebase_isscenario(c), outers)
@@ -123,7 +129,7 @@ function get_all_outer_components(
 end
 
 # This takes out any remaining startTime or stopTime parameters in sub-models.
-# Also performs any future cleanup that we might need.
+# Also can perform any cleanup that we might need in the future
 #
 # Don't confuse this with filter_for_julia_params
 function filter_irrelevant_params!(

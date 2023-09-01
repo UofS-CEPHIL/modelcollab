@@ -1,8 +1,10 @@
-include("./Server.jl")
+include("./LoadFiles.jl")
+
+using HTTP
 
 # Set up firebase
 FirebaseClient.initialize()
 
 # Start up
 println("Starting server")
-server = HTTP.serve(router, Sockets.localhost, 8088)
+server = Server.create_and_start();

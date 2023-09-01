@@ -1,14 +1,3 @@
-include("./firebase/FirebaseComponents.jl")
-include("./http/realtime.jl")
-include("./http/FirebaseClient.jl")
-include("./compute/JuliaModelComponents.jl")
-include("./compute/ComponentBuilder.jl")
-include("./compute/StringGraph.jl")
-include("./compute/ModelBuilder.jl")
-include("./compute/FootBuilder.jl")
-include("./compute/CodeGenerator.jl")
-include("./compute/IdentificationBuilder.jl")
-
 module Server
 
 using HTTP
@@ -20,11 +9,11 @@ using Plots
 using StockFlow
 using Sockets
 
-using .FirebaseClient
-using .ModelBuilder
-using .FootBuilder
-using .IdentificationBuilder
-using .CodeGenerator
+using ..FirebaseClient
+using ..ModelBuilder
+using ..FootBuilder
+using ..IdentificationBuilder
+using ..CodeGenerator
 
 ResponseCode = (
     OK = 200,
@@ -58,7 +47,7 @@ function handle_getmodelresults(req::HTTP.Request)
     return HTTP.Response(ResponseCode.OK)
 end
 
-function create_server()::HTTP.Server
+function create_and_start()::HTTP.Server
     # Set up the server
     router = HTTP.Router()
     HTTP.register!(
@@ -79,6 +68,7 @@ function create_server()::HTTP.Server
         "/getModelResults/{resultid}",
         handle_getmodelresults
     )
+    return HTTP.serve(router, Sockets.localhost, 8088)
 end
 
 end # Server namespace
