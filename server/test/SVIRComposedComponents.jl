@@ -1,0 +1,162 @@
+# This file contains the components for the SVIR composition example
+# There are two models: [ => S => I => R => ]
+#                            v    ^
+#                           [V ===| => ]
+# The SIR model is borrowed from SIRComponents.jl
+
+include("./SIRComponents.jl")
+
+# extra params
+VAX_RATE_ID = "001"
+VAX_RATE_NAME = "vaccinationRate"
+VAX_RATE_VALUE = "0.0001"
+VAX_EFFECTIVENESS_ID = "0011"
+VAX_EFFECTIVENESS_NAME = "vaccinationRate"
+VAX_EFFECTIVENESS_VALUE = "0.0001"
+
+# extra stocks
+V_STOCK_ID = "002"
+V_STOCK_NAME = "V"
+V_INIT_VALUE = "0.0"
+
+# extra vars
+PCT_VAXED_VAR_ID = "003"
+PCT_VAXED_VAR_NAME = "pctVaccinated"
+PCT_VAXED_VAR_EQUATION = "$(V_STOCK_NAME)/$(TOTAL_POP_NAME)"
+
+# extra flows
+VACCINATION_ID = "004"
+VACCINATION_NAME = "vaccination"
+VACCINATION_EQUATION = "S * $(VAX_RATE_ID)"
+VAXINFECTION_ID = "005"
+VAXINFECTION_NAME = "vaccinatedInfections"
+VAXINFECTION_EQUATION = ("$(V_STOCK_NAME) * (1-$(VAX_EFFECTIVENESS_NAME)) * "
+                         * "$(I_STOCK_NAME) / $(TOTAL_POP_NAME)")
+
+EMPTY::Vector{String} = Vector{String}()
+
+# New components. We have to replace some of the existing ones for this model
+S_STOCK::Stock = Stock(
+    S_STOCK_NAME,
+    S_STOCK_ID,
+    S_INIT_VALUE,
+    [BIRTH_NAME, WANIMM_NAME],
+    [INF_NAME, VACCINATION_NAME],
+    [INITIAL_POP_NAME],
+    [TOTAL_POP_NAME, NON_INFECTED_NAME],
+    EMPTY,
+    [INF_NAME, VACCINATION_NAME]
+)
+I_STOCK::Stock = Stock(
+    I_STOCK_NAME,
+    I_STOCK_ID,
+    I_INIT_VALUE,
+    [INF_NAME, VAXINFECTION_NAME],
+    [REC_NAME],
+    [DAYS_INFECTED_NAME],
+    [TOTAL_POP_NAME],
+    [INFECTION_RATE_VAR_NAME],
+    [INF_NAME, REC_NAME, VAXINFECTION_NAME]
+)
+R_STOCK::Stock = Stock(
+    R_STOCK_NAME,
+    R_STOCK_ID,
+    R_INIT_VALUE,
+    [REC_NAME],
+    [WANIMM_NAME],
+    [DAYS_W_IMM_NAME],
+    [NON_INFECTED_NAME, TOTAL_POP_NAME],
+    EMPTY,
+    [WANIMM_NAME]
+)
+TOTAL_POP_SUMVAR::SumVariable = SumVariable(
+    TOTAL_POP_NAME,
+    TOTAL_POP_ID,
+    [S_STOCK_NAME, I_STOCK_NAME, R_STOCK_NAME, V_STOCK_NAME]
+)
+NON_INFECTED_SUMVAR::SumVariable = SumVariable(
+    NON_INFECTED_NAME,
+    NON_INFECTED_ID,
+    [S_STOCK_NAME, R_STOCK_NAME, V_STOCK_NAME]
+)
+V_STOCK::Stock = Stock(
+    V_STOCK_NAME,
+    V_STOCK_ID,
+    V_INIT_VALUE,
+    [VACCINATION_NAME],
+    [VAXINFECTION_NAME],
+    EMPTY,
+    [TOTAL_POP_NAME, NON_INFECTED_NAME],
+    EMPTY,
+    [VAXINFECTION_NAME]
+)
+VACCINATION_FLOW::Flow = Flow(
+    VACCINATION_NAME,
+    VACCINATION_ID,
+    S_STOCK_NAME,
+    V_STOCK_NAME,
+    VACCINATION_EQUATION,
+    [S_STOCK_NAME],
+    EMPTY
+)
+VAXINFECTION_FLOW::Flow = Flow(
+    VAXINFECTION_NAME,
+    VAXINFECTION_ID,
+    V_STOCK_NAME,
+    I_STOCK_NAME,
+    VAXINFECTION_EQUATION,
+    [V_STOCK_NAME, I_STOCK_NAME],
+    [TOTAL_POP_NAME]
+)
+PCT_VAXED_VAR::DynamicVariable = DynamicVariable(
+    PCT_VAXED_VAR_NAME,
+    PCT_VAXED_VAR_ID,
+    PCT_VAXED_VAR_EQUATION,
+    [V_STOCK_NAME],
+    [TOTAL_POP_NAME]
+)
+VAX_RATE_PARAM::Parameter = Parameter(
+    VAX_RATE_NAME,
+    VAX_RATE_ID,
+    VAX_RATE_VALUE
+)
+VAX_EFFECTIVENESS_PARAM::Parameter = Parameter(
+    VAX_EFFECTIVENESS_NAME,
+    VAX_EFFECTIVENESS_ID,
+    VAX_EFFECTIVENESS_VALUE
+)
+
+SIR_MODEL_ID = MODEL_ID
+SIR_MODEL = MODEL
+
+SVI_MODEL_ID = "0000000"
+SVI_MODEL = StockFlowModel(
+    SVI_MODEL_ID,
+    [S_STOCK, V_STOCK, I_STOCK],
+    [VACCINATION_FLOW, VAXINFECTION_FLOW],
+    [VAX_RATE_PARAM, VAX_EFFECTIVENESS_PARAM],
+    [PCT_VAXED_VAR],
+    [TOTAL_POP_SUMVAR, NON_INFECTED_SUMVAR]
+)
+
+# The feet that we expect FootBuilder to build for this model
+S_FOOT = Foot(
+    S_STOCK_NAME,
+    [TOTAL_POP_NAME, NON_INFECTED_NAME],
+    [SIR_MODEL_ID, SVI_MODEL_ID]
+)
+I_FOOT = Foot(
+    I_STOCK_NAME,
+    [TOTAL_POP_NAME],
+    [SIR_MODEL_ID, SVI_MODEL_ID]
+)
+R_FOOT = Foot(
+    R_STOCK_NAME,
+    [TOTAL_POP_NAME, NON_INFECTED_NAME],
+    [SIR_MODEL_ID]
+)
+V_FOOT = Foot(
+    V_STOCK_NAME,
+    [TOTAL_POP_NAME, NON_INFECTED_NAME],
+    [SVI_MODEL_ID]
+)

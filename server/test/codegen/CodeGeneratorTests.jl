@@ -18,3 +18,7 @@ end
 @testset "Simple composed model" begin
     include("./SimpleComposition.jl")
 end
+
+@testset "SIR and SVI models composed" begin
+    include("./SVIRComposedModel.jl")
+end

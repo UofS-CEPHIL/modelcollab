@@ -31,7 +31,7 @@ function handle_getcode(req::HTTP.Request)
         fb_components.outers,
         fb_components.inners
     )
-    feet = FootBuilder.make_feet(models, identifications)
+    feet = FootBuilder.make_feet(models)
     code = CodeGenerator.generate_code(models, feet)
 
     return HTTP.Response(ResponseCode.OK, code)

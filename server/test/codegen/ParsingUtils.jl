@@ -772,4 +772,70 @@ function test_has_no_extra_lines(code::String)::Nothing
 end
 export test_has_no_extra_lines
 
+function test_model(
+    model::StockFlowModel,
+    actual::StockflowArgs,
+    expected_stocks::Vector{Stock},
+    expected_flows::Dict{Flow, String}, # name -> exp. equation
+    expected_sumvar_contrib_var_names::Vector{String}
+)::Nothing
+    @testset "Model $(model.firebaseid) StockAndFlow invocation" begin
+        stocksplit = split_by_arrows_for_list(actual.stock)
+        flowsplit = split_by_arrows_for_list(actual.flow)
+        dynvarsplit = split_by_arrows_for_list(actual.dynvar)
+        sumvarsplit = split_by_arrows_for_list(actual.sumvar)
+
+        # stocks
+        numstocks = length(expected_stocks)
+        for stock in expected_stocks
+            @testset "Stock $(stock.name) is defined correctly" begin
+                test_stockflow_stock_arg(
+                    stock,
+                    stocksplit[stock.name],
+                    model
+                )
+            end
+        end
+        @testset "Has exactly $(numstocks) stocks" begin
+            @test length(collect(keys(stocksplit))) == numstocks
+        end
+
+        # flows
+        numflows = length(collect(keys(expected_flows)))
+        for (flow, exp_equation) in expected_flows
+            @testset "Flow $(flow.name) is defined correctly" begin
+                test_stockflow_flow_arg(flow, flowsplit[flow.name])
+            end
+            @testset "Flow $(flow.name)'s related var is defined correctly" begin
+                varname = make_flow_var_name(flow.name)
+                test_stockflow_dynvar_arg(
+                    dynvarsplit[varname],
+                    exp_equation
+                )
+            end
+        end
+        @testset "Has exactly $(numflows) flows in the outer model" begin
+            @test length(collect(keys(flowsplit))) == numflows
+        end
+
+        # This function only works for this particular case. That is,
+        # no dyn vars except flows
+        @testset "Has exactly $(numflows) dynamic variables" begin
+            @test length(collect(keys(dynvarsplit))) == numflows
+        end
+
+        # This function only works for this particular case. That is,
+        # this one particular sumvar
+        @testset "SumVar is defined correctly" begin
+            val = sumvarsplit[SUM_VAR_NAME]
+            test_stockflow_sumvar_arg(val, expected_sumvar_contrib_var_names)
+        end
+        @testset "Has exactly 1 sum variable" begin
+            @test length(collect(keys(sumvarsplit))) == 1
+        end
+    end
+    return nothing
+end
+export test_model
+
 end # ParsingUtils namespace

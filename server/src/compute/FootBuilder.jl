@@ -4,40 +4,50 @@ using ..ModelComponents
 using ..FirebaseComponents
 
 function make_feet(
-    models::Vector{StockFlowModel},
-    idents::Vector{Identification}
+    models::Vector{StockFlowModel}
 )::Vector{Foot}
-    model_feet = Dict(map(m -> (m.firebaseid, make_feet(m, idents)), models))
+    model_feet = Dict(map(m -> (m.firebaseid, make_feet(m)), models))
     return consolidate_duplicates(model_feet)
 end
 
-function make_feet(
-    model::StockFlowModel,
-    idents::Vector{Identification}
-)::Vector{Foot}
-
-    relevant_idents = filter(
-        i -> i.modelA == model.firebaseid || i.modelB == model.firebaseid,
-        idents
-    )
-    stock_idents = filter(
-        i -> i.component_type == FirebaseComponents.STOCK,
-        relevant_idents
-    )
-    sumvar_idents = filter(
-        i -> i.component_type == FirebaseComponents.SUM_VARIABLE,
-        relevant_idents
-    )
-
-    stock_feet = map(i -> make_stock_foot(i, model), stock_idents)
-    sumvar_feet = map(i -> make_sumvar_foot(i, model, stock_feet), sumvar_idents)
-    all_feet = vcat(stock_feet, sumvar_feet)
-
-    if (length(all_feet) > 0)
-        return all_feet
-    else
-        return [Foot(nothing, [], [model.name]),]
+function make_feet(model::StockFlowModel)::Vector{Foot}
+    function make_foot_from_stock(stock::Stock)::Foot
+        return Foot(
+            stock.name,
+            stock.contributing_sumvar_names,
+            [model.firebaseid]
+        )
     end
+
+    function make_foot_from_sumvar(sumvar::SumVariable)::Foot
+        if (length(sumvar.depended_stock_names) != 0)
+            throw(ErrorException(
+                "Making empty foot for sumvar with "
+                * "stocks: $(sumvar.depended_stock_names)"
+            ))
+        end
+        return Foot(
+            nothing,
+            [],
+            [model.firebaseid]
+        )
+    end
+
+    function is_used_by_any_foot(sumvarname::String, feet::Vector{Foot})::Bool
+        return findfirst(f -> in(sumvarname, f.sumvar_names), feet) !== nothing
+    end
+
+    if (length(model.stocks) == 0)
+        return [Foot(nothing, [], [model.firebaseid])]
+    end
+
+    stockfeet = map(make_foot_from_stock, model.stocks)
+    unused_sumvars = filter(
+        sv -> !is_used_by_any_foot(sv.name, stockfeet),
+        model.sumvars
+    )
+    sumvarfeet = map(make_foot_from_sumvar, unused_sumvars)
+    return vcat(stockfeet, sumvarfeet)
 end
 export make_feet
 

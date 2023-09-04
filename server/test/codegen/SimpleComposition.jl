@@ -1,162 +1,18 @@
-# This file tests a simple example of composition
-# [ param sumvar S1 => S2 =]> S3 => back to S1
-# param contributes to S1S2 and S3S1
-# sumvar contributes to S2S3, doesn't contribute to any inner components
-# S2 and S3 contribute to sumvar
-# S1 and S2 contribute to S1S2 flow
-# S2 and S3 contribute to S2S3 flow
-# S3 contributes to S3S1 flow
-# No stocks have any dependencies
-# S3 and sumvar are composed. Param only exists in inner model.
+module SimpleCompositionCodegenTest
 
-S1_NAME = "S1"
-S1_ID = "0"
-S1_INIT_VALUE = "12.0"
-S2_NAME = "S2"
-S2_ID = "1"
-S2_INIT_VALUE = "432.0"
-S3_NAME = "S3"
-S3_ID = "2"
-S3_INIT_VALUE = "0.0"
+using Test
+using ..ParsingUtils
+using ..CodeGenerator
+using ..ModelComponents
 
-SUM_VAR_NAME = "SUMVAR"
-SUM_VAR_ID = "222"
-PARAM_NAME = "P"
-PARAM_VALUE = "1"
-PARAM_ID = "333"
-INNER_MODEL_ID = "inner"
-OUTER_MODEL_ID = "outer"
-START_TIME_ID = "444"
-START_TIME_NAME = "startTime"
-START_TIME_VALUE = "0.0"
-STOP_TIME_ID = "555"
-STOP_TIME_NAME = "stopTime"
-STOP_TIME_VALUE = "1000.0"
-
-S1S2_NAME = "S1S2"
-S1S2_EQUATION = "($(S1_NAME) + $(S2_NAME)) * $(PARAM_NAME)"
-S1S2_EXPECTED_EQUATION = "(u.$(S1_NAME) + u.$(S2_NAME)) * p.$(PARAM_NAME)"
-S1S2_ID = "3"
-S2S3_NAME = "S2S3"
-S2S3_EQUATION = "( (S2 + 10.0001) * S3) + $(SUM_VAR_NAME)"
-S2S3_EXPECTED_EQUATION = "( (u.S2 + 10.0001) * u.S3) + uN.$(SUM_VAR_NAME)(u, t)"
-S2S3_ID = "4"
-S3S1_NAME = "S3S1"
-S3S1_EQUATION = "$(S3_NAME) * 0.0001"
-S3S1_EXPECTED_EQUATION = "u.$(S3_NAME) * 0.0001"
-S3S1_ID = "5"
-
-S1::Stock = Stock(
-    S1_NAME,
-    S1_ID,
-    S1_INIT_VALUE,
-    [S3S1_NAME],
-    [S1S2_NAME],
-    Vector{String}(),
-    Vector{String}(),
-    Vector{String}(),
-    [S1S2_NAME]
-)
-S2::Stock = Stock(
-    S2_NAME,
-    S2_ID,
-    S2_INIT_VALUE,
-    [S1S2_NAME],
-    [S2S3_NAME],
-    Vector{String}(),
-    [SUM_VAR_NAME],
-    Vector{String}(),
-    [S2S3_NAME, S1S2_NAME]
-)
-S3::Stock = Stock(
-    S3_NAME,
-    S3_ID,
-    S3_INIT_VALUE,
-    [S2S3_NAME],
-    [S3S1_NAME],
-    Vector{String}(),
-    [SUM_VAR_NAME],
-    Vector{String}(),
-    [S3S1_NAME, S2S3_NAME]
-)
-S1S2::Flow = Flow(
-    S1S2_NAME,
-    S1S2_ID,
-    S1_NAME,
-    S2_NAME,
-    S1S2_EQUATION,
-    [S1_NAME, S2_NAME],
-    Vector{String}()
-)
-S2S3::Flow = Flow(
-    S2S3_NAME,
-    S2S3_ID,
-    S2_NAME,
-    S3_NAME,
-    S2S3_EQUATION,
-    [S2_NAME, S3_NAME],
-    [SUM_VAR_NAME]
-)
-S3S1::Flow = Flow(
-    S3S1_NAME,
-    S3S1_ID,
-    S3_NAME,
-    S1_NAME,
-    S3S1_EQUATION,
-    [S3_NAME],
-    Vector{String}()
-)
-START_TIME::Parameter = Parameter(
-    START_TIME_NAME,
-    START_TIME_ID,
-    START_TIME_VALUE
-)
-STOP_TIME::Parameter = Parameter(
-    STOP_TIME_NAME,
-    STOP_TIME_ID,
-    STOP_TIME_VALUE
-)
-PARAM::Parameter = Parameter(
-    PARAM_NAME,
-    PARAM_ID,
-    PARAM_VALUE
-)
-SUMVAR::SumVariable = SumVariable(
-    SUM_VAR_NAME,
-    SUM_VAR_ID,
-    [S2_NAME, S3_NAME]
-)
-
-OUTER_MODEL::StockFlowModel = StockFlowModel(
-    OUTER_MODEL_ID,
-    [S1, S2, S3],
-    [S2S3, S3S1],
-    [START_TIME, STOP_TIME],
-    Vector{DynamicVariable}(),
-    [SUMVAR]
-)
-
-INNER_MODEL::StockFlowModel = StockFlowModel(
-    INNER_MODEL_ID,
-    [S1, S2],
-    [S1S2],
-    [PARAM],
-    Vector{DynamicVariable}(),
-    [SUMVAR]
-)
-PATH = "/some/path"
-
-
-S1_FOOT::Foot = Foot(S1_NAME, Vector{String}(), Vector{String}())
-S2_FOOT::Foot = Foot(S2_NAME, [SUM_VAR_NAME],  [INNER_MODEL_ID, OUTER_MODEL_ID])
-S3_FOOT::Foot = Foot(S3_NAME, [SUM_VAR_NAME], [OUTER_MODEL_ID])
+include("../SimpleCompositionComponents.jl")
 
 result = CodeGenerator.generate_code(
     [INNER_MODEL, OUTER_MODEL],
     [S1_FOOT, S2_FOOT, S3_FOOT],
     PATH
 )
-println(result)
+# println(result)
 stockflow_args = get_stockflow_args(result)
 
 # Before we start the tests, figure out which StockAndFlow invocation is which
@@ -168,9 +24,6 @@ end
 re = r":\w+ *=> *\("
 matches1 = split_by_arrows_for_list(stockflow_args[1].stock)
 matches2 = split_by_arrows_for_list(stockflow_args[2].stock)
-println()
-println(matches1)
-println(matches2)
 matchlens = [length(collect(matches1)), length(collect(matches2))]
 if (sort(matchlens) != [2, 3])
     throw(ErrorException(
@@ -200,71 +53,6 @@ end
 @testset "Has exactly two invocations of StockAndFlow" begin
     @test get_num_invocations("StockAndFlow", result) == 2
     @test length(stockflow_args) == 2
-end
-
-function test_model(
-    model::StockFlowModel,
-    actual::StockflowArgs,
-    expected_stocks::Vector{Stock},
-    expected_flows::Dict{Flow, String}, # name -> exp. equation
-    expected_sumvar_contrib_var_names::Vector{String}
-)::Nothing
-    @testset "Model $(model.firebaseid) StockAndFlow invocation" begin
-        stocksplit = split_by_arrows_for_list(actual.stock)
-        flowsplit = split_by_arrows_for_list(actual.flow)
-        dynvarsplit = split_by_arrows_for_list(actual.dynvar)
-        sumvarsplit = split_by_arrows_for_list(actual.sumvar)
-
-        # stocks
-        numstocks = length(expected_stocks)
-        for stock in expected_stocks
-            @testset "Stock $(stock.name) is defined correctly" begin
-                test_stockflow_stock_arg(
-                    stock,
-                    stocksplit[stock.name],
-                    model
-                )
-            end
-        end
-        @testset "Has exactly $(numstocks) stocks" begin
-            @test length(collect(keys(stocksplit))) == numstocks
-        end
-
-        # flows
-        numflows = length(collect(keys(expected_flows)))
-        for (flow, exp_equation) in expected_flows
-            @testset "Flow $(flow.name) is defined correctly" begin
-                test_stockflow_flow_arg(flow, flowsplit[flow.name])
-            end
-            @testset "Flow $(flow.name)'s related var is defined correctly" begin
-                varname = make_flow_var_name(flow.name)
-                test_stockflow_dynvar_arg(
-                    dynvarsplit[varname],
-                    exp_equation
-                )
-            end
-        end
-        @testset "Has exactly $(numflows) flows in the outer model" begin
-            @test length(collect(keys(flowsplit))) == numflows
-        end
-
-        # This function only works for this particular case. That is,
-        # no dyn vars except flows
-        @testset "Has exactly $(numflows) dynamic variables" begin
-            @test length(collect(keys(dynvarsplit))) == numflows
-        end
-
-        # This function only works for this particular case. That is,
-        # this one particular sumvar
-        @testset "SumVar is defined correctly" begin
-            val = sumvarsplit[SUM_VAR_NAME]
-            test_stockflow_sumvar_arg(val, expected_sumvar_contrib_var_names)
-        end
-        @testset "Has exactly 1 sum variable" begin
-            @test length(collect(keys(sumvarsplit))) == 1
-        end
-    end
-    return nothing
 end
 
 expected_outer_stocks = [
@@ -481,3 +269,5 @@ end
 @testset "Has no more lines after the one that saves the figure" begin
     test_has_no_extra_lines(result)
 end
+
+end # SimpleCompositionCodegenTest namespace
