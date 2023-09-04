@@ -4,7 +4,7 @@ using Test
 using ..ModelComponents
 using ..CodeGenerator
 using ..ParsingUtils
-
+using ..TestingUtils
 
 include("../SVIRComposedComponents.jl")
 

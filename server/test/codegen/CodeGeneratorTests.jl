@@ -1,7 +1,7 @@
 # HOPE YOU LIKE REGEX!!!
 
 include("./ParsingUtils.jl")
-using .ParsingUtils
+include("./TestingUtils.jl")
 
 @testset "Degenerate models" begin
     include("./DegenerateModels.jl")

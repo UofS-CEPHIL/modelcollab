@@ -416,24 +416,8 @@ end
 
 
 function make_solution_lines(models::Vector{StockFlowModel})::Vector{String}
-    all_params = reduce(vcat, map(m -> m.parameters, models))
-    starttimeidx = findfirst(p -> p.name == "startTime", all_params)
-    stoptimeidx = findfirst(p -> p.name == "stopTime", all_params)
-
-    if (starttimeidx === nothing || stoptimeidx === nothing)
-        paramnames = map(p -> p.name, all_params)
-        throw(InvalidModelException(
-            "Unable to find start time or stop time. "
-            * "Start = $starttimeidx, stop = $stoptimeidx. "
-            * "paramnames = $paramnames"
-        ))
-    end
-
-    starttime = all_params[starttimeidx].value
-    stoptime = all_params[stoptimeidx].value
-
     odeline = ("odeprob = ODEProblem(vectorfield(modelapex), u0, "
-             * "($starttime, $stoptime), params)")
+             * "(params.startTime, params.stopTime), params)")
     solline = "solution = solve(odeprob, Tsit5(), abstol=1e-8)"
     return [odeline, solline]
 end
