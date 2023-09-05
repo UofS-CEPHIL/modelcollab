@@ -76,22 +76,21 @@ function check_list_matches_expected(
     actual::String,
     empty::String
 )::Nothing
-    if (length(actual) == 0)
-        # actual should never be empty
-        @test actual != ""
-    elseif (length(expected) == 0)
+    if (length(expected) == 0)
         @test actual == empty
-    elseif (length(expected) == 1)
-        symbol = actual
-        if (symbol[1] == '(')
-            symbol = get_string_between_parens(symbol).result
-        end
-        @test occursin(Regex(":?$(expected[1])"), symbol)
     else
-        itemnames = split(remove_whitespace(actual), ',')
-        @test length(itemnames) == length(expected)
-        for name in expected
-            @test name in expected
+        if (startswith(actual, "("))
+            actual = get_string_between_parens(actual).result
+        end
+
+        if (length(expected) == 1)
+            symbol = actual
+            @test strip(symbol, [':']) == strip(expected[1], [':'])
+        else
+            symbols = split(remove_whitespace(actual), ',')
+            symbols = map(s -> strip(s, [':']), symbols)
+            expected = map(s -> strip(s, [':']), expected)
+            @test sort(symbols) == sort(expected)
         end
     end
     return nothing
@@ -217,7 +216,7 @@ function test_stockflow_sumvar_arg(
     expected_names::Vector{String}
 )::Nothing
     check_list_matches_expected(
-        map(n -> startswith(n, ":") ? n : ":$n", expected_names),
+        expected_names,
         result_after_arrow,
         ":SVV_NONE"
     )
@@ -542,7 +541,6 @@ function test_whole_code(
     expected_stocks::Dict{String, String}, # name -> exp. starting value
     path::String
 )::Nothing
-
     # Separate out some data here for convenience
     model_names = collect(keys(model_stocks))
     model_feet = Dict(

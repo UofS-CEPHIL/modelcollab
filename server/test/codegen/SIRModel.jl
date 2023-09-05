@@ -30,7 +30,10 @@ stockflow_test = StockflowTestArgs(
         INFECTION_RATE_VAR_NAME => INFECTION_RATE_EXPECTED_EQUATION
     ),
     Dict(
-        TOTAL_POP_NAME => [INFECTION_RATE_VAR_NAME, INF_NAME],
+        TOTAL_POP_NAME => [
+            INFECTION_RATE_VAR_NAME,
+            make_flow_var_name(INF_NAME)
+        ],
         NON_INFECTED_NAME => []
     )
 )

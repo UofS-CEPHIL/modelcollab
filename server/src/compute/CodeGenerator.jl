@@ -155,8 +155,6 @@ function remove_duplicate_ids(cpts::Vector{T})::Vector{T} where T<:Component
     return dups_removed
 end
 
-
-
 function make_stockflow_line(model::StockFlowModel)::String
 
     function makeline(names::Vector{String}, alt::String)::String
