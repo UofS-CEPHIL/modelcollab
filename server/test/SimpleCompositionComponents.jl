@@ -9,6 +9,10 @@
 # No stocks have any dependencies
 # S3 and sumvar are composed. Param only exists in inner model.
 
+function qualify_id(id::String)::String
+    return "$(INNER_MODEL_ID)/$(id)"
+end
+
 S1_NAME = "S1"
 S1_ID = "0"
 S1_INIT_VALUE = "12.0"
@@ -54,23 +58,21 @@ S3S1_ID = "5"
 
 ############################# Firebase Components ##############################
 
-function qualify_id(id::String)::String
-    return "$(INNER_MODEL_ID)/$(id)"
-end
-
-FB_S1::FirebaseStock = FirebaseStock(
-    S1_ID,
+FB_S1_INNER::FirebaseStock = FirebaseStock(
+    qualify_id(S1_ID),
     FirebasePoint(100.3, 201.1), # arbitrary
     FirebaseText(S1_NAME),
     FirebaseValue(S1_INIT_VALUE)
 )
+FB_S1_OUTER::FirebaseStock = newid(S1_ID, FB_S1_INNER)
 
-FB_S2::FirebaseStock = FirebaseStock(
+FB_S2_OUTER::FirebaseStock = FirebaseStock(
     S2_ID,
     FirebasePoint(999.999, 888.888),
     FirebaseText(S2_NAME),
     FirebaseValue(S2_INIT_VALUE)
 )
+FB_S2_INNER::FirebaseStock = newid(qualify_id(S2_ID), FB_S2_OUTER)
 
 FB_S3::FirebaseStock = FirebaseStock(
     S3_ID,
@@ -80,7 +82,7 @@ FB_S3::FirebaseStock = FirebaseStock(
 )
 
 FB_S1S2::FirebaseFlow = FirebaseFlow(
-    S1S2_ID,
+    qualify_id(S1S2_ID),
     FirebasePointer(S1_ID, S2_ID),
     FirebaseValue(S1S2_EQUATION),
     FirebaseText(S1S2_NAME)
@@ -100,14 +102,15 @@ FB_S3S1::FirebaseFlow = FirebaseFlow(
     FirebaseText(S3S1_NAME)
 )
 
-FB_SUMVAR::FirebaseSumVariable = FirebaseSumVariable(
-    SUM_VAR_ID,
+FB_SUMVAR_INNER::FirebaseSumVariable = FirebaseSumVariable(
+    qualify_id(SUM_VAR_ID),
     FirebasePoint(88.99, 3333.4444),
     FirebaseText(SUM_VAR_NAME)
 )
+FB_SUMVAR_OUTER::FirebaseSumVariable = newid(SUM_VAR_ID, FB_SUMVAR_INNER)
 
 FB_PARAM::FirebaseParameter = FirebaseParameter(
-    PARAM_ID,
+    qualify_id(PARAM_ID),
     FirebasePoint(101.222, 333.444),
     FirebaseText(PARAM_NAME),
     FirebaseValue(PARAM_VALUE)
@@ -129,16 +132,16 @@ FB_STOPTIME::FirebaseParameter = FirebaseParameter(
 
 # Connections
 NOOFFSET = FirebasePoint(0, 0)
-PS1S2_CONN_ID = "10"
+PS1S2_CONN_ID = qualify_id("10")
 PS1S2_CONN = FirebaseConnection(
     PS1S2_CONN_ID,
-    FirebasePointer(PARAM_ID, S1S2_ID),
+    FirebasePointer(qualify_id(PARAM_ID), qualify_id(S1S2_ID)),
     NOOFFSET
 )
 PS3S1_CONN_ID = "11"
 PS3S1_CONN = FirebaseConnection(
     PS3S1_CONN_ID,
-    FirebasePointer(PARAM_ID, S3S1_ID),
+    FirebasePointer(qualify_id(PARAM_ID), S3S1_ID),
     NOOFFSET
 )
 SVS2S3_CONN_ID = "12"
@@ -147,10 +150,10 @@ SVS2S3_CONN = FirebaseConnection(
     FirebasePointer(SUM_VAR_ID, S2S3_ID),
     NOOFFSET
 )
-S2SV_CONN_ID = "13"
+S2SV_CONN_ID = qualify_id("13")
 S2SV_CONN = FirebaseConnection(
     S2SV_CONN_ID,
-    FirebasePointer(S2_ID, SUM_VAR_ID),
+    FirebasePointer(qualify_id(S2_ID), qualify_id(SUM_VAR_ID)),
     NOOFFSET
 )
 S3SV_CONN_ID = "14"
@@ -159,16 +162,16 @@ S3SV_CONN = FirebaseConnection(
     FirebasePointer(S3_ID, SUM_VAR_ID),
     NOOFFSET
 )
-S1S1S2_CONN_ID = "15"
+S1S1S2_CONN_ID = qualify_id("15")
 S1S1S2_CONN = FirebaseConnection(
     S1S1S2_CONN_ID,
-    FirebasePointer(S1_ID, S1S2_ID),
+    FirebasePointer(qualify_id(S1_ID), qualify_id(S1S2_ID)),
     NOOFFSET
 )
-S2S1S2_CONN_ID = "16"
+S2S1S2_CONN_ID = qualify_id("16")
 S2S1S2_CONN = FirebaseConnection(
     S2S1S2_CONN_ID,
-    FirebasePointer(S2_ID, S1S2_ID),
+    FirebasePointer(qualify_id(S2_ID), qualify_id(S1S2_ID)),
     NOOFFSET
 )
 S2S2S3_CONN_ID = "17"

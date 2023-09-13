@@ -181,6 +181,12 @@ end
     include("../SimpleCompositionComponents.jl")
     NOOFFSET = FirebasePoint(0, 0)
 
+    FB_S1 = FB_S1_OUTER
+    FB_S2 = FB_S2_OUTER
+    FB_SUMVAR = FB_SUMVAR_OUTER
+    PARAM_ID = qualify_id("333")
+
+
     # Param, s1, s2, and sumvar all connect to the flow
     S1FLOWCONN_ID = "987987987"
     S1FLOWCONN = FirebaseConnection(

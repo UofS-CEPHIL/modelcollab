@@ -197,6 +197,22 @@ export FirebaseConnection
 function newid(id::String, o::FirebaseConnection)::FirebaseConnection
     return FirebaseConnection(id, o.pointer, o.handleoffset)
 end
+function newsource(sourceid::String, o::FirebaseConnection)::FirebaseConnection
+    return FirebaseConnection(
+        o.id,
+        FirebasePointer(sourceid, o.pointer.to),
+        o.handleoffset
+    )
+end
+export newsource
+function newdest(destid::String, o::FirebaseConnection)::FirebaseConnection
+    return FirebaseConnection(
+        o.id,
+        FirebasePointer(o.pointer.from, destid),
+        o.handleoffset
+    )
+end
+export newdest
 
 struct FirebaseFlow <: FirebaseDataObject
     id::String
@@ -207,6 +223,22 @@ end
 export FirebaseFlow
 function newid(id::String, o::FirebaseFlow)::FirebaseFlow
     return FirebaseFlow(id, o.pointer, o.value, o.text)
+end
+function newsource(sourceid::String, o::FirebaseFlow)::FirebaseFlow
+    return FirebaseFlow(
+        o.id,
+        FirebasePointer(sourceid, o.pointer.to),
+        o.value,
+        o.text
+    )
+end
+function newdest(destid::String, o::FirebaseFlow)::FirebaseFlow
+    return FirebaseFlow(
+        o.id,
+        FirebasePointer(o.pointer.from, destid),
+        o.value,
+        o.text
+    )
 end
 
 #################################### Stock #####################################

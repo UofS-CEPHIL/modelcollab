@@ -12,12 +12,14 @@ using ..ModelBuilderTestingUtils
 
     result = ModelBuilder.make_stockflow_models(
         vcat(OUTER_CONNECTIONS, [
-            FB_S1, FB_S2, FB_S3, FB_S2S3, FB_S3S1,
-            FB_SUMVAR, FB_STARTTIME, FB_STOPTIME
+            FB_S1_OUTER, FB_S2_OUTER, FB_S3, FB_S2S3, FB_S3S1,
+            FB_SUMVAR_OUTER, FB_STARTTIME, FB_STOPTIME,
+            S1_SUB, S2_SUB, SUMVAR_SUB
+
         ]),
         Dict(
             INNER_MODEL_ID => vcat(INNER_CONNECTIONS, [
-                FB_S1, FB_S2, FB_S1S2, FB_SUMVAR, FB_PARAM
+                FB_S1_INNER, FB_S2_INNER, FB_S1S2, FB_SUMVAR_INNER, FB_PARAM
             ])
         )
     )
@@ -39,7 +41,7 @@ using ..ModelBuilderTestingUtils
                 [
                     Stock(
                         S1_NAME,
-                        S1_ID,
+                        qualify_id(S1_ID),
                         S1_INIT_VALUE,
                         [],
                         [S1S2_NAME],
@@ -63,7 +65,7 @@ using ..ModelBuilderTestingUtils
                 [
                     Flow(
                         S1S2_NAME,
-                        S1S2_ID,
+                        qualify_id(S1S2_ID),
                         S1_NAME,
                         S2_NAME,
                         S1S2_EQUATION,
@@ -74,7 +76,7 @@ using ..ModelBuilderTestingUtils
                 [
                     Parameter(
                         PARAM_NAME,
-                        PARAM_ID,
+                        qualify_id(PARAM_ID),
                         PARAM_VALUE
                     )
                 ],
@@ -82,7 +84,7 @@ using ..ModelBuilderTestingUtils
                 [
                     SumVariable(
                         SUM_VAR_NAME,
-                        SUM_VAR_ID,
+                        qualify_id(SUM_VAR_ID),
                         [S2_NAME]
                     )
                 ]
@@ -98,7 +100,7 @@ using ..ModelBuilderTestingUtils
                 [
                     Stock(
                         S1_NAME,
-                        S1_ID,
+                        qualify_id(S1_ID),
                         S1_INIT_VALUE,
                         [S3S1_NAME],
                         [],
@@ -114,7 +116,7 @@ using ..ModelBuilderTestingUtils
                         [],
                         [S2S3_NAME],
                         [],
-                        [SUM_VAR_NAME],
+                        [], # no sumvar connection in outer; only in inner
                         [],
                         [S2S3_NAME]
                     ),
@@ -155,8 +157,8 @@ using ..ModelBuilderTestingUtils
                 [
                     SumVariable(
                         SUM_VAR_NAME,
-                        SUM_VAR_ID,
-                        [S2_NAME, S3_NAME]
+                        qualify_id(SUM_VAR_ID),
+                        [S3_NAME] # S2 connection only exists in inner
                     )
                 ]
             )

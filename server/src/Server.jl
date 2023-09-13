@@ -27,10 +27,6 @@ function handle_getcode(req::HTTP.Request)
         fb_components.outers,
         fb_components.inners
     )
-    identifications = IdentificationBuilder.make_identifications(
-        fb_components.outers,
-        fb_components.inners
-    )
     feet = FootBuilder.make_feet(models)
     code = CodeGenerator.generate_code(models, feet)
 
@@ -48,7 +44,6 @@ function handle_getmodelresults(req::HTTP.Request)
 end
 
 function create_and_start()::HTTP.Server
-    # Set up the server
     router = HTTP.Router()
     HTTP.register!(
         router,

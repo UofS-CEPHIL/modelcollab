@@ -20,8 +20,7 @@ function make_stockflow_models(
     scenario_name::Union{String, Nothing}=nothing
 )::Vector{StockFlowModel}
 
-    inners = Dict(inners)
-
+    apply_substitutions!(outers, inners)
     filter_irrelevant_params!(outers, inners)
 
     substitutions::Vector{FirebaseSubstitution} =
@@ -41,7 +40,6 @@ function make_stockflow_models(
         end
         apply_scenario!(scenario, all_models)
     end
-    apply_substitutions!(all_models, substitutions)
 
     return map(
         pair -> make_julia_components(pair.first, pair.second),
@@ -193,62 +191,39 @@ function add_outers_to_models_dict!(
     return nothing
 end
 
-function apply_substitution(
-    model_components::Vector{FirebaseDataObject},
-    all_components::Vector{FirebaseDataObject},
-    sub::FirebaseSubstitution
-)::Vector{FirebaseDataObject}
-    # Find the component that will be used as the substitute
-    sub_idx = findfirst(
-        c -> c.id == sub.replacementid,
-        all_components
-    )
-    if (sub_idx === nothing)
-        all_ids = map(c -> c.id, all_components)
-        id = sub.replacementid
-        throw(KeyError(
-            "Couldn't find id $id in list $all_ids"
-        ))
-    end
-
-    # Replace the component if it exists directly in the model components
-    sizebefore = length(model_components)
-    new_components = filter(c -> c.id != sub.replacedid, model_components)
-    if (sizebefore != length(new_components))
-        push!(new_components, all_components[sub_idx])
-    end
-
-    # Replace the component if it is referenced by a model component
-    for i in 1:length(model_components)
-        if (hasproperty(new_components[i], :from))
-            if (new_components[i].from == sub.replacedid)
-                new_components[i].from = sub.replacementid
-            end
-        end
-        if (hasproperty(new_components[i], :to))
-            if (new_components[i].to == sub.replacedid)
-                new_components[i].to = sub.replacementid
-            end
-        end
-    end
-
-    return new_components
-end
-
-
 function apply_substitutions!(
-    models::Dict{String, Vector{FirebaseDataObject}},
-    subs::Vector{FirebaseSubstitution}
+    outers::Vector{FirebaseDataObject},
+    inners::Dict{String, Vector{FirebaseDataObject}}
 )::Nothing
-    all_components = reduce(vcat, values(models))
+    if (length(inners) > 0)
+        all_components = [outers; reduce(vcat, values(inners))]
+    else
+        all_components = outers
+    end
+
+    subs = filter(FirebaseComponents.firebase_issubstitution, all_components)
+    if (length(subs) > 0 && length(inners) == 0)
+        throw(ErrorException("Found substitutions but no inner models"))
+    end
 
     for sub in subs
-        for k in keys(models)
-            models[k] = apply_substitution(
-                models[k],
-                all_components,
-                sub
-            )
+        lists = collect(values(inners))
+        push!(lists, outers)
+        for list in lists
+            for i in 1:length(list)
+                c = list[i]
+                if (c.id == sub.replacedid)
+                    list[i] = newid(sub.replacementid, c)
+                end
+                if (firebase_isflow(c) || firebase_isconnection(c))
+                    if (c.pointer.from == sub.replacedid)
+                        list[i] = newsource(sub.replacementid, c)
+                    end
+                    if (c.pointer.to == sub.replacedid)
+                        list[i] = newdest(sub.replacementid, c)
+                    end
+                end
+            end
         end
     end
 end
