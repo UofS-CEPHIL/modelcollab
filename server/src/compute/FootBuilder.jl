@@ -28,7 +28,7 @@ function make_feet(model::StockFlowModel)::Vector{Foot}
         end
         return Foot(
             nothing,
-            [],
+            [sumvar.name],
             [model.firebaseid]
         )
     end

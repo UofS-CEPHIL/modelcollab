@@ -22,9 +22,6 @@ function make_stockflow_models(
 
     apply_substitutions!(outers, inners)
     filter_irrelevant_params!(outers, inners)
-
-    substitutions::Vector{FirebaseSubstitution} =
-        filter(c -> firebase_issubstitution(c), outers)
     scenarios = filter(c -> firebase_isscenario(c), outers)
 
     add_outers_to_models_dict!(outers, inners)

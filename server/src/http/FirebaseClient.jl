@@ -54,14 +54,26 @@ function get_inner_models(
 
     # Prefix the inner components' ids with their model ID
     for (modelid, components) in inners
-        for i in 1:length(components)
-            component = inners[modelid][i]
-            id = component.id
-            inners[modelid][i] = newid("$modelid/$id", component)
-        end
+        qualify_component_ids!(modelid, components)
     end
 
     return inners
+end
+
+function qualify_component_ids!(
+    modelid::String,
+    components::Vector{FirebaseDataObject}
+)::Nothing
+    qualify_component_id(id::String) = "$(modelid)/$(id)"
+    for i in 1:length(components)
+        old = components[i]
+        new = newid(qualify_component_id(old.id), old)
+        if (firebase_isconnection(old) || firebase_isflow(old))
+            new = newsource(qualify_component_id(old.pointer.from), new)
+            new = newdest(qualify_component_id(old.pointer.to), new)
+        end
+        components[i] = new
+    end
 end
 
 struct InitialFirebaseResult

@@ -22,7 +22,6 @@ ResponseCode = (
 function handle_getcode(req::HTTP.Request)
     sessionid = HTTP.getparams(req)["sessionid"]
     fb_components = FirebaseClient.get_components(sessionid)
-
     models = ModelBuilder.make_stockflow_models(
         fb_components.outers,
         fb_components.inners
@@ -30,6 +29,7 @@ function handle_getcode(req::HTTP.Request)
     feet = FootBuilder.make_feet(models)
     code = CodeGenerator.generate_code(models, feet)
 
+    println("Done!")
     return HTTP.Response(ResponseCode.OK, code)
 end
 
