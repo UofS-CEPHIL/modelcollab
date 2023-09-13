@@ -5,6 +5,7 @@ using ..ParsingUtils
 using ..TestingUtils
 using ..CodeGenerator
 using ..ModelComponents
+using ..FirebaseComponents
 
 include("../SmallestPossibleModelComponents.jl")
 

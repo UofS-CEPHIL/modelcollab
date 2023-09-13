@@ -42,7 +42,6 @@ function make_stockflow_models(
         apply_scenario!(scenario, all_models)
     end
     apply_substitutions!(all_models, substitutions)
-    filter_for_julia_components!(all_models)
 
     return map(
         pair -> make_julia_components(pair.first, pair.second),
@@ -278,25 +277,5 @@ function apply_scenario!(
         apply_scenario!(scenario, model)
     end
 end
-
-
-function filter_for_julia_components!(
-    components::Dict{String, Vector{FirebaseDataObject}}
-)::Nothing
-    irrelevant_types = (
-        FirebaseComponents.CONNECTION,
-        FirebaseComponents.STATIC_MODEL,
-        FirebaseComponents.SUBSTITUTION,
-        FirebaseComponents.CLOUD,
-        FirebaseComponents.SCENARIO
-    )
-    for k in keys(components)
-        components[k] = filter(
-            c -> !in(firebase_gettype(c), irrelevant_types),
-            components[k]
-        )
-    end
-end
-
 
 end # ModelBuilder module

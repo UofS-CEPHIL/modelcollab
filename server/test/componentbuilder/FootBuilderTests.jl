@@ -3,6 +3,7 @@ module FootBuilderTests
 using Test
 using ..FootBuilder
 using ..ModelComponents
+using ..FirebaseComponents
 
 const EMPTY_STRING_ARR::Vector{String} = Vector{String}()
 
@@ -37,6 +38,7 @@ function testfoot(
 end
 
 @testset "Smallest possible model" begin
+
     include("../SmallestPossibleModelComponents.jl")
 
     result = FootBuilder.make_feet([MODEL])

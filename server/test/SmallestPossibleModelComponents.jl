@@ -1,6 +1,9 @@
 # This file tests the case of the simplest valid model:
 # one stock, start time, and stop time.
 
+
+#################################### Values ####################################
+
 S1_NAME = "s1"
 S1_ID = "1"
 S1_VAL = "1000"
@@ -15,6 +18,31 @@ STOP_TIME_VAL = "100"
 STOP_TIME_EXPECTED_VAL = "100.0"
 MODEL_ID = "7"
 PATH = "/my/path"
+
+############################# Firebase Components ##############################
+
+FB_S1::FirebaseStock = FirebaseStock(
+    S1_ID,
+    FirebasePoint(100.3, 201.1), # arbitrary
+    FirebaseText(S1_NAME),
+    FirebaseValue(S1_VAL)
+)
+
+FB_STARTTIME::FirebaseParameter = FirebaseParameter(
+    START_TIME_ID,
+    FirebasePoint(300.222, 111.222),
+    FirebaseText(START_TIME_NAME),
+    FirebaseValue(START_TIME_VAL)
+)
+
+FB_STOPTIME::FirebaseParameter = FirebaseParameter(
+    STOP_TIME_ID,
+    FirebasePoint(300.222, 111.222),
+    FirebaseText(STOP_TIME_NAME),
+    FirebaseValue(STOP_TIME_VAL)
+)
+
+############################### Julia Components ###############################
 
 S1::Stock = Stock(
     S1_NAME,

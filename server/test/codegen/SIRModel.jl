@@ -1,6 +1,7 @@
 module SIRModelCodegenTest
 
 using Test
+using ..FirebaseComponents
 using ..ModelComponents
 using ..CodeGenerator
 using ..ParsingUtils

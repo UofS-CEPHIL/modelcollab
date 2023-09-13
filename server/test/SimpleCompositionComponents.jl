@@ -29,7 +29,7 @@ PARAM_VALUE = "1"
 PARAM_EXPECTED_VALUE = "1.0"
 PARAM_ID = "333"
 INNER_MODEL_ID = "inner"
-OUTER_MODEL_ID = "outer"
+OUTER_MODEL_ID = "_outer"
 START_TIME_ID = "444"
 START_TIME_NAME = "startTime"
 START_TIME_VALUE = "0.0"
@@ -51,6 +51,186 @@ S3S1_NAME = "S3S1"
 S3S1_EQUATION = "$(S3_NAME) * 0.0001"
 S3S1_EXPECTED_EQUATION = "u.$(S3_NAME) * 0.0001"
 S3S1_ID = "5"
+
+############################# Firebase Components ##############################
+
+function qualify_id(id::String)::String
+    return "$(INNER_MODEL_ID)/$(id)"
+end
+
+FB_S1::FirebaseStock = FirebaseStock(
+    S1_ID,
+    FirebasePoint(100.3, 201.1), # arbitrary
+    FirebaseText(S1_NAME),
+    FirebaseValue(S1_INIT_VALUE)
+)
+
+FB_S2::FirebaseStock = FirebaseStock(
+    S2_ID,
+    FirebasePoint(999.999, 888.888),
+    FirebaseText(S2_NAME),
+    FirebaseValue(S2_INIT_VALUE)
+)
+
+FB_S3::FirebaseStock = FirebaseStock(
+    S3_ID,
+    FirebasePoint(99.1123, 999.1),
+    FirebaseText(S3_NAME),
+    FirebaseValue(S3_INIT_VALUE)
+)
+
+FB_S1S2::FirebaseFlow = FirebaseFlow(
+    S1S2_ID,
+    FirebasePointer(S1_ID, S2_ID),
+    FirebaseValue(S1S2_EQUATION),
+    FirebaseText(S1S2_NAME)
+)
+
+FB_S2S3::FirebaseFlow = FirebaseFlow(
+    S2S3_ID,
+    FirebasePointer(S2_ID, S3_ID),
+    FirebaseValue(S2S3_EQUATION),
+    FirebaseText(S2S3_NAME)
+)
+
+FB_S3S1::FirebaseFlow = FirebaseFlow(
+    S3S1_ID,
+    FirebasePointer(S3_ID, S1_ID),
+    FirebaseValue(S3S1_EQUATION),
+    FirebaseText(S3S1_NAME)
+)
+
+FB_SUMVAR::FirebaseSumVariable = FirebaseSumVariable(
+    SUM_VAR_ID,
+    FirebasePoint(88.99, 3333.4444),
+    FirebaseText(SUM_VAR_NAME)
+)
+
+FB_PARAM::FirebaseParameter = FirebaseParameter(
+    PARAM_ID,
+    FirebasePoint(101.222, 333.444),
+    FirebaseText(PARAM_NAME),
+    FirebaseValue(PARAM_VALUE)
+)
+
+FB_STARTTIME::FirebaseParameter = FirebaseParameter(
+    START_TIME_ID,
+    FirebasePoint(300.222, 111.222),
+    FirebaseText(START_TIME_NAME),
+    FirebaseValue(START_TIME_VALUE)
+)
+
+FB_STOPTIME::FirebaseParameter = FirebaseParameter(
+    STOP_TIME_ID,
+    FirebasePoint(300.222, 111.222),
+    FirebaseText(STOP_TIME_NAME),
+    FirebaseValue(STOP_TIME_VALUE)
+)
+
+# Connections
+NOOFFSET = FirebasePoint(0, 0)
+PS1S2_CONN_ID = "10"
+PS1S2_CONN = FirebaseConnection(
+    PS1S2_CONN_ID,
+    FirebasePointer(PARAM_ID, S1S2_ID),
+    NOOFFSET
+)
+PS3S1_CONN_ID = "11"
+PS3S1_CONN = FirebaseConnection(
+    PS3S1_CONN_ID,
+    FirebasePointer(PARAM_ID, S3S1_ID),
+    NOOFFSET
+)
+SVS2S3_CONN_ID = "12"
+SVS2S3_CONN = FirebaseConnection(
+    SVS2S3_CONN_ID,
+    FirebasePointer(SUM_VAR_ID, S2S3_ID),
+    NOOFFSET
+)
+S2SV_CONN_ID = "13"
+S2SV_CONN = FirebaseConnection(
+    S2SV_CONN_ID,
+    FirebasePointer(S2_ID, SUM_VAR_ID),
+    NOOFFSET
+)
+S3SV_CONN_ID = "14"
+S3SV_CONN = FirebaseConnection(
+    S3SV_CONN_ID,
+    FirebasePointer(S3_ID, SUM_VAR_ID),
+    NOOFFSET
+)
+S1S1S2_CONN_ID = "15"
+S1S1S2_CONN = FirebaseConnection(
+    S1S1S2_CONN_ID,
+    FirebasePointer(S1_ID, S1S2_ID),
+    NOOFFSET
+)
+S2S1S2_CONN_ID = "16"
+S2S1S2_CONN = FirebaseConnection(
+    S2S1S2_CONN_ID,
+    FirebasePointer(S2_ID, S1S2_ID),
+    NOOFFSET
+)
+S2S2S3_CONN_ID = "17"
+S2S2S3_CONN = FirebaseConnection(
+    S2S2S3_CONN_ID,
+    FirebasePointer(S2_ID, S2S3_ID),
+    NOOFFSET
+)
+S3S2S3_CONN_ID = "18"
+S3S2S3_CONN = FirebaseConnection(
+    S2S2S3_CONN_ID,
+    FirebasePointer(S3_ID, S2S3_ID),
+    NOOFFSET
+)
+S3S3S1_CONN_ID = "19"
+S3S3S1_CONN = FirebaseConnection(
+    S3S3S1_CONN_ID,
+    FirebasePointer(S3_ID, S3S1_ID),
+    NOOFFSET
+)
+OUTER_CONNECTIONS = [
+    SVS2S3_CONN, S3SV_CONN, S2S2S3_CONN, S3S2S3_CONN, S3S3S1_CONN, PS3S1_CONN
+]
+INNER_CONNECTIONS = [
+     S2SV_CONN, S1S1S2_CONN, S2S1S2_CONN, PS1S2_CONN
+]
+
+# Composition in Firebase:
+# S1 and S2 exist both inside and out and are composed
+# S1 substitution goes out -> in and S2 goes in -> out
+# Sumvar exists both inside and out and is composed out -> in
+# Param exists inside and is not composed.
+S1_SUB_ID = "6"
+S1_SUB = FirebaseSubstitution(
+    S1_SUB_ID,
+    S1_ID,
+    qualify_id(S1_ID)
+)
+S2_SUB_ID = "7"
+S2_SUB = FirebaseSubstitution(
+    S2_SUB_ID,
+    qualify_id(S2_ID),
+    S2_ID
+)
+SUMVAR_SUB_ID = "8"
+SUMVAR_SUB = FirebaseSubstitution(
+    SUMVAR_SUB_ID,
+    SUM_VAR_ID,
+    qualify_id(SUM_VAR_ID)
+)
+
+# Static model
+STATIC_MODEL_ID = "9"
+STATIC_MODEL_NAME = "smName"
+STATIC_MODEL = FirebaseStaticModel(
+    STATIC_MODEL_ID,
+    STATIC_MODEL_NAME,
+    "Purple", # Arbitrary
+    FirebasePoint(100, 30.1)
+)
+
+############################### Julia Components ###############################
 
 S1::Stock = Stock(
     S1_NAME,

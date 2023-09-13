@@ -8,13 +8,30 @@ function make_julia_components(
     model_components::Vector{FirebaseDataObject}
 )::StockFlowModel
     fbcomponents = organize_components(model_components)
+    julia_components = filter(is_julia_component, model_components)
     nativecomponents = map(
         c -> make_julia_component(c, fbcomponents),
-        model_components
+        julia_components
     )
     return organize_components(name, nativecomponents)
 end
 export make_julia_components
+
+function is_julia_component(
+    component::FirebaseDataObject
+)::Bool
+    irrelevant_types = (
+        FirebaseComponents.CONNECTION,
+        FirebaseComponents.STATIC_MODEL,
+        FirebaseComponents.SUBSTITUTION,
+        FirebaseComponents.CLOUD,
+        FirebaseComponents.SCENARIO
+    )
+    return !in(
+        firebase_gettype(component),
+        irrelevant_types
+    )
+end
 
 struct FirebaseComponentsCollection
     all::Vector{FirebaseDataObject}
@@ -162,10 +179,10 @@ function make_julia_component(
 
     fromstockidx = findfirst(s -> s.id == flow.pointer.from, components.stocks)
     fromstock = fromstockidx === nothing ? nothing : components.stocks[fromstockidx]
-    fromname = fromstock === nothing ? "" : fromstock.text.text
+    fromname = fromstock === nothing ? nothing : fromstock.text.text
     tostockidx = findfirst(s -> s.id == flow.pointer.to, components.stocks)
     tostock = tostockidx === nothing ? nothing : components.stocks[tostockidx]
-    toname = tostock === nothing ? "" : tostock.text.text
+    toname = tostock === nothing ? nothing : tostock.text.text
 
     depended_ids = get_depended_ids(flow, components)
     depended_stock_names = get_names_of_components_in_idlist(

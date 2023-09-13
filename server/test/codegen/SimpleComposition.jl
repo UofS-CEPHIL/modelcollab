@@ -4,6 +4,7 @@ using Test
 using ..ParsingUtils
 using ..TestingUtils
 using ..CodeGenerator
+using ..FirebaseComponents
 using ..ModelComponents
 
 include("../SimpleCompositionComponents.jl")

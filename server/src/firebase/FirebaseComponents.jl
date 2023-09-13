@@ -129,8 +129,8 @@ export firebase_isscenario
 
 ## Some basic objects that we can compose into the actual ones
 struct FirebasePointer
-    from::String
-    to::String
+    from::Union{String, Nothing}
+    to::Union{String, Nothing}
 end
 export FirebasePointer
 
