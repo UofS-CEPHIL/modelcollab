@@ -28,7 +28,7 @@ function make_stockflow_models(
     all_models = inners # rename the var to reflect the change
 
     if (scenario_name !== nothing)
-        scenario = findfirst(s -> s.name == scenario_name)
+        scenario = findfirst(s -> s.name == scenario_name, scenarios)
         if (scenario === nothing)
             scenario_names = map(s -> s.name, scenarios)
             throw(ArgumentError(
