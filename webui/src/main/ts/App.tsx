@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import LoginScreen from "./components/Screens/LoginScreen";
-import CanvasScreen from "./components/Screens/CanvasScreen";
 import SessionSelectScreen from "./components/Screens/SessionSelectScreen";
 import FirebaseDataModelImpl from "./data/FirebaseDataModelImpl";
 import FirebaseManagerImpl from "./data/FirebaseManagerImpl";
@@ -35,6 +34,8 @@ import ParameterEditBox from "./components/EditBox/ParameterEditBox";
 import VariableEditBox from "./components/EditBox/DynamicVariableEditBox";
 import ScenarioEditBox from "./components/EditBox/ScenarioEditBox";
 import SumVariableEditBox from "./components/EditBox/SumVariableEditBox";
+import CanvasScreen from "./components/Screens/CanvasScreen";
+import Canvas from "./components/maxgraph/Canvas";
 
 const firebaseManager = new FirebaseManagerImpl();
 
@@ -70,20 +71,20 @@ export default class App extends React.Component<Props, State> {
                 </Router>
             );
         }
-        else if (!this.state.currentSession) {
-            return (<Router>
-                <Routes>
-                    <Route
-                        path="/"
-                        element={<SessionSelectScreen
-                            firebaseData={new FirebaseDataModelImpl(firebaseManager)}
-                            openSession={s => this.setState({ ...this.state, currentSession: s })}
-                        />}
-                    />
-                </Routes>
-            </Router>
-            );
-        }
+        // else if (!this.state.currentSession) {
+        //     return (<Router>
+        //         <Routes>
+        //             <Route
+        //                 path="/"
+        //                 element={<SessionSelectScreen
+        //                     firebaseData={new FirebaseDataModelImpl(firebaseManager)}
+        //                     openSession={s => this.setState({ ...this.state, currentSession: s })}
+        //                 />}
+        //             />
+        //         </Routes>
+        //     </Router>
+        //     );
+        // }
         else {
             return (
                 <Router>
@@ -91,18 +92,7 @@ export default class App extends React.Component<Props, State> {
                         <Route
                             path="/"
                             element={
-                                <CanvasScreen
-                                    firebaseDataModel={new FirebaseDataModelImpl(firebaseManager)}
-                                    sessionId={this.state.currentSession}
-                                    returnToSessionSelect={() => this.setState({ ...this.state, currentSession: null })}
-                                    createCanvasForMode={(m, p) => this.createCanvasForMode(m, p)}
-                                    createEditBox={p => this.createEditBox(p)}
-                                    createToolbar={p => this.createToolbar(p)}
-                                    createImportModelBox={p => this.createImportModelBox(p)}
-                                    createSaveModelBox={p => this.createSaveModelBox(p)}
-                                    createScenariosBox={p => this.createScenariosBox(p)}
-                                    renderer={new ComponentRendererImpl()}
-                                />
+                                <Canvas />
                             }
                         />
                     </Routes>

@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react';
-import { Stage, Layer, Group } from 'react-konva';
+import { Graph } from "@maxgraph/core";
 
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import ComponentUiData, { VisibleUiComponent } from './ScreenObjects/ComponentUiData';
@@ -7,6 +7,7 @@ import { DEFAULT_COLOR, SELECTED_COLOR } from './ScreenObjects/Stock/Stock';
 import FlowUiData from './ScreenObjects/Flow/FlowUiData';
 import ComponentCollection from './ComponentCollection';
 import ComponentRenderer from './Renderer/ComponentRenderer';
+
 
 const RIGHT_CLICK = 2;
 export interface Props {
@@ -188,4 +189,3 @@ export abstract class ExtendableBaseCanvas
 }
 
 export default abstract class BaseCanvas extends ExtendableBaseCanvas<Props, State> { }
-
