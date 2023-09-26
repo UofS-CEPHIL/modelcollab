@@ -1,12 +1,14 @@
+import { FirebaseComponentModel as schema } from "database/build/export";
 import ComponentCollection from "./components/Canvas/ComponentCollection";
 import ComponentUiData from "./components/Canvas/ScreenObjects/ComponentUiData";
 
 export default class IdGenerator {
 
-    static generateUniqueId(existing: ComponentCollection | ComponentUiData[]): string {
+    static generateUniqueId(existing: ComponentCollection | ComponentUiData[] | schema.FirebaseDataComponent<any>[]): string {
         let componentID: string;
         let isUsed: boolean;
-        let components: ComponentUiData[];
+        // TODO this is messy; remember to fix this up after replacing *UiData
+        let components: any[];
         if (existing instanceof ComponentCollection) {
             components = existing.getAllComponentsIncludingChildren();
         }

@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { FirebaseComponentModel as schema } from "database/build/export";
 
 import LoginScreen from "./components/Screens/LoginScreen";
+import CanvasScreen from "./components/maxgraph/CanvasScreen";
 import SessionSelectScreen from "./components/Screens/SessionSelectScreen";
 import FirebaseDataModelImpl from "./data/FirebaseDataModelImpl";
 import FirebaseManagerImpl from "./data/FirebaseManagerImpl";
@@ -34,8 +35,6 @@ import ParameterEditBox from "./components/EditBox/ParameterEditBox";
 import VariableEditBox from "./components/EditBox/DynamicVariableEditBox";
 import ScenarioEditBox from "./components/EditBox/ScenarioEditBox";
 import SumVariableEditBox from "./components/EditBox/SumVariableEditBox";
-import CanvasScreen from "./components/Screens/CanvasScreen";
-import Canvas from "./components/maxgraph/Canvas";
 
 const firebaseManager = new FirebaseManagerImpl();
 
@@ -92,7 +91,7 @@ export default class App extends React.Component<Props, State> {
                         <Route
                             path="/"
                             element={
-                                <Canvas />
+                                <CanvasScreen />
                             }
                         />
                     </Routes>

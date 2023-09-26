@@ -4,7 +4,7 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 
 import ComponentUiData, { PointerComponent } from '../Canvas/ScreenObjects/ComponentUiData';
 import { Props as CanvasProps } from "../Canvas/BaseCanvas";
-import { Props as ToolbarProps } from '../Toolbar/CanvasScreenToolbar';
+import CanvasScreenToolbar, { Props as ToolbarProps } from '../Toolbar/CanvasScreenToolbar';
 import { UiMode } from '../../UiMode';
 import applicationConfig from '../../config/applicationConfig';
 import FirebaseDataModel from '../../data/FirebaseDataModel';
@@ -29,6 +29,7 @@ import SubstitutionUiData from '../Canvas/ScreenObjects/Substitution/SubstitionU
 import ScenarioUiData from '../Canvas/ScreenObjects/Scenario/ScenarioUiData';
 import { Props as ScenarioEditBoxProps } from '../EditBox/ScenarioEditBox';
 import HelpBox from '../HelpBox/HelpBox';
+import Canvas from '../maxgraph/Canvas';
 
 
 export interface LoadedStaticModel {
@@ -143,110 +144,18 @@ export default class CanvasScreen extends React.Component<Props, State> {
     public render() {
         const setMode = (mode: UiMode) => {
             this.setState({ ...this.state, mode });
-            if (lastMode !== mode)
-                setTimeout(() => { this.setSelected([]) });
-            lastMode = mode;
         }
-        const selectedComponents = this.state.selectedComponentIds.map(
-            id => this.state.components.find(c => c.getId() === id)
-        );
 
         this.setComponentsForStaticModels();
 
         return (
             <React.Fragment>
                 {
-
-                    this.props.createToolbar({
-                        mode: this.state.mode,
-                        setMode: setMode,
-                        returnToSessionSelect: this.props.returnToSessionSelect,
-                        sessionId: this.props.sessionId,
-                        downloadData: (b, fname) => this.downloadData(b, fname),
-                        firebaseDataModel: this.props.firebaseDataModel,
-                        saveModel: () => this.saveModel(),
-                        importModel: () => this.importModel(),
-                        showScenarios: () => this.showScenarios(),
-                        restClient: new RestClientImpl(),
-                        showHelpBox: () => this.showHelpBox(),
-                        selectedScenario: this.state.selectedScenarioName
-                    })
+                    // TODO add toolbar
+                    <Toolbar />
                 }
                 {
-                    this.props.createCanvasForMode(
-                        this.state.mode,
-                        {
-                            firebaseDataModel: this.dm,
-                            sessionId: this.props.sessionId,
-                            components: new ComponentCollection(this.state.components),
-                            renderer: this.props.renderer,
-                            selectedComponentIds: this.state.selectedComponentIds,
-                            showConnectionHandles: false,
-                            editComponent: c => this.updateComponent(c),
-                            deleteComponent: id => this.removeComponent(id),
-                            addComponent: c => this.addComponent(c),
-                            setSelected: ids => this.setSelected(ids),
-                            identifyComponents: (replaced, replacement) =>
-                                this.identifyComponents(replaced, replacement)
-                        }
-                    )
-                }
-                {
-                    (selectedComponents.length === 1 && this.shouldShowEditBox() && selectedComponents[0]) &&
-                    this.props.createEditBox({
-                        initialComponent: selectedComponents[0].getDatabaseObject(),
-                        handleCancel: () => this.setSelected([]),
-                        handleSave: (comp: schema.FirebaseDataComponent<any>) => {
-                            const newComponent = this.createUiComponent(comp);
-                            if (newComponent) {
-                                const components: ComponentUiData[] = this.state.components
-                                    .filter(c => c.getId() !== comp.getId())
-                                    .concat(newComponent);
-                                this.setState({ ...this.state, components, selectedComponentIds: [] });
-                            }
-
-                            this.dm.updateComponent(this.props.sessionId, comp);
-                        },
-                        sessionId: this.props.sessionId,
-                        db: this.props.firebaseDataModel
-                    } as ScenarioEditBoxProps)
-                }
-                {
-                    this.state.showingSaveModelBox &&
-                    this.props.createSaveModelBox({
-                        handleCancel: () => this.setState({ ...this.state, showingSaveModelBox: false }),
-                        handleSave: id => {
-                            this.setState({ ...this.state, showingSaveModelBox: false });
-                            this.dm.addModelToLibrary(id, this.state.components);
-                        }
-                    })
-                }
-                {
-                    this.state.showingImportModelBox &&
-                    this.props.createImportModelBox({
-                        handleCancel: () => this.setState({ ...this.state, showingImportModelBox: false }),
-                        handleSubmit: name => {
-                            setTimeout(() => this.setState({ ...this.state, showingImportModelBox: false }));
-                            this.loadStaticModelData(name);
-                        },
-                        database: this.props.firebaseDataModel
-                    })
-                }
-                {
-                    this.state.showingScenarioBox &&
-                    this.props.createScenariosBox({
-                        handleCancel: () => this.setState({ ...this.state, showingScenarioBox: false }),
-                        handleSubmit: name => this.setState({ ...this.state, showingScenarioBox: false, selectedScenarioName: name }),
-                        initialSelected: this.state.selectedScenarioName,
-                        sessionId: this.props.sessionId,
-                        database: this.props.firebaseDataModel,
-                        handleEdit: name => this.startEditingScenario(name),
-                        generateNewId: () => IdGenerator.generateUniqueId(this.state.components)
-                    })
-                }
-                {
-                    this.state.showingHelpBox &&
-                    (<HelpBox onClose={() => this.setState({ ...this.state, showingHelpBox: false })} width={700} />)
+                    <Canvas />
                 }
             </React.Fragment >
         );
@@ -396,7 +305,7 @@ export default class CanvasScreen extends React.Component<Props, State> {
                 let newNewOrphans: ComponentUiData[] = [];
                 for (const orphan of newOrphans) {
                     const subOrphans = findOrphans(orphan);
-                    // eslint-disable-next-line                   
+                    // eslint-disable-next-line
                     const unique = subOrphans.filter(o => {
                         return orphans.find(c => c.getId() === o.getId()) === undefined
                     });
