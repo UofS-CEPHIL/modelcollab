@@ -4,9 +4,7 @@ import { styled, CSSObject, Theme } from "@mui/material/styles";
 import MenuIcon from '@mui/icons-material/Menu';
 import { UiMode } from "../../UiMode";
 
-import CloudIcon from '@mui/icons-material/Cloud';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
-import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import EditIcon from '@mui/icons-material/Edit';
@@ -196,12 +194,8 @@ export default class CanvasToolbar extends Component<Props, State> {
 
     private static getIconForMode(mode: UiMode): ReactElement {
         switch (mode) {
-            case UiMode.CLOUD:
-                return (<CloudIcon />);
             case UiMode.CONNECT:
                 return (<NorthEastIcon />);
-            case UiMode.DELETE:
-                return (<DeleteIcon />);
             case UiMode.DYN_VARIABLE:
                 return (<AddCircleIcon />);
             case UiMode.SUM_VARIABLE:

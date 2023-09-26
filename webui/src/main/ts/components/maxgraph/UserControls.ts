@@ -2,6 +2,7 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import { Cell, EventObject, Graph, InternalEvent, KeyHandler, UndoManager } from "@maxgraph/core";
 import { UiMode } from "../../UiMode";
 import ModeBehaviour from "./ModeBehaviour";
+import BehaviourGetter from "./BehaviourGetter";
 
 export default class UserControls {
 
@@ -23,7 +24,7 @@ export default class UserControls {
 
         this.graph = graph;
         this.keyHandler = new KeyHandler(graph);
-        if (!mode) mode = ModeBehaviour.getBehaviourForMode(
+        if (!mode) mode = BehaviourGetter.getBehaviourForMode(
             UiMode.MOVE,
             this.graph,
             () => this.getFirebaseState()
@@ -40,7 +41,7 @@ export default class UserControls {
     }
 
     public changeMode(mode: UiMode): void {
-        this.modeBehaviour = ModeBehaviour.getBehaviourForMode(
+        this.modeBehaviour = BehaviourGetter.getBehaviourForMode(
             mode,
             this.graph,
             () => this.getFirebaseState()
@@ -136,6 +137,7 @@ export default class UserControls {
     }
 
     private setupModeBehaviours(): void {
+        // Canvas click
         this.graph.addListener(
             InternalEvent.CLICK,
             (_: EventTarget, event: EventObject) => {
@@ -148,5 +150,15 @@ export default class UserControls {
                 }
             }
         );
+
+        // Selection changed
+        this.graph.getSelectionModel().addListener(
+            InternalEvent.CHANGE,
+            (_: EventTarget, event: EventObject) => {
+                this.modeBehaviour.selectionChanged(
+                    this.graph.getSelectionCells()
+                )
+            }
+        )
     }
 }
