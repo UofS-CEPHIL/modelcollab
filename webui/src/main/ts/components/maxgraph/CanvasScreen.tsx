@@ -1,10 +1,10 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Component, createRef, Fragment, ReactElement, RefObject } from 'react';
-import { Props as CanvasProps } from './Canvas';
 import CanvasToolbar from './CanvasToolbar';
-import { Cell, Graph, RubberBandHandler } from '@maxgraph/core';
+import { Cell, RubberBandHandler } from '@maxgraph/core';
 import UserControls from './UserControls';
 import { UiMode } from '../../UiMode';
+import StockFlowGraph from "./StockFlowGraph";
 
 interface Props {
     // firebaseDataModel: FirebaseDataModel;
@@ -26,10 +26,10 @@ export default class CanvasScreen extends Component<Props, State> {
     public static readonly INIT_MODE = UiMode.MOVE;
 
     private graphRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>();
-    private graph: Graph | null = null;
+    private graph: StockFlowGraph | null = null;
     private controls: UserControls | null = null;
 
-    public constructor(props: CanvasProps) {
+    public constructor(props: Props) {
         super(props);
         this.state = {
             mode: CanvasScreen.INIT_MODE,
@@ -42,7 +42,7 @@ export default class CanvasScreen extends Component<Props, State> {
         // Set up the graph only if the ref has been created but the graph
         // hasn't been created yet
         if (this.graphRef.current && !this.graph) {
-            this.graph = new Graph(this.graphRef.current);
+            this.graph = new StockFlowGraph(this.graphRef.current);
             new RubberBandHandler(this.graph);
             this.controls = new UserControls(
                 this.graph,

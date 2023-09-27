@@ -275,7 +275,7 @@ export interface StockComponentData extends FirebaseDataObject {
     text: string;           // text on screen
     // Initial value of the stock.
     // This should either be a number, or an equation in terms of only
-    // parameters and stocks. Variables should be filled in on the frontend.
+    // parameters and stocks.
     initvalue: string;
 }
 

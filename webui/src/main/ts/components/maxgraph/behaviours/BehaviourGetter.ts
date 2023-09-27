@@ -1,6 +1,6 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Graph } from "@maxgraph/core";
-import { UiMode } from "../../UiMode";
+import { UiMode } from "../../../UiMode";
 import ModeBehaviour from "./ModeBehaviour";
 import { MoveModeBehaviour } from "./MoveModeBehaviour";
 import { StockModeBehaviour } from "./StockModeBehaviour";

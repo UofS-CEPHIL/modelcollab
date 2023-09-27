@@ -1,6 +1,5 @@
-import { Cell } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
-import IdGenerator from "../../IdGenerator";
+import IdGenerator from "../../../IdGenerator";
 import { DefaultBehaviours } from "./DefaultBehaviours";
 
 export default class DynamicVariableModeBehaviour extends DefaultBehaviours {
@@ -27,27 +26,5 @@ export default class DynamicVariableModeBehaviour extends DefaultBehaviours {
         });
     }
 
-    private static makeDynamicVariableArgs(
-        parent: Cell,
-        dynvar: schema.VariableFirebaseComponent
-    ) {
-        return {
-            parent,
-            value: dynvar.getData().text,
-            id: dynvar.getId(),
-            x: dynvar.getData().x,
-            y: dynvar.getData().y,
-            width: DynamicVariableModeBehaviour.DEFAULT_WIDTH_PX,
-            height: DynamicVariableModeBehaviour.DEFAULT_HEIGHT_PX,
-            style: {
-                shape: "text",
-                fillColor: DynamicVariableModeBehaviour.FILL_COLOUR,
-                strokeColor: DynamicVariableModeBehaviour.STROKE_COLOUR,
-                fontColor: DynamicVariableModeBehaviour.STROKE_COLOUR,
-                fontSize: DynamicVariableModeBehaviour.DEFAULT_FONT_SIZE,
-                fontStyle: 3
-            }
-        }
-    }
 
 }

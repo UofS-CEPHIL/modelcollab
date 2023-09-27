@@ -1,8 +1,15 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import { Cell, EventObject, Graph, InternalEvent, KeyHandler, UndoManager } from "@maxgraph/core";
+import {
+    Cell,
+    EventObject,
+    Graph,
+    InternalEvent,
+    KeyHandler,
+    UndoManager
+} from "@maxgraph/core";
 import { UiMode } from "../../UiMode";
-import ModeBehaviour from "./ModeBehaviour";
-import BehaviourGetter from "./BehaviourGetter";
+import ModeBehaviour from "./behaviours/ModeBehaviour";
+import BehaviourGetter from "./behaviours/BehaviourGetter";
 
 export default class UserControls {
 
