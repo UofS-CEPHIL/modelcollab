@@ -5,21 +5,7 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 
 import LoginScreen from "./components/Screens/LoginScreen";
 import CanvasScreen from "./components/maxgraph/CanvasScreen";
-import SessionSelectScreen from "./components/Screens/SessionSelectScreen";
-import FirebaseDataModelImpl from "./data/FirebaseDataModelImpl";
 import FirebaseManagerImpl from "./data/FirebaseManagerImpl";
-import { UiMode } from "./UiMode";
-import MoveModeCanvas from "./components/Canvas/ModeCanvas/MoveModeCanvas";
-import { Props as CanvasProps } from "./components/Canvas/BaseCanvas";
-import StockModeCanvas from "./components/Canvas/ModeCanvas/StockModeCanvas";
-import FlowModeCanvas from "./components/Canvas/ModeCanvas/FlowModeCanvas";
-import DeleteModeCanvas from "./components/Canvas/ModeCanvas/DeleteModeCanvas";
-import EditModeCanvas from "./components/Canvas/ModeCanvas/EditModeCanvas";
-import ParamModeCanvas from "./components/Canvas/ModeCanvas/ParamModeCanvas";
-import SumVariableModeCanvas from "./components/Canvas/ModeCanvas/SumVariableModeCanvas";
-import ConnectModeCanvas from "./components/Canvas/ModeCanvas/ConnectModeCanvas";
-import DynamicVariableModeCanvas from "./components/Canvas/ModeCanvas/DynamicVariableModeCanvas";
-import CloudModeCanvas from "./components/Canvas/ModeCanvas/CloudModeCanvas";
 import { Props as EditBoxProps } from './components/EditBox/EditBox';
 import { Props as ScenarioEditBoxProps } from './components/EditBox/ScenarioEditBox';
 import CanvasScreenToolbar, { Props as ToolbarProps } from './components/Toolbar/CanvasScreenToolbar';
@@ -27,14 +13,13 @@ import ImportModelBox from './components/ImportModelBox/ImportModelBox';
 import { Props as ImportModelBoxProps } from './components/ButtonListBox/ButtonListBox';
 import ScenariosBox, { Props as ScenariosBoxProps } from "./components/ScenariosBox/ScenariosBox";
 import SaveModelBox, { Props as SaveModelBoxProps } from "./components/SaveModelBox/SaveModelBox";
-import ComponentRendererImpl from "./components/Canvas/Renderer/ComponentRendererImpl";
-import IdentifyModeCanvas from "./components/Canvas/ModeCanvas/IdentifyModeCanvas";
 import StockEditBox from "./components/EditBox/StockEditBox";
 import FlowEditBox from "./components/EditBox/FlowEditBox";
 import ParameterEditBox from "./components/EditBox/ParameterEditBox";
 import VariableEditBox from "./components/EditBox/DynamicVariableEditBox";
 import ScenarioEditBox from "./components/EditBox/ScenarioEditBox";
 import SumVariableEditBox from "./components/EditBox/SumVariableEditBox";
+import FirebaseDataModelImpl from "./data/FirebaseDataModelImpl";
 
 const firebaseManager = new FirebaseManagerImpl();
 
@@ -91,7 +76,10 @@ export default class App extends React.Component<Props, State> {
                         <Route
                             path="/"
                             element={
-                                <CanvasScreen />
+                                <CanvasScreen
+                                    firebaseDataModel={new FirebaseDataModelImpl(firebaseManager)}
+                                    sessionId={"NULL"}
+                                />
                             }
                         />
                     </Routes>

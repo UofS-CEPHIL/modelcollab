@@ -5,10 +5,12 @@ import { Cell, RubberBandHandler } from '@maxgraph/core';
 import UserControls from './UserControls';
 import { UiMode } from '../../UiMode';
 import StockFlowGraph from "./StockFlowGraph";
+import DiagramActions from "./DiagramActions";
+import FirebaseDataModel from "../../data/FirebaseDataModel";
 
 interface Props {
-    // firebaseDataModel: FirebaseDataModel;
-    // sessionId: string;
+    firebaseDataModel: FirebaseDataModel;
+    sessionId: string;
     // returnToSessionSelect: () => void;
 }
 
@@ -28,6 +30,7 @@ export default class CanvasScreen extends Component<Props, State> {
     private graphRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>();
     private graph: StockFlowGraph | null = null;
     private controls: UserControls | null = null;
+    private actions: DiagramActions | null = null;
 
     public constructor(props: Props) {
         super(props);
@@ -43,9 +46,17 @@ export default class CanvasScreen extends Component<Props, State> {
         // hasn't been created yet
         if (this.graphRef.current && !this.graph) {
             this.graph = new StockFlowGraph(this.graphRef.current);
+            this.actions = new DiagramActions(
+                this.props.firebaseDataModel,
+                this.graph,
+                this.props.sessionId,
+                components => this.setState({ components }),
+                () => this.state.components
+            );
             new RubberBandHandler(this.graph);
             this.controls = new UserControls(
                 this.graph,
+                this.actions,
                 c => this.setState({ clipboard: c }),
                 () => this.state.clipboard,
                 () => this.state.components

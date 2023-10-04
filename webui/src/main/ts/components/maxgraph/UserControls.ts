@@ -2,7 +2,6 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import {
     Cell,
     EventObject,
-    Graph,
     InternalEvent,
     KeyHandler,
     UndoManager
@@ -10,19 +9,24 @@ import {
 import { UiMode } from "../../UiMode";
 import ModeBehaviour from "./behaviours/ModeBehaviour";
 import BehaviourGetter from "./behaviours/BehaviourGetter";
+import DiagramActions from "./DiagramActions";
+import StockFlowGraph from "./StockFlowGraph";
 
 export default class UserControls {
 
-    private graph: Graph;
+    private graph: StockFlowGraph;
     private keyHandler: KeyHandler;
     private undoManager: UndoManager;
+    private diagramActions: DiagramActions;
+
     private modeBehaviour: ModeBehaviour;
     private copyCells: (c: Cell[]) => void;
     private pasteCells: () => Cell[];
     private getFirebaseState: () => schema.FirebaseDataComponent<any>[];
 
     public constructor(
-        graph: Graph,
+        graph: StockFlowGraph,
+        actions: DiagramActions,
         copyCells: (c: Cell[]) => void,
         pasteCells: () => Cell[],
         getFirebaseState: () => schema.FirebaseDataComponent<any>[],
@@ -30,10 +34,12 @@ export default class UserControls {
     ) {
 
         this.graph = graph;
+        this.diagramActions = actions;
         this.keyHandler = new KeyHandler(graph);
         if (!mode) mode = BehaviourGetter.getBehaviourForMode(
             UiMode.MOVE,
             this.graph,
+            this.diagramActions,
             () => this.getFirebaseState()
         );
         this.modeBehaviour = mode;
@@ -51,6 +57,7 @@ export default class UserControls {
         this.modeBehaviour = BehaviourGetter.getBehaviourForMode(
             mode,
             this.graph,
+            this.diagramActions,
             () => this.getFirebaseState()
         );
     }
@@ -64,6 +71,7 @@ export default class UserControls {
 
     private setupUniversalKeyboardShortcuts(): void {
         const getCharCode = this.getCharCode;
+        const deleteSelected = () => this.diagramActions.deleteSelection();
 
         // Copy, cut, paste
         const cloneCells = (cells: Cell[]) => {
@@ -86,26 +94,26 @@ export default class UserControls {
             }
             return cells;
         }
+
+        const copySelection = () => this.copyCells(
+            cloneCells(
+                this.graph!.getSelectionCells()
+            )
+        );
         this.keyHandler.bindControlKey(
             getCharCode("C"),
-            () => this.copyCells(
-                cloneCells(
-                    this.graph!.getSelectionCells()
-                )
-            )
+            () => copySelection()
         );
         this.keyHandler.bindControlKey(
             getCharCode("X"),
-            () => this.copyCells(
-                cloneCells(
-                    this.graph!.removeCells(
-                        this.graph!.getSelectionCells()
-                    )
-                )
-            )
+            () => {
+                copySelection();
+                deleteSelected();
+            }
         );
         this.keyHandler.bindControlKey(
             getCharCode("V"),
+            // TODO fix
             () => this.graph!.addCells(
                 this.pasteCells(),
                 this.graph.getDefaultParent(),
@@ -123,8 +131,6 @@ export default class UserControls {
         );
 
         // Delete selection
-        const deleteSelected = () =>
-            this.graph!.removeCells(this.graph!.getSelectionCells());
         this.keyHandler.bindKey(getCharCode("\b"), deleteSelected);
         this.keyHandler.bindKey(127 /*DEL*/, deleteSelected);
 

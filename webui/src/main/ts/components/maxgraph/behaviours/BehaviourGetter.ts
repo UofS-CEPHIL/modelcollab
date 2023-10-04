@@ -1,5 +1,4 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import { Graph } from "@maxgraph/core";
 import { UiMode } from "../../../UiMode";
 import ModeBehaviour from "./ModeBehaviour";
 import { MoveModeBehaviour } from "./MoveModeBehaviour";
@@ -8,6 +7,8 @@ import { ParameterModeBehaviour } from "./ParameterModeBehaviour";
 import DynamicVariableModeBehaviour from "./DynamicVariableModeBehaviour";
 import SumVariableModeBehaviour from "./SumVariableModeBehaviour";
 import FlowModeBehaviour from "./FlowModeBehaviour";
+import DiagramActions from "../DiagramActions";
+import StockFlowGraph from "../StockFlowGraph";
 
 // This class is basically just a map between UI modes and their associated
 // behaviour classes. This was originally a static method on ModeBehaviour but
@@ -15,22 +16,23 @@ import FlowModeBehaviour from "./FlowModeBehaviour";
 export default class BehaviourGetter {
     static getBehaviourForMode(
         mode: UiMode,
-        graph: Graph,
+        graph: StockFlowGraph,
+        actions: DiagramActions,
         getFirebaseState: () => schema.FirebaseDataComponent<any>[]
     ): ModeBehaviour {
         switch (mode) {
             case UiMode.MOVE:
-                return new MoveModeBehaviour(graph, getFirebaseState);
+                return new MoveModeBehaviour(graph, actions, getFirebaseState);
             case UiMode.STOCK:
-                return new StockModeBehaviour(graph, getFirebaseState);
+                return new StockModeBehaviour(graph, actions, getFirebaseState);
             case UiMode.PARAM:
-                return new ParameterModeBehaviour(graph, getFirebaseState);
+                return new ParameterModeBehaviour(graph, actions, getFirebaseState);
             case UiMode.DYN_VARIABLE:
-                return new DynamicVariableModeBehaviour(graph, getFirebaseState);
+                return new DynamicVariableModeBehaviour(graph, actions, getFirebaseState);
             case UiMode.SUM_VARIABLE:
-                return new SumVariableModeBehaviour(graph, getFirebaseState);
+                return new SumVariableModeBehaviour(graph, actions, getFirebaseState);
             case UiMode.FLOW:
-                return new FlowModeBehaviour(graph, getFirebaseState);
+                return new FlowModeBehaviour(graph, actions, getFirebaseState);
             default:
                 throw new Error("Unknown mode: " + mode);
         }

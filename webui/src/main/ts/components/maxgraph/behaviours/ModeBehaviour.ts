@@ -1,22 +1,30 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import { Cell, Graph } from "@maxgraph/core";
-
+import { Cell } from "@maxgraph/core";
+import StockFlowGraph from "../StockFlowGraph";
+import DiagramActions from "../DiagramActions";
 
 export default abstract class ModeBehaviour {
 
-    private graph: Graph;
+    private graph: StockFlowGraph;
+    private actions: DiagramActions;
     protected getFirebaseState: () => schema.FirebaseDataComponent<any>[]
 
     public constructor(
-        graph: Graph,
+        graph: StockFlowGraph,
+        actions: DiagramActions,
         getFirebaseState: () => schema.FirebaseDataComponent<any>[]
     ) {
         this.graph = graph;
+        this.actions = actions;
         this.getFirebaseState = getFirebaseState;
     }
 
-    public getGraph(): Graph {
+    public getGraph(): StockFlowGraph {
         return this.graph;
+    }
+
+    public getActions(): DiagramActions {
+        return this.actions;
     }
 
     public abstract canvasClicked(x: number, y: number): void;

@@ -3,7 +3,7 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import StockFlowGraph from "../StockFlowGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
-export class SumVariablePresentation
+export default class SumVariablePresentation
     implements ComponentPresentation<schema.SumVariableFirebaseComponent>
 {
     public static readonly FILL_COLOUR = "White"

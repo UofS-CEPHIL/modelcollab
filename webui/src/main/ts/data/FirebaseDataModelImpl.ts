@@ -4,7 +4,6 @@ import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build
 
 import FirebaseDataModel from "./FirebaseDataModel";
 import ComponentUiData from "../components/Canvas/ScreenObjects/ComponentUiData";
-import ParameterUiData from "../components/Canvas/ScreenObjects/Parameter/ParameterUiData";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
@@ -93,27 +92,23 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         this.setAllComponents(
             id,
             [
-                new ParameterUiData(
-                    new schema.ParameterFirebaseComponent(
-                        "0",
-                        {
-                            x: 100,
-                            y: 100,
-                            text: "startTime",
-                            value: "0.0"
-                        }
-                    )
+                new schema.ParameterFirebaseComponent(
+                    "0",
+                    {
+                        x: 100,
+                        y: 100,
+                        text: "startTime",
+                        value: "0.0"
+                    }
                 ),
-                new ParameterUiData(
-                    new schema.ParameterFirebaseComponent(
-                        "1",
-                        {
-                            x: 100,
-                            y: 130,
-                            text: "stopTime",
-                            value: "0.0"
-                        }
-                    )
+                new schema.ParameterFirebaseComponent(
+                    "1",
+                    {
+                        x: 100,
+                        y: 130,
+                        text: "stopTime",
+                        value: "0.0"
+                    }
                 ),
             ]);
     }
@@ -128,12 +123,20 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    removeComponents(sessionId: string, componentIds: string[], allComponents: ComponentUiData[]): void {
-        const newComponentsList = allComponents.filter(c => !componentIds.includes(c.getId()));
+    removeComponents(
+        sessionId: string,
+        componentIds: string[],
+        allComponents: schema.FirebaseDataComponent<any>[]
+    ): void {
+        const newComponentsList =
+            allComponents.filter(c => !componentIds.includes(c.getId()));
         this.setAllComponents(sessionId, newComponentsList);
     }
 
-    setAllComponents(sessionId: string, updatedComponentsList: ComponentUiData[]): void {
+    setAllComponents(
+        sessionId: string,
+        updatedComponentsList: schema.FirebaseDataComponent<any>[]
+    ): void {
         set(
             ref(
                 this.firebaseManager.getDb(),
@@ -190,4 +193,3 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         ).then(s => this.triggerCallback(s, onData));
     }
 }
-

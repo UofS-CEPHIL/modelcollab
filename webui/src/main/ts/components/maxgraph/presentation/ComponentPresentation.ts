@@ -2,6 +2,8 @@ import { Cell } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import StockFlowGraph from "../StockFlowGraph";
 
+// This class contains the logic for styling different component types for
+// addition into the on-screen graph
 export default interface ComponentPresentation<
     T extends schema.FirebaseDataComponent<any>
 > {

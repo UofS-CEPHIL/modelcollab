@@ -10,13 +10,6 @@ export class ParameterModeBehaviour extends DefaultBehaviours {
             newId,
             { x, y, value: "", text: "" }
         );
-        this.getGraph().batchUpdate(() => {
-            this.getGraph().insertVertex(
-                ParameterModeBehaviour.makeParamArgs(
-                    this.getGraph().getDefaultParent(),
-                    newParam
-                )
-            );
-        });
+        this.getActions().addComponent(newParam);
     }
 }

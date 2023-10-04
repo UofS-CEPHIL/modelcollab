@@ -1,4 +1,3 @@
-import { Cell } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
 import { DefaultBehaviours } from "./DefaultBehaviours";
@@ -17,13 +16,6 @@ export default class SumVariableModeBehaviour extends DefaultBehaviours {
             newId,
             { x, y, text: "" }
         );
-        this.getGraph().batchUpdate(() => {
-            this.getGraph().insertVertex(
-                SumVariableModeBehaviour.makeSumVariableArgs(
-                    this.getGraph().getDefaultParent(),
-                    newVar
-                )
-            );
-        });
+        this.getActions().addComponent(newVar);
     }
 }
