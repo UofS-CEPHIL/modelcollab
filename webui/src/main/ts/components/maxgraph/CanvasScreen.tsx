@@ -16,7 +16,7 @@ interface Props {
 
 interface State {
     mode: UiMode;
-    clipboard: Cell[];
+    clipboard: schema.FirebaseDataComponent<any>[];
     components: schema.FirebaseDataComponent<any>[];
 
     // loadedModels: LoadedStaticModel[];
@@ -58,11 +58,23 @@ export default class CanvasScreen extends Component<Props, State> {
                 this.graph,
                 this.actions,
                 c => this.setState({ clipboard: c }),
-                () => this.state.clipboard,
+                () => this.pasteComponents(),
                 () => this.state.components
             );
         }
     }
+
+    private pasteComponents(): schema.FirebaseDataComponent<any>[] {
+        const components = this.state.clipboard;
+        // TODO assign new IDs
+        this.setState({ clipboard: [] });
+        return components;
+    }
+
+    // public setState(state: any): void {
+    //     debugger;
+    //     super.setState(state);
+    // }
 
     private setMode(mode: UiMode): void {
         if (!this.controls) throw new Error("Not initialized");

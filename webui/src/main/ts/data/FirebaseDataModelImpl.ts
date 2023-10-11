@@ -17,15 +17,16 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         snapshot: DataSnapshot,
         callback: (data: schema.FirebaseDataComponent<any>[]) => void
     ) {
+        let components: schema.FirebaseDataComponent<any>[] = [];
         if (snapshot.exists() && snapshot.key) {
-            const components: schema.FirebaseDataComponent<any>[] =
+            components =
                 Object
                     .entries(snapshot.val())
                     .map(
                         ([k, v]) => schema.createFirebaseDataComponent(k, v)
                     );
-            callback(components);
         }
+        callback(components);
     }
 
     updateComponent(sessionId: string, data: schema.FirebaseDataComponent<any>) {

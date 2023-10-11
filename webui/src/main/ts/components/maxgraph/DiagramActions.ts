@@ -58,12 +58,13 @@ export default class DiagramActions {
     public onFbDataChanged(
         newComponents: schema.FirebaseDataComponent<any>[]
     ): void {
-        console.log("fbdata refresh")
+        const oldComponents = this.getCurrentComponents();
         this.setCurrentComponents(newComponents);
-        this.graph.refreshComponents(
-            newComponents,
-            this.getCurrentComponents()
-        );
+        this.graph.refreshComponents(newComponents, oldComponents);
+    }
+
+    public addComponents(components: schema.FirebaseDataComponent<any>[]): void {
+        // TODO add multiple components at once
     }
 
     public addComponent(component: schema.FirebaseDataComponent<any>): void {
@@ -77,9 +78,11 @@ export default class DiagramActions {
 
     public deleteSelection(): void {
         const selectedComponents = this.graph!.getSelectionCells();
-        const selectedIds = selectedComponents.map(c => c.getId()!);
-        const allComponents = this.getCurrentComponents();
-        this.fbData.removeComponents(this.sessionId, selectedIds, allComponents);
+        if (selectedComponents.length > 0) {
+            const selectedIds = selectedComponents.map(c => c.getId()!);
+            const allComponents = this.getCurrentComponents();
+            this.fbData.removeComponents(this.sessionId, selectedIds, allComponents);
+        }
     }
 
     public deleteComponent(component: schema.FirebaseDataComponent<any>): void {

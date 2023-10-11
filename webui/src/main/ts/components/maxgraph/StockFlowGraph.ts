@@ -23,7 +23,6 @@ export default class StockFlowGraph extends Graph {
         newComponents: schema.FirebaseDataComponent<any>[],
         oldComponents: schema.FirebaseDataComponent<any>[]
     ): void {
-        console.log("Graph refreshing");
         const updates = this.findComponentUpdates(newComponents, oldComponents);
         const findComponent = (id: string) =>
             newComponents.find(c => c.getId() === id)!
