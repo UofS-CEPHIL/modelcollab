@@ -71,11 +71,6 @@ export default class CanvasScreen extends Component<Props, State> {
         return components;
     }
 
-    // public setState(state: any): void {
-    //     debugger;
-    //     super.setState(state);
-    // }
-
     private setMode(mode: UiMode): void {
         if (!this.controls) throw new Error("Not initialized");
         this.controls?.changeMode(mode);

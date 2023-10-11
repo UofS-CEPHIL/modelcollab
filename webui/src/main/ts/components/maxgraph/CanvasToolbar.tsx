@@ -42,7 +42,7 @@ export default class CanvasToolbar extends Component<Props, State> {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
             }),
-            overflowX: 'hidden',
+            overflowX: 'hidden'
         });
         const closedMixin = (theme: Theme): CSSObject => ({
             transition: theme.transitions.create('width', {
@@ -164,7 +164,10 @@ export default class CanvasToolbar extends Component<Props, State> {
                     sx={{
                         minHeight: 48,
                         justifyContent: isOpen ? 'initial' : 'center',
-                        px: 2.5
+                        px: 2.5,
+                        "&.Mui-selected": {
+                            backgroundColor: 'rgba(39, 97, 245, 0.23)'
+                        }
                     }}
                     onClick={e => onClick(e)}
                     selected={this.isSelected(text)}
