@@ -8,6 +8,8 @@ import StockFlowGraph from "./StockFlowGraph";
 import DiagramActions from "./DiagramActions";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 
+import "../style/mxstyle.css";
+
 interface Props {
     firebaseDataModel: FirebaseDataModel;
     sessionId: string;
@@ -92,10 +94,9 @@ export default class CanvasScreen extends Component<Props, State> {
                     <div
                         id="graph-container"
                         ref={this.graphRef}
-                        style={{ "width": "100%", "height": "1000px" }}
                     />
                 }
-            </Fragment >
+            </Fragment>
         );
     }
 

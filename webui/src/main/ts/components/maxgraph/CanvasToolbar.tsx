@@ -25,6 +25,8 @@ export interface State {
 
 export default class CanvasToolbar extends Component<Props, State> {
 
+    public static readonly DRAWER_WIDTH = "240";
+
     public constructor(props: Props) {
         super(props);
         this.state = { mode: UiMode.MOVE };
@@ -35,9 +37,8 @@ export default class CanvasToolbar extends Component<Props, State> {
 
         // Apply styles to components. Copied from
         // https://mui.com/material-ui/react-drawer/
-        const drawerWidth = "240";
         const openedMixin = (theme: Theme): CSSObject => ({
-            width: drawerWidth,
+            width: CanvasToolbar.DRAWER_WIDTH,
             transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
@@ -90,8 +91,8 @@ export default class CanvasToolbar extends Component<Props, State> {
                 duration: theme.transitions.duration.leavingScreen,
             }),
             ...(open && {
-                marginLeft: drawerWidth,
-                width: `calc(100% - ${drawerWidth}px)`,
+                marginLeft: CanvasToolbar.DRAWER_WIDTH,
+                width: `calc(100% - ${CanvasToolbar.DRAWER_WIDTH}px)`,
                 transition: theme.transitions.create(['width', 'margin'], {
                     easing: theme.transitions.easing.sharp,
                     duration: theme.transitions.duration.enteringScreen,
