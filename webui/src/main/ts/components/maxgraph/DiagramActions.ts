@@ -1,4 +1,4 @@
-import { InternalEvent } from "@maxgraph/core";
+import { Cell, EventObject, InternalEvent } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import StockFlowGraph from "./StockFlowGraph";
@@ -9,12 +9,11 @@ import StockFlowGraph from "./StockFlowGraph";
 // Firebase components (i.e. by using setCurrentComponents), and the local Graph
 // representation
 //
-// The actions that are performed on the graph (add a component, change its
-// size, delete a component, etc.) are triggered by first editing the graph,
-// then propagating the action to Firebase in a listener. Actions that don't
-// need to be reflected in the graph and/or don't originate from the graph
-// (e.g. change a Stock starting value) happen by directly interacting with
-// Firebase and setCurrentComponents
+// Actions are almost always performed by first updating Firebase and allowing
+// the change to propagate via the listeners. The only exceptions to this are
+// ones that must be triggered by performing actions on individual graph cells,
+// such as moving or resizing an existing component. In such cases, we set up
+// listeners for the event and update Firebase within them.
 export default class DiagramActions {
 
     private fbData: FirebaseDataModel;
@@ -47,7 +46,7 @@ export default class DiagramActions {
         // instead come from the graph directly, such as cells moved or resized.
         this.graph.addListener(
             InternalEvent.CELLS_MOVED,
-            () => null // TODO
+            (s: EventSource, o: EventObject) => this.onCellsMoved(s, o)
         );
         this.graph.addListener(
             InternalEvent.CELLS_RESIZED,
@@ -55,21 +54,30 @@ export default class DiagramActions {
         );
     }
 
-    public onFbDataChanged(
-        newComponents: schema.FirebaseDataComponent<any>[]
-    ): void {
-        const oldComponents = this.getCurrentComponents();
-        this.setCurrentComponents(newComponents);
-        this.graph.refreshComponents(newComponents, oldComponents);
-    }
-
-    public addComponents(components: schema.FirebaseDataComponent<any>[]): void {
-        // TODO add multiple components at once
-    }
-
     public addComponent(component: schema.FirebaseDataComponent<any>): void {
         // "update" and "add" are the same thing in Firebase
         this.updateComponent(component);
+    }
+
+    public moveComponents(
+        components: schema.FirebaseDataComponent<any>[],
+        dx: number,
+        dy: number
+    ): void {
+        const allComponents = this.getCurrentComponents();
+        const vertices = components.filter(
+            c => c instanceof schema.PointFirebaseComponent
+        );
+        const others = allComponents.filter(
+            c => !vertices.find(v => v.getId() === c.getId())
+        );
+        const updatedVerts = vertices.map(v =>
+            (v as schema.PointFirebaseComponent<any>).withUpdatedLocation(dx, dy)
+        );
+        this.fbData.setAllComponents(
+            this.sessionId,
+            [...updatedVerts, ...others]
+        );
     }
 
     public updateComponent(component: schema.FirebaseDataComponent<any>): void {
@@ -81,11 +89,39 @@ export default class DiagramActions {
         if (selectedComponents.length > 0) {
             const selectedIds = selectedComponents.map(c => c.getId()!);
             const allComponents = this.getCurrentComponents();
-            this.fbData.removeComponents(this.sessionId, selectedIds, allComponents);
+            this.fbData.removeComponents(
+                this.sessionId,
+                selectedIds,
+                allComponents
+            );
         }
     }
 
     public deleteComponent(component: schema.FirebaseDataComponent<any>): void {
         this.fbData.removeComponent(this.sessionId, component.getId());
+    }
+
+    private onFbDataChanged(
+        newComponents: schema.FirebaseDataComponent<any>[]
+    ): void {
+        const oldComponents = this.getCurrentComponents();
+        this.setCurrentComponents(newComponents);
+        this.graph.refreshComponents(newComponents, oldComponents);
+    }
+
+    private onCellsMoved(_: EventSource, event: EventObject): void {
+        const dx = event.properties["dx"];
+        const dy = event.properties["dy"];
+        const cells: Cell[] = event.properties["cells"];
+        const components = cells
+            .map(c => c.getId()!)
+            .map(id => this.getComponentWithId(id)!);
+        this.moveComponents(components, dx, dy);
+    }
+
+    private getComponentWithId(
+        id: string
+    ): schema.FirebaseDataComponent<any> | undefined {
+        return this.getCurrentComponents().find(c => c.getId() === id);
     }
 }

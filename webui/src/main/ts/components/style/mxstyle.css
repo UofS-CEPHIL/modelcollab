@@ -1,0 +1,17 @@
+div.mxRubberband {
+  border-color: #b18426;
+  background: #db9b0b;
+  position: absolute;
+}
+
+.App {
+    text-align: center;
+}
+
+#graph-container {
+  border: #B0B0B0 1px solid;
+  height: 100vh;
+  width: calc(100% - 240px);
+  margin-left: 240px;
+  margin-top: 64px;
+}

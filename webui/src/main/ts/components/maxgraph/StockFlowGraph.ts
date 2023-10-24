@@ -25,7 +25,7 @@ export default class StockFlowGraph extends Graph {
     ): void {
         const updates = this.findComponentUpdates(newComponents, oldComponents);
         const findComponent = (id: string) =>
-            newComponents.find(c => c.getId() === id)!
+            newComponents.find(c => c.getId() === id)!;
 
         this.batchUpdate(() => {
             updates.newIds.forEach(id => this.addComponent(findComponent(id)));
@@ -38,17 +38,18 @@ export default class StockFlowGraph extends Graph {
 
     // Update a component. Call this in the middle of a batch update.
     public updateComponent(c: schema.FirebaseDataComponent<any>): void {
-        // TODO
+        const cell = this.getCellWithId(c.getId())!;
+        this.getRelevantPresentation(c).updateComponent(c, cell, this);
     }
 
     // Delete a component. Call this in the middle of a batch update.
     public deleteComponent(id: string): void {
-        const component = this.getCellWithId(id);
-        if (!component) {
+        const cell = this.getCellWithId(id);
+        if (!cell) {
             throw new Error("Unable to find component with ID " + id);
         }
         else {
-            this.removeCells([component]);
+            this.removeCells([cell]);
         }
     }
 

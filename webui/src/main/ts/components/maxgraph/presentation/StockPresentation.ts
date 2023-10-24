@@ -16,11 +16,23 @@ export default class StockPresentation
     public addComponent(
         stock: schema.StockFirebaseComponent,
         graph: StockFlowGraph
-    ) {
+    ): void {
         graph.insertVertex(this.getGraphArgs(
             graph.getDefaultParent(),
             stock
         ));
+    }
+
+    public updateComponent(
+        stock: schema.StockFirebaseComponent,
+        cell: Cell,
+        graph: StockFlowGraph
+    ): void {
+        const newGeo = cell.getGeometry()!.clone();
+        newGeo.x = stock.getData().x;
+        newGeo.y = stock.getData().y;
+        cell.setValue(stock.getData().text);
+        graph.getDataModel().setGeometry(cell, newGeo);
     }
 
     private getGraphArgs(
@@ -47,9 +59,17 @@ export default class StockPresentation
         };
     }
 
-    // Is the given stock firebase data up-to-date with the presentation info in
-    // the cell that represents it? Ignore any irrelevant data
     public isEqual(stock: schema.StockFirebaseComponent, cell: Cell): boolean {
-        return false; // TODO
+        const cpntText = stock.getData().text;
+        const cellText = cell.getValue();
+        const cpntX = stock.getData().x;
+        const cellX = cell.getGeometry()!.getPoint().x;
+        const cpntY = stock.getData().y;
+        const cellY = cell.getGeometry()!.getPoint().y;
+        return (
+            cpntText === cellText
+            && cpntX === cellX
+            && cpntY === cellY
+        );
     }
 }

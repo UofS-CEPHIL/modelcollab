@@ -181,7 +181,12 @@ export function createFirebaseDataComponent(id: string, data: any, idPrefix?: st
 
 //################################# Var / Param ##################################
 
-export interface TextComponentData extends FirebaseDataObject {
+export interface PointComponentData extends FirebaseDataObject {
+    x: number;
+    y: number;
+}
+
+export interface TextComponentData extends PointComponentData {
     x: number;
     y: number;
     text: string;
@@ -194,14 +199,29 @@ export interface NameValueComponentData extends TextComponentData {
     value: string;
 }
 
-export abstract class TextFirebaseComponent<DataType extends TextComponentData> extends FirebaseDataComponent<DataType> {
+export abstract class PointFirebaseComponent<DataType extends PointComponentData> extends FirebaseDataComponent<DataType> {
     constructor(id: string, data: DataType) {
         super(id, data);
     }
 
-    abstract getType(): ComponentType;
+    public abstract getType(): ComponentType;
 
-    abstract withData(d: TextComponentData): TextFirebaseComponent<DataType>;
+    public abstract withData(d: PointComponentData): PointFirebaseComponent<DataType>;
+
+    public withUpdatedLocation(dx: number, dy: number): PointFirebaseComponent<DataType> {
+        const oldData = this.getData();
+        return this.withData({...oldData, x: oldData.x + dx, y: oldData.y + dy});
+    }
+}
+
+export abstract class TextFirebaseComponent<DataType extends TextComponentData> extends PointFirebaseComponent<DataType> {
+    constructor(id: string, data: DataType) {
+        super(id, data);
+    }
+
+    public abstract getType(): ComponentType;
+
+    public abstract withData(d: TextComponentData): TextFirebaseComponent<DataType>;
 }
 
 export class SumVariableFirebaseComponent extends TextFirebaseComponent<TextComponentData> {
@@ -269,7 +289,7 @@ export class ConnectionFirebaseComponent extends FirebaseDataComponent<Connectio
 
 //#################################### Stock #####################################
 
-export interface StockComponentData extends FirebaseDataObject {
+export interface StockComponentData extends PointComponentData {
     x: number;              // x position on screen
     y: number;              // y position on screen
     text: string;           // text on screen
@@ -279,7 +299,7 @@ export interface StockComponentData extends FirebaseDataObject {
     initvalue: string;
 }
 
-export class StockFirebaseComponent extends FirebaseDataComponent<StockComponentData> {
+export class StockFirebaseComponent extends PointFirebaseComponent<StockComponentData> {
     constructor(id: string, data: StockComponentData) {
         super(id, data);
     }
@@ -339,12 +359,12 @@ export class FlowFirebaseComponent extends FirebaseDataComponent<FlowComponentDa
 
 //#################################### Cloud #####################################
 
-export interface CloudComponentData extends FirebaseDataObject {
+export interface CloudComponentData extends PointComponentData {
     x: number;
     y: number;
 }
 
-export class CloudFirebaseComponent extends FirebaseDataComponent<CloudComponentData> {
+export class CloudFirebaseComponent extends PointFirebaseComponent<CloudComponentData> {
     constructor(id: string, data: CloudComponentData) {
         super(id, data);
     }
@@ -368,14 +388,14 @@ export class CloudFirebaseComponent extends FirebaseDataComponent<CloudComponent
 
 //################################# Static Model #################################
 
-export interface StaticModelComponentData extends FirebaseDataObject {
+export interface StaticModelComponentData extends PointComponentData {
     x: number,
     y: number,
     color: string,
     modelId: string
 }
 
-export class StaticModelFirebaseComponent extends FirebaseDataComponent<StaticModelComponentData> {
+export class StaticModelFirebaseComponent extends PointFirebaseComponent<StaticModelComponentData> {
     getType(): ComponentType {
         return ComponentType.STATIC_MODEL;
     }

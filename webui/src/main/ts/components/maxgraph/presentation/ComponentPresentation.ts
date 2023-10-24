@@ -12,6 +12,11 @@ export default interface ComponentPresentation<
     // StockFlowGraph
     addComponent(component: T, graph: StockFlowGraph): void;
 
+    // Update an existing cell in the graph to match the given component. This
+    // should only be called in the middle of a batchUpdate() on the provided
+    // StockFlowGraph
+    updateComponent(component: T, cell: Cell, graph: StockFlowGraph): void;
+
     // Returns true if the given component contains all the same data as the
     // cell that represents it, ignoring any irrelevant values
     isEqual(component: T, cell: Cell): boolean;
