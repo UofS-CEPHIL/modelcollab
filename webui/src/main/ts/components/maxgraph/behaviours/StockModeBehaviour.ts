@@ -1,6 +1,6 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
-import { DefaultBehaviours } from "./DefaultBehaviours";
+import DefaultBehaviours from "./DefaultBehaviours";
 
 // Stock mode listens for background clicks and adds stocks
 export class StockModeBehaviour extends DefaultBehaviours {

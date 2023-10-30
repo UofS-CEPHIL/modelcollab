@@ -1,7 +1,7 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Component, createRef, Fragment, ReactElement, RefObject } from 'react';
 import CanvasToolbar from './CanvasToolbar';
-import { Cell, RubberBandHandler } from '@maxgraph/core';
+import { Cell, InternalEvent, RubberBandHandler } from '@maxgraph/core';
 import UserControls from './UserControls';
 import { UiMode } from '../../UiMode';
 import StockFlowGraph from "./StockFlowGraph";
@@ -47,6 +47,8 @@ export default class CanvasScreen extends Component<Props, State> {
         // Set up the graph only if the ref has been created but the graph
         // hasn't been created yet
         if (this.graphRef.current && !this.graph) {
+            // Allow right-click on canvas
+            InternalEvent.disableContextMenu(this.graphRef.current);
             this.graph = new StockFlowGraph(this.graphRef.current);
             this.actions = new DiagramActions(
                 this.props.firebaseDataModel,

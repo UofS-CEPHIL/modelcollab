@@ -26,12 +26,21 @@ export default class StockFlowGraph extends Graph {
         const updates = this.findComponentUpdates(newComponents, oldComponents);
         const findComponent = (id: string) =>
             newComponents.find(c => c.getId() === id)!;
+        const isEdge = (cpt: schema.FirebaseDataComponent<any>) =>
+            [schema.ComponentType.CONNECTION, schema.ComponentType.FLOW]
+                .includes(cpt.getType());
+
+        const toAdd = updates.newIds.map(findComponent);
+        const verticesToAdd = toAdd.filter(c => !isEdge(c));
+        const edgesToAdd = toAdd.filter(c => isEdge(c));
+        const toUpdate = updates.updatedIds.map(findComponent);
 
         this.batchUpdate(() => {
-            updates.newIds.forEach(id => this.addComponent(findComponent(id)));
-            updates.updatedIds.forEach(
-                id => this.updateComponent(findComponent(id))
-            );
+            // Add vertices first so that we don't end up in a situation where
+            // and edge can't find its source or target
+            verticesToAdd.forEach(v => this.addComponent(v));
+            edgesToAdd.forEach(e => this.addComponent(e));
+            toUpdate.forEach(c => this.updateComponent(c));
             updates.deletedIds.forEach(id => this.deleteComponent(id));
         });
     }
@@ -56,6 +65,10 @@ export default class StockFlowGraph extends Graph {
     // Add a new component. Call this in the middle of a batch update.
     public addComponent(c: schema.FirebaseDataComponent<any>): void {
         this.getRelevantPresentation(c).addComponent(c, this);
+    }
+
+    public getCellWithId(id: string): Cell | undefined {
+        return this.getDataModel().cells![id];
     }
 
     private findComponentUpdates(
@@ -114,9 +127,5 @@ export default class StockFlowGraph extends Graph {
                     "No available presentation for type: " + component.getType()
                 );
         }
-    }
-
-    private getCellWithId(id: string): Cell | undefined {
-        return this.getDataModel().cells![id];
     }
 }

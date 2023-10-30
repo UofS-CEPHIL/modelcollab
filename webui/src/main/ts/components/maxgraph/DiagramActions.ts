@@ -60,23 +60,31 @@ export default class DiagramActions {
     }
 
     public moveComponents(
-        components: schema.FirebaseDataComponent<any>[],
+        updatedComponents: schema.FirebaseDataComponent<any>[],
+        clouds: Cell[],
         dx: number,
         dy: number
     ): void {
         const allComponents = this.getCurrentComponents();
-        const vertices = components.filter(
+        const verticesToUpdate = updatedComponents.filter(
             c => c instanceof schema.PointFirebaseComponent
         );
+        const updatedFlows = clouds.length > 0
+            ? this.moveFlowClouds(clouds, allComponents, dx, dy)
+            : allComponents.filter(c => c instanceof schema.FlowFirebaseComponent);
+
         const others = allComponents.filter(
-            c => !vertices.find(v => v.getId() === c.getId())
+            c => !(
+                verticesToUpdate.find(v => v.getId() === c.getId())
+                || updatedFlows.find(f => f.getId() === c.getId())
+            )
         );
-        const updatedVerts = vertices.map(v =>
+        const updatedVertices = verticesToUpdate.map(v =>
             (v as schema.PointFirebaseComponent<any>).withUpdatedLocation(dx, dy)
         );
         this.fbData.setAllComponents(
             this.sessionId,
-            [...updatedVerts, ...others]
+            [...updatedVertices, ...updatedFlows, ...others]
         );
     }
 
@@ -101,6 +109,58 @@ export default class DiagramActions {
         this.fbData.removeComponent(this.sessionId, component.getId());
     }
 
+    private moveFlowClouds(
+        clouds: Cell[],
+        allComponents: schema.FirebaseDataComponent<any>[],
+        dx: number,
+        dy: number
+    ): schema.FlowFirebaseComponent[] {
+
+        interface CloudUpdate {
+            source: boolean,
+            flowId: string,
+            newX: number,
+            newY: number
+        };
+
+        function makePointString(x: number, y: number): string {
+            return `p${x},${y}`;
+        }
+
+        function makeCloudUpdate(cloud: Cell): CloudUpdate {
+            const id = cloud.getId()!;
+            const idsplit = id.split('.');
+            const geo = cloud.getGeometry()!;
+            return {
+                source: idsplit[1] === "from",
+                flowId: idsplit[0],
+                newX: geo.x,
+                newY: geo.y
+            };
+        }
+
+        const updates = clouds.map(makeCloudUpdate);
+        const updatedFlows = allComponents
+            .filter(c => c instanceof schema.FlowFirebaseComponent)
+            .map(c => c.clone());
+        for (const update of updates) {
+            const idx = updatedFlows.findIndex(f => f.getId() === update.flowId);
+            if (idx < 0) throw new Error("Couldn't find flow " + update.flowId);
+            const oldData = updatedFlows[idx].getData();
+            const pointString = makePointString(update.newX, update.newY);
+            var newData;
+            if (update.source) {
+                newData = { ...oldData, from: pointString };
+            }
+            else {
+                newData = { ...oldData, to: pointString };
+            }
+            updatedFlows[idx] = updatedFlows[idx].withData(newData);
+        }
+
+        return updatedFlows;
+    }
+
     private onFbDataChanged(
         newComponents: schema.FirebaseDataComponent<any>[]
     ): void {
@@ -113,10 +173,15 @@ export default class DiagramActions {
         const dx = event.properties["dx"];
         const dy = event.properties["dy"];
         const cells: Cell[] = event.properties["cells"];
+
+        const isCloudId = (id: string) => id.includes('.');
+        const clouds = cells.filter(cell => isCloudId(cell.getId()!));
+
         const components = cells
+            .filter(c => !isCloudId(c.getId()!))
             .map(c => c.getId()!)
             .map(id => this.getComponentWithId(id)!);
-        this.moveComponents(components, dx, dy);
+        this.moveComponents(components, clouds, dx, dy);
     }
 
     private getComponentWithId(

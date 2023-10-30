@@ -40,8 +40,13 @@ export abstract class FirebaseDataComponent<DataType extends FirebaseDataObject>
         else return idSplit.slice(0, idSplit.length - 1).join('/');
     }
 
+    public clone(): FirebaseDataComponent<DataType> {
+        return this.withId(this.getId());
+    }
+
     abstract getType(): ComponentType;
     abstract withData(d: DataType): FirebaseDataComponent<DataType>;
+    abstract withId(id: string): FirebaseDataComponent<DataType>;
 }
 
 // Represents any object that acts as the "data" field for any FirebaseDataComponent
@@ -208,6 +213,8 @@ export abstract class PointFirebaseComponent<DataType extends PointComponentData
 
     public abstract withData(d: PointComponentData): PointFirebaseComponent<DataType>;
 
+    public abstract withId(id: string): PointFirebaseComponent<DataType>;
+
     public withUpdatedLocation(dx: number, dy: number): PointFirebaseComponent<DataType> {
         const oldData = this.getData();
         return this.withData({...oldData, x: oldData.x + dx, y: oldData.y + dy});
@@ -222,6 +229,8 @@ export abstract class TextFirebaseComponent<DataType extends TextComponentData> 
     public abstract getType(): ComponentType;
 
     public abstract withData(d: TextComponentData): TextFirebaseComponent<DataType>;
+
+    public abstract withId(id: string): TextFirebaseComponent<DataType>;
 }
 
 export class SumVariableFirebaseComponent extends TextFirebaseComponent<TextComponentData> {
@@ -231,6 +240,10 @@ export class SumVariableFirebaseComponent extends TextFirebaseComponent<TextComp
 
     public withData(d: TextComponentData): SumVariableFirebaseComponent {
         return new SumVariableFirebaseComponent(this.getId(), d);
+    }
+
+    public withId(id: string): SumVariableFirebaseComponent {
+        return new SumVariableFirebaseComponent(id, Object.assign({}, this.getData()));
     }
 }
 
@@ -242,6 +255,10 @@ export class ParameterFirebaseComponent extends TextFirebaseComponent<NameValueC
     public withData(d: NameValueComponentData): ParameterFirebaseComponent {
         return new ParameterFirebaseComponent(this.getId(), d);
     }
+
+    public withId(id: string): ParameterFirebaseComponent {
+        return new ParameterFirebaseComponent(id, Object.assign({}, this.getData()));
+    }
 }
 
 export class VariableFirebaseComponent extends TextFirebaseComponent<NameValueComponentData> {
@@ -251,6 +268,10 @@ export class VariableFirebaseComponent extends TextFirebaseComponent<NameValueCo
 
     public withData(d: NameValueComponentData): VariableFirebaseComponent {
         return new VariableFirebaseComponent(this.getId(), d);
+    }
+
+    public withId(id: string): VariableFirebaseComponent {
+        return new VariableFirebaseComponent(id, Object.assign({}, this.getData()));
     }
 }
 
@@ -268,12 +289,16 @@ export class ConnectionFirebaseComponent extends FirebaseDataComponent<Connectio
         super(id, data);
     }
 
-    getType(): ComponentType {
+    public getType(): ComponentType {
         return ComponentType.CONNECTION;
     }
 
-    withData(d: ConnectionComponentData): ConnectionFirebaseComponent {
+    public withData(d: ConnectionComponentData): ConnectionFirebaseComponent {
         return new ConnectionFirebaseComponent(this.getId(), d);
+    }
+
+    public withId(id: string): ConnectionFirebaseComponent {
+        return new ConnectionFirebaseComponent(id, Object.assign({}, this.getData()));
     }
 
     static toConnectionComponentData(data: any): ConnectionComponentData {
@@ -299,17 +324,21 @@ export interface StockComponentData extends PointComponentData {
     initvalue: string;
 }
 
-export class StockFirebaseComponent extends PointFirebaseComponent<StockComponentData> {
+export class StockFirebaseComponent extends TextFirebaseComponent<StockComponentData> {
     constructor(id: string, data: StockComponentData) {
         super(id, data);
     }
 
-    getType(): ComponentType {
+    public getType(): ComponentType {
         return ComponentType.STOCK;
     }
 
-    withData(d: StockComponentData): StockFirebaseComponent {
+    public withData(d: StockComponentData): StockFirebaseComponent {
         return new StockFirebaseComponent(this.getId(), d);
+    }
+
+    public withId(id: string): StockFirebaseComponent {
+        return new StockFirebaseComponent(id, Object.assign({}, this.getData()));
     }
 
     static toStockComponentData(data: any): StockComponentData {
@@ -337,12 +366,16 @@ export class FlowFirebaseComponent extends FirebaseDataComponent<FlowComponentDa
         super(id, data);
     }
 
-    getType(): ComponentType {
+    public getType(): ComponentType {
         return ComponentType.FLOW;
     }
 
-    withData(d: FlowComponentData) {
+    public withData(d: FlowComponentData) {
         return new FlowFirebaseComponent(this.getId(), d);
+    }
+
+    public withId(id: string): FlowFirebaseComponent {
+        return new FlowFirebaseComponent(id, Object.assign({}, this.getData()));
     }
 
     static toFlowComponentData: (d: any) => FlowComponentData = (data: any) => {
@@ -369,12 +402,16 @@ export class CloudFirebaseComponent extends PointFirebaseComponent<CloudComponen
         super(id, data);
     }
 
-    getType(): ComponentType {
+    public getType(): ComponentType {
         return ComponentType.CLOUD;
     }
 
-    withData(d: CloudComponentData) {
+    public withData(d: CloudComponentData) {
         return new CloudFirebaseComponent(this.getId(), d);
+    }
+
+    public withId(id: string): CloudFirebaseComponent {
+        return new CloudFirebaseComponent(id, Object.assign({}, this.getData()));
     }
 
     public static toCloudComponentData(data: any): CloudComponentData {
@@ -396,12 +433,16 @@ export interface StaticModelComponentData extends PointComponentData {
 }
 
 export class StaticModelFirebaseComponent extends PointFirebaseComponent<StaticModelComponentData> {
-    getType(): ComponentType {
+    public getType(): ComponentType {
         return ComponentType.STATIC_MODEL;
     }
 
-    withData(data: StaticModelComponentData): StaticModelFirebaseComponent {
+    public withData(data: StaticModelComponentData): StaticModelFirebaseComponent {
         return new StaticModelFirebaseComponent(this.getId(), data);
+    }
+
+    public withId(id: string): StaticModelFirebaseComponent {
+        return new StaticModelFirebaseComponent(id, Object.assign({}, this.getData()));
     }
 }
 
@@ -413,12 +454,16 @@ export interface SubstitutionComponentData extends FirebaseDataObject {
 }
 
 export class SubstitutionFirebaseComponent extends FirebaseDataComponent<SubstitutionComponentData> {
-    getType(): ComponentType {
+    public getType(): ComponentType {
         return ComponentType.SUBSTITUTION;
     }
 
-    withData(data: SubstitutionComponentData): SubstitutionFirebaseComponent {
+    public withData(data: SubstitutionComponentData): SubstitutionFirebaseComponent {
         return new SubstitutionFirebaseComponent(this.getId(), data);
+    }
+
+    public withId(id: string): SubstitutionFirebaseComponent {
+        return new SubstitutionFirebaseComponent(id, Object.assign({}, this.getData()));
     }
 }
 
@@ -430,11 +475,15 @@ export interface ScenarioComponentData extends FirebaseDataObject {
 }
 
 export class ScenarioFirebaseComponent extends FirebaseDataComponent<ScenarioComponentData> {
-    getType(): ComponentType {
+    public getType(): ComponentType {
         return ComponentType.SCENARIO;
     }
 
-    withData(data: ScenarioComponentData): ScenarioFirebaseComponent {
+    public withData(data: ScenarioComponentData): ScenarioFirebaseComponent {
         return new ScenarioFirebaseComponent(this.getId(), data);
+    }
+
+    public withId(id: string): ScenarioFirebaseComponent {
+        return new ScenarioFirebaseComponent(id, Object.assign({}, this.getData()));
     }
 }

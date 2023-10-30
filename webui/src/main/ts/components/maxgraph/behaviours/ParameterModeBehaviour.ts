@@ -1,7 +1,6 @@
-import { Cell, VertexParameters } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
-import { DefaultBehaviours } from "./DefaultBehaviours";
+import DefaultBehaviours from "./DefaultBehaviours";
 
 export class ParameterModeBehaviour extends DefaultBehaviours {
     public canvasClicked(x: number, y: number): void {

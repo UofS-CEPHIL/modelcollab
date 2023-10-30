@@ -1,10 +1,10 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import StockFlowGraph from "../StockFlowGraph";
-import ComponentPresentation from "./ComponentPresentation";
+import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class StockPresentation
-    implements ComponentPresentation<schema.StockFirebaseComponent>
+    extends TextComponentPresentation<schema.StockFirebaseComponent>
 {
     public static readonly FILL_COLOUR = "White"
     public static readonly STROKE_COLOUR = "Black"
@@ -21,18 +21,6 @@ export default class StockPresentation
             graph.getDefaultParent(),
             stock
         ));
-    }
-
-    public updateComponent(
-        stock: schema.StockFirebaseComponent,
-        cell: Cell,
-        graph: StockFlowGraph
-    ): void {
-        const newGeo = cell.getGeometry()!.clone();
-        newGeo.x = stock.getData().x;
-        newGeo.y = stock.getData().y;
-        cell.setValue(stock.getData().text);
-        graph.getDataModel().setGeometry(cell, newGeo);
     }
 
     private getGraphArgs(
@@ -57,19 +45,5 @@ export default class StockPresentation
                 fontColor: StockPresentation.STROKE_COLOUR
             }
         };
-    }
-
-    public isEqual(stock: schema.StockFirebaseComponent, cell: Cell): boolean {
-        const cpntText = stock.getData().text;
-        const cellText = cell.getValue();
-        const cpntX = stock.getData().x;
-        const cellX = cell.getGeometry()!.getPoint().x;
-        const cpntY = stock.getData().y;
-        const cellY = cell.getGeometry()!.getPoint().y;
-        return (
-            cpntText === cellText
-            && cpntX === cellX
-            && cpntY === cellY
-        );
     }
 }

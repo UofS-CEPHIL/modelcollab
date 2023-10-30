@@ -1,7 +1,7 @@
-import { Cell, EdgeParameters, VertexParameters } from "@maxgraph/core";
+import { Cell } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
-import { DefaultBehaviours } from "./DefaultBehaviours";
+import DefaultBehaviours from "./DefaultBehaviours";
 
 export interface Point { x: number, y: number };
 
@@ -9,116 +9,68 @@ export default class FlowModeBehaviour extends DefaultBehaviours {
 
     private firstClick: Cell | Point | null = null;
 
-    public static readonly NAME = "Flow"
-    public static readonly FILL_COLOUR = "White"
-    public static readonly STROKE_COLOUR = "Black"
-    public static readonly STROKE_WIDTH = 1.5
-    public static readonly DEFAULT_FONT_SIZE = 14;
-
     public canvasClicked(x: number, y: number): void {
-        if (this.firstClick) {
-            this.addComponents(this.firstClick, { x, y });
+        // Only allow flows if at least one item is a cell
+        if (this.firstClick instanceof Cell) {
+            this.addFlow(this.firstClick, { x, y });
         }
         else {
             this.firstClick = { x, y };
         }
     }
 
+    public canvasRightClicked(_: number, __: number) {
+        // On right click, forget the last selected cell/point
+        this.firstClick = null;
+    }
+
     public selectionChanged(selection: Cell[]): void {
-        if (selection.length == 1) {
+        if (selection.length == 1 && this.isCellStock(selection[0])) {
+            console.log('stock')
             if (this.firstClick) {
-                this.addComponents(this.firstClick, selection[0]);
+                if (!this.isCellAlreadySelected(selection[0])) {
+                    this.addFlow(this.firstClick, selection[0]);
+                }
             }
             else {
                 this.firstClick = selection[0];
             }
         }
-        // If the user selects a group, forget the last single cell that was
-        // selected
+        // If the user selects a group, forget the last selected cell/point
         else if (selection.length > 1) {
             this.firstClick = null;
         }
+        console.log("firstclick = " + this.firstClick);
     }
 
-    private addComponents(source: Cell | Point, target: Cell | Point) {
+    private isCellAlreadySelected(cell: Cell): boolean {
+        return this.firstClick instanceof Cell
+            && this.firstClick.getId() === cell.getId()
+    }
+
+    private isCellStock(cell: Cell): boolean {
+        const cellId = cell.getId();
+        const components = this.getFirebaseState();
+        const match = components.find(c => c.getId() === cellId);
+        return match instanceof schema.StockFirebaseComponent;
+    }
+
+    private addFlow(fr: Cell | Point, to: Cell | Point) {
+
+        function getStringRepresentation(c: Cell | Point): string {
+            // TODO store this logic with Firebase stuff
+            return c instanceof Cell ? c.getId()! : `p${c.x},${c.y}`;
+        }
+
         this.firstClick = null;
-        this.getGraph().batchUpdate(() => {
-            if (!(source instanceof Cell)) {
-                source = this.getGraph().insertVertex(
-                    FlowModeBehaviour.makeCloudArgs(
-                        this.getGraph().getDefaultParent(),
-                        source.x,
-                        source.y
-                    )
-                );
-            }
-            if (!(target instanceof Cell)) {
-                target = this.getGraph().insertVertex(
-                    FlowModeBehaviour.makeCloudArgs(
-                        this.getGraph().getDefaultParent(),
-                        target.x,
-                        target.y
-                    )
-                );
-            }
+        var fromId: string = getStringRepresentation(fr);
+        var toId: string = getStringRepresentation(to);
 
-            const flow = new schema.FlowFirebaseComponent(
-                IdGenerator.generateUniqueId(this.getFirebaseState()),
-                { text: "", equation: "", from: "", to: "" }
-            );
-
-            this.getGraph().insertEdge(
-                FlowModeBehaviour.makeFlowArgs(
-                    this.getGraph().getDefaultParent(),
-                    source,
-                    target
-                )
-            );
-        });
-    }
-
-    private static makeFlowArgs(
-        parent: Cell,
-        fr: Cell,
-        to: Cell
-    ): EdgeParameters {
-        return {
-            parent,
-            value: "flow",
-            source: fr,
-            target: to,
-            style: {
-                shape: "arrowConnector",
-                strokeColor: FlowModeBehaviour.STROKE_COLOUR,
-                strokeWidth: FlowModeBehaviour.STROKE_WIDTH,
-                fillColor: FlowModeBehaviour.FILL_COLOUR,
-                fontColor: FlowModeBehaviour.STROKE_COLOUR,
-                fontSize: FlowModeBehaviour.DEFAULT_FONT_SIZE,
-                fontStyle: 1,
-                curved: false,
-                bendable: true,
-                edgeStyle: 'elbowEdgeStyle',
-            }
-        };
-    }
-
-    private static makeCloudArgs(
-        parent: Cell,
-        x: number,
-        y: number
-    ): VertexParameters {
-        return {
-            parent,
-            value: "",
-            x,
-            y,
-            width: FlowModeBehaviour.CLOUD_DEFAULT_WIDTH_PX,
-            height: FlowModeBehaviour.CLOUD_DEFAULT_HEIGHT_PX,
-            style: {
-                shape: "cloud",
-                fillColor: FlowModeBehaviour.FILL_COLOUR,
-                strokeColor: FlowModeBehaviour.STROKE_COLOUR
-            }
-        };
+        const newFlow = new schema.FlowFirebaseComponent(
+            IdGenerator.generateUniqueId(this.getFirebaseState()),
+            { from: fromId, to: toId, text: "Flow", equation: "" }
+        );
+        this.getActions().addComponent(newFlow);
+        this.getGraph().setSelectionCell(null);
     }
 }

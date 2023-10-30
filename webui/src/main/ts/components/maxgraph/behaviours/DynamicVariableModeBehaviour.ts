@@ -1,6 +1,6 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
-import { DefaultBehaviours } from "./DefaultBehaviours";
+import DefaultBehaviours from "./DefaultBehaviours";
 
 export default class DynamicVariableModeBehaviour extends DefaultBehaviours {
 

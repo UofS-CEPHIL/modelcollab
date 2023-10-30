@@ -1,11 +1,12 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import StockFlowGraph from "../StockFlowGraph";
-import ComponentPresentation from "./ComponentPresentation";
+import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class DynamicVariablePresentation
-    implements ComponentPresentation<schema.VariableFirebaseComponent>
+    extends TextComponentPresentation<schema.VariableFirebaseComponent>
 {
+
     public static readonly FILL_COLOUR = "White"
     public static readonly STROKE_COLOUR = "Black"
     public static readonly DEFAULT_WIDTH_PX = 80
@@ -43,14 +44,5 @@ export default class DynamicVariablePresentation
                 fontStyle: 3
             }
         };
-    }
-
-    // Is the given stock firebase data up-to-date with the presentation info in
-    // the cell that represents it? Ignore any irrelevant data
-    public isEqual(
-        stock: schema.VariableFirebaseComponent,
-        cell: Cell
-    ): boolean {
-        return false; // TODO
     }
 }

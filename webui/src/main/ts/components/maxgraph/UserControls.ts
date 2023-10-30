@@ -143,17 +143,33 @@ export default class UserControls {
         );
     }
 
+    private isRightClick(event: EventObject): boolean {
+        return event.getProperty("event").which === 3;
+    }
+
+    private getClickLocation(event: EventObject): { x: number, y: number } {
+        return {
+            x: event.getProperty("event").layerX,
+            y: event.getProperty("event").layerY
+        }
+    }
+
     private setupModeBehaviours(): void {
         // Canvas click
         this.graph.addListener(
             InternalEvent.CLICK,
             (_: EventTarget, event: EventObject) => {
-                // No cell indicates click on background
-                if (!event.getProperty("cell")) {
-                    this.modeBehaviour.canvasClicked(
-                        event.getProperty("event").layerX,
-                        event.getProperty("event").layerY
-                    );
+                const pos = this.getClickLocation(event);
+                if (this.isRightClick(event)) {
+                    this.modeBehaviour.canvasRightClicked(pos.x, pos.y);
+                }
+                else {
+                    // No cell indicates click on background.
+                    // We ignore clicks on cells because that behaviour happens
+                    // through the selectionChanged listener.
+                    if (!event.getProperty("cell")) {
+                        this.modeBehaviour.canvasClicked(pos.x, pos.y);
+                    }
                 }
             }
         );
