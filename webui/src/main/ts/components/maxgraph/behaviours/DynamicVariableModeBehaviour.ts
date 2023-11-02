@@ -1,8 +1,8 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
-import DefaultBehaviours from "./DefaultBehaviours";
+import DefaultBehaviour from "./DefaultBehaviour";
 
-export default class DynamicVariableModeBehaviour extends DefaultBehaviours {
+export default class DynamicVariableModeBehaviour extends DefaultBehaviour {
 
     public static readonly FILL_COLOUR = "White"
     public static readonly STROKE_COLOUR = "Black"

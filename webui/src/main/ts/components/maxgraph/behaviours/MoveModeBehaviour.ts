@@ -1,4 +1,4 @@
-import DefaultBehaviours from "./DefaultBehaviours";
+import DefaultBehaviour from "./DefaultBehaviour";
 
 // Move mode is just defaults
-export class MoveModeBehaviour extends DefaultBehaviours { }
+export class MoveModeBehaviour extends DefaultBehaviour { }

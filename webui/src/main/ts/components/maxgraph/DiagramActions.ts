@@ -70,7 +70,7 @@ export default class DiagramActions {
             c => c instanceof schema.PointFirebaseComponent
         );
         const updatedFlows = clouds.length > 0
-            ? this.moveFlowClouds(clouds, allComponents, dx, dy)
+            ? this.moveFlowClouds(clouds, allComponents)
             : allComponents.filter(c => c instanceof schema.FlowFirebaseComponent);
 
         const others = allComponents.filter(
@@ -97,9 +97,13 @@ export default class DiagramActions {
         if (selectedComponents.length > 0) {
             const selectedIds = selectedComponents.map(c => c.getId()!);
             const allComponents = this.getCurrentComponents();
+            const orphans = this.findOrphanedArrowIds(
+                selectedIds,
+                allComponents
+            );
             this.fbData.removeComponents(
                 this.sessionId,
-                selectedIds,
+                [...selectedIds, ...orphans],
                 allComponents
             );
         }
@@ -111,9 +115,7 @@ export default class DiagramActions {
 
     private moveFlowClouds(
         clouds: Cell[],
-        allComponents: schema.FirebaseDataComponent<any>[],
-        dx: number,
-        dy: number
+        allComponents: schema.FirebaseDataComponent<any>[]
     ): schema.FlowFirebaseComponent[] {
 
         interface CloudUpdate {
@@ -180,13 +182,43 @@ export default class DiagramActions {
         const components = cells
             .filter(c => !isCloudId(c.getId()!))
             .map(c => c.getId()!)
-            .map(id => this.getComponentWithId(id)!);
+            .map(id => this.getComponentWithIdOrThrow(id));
         this.moveComponents(components, clouds, dx, dy);
     }
 
     private getComponentWithId(
-        id: string
+        id: string,
+        currentComponents?: schema.FirebaseDataComponent<any>[]
     ): schema.FirebaseDataComponent<any> | undefined {
-        return this.getCurrentComponents().find(c => c.getId() === id);
+        if (!currentComponents) currentComponents = this.getCurrentComponents();
+        return currentComponents.find(c => c.getId() === id);
+    }
+
+    private getComponentWithIdOrThrow(
+        id: string,
+        currentComponents?: schema.FirebaseDataComponent<any>[]
+    ): schema.FirebaseDataComponent<any> {
+        const ret = this.getComponentWithId(id, currentComponents);
+        if (!ret) throw new Error("Can't find component with id " + id);
+        return ret;
+    }
+
+    private findOrphanedArrowIds(
+        deletedIds: string[],
+        allComponents: schema.FirebaseDataComponent<any>[]
+    ): string[] {
+        function isArrow(c: schema.FirebaseDataComponent<any>): boolean {
+            return [schema.ComponentType.CONNECTION, schema.ComponentType.FLOW]
+                .includes(c.getType());
+        }
+        function isOrphaned(c: schema.FirebaseDataComponent<any>): boolean {
+            return deletedIds.includes(c.getData().from)
+                || deletedIds.includes(c.getData().to);
+        }
+
+        return allComponents
+            .filter(isArrow)
+            .filter(isOrphaned)
+            .map(c => c.getId());
     }
 }

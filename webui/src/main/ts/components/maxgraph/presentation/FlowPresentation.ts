@@ -19,10 +19,29 @@ export default class FlowPresentation
         graph: StockFlowGraph
     ): void {
 
-        var source: Cell;
-        var target: Cell;
-        if (this.isPoint(component.getData().from)) {
-            // Source is a point not a stock. Add a cloud there
+        var source: Cell | undefined = undefined;
+        var target: Cell | undefined = undefined;
+
+        // First make sure that we can find the source and target components
+        if (!this.isPoint(component.getData().from)) {
+            source = graph.getCellWithId(component.getData().from);
+            if (!source) {
+                throw new Error(
+                    "Unable to find source with id " + component.getData().from
+                );
+            }
+        }
+        if (!this.isPoint(component.getData().to)) {
+            target = graph.getCellWithId(component.getData().to);
+            if (!target) {
+                throw new Error(
+                    "Unable to find target with id " + component.getData().to
+                );
+            }
+        }
+
+        // Create clouds if necessary
+        if (!source) {
             const point = this.extractPoint(component.getData().from);
             source = graph.insertVertex(
                 this.makeCloudArgs(
@@ -33,12 +52,7 @@ export default class FlowPresentation
                 )
             );
         }
-        else {
-            source = graph.getCellWithId(component.getData().from)!;
-        }
-
-        if (this.isPoint(component.getData().to)) {
-            // Target is a point not a stock. Add a cloud there
+        if (!target) {
             const point = this.extractPoint(component.getData().to);
             target = graph.insertVertex(
                 this.makeCloudArgs(
@@ -48,9 +62,6 @@ export default class FlowPresentation
                     this.makeCloudId(component.getId(), false)
                 )
             );
-        }
-        else {
-            target = graph.getCellWithId(component.getData().to)!;
         }
 
         graph.insertEdge(
@@ -63,7 +74,7 @@ export default class FlowPresentation
         );
     }
 
-    updateComponent(
+    public updateComponent(
         flow: schema.FlowFirebaseComponent,
         cell: Cell,
         graph: StockFlowGraph

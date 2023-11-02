@@ -9,6 +9,7 @@ import SumVariableModeBehaviour from "./SumVariableModeBehaviour";
 import FlowModeBehaviour from "./FlowModeBehaviour";
 import DiagramActions from "../DiagramActions";
 import StockFlowGraph from "../StockFlowGraph";
+import { ConnectModeBehaviour } from "./ConnectModeBehaviour";
 
 // This class is basically just a map between UI modes and their associated
 // behaviour classes. This was originally a static method on ModeBehaviour but
@@ -22,17 +23,33 @@ export default class BehaviourGetter {
     ): ModeBehaviour {
         switch (mode) {
             case UiMode.MOVE:
-                return new MoveModeBehaviour(graph, actions, getFirebaseState);
+                return new MoveModeBehaviour(
+                    graph, actions, getFirebaseState
+                );
             case UiMode.STOCK:
-                return new StockModeBehaviour(graph, actions, getFirebaseState);
+                return new StockModeBehaviour(
+                    graph, actions, getFirebaseState
+                );
             case UiMode.PARAM:
-                return new ParameterModeBehaviour(graph, actions, getFirebaseState);
+                return new ParameterModeBehaviour(
+                    graph, actions, getFirebaseState
+                );
             case UiMode.DYN_VARIABLE:
-                return new DynamicVariableModeBehaviour(graph, actions, getFirebaseState);
+                return new DynamicVariableModeBehaviour(
+                    graph, actions, getFirebaseState
+                );
             case UiMode.SUM_VARIABLE:
-                return new SumVariableModeBehaviour(graph, actions, getFirebaseState);
+                return new SumVariableModeBehaviour(
+                    graph, actions, getFirebaseState
+                );
             case UiMode.FLOW:
-                return new FlowModeBehaviour(graph, actions, getFirebaseState);
+                return new FlowModeBehaviour(
+                    graph, actions, getFirebaseState
+                );
+            case UiMode.CONNECT:
+                return new ConnectModeBehaviour(
+                    graph, actions, getFirebaseState
+                );
             default:
                 throw new Error("Unknown mode: " + mode);
         }

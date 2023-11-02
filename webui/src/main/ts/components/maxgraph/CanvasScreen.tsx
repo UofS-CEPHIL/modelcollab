@@ -49,7 +49,10 @@ export default class CanvasScreen extends Component<Props, State> {
         if (this.graphRef.current && !this.graph) {
             // Allow right-click on canvas
             InternalEvent.disableContextMenu(this.graphRef.current);
-            this.graph = new StockFlowGraph(this.graphRef.current);
+            this.graph = new StockFlowGraph(
+                this.graphRef.current,
+                () => this.state.components
+            );
             this.actions = new DiagramActions(
                 this.props.firebaseDataModel,
                 this.graph,

@@ -1,8 +1,8 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import IdGenerator from "../../../IdGenerator";
-import DefaultBehaviours from "./DefaultBehaviours";
+import DefaultBehaviour from "./DefaultBehaviour";
 
-export class ParameterModeBehaviour extends DefaultBehaviours {
+export class ParameterModeBehaviour extends DefaultBehaviour {
     public canvasClicked(x: number, y: number): void {
         const newId = IdGenerator.generateUniqueId(this.getFirebaseState());
         const newParam = new schema.ParameterFirebaseComponent(

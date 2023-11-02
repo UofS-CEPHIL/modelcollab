@@ -6,6 +6,7 @@ import DynamicVariablePresentation from "./presentation/DynamicVariablePresentat
 import SumVariablePresentation from "./presentation/SumVariablePresentation";
 import ParameterPresentation from "./presentation/ParameterPresentation";
 import ComponentPresentation from "./presentation/ComponentPresentation";
+import ConnectionPresentation from "./presentation/ConnectionPresentation";
 
 // This class extends the default MaxGraph `Graph` class with functions to add
 // and style specific Stock & Flow diagram components
@@ -18,6 +19,17 @@ export default class StockFlowGraph extends Graph {
     private readonly dynvarPresentation = new DynamicVariablePresentation();
     private readonly paramPresentation = new ParameterPresentation();
     private readonly flowPresentation = new FlowPresentation();
+    private readonly connectionPresentation = new ConnectionPresentation();
+
+    private getFirebaseState: () => schema.FirebaseDataComponent<any>[];
+
+    public constructor(
+        container: HTMLElement,
+        getFirebaseState: () => schema.FirebaseDataComponent<any>[]
+    ) {
+        super(container);
+        this.getFirebaseState = getFirebaseState;
+    }
 
     public refreshComponents(
         newComponents: schema.FirebaseDataComponent<any>[],
@@ -42,6 +54,7 @@ export default class StockFlowGraph extends Graph {
             edgesToAdd.forEach(e => this.addComponent(e));
             toUpdate.forEach(c => this.updateComponent(c));
             updates.deletedIds.forEach(id => this.deleteComponent(id));
+            this.deleteOrphanedClouds(newComponents);
         });
     }
 
@@ -112,20 +125,49 @@ export default class StockFlowGraph extends Graph {
                 return this.stockPresentation;
             case schema.ComponentType.VARIABLE:
                 return this.dynvarPresentation;
-            // case schema.ComponentType.CLOUD:
-            //     return this.cloudPresentation;
             case schema.ComponentType.PARAMETER:
                 return this.paramPresentation;
             case schema.ComponentType.SUM_VARIABLE:
                 return this.sumvarPresentation;
             case schema.ComponentType.FLOW:
                 return this.flowPresentation;
-            // case schema.ComponentType.CONNECTION:
-            //     return this.connectionPresentation;
+            case schema.ComponentType.CONNECTION:
+                return this.connectionPresentation;
             default:
                 throw new Error(
                     "No available presentation for type: " + component.getType()
                 );
         }
     }
+
+    public isCellType(cell: Cell, cptType: schema.ComponentType): boolean {
+        const cellId = cell.getId()!;
+        const components = this.getFirebaseState();
+        const match = components.find(c => c.getId() === cellId);
+        if (!match) {
+            throw new Error(`Unable to find component with id ${cellId}`);
+        }
+        return match.getType() === cptType;
+    }
+
+    private isCloudId(id: string): boolean {
+        return id.includes('.');
+    }
+
+    private deleteOrphanedClouds(
+        components: schema.FirebaseDataComponent<any>[]
+    ): void {
+        function isCloudOrphan(cloud: Cell): boolean {
+            const flowid = cloud.getId()!.split('.')[0];
+            return !components.find(c => c.getId() === flowid);
+        }
+
+        const clouds = Object.values(this
+            .getDataModel()
+            .cells!
+        ).filter(c => this.isCloudId(c.getId()!));
+        const orphanedClouds = clouds.filter(isCloudOrphan);
+        this.removeCells(orphanedClouds);
+    }
+
 }
