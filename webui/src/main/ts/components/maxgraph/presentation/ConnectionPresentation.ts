@@ -30,6 +30,7 @@ export default class ConnectionPresentation
 
         graph.insertEdge(
             this.makeConnectionArgs(
+                component,
                 graph.getDefaultParent(),
                 source,
                 target,
@@ -38,16 +39,31 @@ export default class ConnectionPresentation
         );
     }
 
-    public updateComponent(component: schema.ConnectionFirebaseComponent, cell: Cell, graph: StockFlowGraph): void {
+    public updateCell(
+        component: schema.ConnectionFirebaseComponent,
+        cell: Cell,
+        graph: StockFlowGraph
+    ): void {
         // TODO
     }
 
-    public isEqual(component: schema.ConnectionFirebaseComponent, cell: Cell): boolean {
+    public isEqual(
+        component: schema.ConnectionFirebaseComponent,
+        cell: Cell
+    ): boolean {
         // TODO
         return true;
     }
 
+    public updateComponent(
+        component: schema.ConnectionFirebaseComponent,
+        cell: Cell
+    ): schema.ConnectionFirebaseComponent {
+        throw new Error("Not implemented");
+    }
+
     private makeConnectionArgs(
+        conn: schema.ConnectionFirebaseComponent,
         parent: Cell,
         fr: Cell,
         to: Cell,
@@ -56,7 +72,7 @@ export default class ConnectionPresentation
         return {
             parent,
             id,
-            value: "",
+            value: conn,
             source: fr,
             target: to,
             style: {

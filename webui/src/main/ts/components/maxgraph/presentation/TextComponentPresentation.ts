@@ -8,18 +8,25 @@ export default abstract class TextComponentPresentation
     <DataType extends schema.TextFirebaseComponent<any>>
     extends PointComponentPresentation<DataType>
 {
-    updateComponent(
+    public updateCell(
         component: DataType,
         cell: Cell,
         graph: StockFlowGraph
     ): void {
-        super.updateComponent(component, cell, graph);
-        cell.setValue(component.getData().text);
+        super.updateCell(component, cell, graph);
+        cell.setValue(component);
+    }
+
+    public updateComponent(component: DataType, cell: Cell): DataType {
+        const update: DataType = super.updateComponent(component, cell);
+        return update.withData(
+            { ...update.getData(), text: cell.getValue().getData().text }
+        ) as DataType;
     }
 
     public isEqual(component: DataType, cell: Cell): boolean {
         const cpntText = component.getData().text;
-        const cellText = cell.getValue();
+        const cellText = cell.getValue().getData().text;
         return super.isEqual(component, cell) && cpntText === cellText;
     }
 }

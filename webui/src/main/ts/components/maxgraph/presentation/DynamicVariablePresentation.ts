@@ -29,7 +29,7 @@ export default class DynamicVariablePresentation
     ): VertexParameters {
         return {
             parent,
-            value: dynvar.getData().text,
+            value: dynvar,
             id: dynvar.getId(),
             x: dynvar.getData().x,
             y: dynvar.getData().y,

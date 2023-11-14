@@ -1,4 +1,4 @@
-import { Cell, EventObject, InternalEvent } from "@maxgraph/core";
+import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, UndoableChange, ValueChange } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import StockFlowGraph from "./StockFlowGraph";
@@ -19,7 +19,8 @@ export default class DiagramActions {
     private fbData: FirebaseDataModel;
     private graph: StockFlowGraph;
     private sessionId: string;
-    private setCurrentComponents: (c: schema.FirebaseDataComponent<any>[]) => void;
+    private setCurrentComponents:
+        (c: schema.FirebaseDataComponent<any>[]) => void;
     private getCurrentComponents: () => schema.FirebaseDataComponent<any>[];
 
     public constructor(
@@ -71,7 +72,9 @@ export default class DiagramActions {
         );
         const updatedFlows = clouds.length > 0
             ? this.moveFlowClouds(clouds, allComponents)
-            : allComponents.filter(c => c instanceof schema.FlowFirebaseComponent);
+            : allComponents.filter(
+                c => c instanceof schema.FlowFirebaseComponent
+            );
 
         const others = allComponents.filter(
             c => !(
@@ -80,7 +83,8 @@ export default class DiagramActions {
             )
         );
         const updatedVertices = verticesToUpdate.map(v =>
-            (v as schema.PointFirebaseComponent<any>).withUpdatedLocation(dx, dy)
+            (v as schema.PointFirebaseComponent<any>)
+                .withUpdatedLocation(dx, dy)
         );
         this.fbData.setAllComponents(
             this.sessionId,
@@ -90,6 +94,43 @@ export default class DiagramActions {
 
     public updateComponent(component: schema.FirebaseDataComponent<any>): void {
         this.fbData.updateComponent(this.sessionId, component);
+    }
+
+    public handleChanges(changes: UndoableChange[]): void {
+        const updatedComponents = this.getCurrentComponents();
+        for (const change of changes) {
+            if (
+                change instanceof GeometryChange
+                || change instanceof ValueChange
+            ) {
+                const idx = this.getIdxWithIdOrThrow(
+                    change.cell.getId()!,
+                    updatedComponents
+                );
+                const oldComponent = updatedComponents[idx];
+                updatedComponents[idx] = this.graph
+                    .getRelevantPresentation(oldComponent)
+                    .updateComponent(oldComponent, change.cell);
+            }
+            else if (change instanceof ChildChange) {
+                const isDeletion: boolean = !change.parent;
+                const updated = change.child;
+                if (isDeletion) {
+                    const idx = this.getIdxWithIdOrThrow(
+                        updated.getId()!,
+                        updatedComponents
+                    );
+                    updatedComponents.splice(idx, 1);
+                }
+                else {
+                    updatedComponents.push(updated.getValue());
+                }
+            }
+            else {
+                console.error("Unknown change type occurred: " + change);
+            }
+        }
+        this.fbData.setAllComponents(this.sessionId, updatedComponents);
     }
 
     public deleteSelection(): void {
@@ -109,8 +150,13 @@ export default class DiagramActions {
         }
     }
 
-    public deleteComponent(component: schema.FirebaseDataComponent<any>): void {
-        this.fbData.removeComponent(this.sessionId, component.getId());
+    public deleteComponent(
+        component: schema.FirebaseDataComponent<any> | string
+    ): void {
+        if (component instanceof schema.FirebaseDataComponent<any>) {
+            component = component.getId();
+        }
+        this.fbData.removeComponent(this.sessionId, component);
     }
 
     private moveFlowClouds(
@@ -201,6 +247,19 @@ export default class DiagramActions {
         const ret = this.getComponentWithId(id, currentComponents);
         if (!ret) throw new Error("Can't find component with id " + id);
         return ret;
+    }
+
+    private getIdxWithIdOrThrow(
+        id: string,
+        components: schema.FirebaseDataComponent<any>[]
+    ): number {
+        const componentIdx = components.findIndex(c => c.getId() === id);
+        if (componentIdx < 0) {
+            throw new Error(
+                "Can't find component with id " + id
+            );
+        }
+        return componentIdx;
     }
 
     private findOrphanedArrowIds(

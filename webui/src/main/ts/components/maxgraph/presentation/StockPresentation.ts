@@ -30,7 +30,7 @@ export default class StockPresentation
         return {
             parent,
             id: stock.getId(),
-            value: stock.getData().text,
+            value: stock,
             x: stock.getData().x,
             y: stock.getData().y,
             width: StockPresentation.DEFAULT_WIDTH_PX,

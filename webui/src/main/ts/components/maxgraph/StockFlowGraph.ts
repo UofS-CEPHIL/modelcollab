@@ -29,18 +29,46 @@ export default class StockFlowGraph extends Graph {
     ) {
         super(container);
         this.getFirebaseState = getFirebaseState;
+        this.setAutoSizeCells(true);
+        // Override the cellLabelChanged function. For some reason, this
+        // is the way we have to do it...
+        this.cellLabelChanged = this.onCellLabelChanged;
+    }
+
+    // Override
+    // Returns the string representation of a particular cell
+    public convertValueToString(cell: Cell): string {
+        const component = cell.getValue() as schema.FirebaseDataComponent<any>;
+        return component.getData().text ?? "";
+    }
+
+    // Update the state when user changes a cell's text. For some reason we
+    // need to define this separately and set the override in the constructor.
+    // TS still confuses me sometimes.
+    private onCellLabelChanged(
+        cell: Cell,
+        newValue: string,
+        resize: boolean = false
+    ): void {
+        // TODO
+        throw new Error("Not implemented");
     }
 
     public refreshComponents(
         newComponents: schema.FirebaseDataComponent<any>[],
         oldComponents: schema.FirebaseDataComponent<any>[]
     ): void {
-        const updates = this.findComponentUpdates(newComponents, oldComponents);
         const findComponent = (id: string) =>
             newComponents.find(c => c.getId() === id)!;
         const isEdge = (cpt: schema.FirebaseDataComponent<any>) =>
             [schema.ComponentType.CONNECTION, schema.ComponentType.FLOW]
                 .includes(cpt.getType());
+        const updates = this.findComponentUpdates(newComponents, oldComponents);
+        if (
+            updates.newIds.length === 0
+            && updates.deletedIds.length === 0
+            && updates.updatedIds.length === 0
+        ) return;
 
         const toAdd = updates.newIds.map(findComponent);
         const verticesToAdd = toAdd.filter(c => !isEdge(c));
@@ -61,7 +89,7 @@ export default class StockFlowGraph extends Graph {
     // Update a component. Call this in the middle of a batch update.
     public updateComponent(c: schema.FirebaseDataComponent<any>): void {
         const cell = this.getCellWithId(c.getId())!;
-        this.getRelevantPresentation(c).updateComponent(c, cell, this);
+        this.getRelevantPresentation(c).updateCell(c, cell, this);
     }
 
     // Delete a component. Call this in the middle of a batch update.
@@ -117,7 +145,7 @@ export default class StockFlowGraph extends Graph {
         return { newIds, updatedIds, deletedIds };
     }
 
-    private getRelevantPresentation(
+    public getRelevantPresentation(
         component: schema.FirebaseDataComponent<any>
     ): ComponentPresentation<any> {
         switch (component.getType()) {

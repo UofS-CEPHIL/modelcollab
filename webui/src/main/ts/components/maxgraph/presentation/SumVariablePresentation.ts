@@ -29,7 +29,7 @@ export default class SumVariablePresentation
         return {
             parent,
             id: sumvar.getId(),
-            value: sumvar.getData().text,
+            value: sumvar,
             x: sumvar.getData().x,
             y: sumvar.getData().y,
             width: SumVariablePresentation.DEFAULT_WIDTH_PX,

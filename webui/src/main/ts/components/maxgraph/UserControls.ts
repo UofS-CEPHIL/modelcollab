@@ -2,8 +2,10 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import {
     Cell,
     EventObject,
+    GeometryChange,
     InternalEvent,
     KeyHandler,
+    UndoableChange,
     UndoManager
 } from "@maxgraph/core";
 import { UiMode } from "../../UiMode";
@@ -63,10 +65,27 @@ export default class UserControls {
     }
 
     private setupUndoManager(): void {
-        const onUndo = (_: EventTarget, event: EventObject) =>
+        // Setup undo manager to notice undoable changes
+        var isFirst = true;
+        const onUndoableEvent = (_: EventTarget, event: EventObject) => {
             this.undoManager.undoableEditHappened(event.getProperty("edit"));
-        this.graph.getDataModel().addListener(InternalEvent.UNDO, onUndo);
-        this.graph.getView().addListener(InternalEvent.UNDO, onUndo);
+            if (isFirst) {
+                isFirst = false;
+                this.undoManager.clear();
+            }
+        }
+        this.graph.getDataModel()
+            .addListener(InternalEvent.UNDO, onUndoableEvent);
+        this.graph.getView()
+            .addListener(InternalEvent.UNDO, onUndoableEvent);
+
+        // Setup actions when undo/redo happens
+        const onUndoOrRedo = (_: EventTarget, event: EventObject) => {
+            const edit = event.getProperty("edit");
+            this.diagramActions.handleChanges(edit.changes);
+        }
+        this.undoManager.addListener(InternalEvent.UNDO, onUndoOrRedo);
+        this.undoManager.addListener(InternalEvent.REDO, onUndoOrRedo);
     }
 
     private setupUniversalKeyboardShortcuts(): void {
@@ -113,11 +132,11 @@ export default class UserControls {
         // Undo, redo
         this.keyHandler.bindControlKey(
             getCharCode("Z"),
-            () => this.undoManager.undo()
+            () => { this.undoManager.undo() }
         );
         this.keyHandler.bindControlShiftKey(
             getCharCode("Z"),
-            () => this.undoManager.redo()
+            () => { this.undoManager.redo() }
         );
     }
 

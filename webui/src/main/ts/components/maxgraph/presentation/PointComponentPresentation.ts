@@ -12,7 +12,7 @@ export default abstract class PointComponentPresentation
         graph: StockFlowGraph
     ): void;
 
-    public updateComponent(
+    public updateCell(
         component: DataType,
         cell: Cell,
         graph: StockFlowGraph
@@ -21,6 +21,13 @@ export default abstract class PointComponentPresentation
         newGeo.x = component.getData().x;
         newGeo.y = component.getData().y;
         graph.getDataModel().setGeometry(cell, newGeo);
+    }
+
+    public updateComponent(component: DataType, cell: Cell): DataType {
+        const geo = cell.getGeometry()!;
+        return component.withData(
+            { ...component.getData(), x: geo.x, y: geo.y }
+        ) as DataType;
     }
 
     public isEqual(component: DataType, cell: Cell): boolean {

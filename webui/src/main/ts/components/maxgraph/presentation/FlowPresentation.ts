@@ -66,6 +66,7 @@ export default class FlowPresentation
 
         graph.insertEdge(
             this.makeFlowArgs(
+                component,
                 graph.getDefaultParent(),
                 source,
                 target,
@@ -74,7 +75,7 @@ export default class FlowPresentation
         );
     }
 
-    public updateComponent(
+    public updateCell(
         flow: schema.FlowFirebaseComponent,
         cell: Cell,
         graph: StockFlowGraph
@@ -95,12 +96,19 @@ export default class FlowPresentation
                 graph
             );
         }
-        cell.setValue(flow.getData().text);
+        cell.setValue(flow);
+    }
+
+    public updateComponent(
+        component: schema.FlowFirebaseComponent,
+        cell: Cell
+    ): schema.FlowFirebaseComponent {
+        throw new Error("Not Implemented");
     }
 
     public isEqual(flow: schema.FlowFirebaseComponent, cell: Cell): boolean {
         const cpntText = flow.getData().text;
-        const cellText = cell.getValue();
+        const cellText = cell.getValue().getData().text;
 
         // If the source/target is a cloud, check whether it's been
         // moved. Otherwise, there's nothing to check since a flow can't change
@@ -125,7 +133,10 @@ export default class FlowPresentation
         return cpntText === cellText && fromEqual && toEqual;
     }
 
-    private isCloudEqual(point: { x: number, y: number }, cloud: Cell): boolean {
+    private isCloudEqual(
+        point: { x: number, y: number },
+        cloud: Cell
+    ): boolean {
         const cellX = cloud.getGeometry()!.getPoint().x;
         const cellY = cloud.getGeometry()!.getPoint().y;
         return (point.x === cellX && point.y === cellY);
@@ -163,6 +174,7 @@ export default class FlowPresentation
     }
 
     private makeFlowArgs(
+        flow: schema.FlowFirebaseComponent,
         parent: Cell,
         fr: Cell,
         to: Cell,
@@ -171,7 +183,7 @@ export default class FlowPresentation
         return {
             parent,
             id,
-            value: "flow",
+            value: flow,
             source: fr,
             target: to,
             style: {

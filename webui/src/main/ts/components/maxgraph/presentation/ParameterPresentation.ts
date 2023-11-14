@@ -29,7 +29,7 @@ export default class ParameterPresentation
         return {
             parent,
             id: param.getId(),
-            value: param.getData().text,
+            value: param,
             position: [param.getData().x, param.getData().y],
             width: ParameterPresentation.DEFAULT_WIDTH_PX,
             height: ParameterPresentation.DEFAULT_HEIGHT_PX,
