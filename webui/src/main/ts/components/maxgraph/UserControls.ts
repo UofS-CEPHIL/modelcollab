@@ -13,6 +13,7 @@ import ModeBehaviour from "./behaviours/ModeBehaviour";
 import BehaviourGetter from "./behaviours/BehaviourGetter";
 import DiagramActions from "./DiagramActions";
 import StockFlowGraph from "./StockFlowGraph";
+import ModalBoxType from "../ModalBox/ModalBoxType";
 
 export default class UserControls {
 
@@ -25,6 +26,7 @@ export default class UserControls {
     private copyCells: (c: schema.FirebaseDataComponent<any>[]) => void;
     private pasteCells: () => schema.FirebaseDataComponent<any>[];
     private getCurrentComponents: () => schema.FirebaseDataComponent<any>[];
+    private setOpenModalBox: (m: ModalBoxType) => void;
 
     public constructor(
         graph: StockFlowGraph,
@@ -32,17 +34,20 @@ export default class UserControls {
         copyCells: (c: schema.FirebaseDataComponent<any>[]) => void,
         pasteCells: () => schema.FirebaseDataComponent<any>[],
         getCurrentComponents: () => schema.FirebaseDataComponent<any>[],
+        setOpenModalBox: (m: ModalBoxType) => void,
         mode?: ModeBehaviour
     ) {
 
         this.graph = graph;
         this.diagramActions = actions;
         this.keyHandler = new KeyHandler(graph);
+        this.setOpenModalBox = setOpenModalBox;
         if (!mode) mode = BehaviourGetter.getBehaviourForMode(
             UiMode.MOVE,
             this.graph,
             this.diagramActions,
-            () => this.getCurrentComponents()
+            () => this.getCurrentComponents(),
+            m => this.setOpenModalBox(m)
         );
         this.modeBehaviour = mode;
         this.copyCells = copyCells;
@@ -60,7 +65,8 @@ export default class UserControls {
             mode,
             this.graph,
             this.diagramActions,
-            () => this.getCurrentComponents()
+            () => this.getCurrentComponents(),
+            m => this.setOpenModalBox(m)
         );
     }
 
@@ -110,7 +116,7 @@ export default class UserControls {
         );
         this.keyHandler.bindControlKey(
             getCharCode("V"),
-            () => this.diagramActions.addComponents(this.pasteCells())
+            () => console.error("Paste not implemented")
         );
 
         // Select all
@@ -147,18 +153,8 @@ export default class UserControls {
     private getComponentsFromCells(
         cells: Cell[]
     ): schema.FirebaseDataComponent<any>[] {
-        const components = this.getCurrentComponents();
         return cells.map(
-            cell => {
-                const component =
-                    components.find(c => c.getId() === cell.getId());
-                if (!component) {
-                    throw new Error(
-                        "Can't find component for id: " + cell.getId()
-                    );
-                }
-                return component;
-            }
+            cell => cell.getValue()
         );
     }
 

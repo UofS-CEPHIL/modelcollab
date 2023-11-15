@@ -3,7 +3,7 @@ import Typography from '@mui/material/Typography';
 import { Button, Grid, TextField } from '@mui/material';
 import React, { ReactElement } from 'react';
 import { FirebaseComponentModel as schema } from "database/build/export";
-import ModalBox, { Props as BaseProps, State as BaseState } from '../ModalBox/ModalBox';
+import ModalBox, { Props as BaseProps, State as BaseState } from '../ModalBox';
 
 export interface Props<Component extends schema.FirebaseDataComponent<any>> extends BaseProps {
     initialComponent: Component;
@@ -17,9 +17,9 @@ export interface State<Component extends schema.FirebaseDataComponent<any>> exte
 
 export abstract class ExtensibleEditBox
     <
-    Component extends schema.FirebaseDataComponent<any>,
-    EditBoxProps extends Props<Component>,
-    EditBoxState extends State<Component>
+        Component extends schema.FirebaseDataComponent<any>,
+        EditBoxProps extends Props<Component>,
+        EditBoxState extends State<Component>
     >
     extends ModalBox<EditBoxProps, EditBoxState>
 {
@@ -32,12 +32,22 @@ export abstract class ExtensibleEditBox
 
     private static TEXT_INPUT_CLASS: string = "EditBoxTextInput";
 
-    private handleChange(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>): void {
-        let component: Component = this.updateComponent(this.state.component, event.target.name, event.target.value);
+    private handleChange(
+        event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+    ): void {
+        let component: Component = this.updateComponent(
+            this.state.component,
+            event.target.name,
+            event.target.value
+        );
         this.setState({ component });
     };
 
-    protected updateComponent(old: Component, field: string, value: string): Component {
+    protected updateComponent(
+        old: Component,
+        field: string,
+        value: string
+    ): Component {
         if (!Object.keys(old.getData()).includes(field))
             throw new Error(
                 "Received updated field "
@@ -87,7 +97,10 @@ export abstract class ExtensibleEditBox
         );
     }
 
-    private renderContents(componentTypeName: string, fieldsAndLabels: { [field: string]: string }): ReactElement {
+    private renderContents(
+        componentTypeName: string,
+        fieldsAndLabels: { [field: string]: string }
+    ): ReactElement {
         return (
             <Box>
                 <Typography variant="h6" component="h2" data-testid={"HeaderText"}>
@@ -120,13 +133,13 @@ export abstract class ExtensibleEditBox
 
 export default abstract class EditBox
     <
-    Component extends schema.FirebaseDataComponent<any>
+        Component extends schema.FirebaseDataComponent<any>
     >
     extends ExtensibleEditBox
     <
-    Component,
-    Props<Component>,
-    State<Component>
+        Component,
+        Props<Component>,
+        State<Component>
     >
 {
     constructor(props: Props<Component>) {
@@ -134,4 +147,3 @@ export default abstract class EditBox
         this.state = { component: props.initialComponent };
     }
 }
-

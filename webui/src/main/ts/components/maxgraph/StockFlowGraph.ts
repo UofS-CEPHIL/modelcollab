@@ -83,6 +83,9 @@ export default class StockFlowGraph extends Graph {
             toUpdate.forEach(c => this.updateComponent(c));
             updates.deletedIds.forEach(id => this.deleteComponent(id));
             this.deleteOrphanedClouds(newComponents);
+            this.refreshLabels(
+                toUpdate.map(c => this.getCellWithId(c.getId())!)
+            );
         });
     }
 
@@ -110,6 +113,12 @@ export default class StockFlowGraph extends Graph {
 
     public getCellWithId(id: string): Cell | undefined {
         return this.getDataModel().cells![id];
+    }
+
+    private refreshLabels(cells: Cell[]): void {
+        this.getView()
+            .getCellStates(cells)
+            .forEach(s => this.getCellRenderer().redrawLabel(s, true));
     }
 
     private findComponentUpdates(

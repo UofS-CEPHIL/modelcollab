@@ -1,7 +1,7 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Component, createRef, Fragment, ReactElement, RefObject } from 'react';
 import CanvasToolbar from './CanvasToolbar';
-import { Cell, InternalEvent, RubberBandHandler } from '@maxgraph/core';
+import { InternalEvent, RubberBandHandler } from '@maxgraph/core';
 import UserControls from './UserControls';
 import { UiMode } from '../../UiMode';
 import StockFlowGraph from "./StockFlowGraph";
@@ -9,6 +9,8 @@ import DiagramActions from "./DiagramActions";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 
 import "../style/mxstyle.css";
+import ModalBoxType from "../ModalBox/ModalBoxType";
+import EditBoxBuilder from "../ModalBox/EditBox/EditBoxBuilder";
 
 interface Props {
     firebaseDataModel: FirebaseDataModel;
@@ -20,7 +22,7 @@ interface State {
     mode: UiMode;
     clipboard: schema.FirebaseDataComponent<any>[];
     components: schema.FirebaseDataComponent<any>[];
-
+    displayedModalBox: ModalBoxType | null;
     // loadedModels: LoadedStaticModel[];
     // selectedScenario: string;
 }
@@ -39,7 +41,8 @@ export default class CanvasScreen extends Component<Props, State> {
         this.state = {
             mode: CanvasScreen.INIT_MODE,
             clipboard: [],
-            components: []
+            components: [],
+            displayedModalBox: null
         };
     }
 
@@ -66,7 +69,8 @@ export default class CanvasScreen extends Component<Props, State> {
                 this.actions,
                 c => this.setState({ clipboard: c }),
                 () => this.pasteComponents(),
-                () => this.state.components
+                () => this.state.components,
+                m => this.setState({ ...this.state, displayedModalBox: m })
             );
         }
     }
@@ -93,6 +97,9 @@ export default class CanvasScreen extends Component<Props, State> {
                     />
                 }
                 {
+                    this.makeModalBoxIfNecessary()
+                }
+                {
                     // Force the graph to 1000px for now. There's some sort of
                     // panning mechanism built into maxgraph -- TODO Figure out
                     // how to use it
@@ -105,5 +112,53 @@ export default class CanvasScreen extends Component<Props, State> {
         );
     }
 
+    private makeModalBoxIfNecessary(): ReactElement | null {
+        if (!this.graph || this.state.displayedModalBox == null) {
+            return null;
+        }
 
+        if (this.state.displayedModalBox === ModalBoxType.EDIT_COMPONENT) {
+            const selected = this.graph.getSelectionCells();
+            if (selected.length != 1) {
+                throw new Error(
+                    `Showing edit box with ${selected.length} cells `
+                    + "selected, expected exactly 1"
+                );
+            }
+            return EditBoxBuilder.build(
+                selected[0].getValue(),
+                c => {
+                    const cell = this.graph!.getCellWithId(c.getId());
+                    if (!cell) {
+                        console.info(
+                            "Edited cell was deleted "
+                            + `while editing. Id=${c.getId()}`
+                        );
+                        return;
+                    }
+                    if (c instanceof schema.PointFirebaseComponent) {
+                        const upToDateGeometry = cell.getGeometry()!;
+                        c = c.withData({
+                            ...c.getData(),
+                            x: upToDateGeometry.x,
+                            y: upToDateGeometry.y
+                        });
+                    }
+                    this.setState({ ...this.state, displayedModalBox: null });
+                    this.actions!.updateComponent(c);
+                    this.graph!.setSelectionCells([]);
+                },
+                () => {
+                    this.setState({ ...this.state, displayedModalBox: null });
+                    this.graph!.setSelectionCells([]);
+                }
+            );
+        }
+        else {
+            console.error(
+                "Modal box not implemented: " + this.state.displayedModalBox
+            );
+        }
+        return null;
+    }
 }

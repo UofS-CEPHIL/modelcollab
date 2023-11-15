@@ -6,19 +6,11 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import LoginScreen from "./components/Screens/LoginScreen";
 import CanvasScreen from "./components/maxgraph/CanvasScreen";
 import FirebaseManagerImpl from "./data/FirebaseManagerImpl";
-import { Props as EditBoxProps } from './components/EditBox/EditBox';
-import { Props as ScenarioEditBoxProps } from './components/EditBox/ScenarioEditBox';
 import CanvasScreenToolbar, { Props as ToolbarProps } from './components/Toolbar/CanvasScreenToolbar';
 import ImportModelBox from './components/ImportModelBox/ImportModelBox';
 import { Props as ImportModelBoxProps } from './components/ButtonListBox/ButtonListBox';
 import ScenariosBox, { Props as ScenariosBoxProps } from "./components/ScenariosBox/ScenariosBox";
 import SaveModelBox, { Props as SaveModelBoxProps } from "./components/SaveModelBox/SaveModelBox";
-import StockEditBox from "./components/EditBox/StockEditBox";
-import FlowEditBox from "./components/EditBox/FlowEditBox";
-import ParameterEditBox from "./components/EditBox/ParameterEditBox";
-import VariableEditBox from "./components/EditBox/DynamicVariableEditBox";
-import ScenarioEditBox from "./components/EditBox/ScenarioEditBox";
-import SumVariableEditBox from "./components/EditBox/SumVariableEditBox";
 import FirebaseDataModelImpl from "./data/FirebaseDataModelImpl";
 
 const firebaseManager = new FirebaseManagerImpl();
@@ -90,40 +82,6 @@ export default class App extends React.Component<Props, State> {
 
     private createScenariosBox(props: ScenariosBoxProps): ReactElement {
         return (<ScenariosBox {...props} />);
-    }
-
-    private createEditBox(props: EditBoxProps<any>): ReactElement {
-        switch (props.initialComponent.getType()) {
-            case schema.ComponentType.STOCK:
-                return (
-                    <StockEditBox {...props} />
-                );
-            case schema.ComponentType.FLOW:
-                return (
-                    <FlowEditBox{...props} />
-                );
-            case schema.ComponentType.PARAMETER:
-                return (
-                    <ParameterEditBox {...props} />
-                );
-            case schema.ComponentType.VARIABLE:
-                return (
-                    <VariableEditBox {...props} />
-                );
-            case schema.ComponentType.SUM_VARIABLE:
-                return (
-                    <SumVariableEditBox {...props} />
-                );
-            case schema.ComponentType.SCENARIO:
-                return (
-                    <ScenarioEditBox {...props as ScenarioEditBoxProps} />
-                );
-            default:
-                throw new Error(
-                    "Attempted to create edit box for invalid component: " + props.initialComponent
-                );
-        }
-
     }
 
     private createImportModelBox(props: ImportModelBoxProps): ReactElement {

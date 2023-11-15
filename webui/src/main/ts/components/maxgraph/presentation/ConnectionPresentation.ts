@@ -44,14 +44,16 @@ export default class ConnectionPresentation
         cell: Cell,
         graph: StockFlowGraph
     ): void {
-        // TODO
+        // Nothing happens for now. TODO update this once we figure out
+        // a little more about how we'll be changing the Firebase schema
     }
 
     public isEqual(
         component: schema.ConnectionFirebaseComponent,
         cell: Cell
     ): boolean {
-        // TODO
+        // This is always true for now. TODO update this once we figure out a
+        // little more about how we'll be changing the Firebase schema
         return true;
     }
 
@@ -59,7 +61,9 @@ export default class ConnectionPresentation
         component: schema.ConnectionFirebaseComponent,
         cell: Cell
     ): schema.ConnectionFirebaseComponent {
-        throw new Error("Not implemented");
+        // Nothing happens for now. TODO update this once we figure out
+        // a little more about how we'll be changing the Firebase schema
+        return component;
     }
 
     private makeConnectionArgs(

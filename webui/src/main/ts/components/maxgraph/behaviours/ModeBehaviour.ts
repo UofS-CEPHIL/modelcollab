@@ -2,21 +2,25 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import { Cell } from "@maxgraph/core";
 import StockFlowGraph from "../StockFlowGraph";
 import DiagramActions from "../DiagramActions";
+import ModalBoxType from "../../ModalBox/ModalBoxType";
 
 export default abstract class ModeBehaviour {
 
     private graph: StockFlowGraph;
     private actions: DiagramActions;
     protected getFirebaseState: () => schema.FirebaseDataComponent<any>[]
+    protected setOpenModalBox: (t: ModalBoxType) => void;
 
     public constructor(
         graph: StockFlowGraph,
         actions: DiagramActions,
-        getFirebaseState: () => schema.FirebaseDataComponent<any>[]
+        getFirebaseState: () => schema.FirebaseDataComponent<any>[],
+        setOpenModalBox: (t: ModalBoxType) => void
     ) {
         this.graph = graph;
         this.actions = actions;
         this.getFirebaseState = getFirebaseState;
+        this.setOpenModalBox = setOpenModalBox;
     }
 
     public getGraph(): StockFlowGraph {
