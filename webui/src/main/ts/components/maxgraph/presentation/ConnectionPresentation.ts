@@ -13,8 +13,11 @@ export default class ConnectionPresentation
 
     public addComponent(
         component: schema.ConnectionFirebaseComponent,
-        graph: StockFlowGraph
-    ): void {
+        graph: StockFlowGraph,
+        parent?: Cell,
+        _?: (__: string) => void,
+        movable: boolean = true
+    ): Cell {
         const source = graph.getCellWithId(component.getData().from);
         const target = graph.getCellWithId(component.getData().to);
         if (!source) {
@@ -28,13 +31,15 @@ export default class ConnectionPresentation
             );
         }
 
-        graph.insertEdge(
+        // TODO remove the `!` after the bug in maxgraph is fixed
+        return graph.insertEdge(
             this.makeConnectionArgs(
                 component,
-                graph.getDefaultParent(),
+                parent ?? graph.getDefaultParent(),
                 source,
                 target,
-                component.getId()
+                component.getId(),
+                !movable
             )
         );
     }
@@ -71,7 +76,8 @@ export default class ConnectionPresentation
         parent: Cell,
         fr: Cell,
         to: Cell,
-        id: string
+        id: string,
+        movable: boolean
     ): EdgeParameters {
         return {
             parent,
@@ -86,6 +92,7 @@ export default class ConnectionPresentation
                 curved: true,
                 bendable: true,
                 edgeStyle: 'orthogonalEdgeStyle',
+                movable
             }
         }
     }

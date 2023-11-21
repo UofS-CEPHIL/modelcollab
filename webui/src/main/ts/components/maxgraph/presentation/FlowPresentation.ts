@@ -16,11 +16,19 @@ export default class FlowPresentation
 
     public addComponent(
         component: schema.FlowFirebaseComponent,
-        graph: StockFlowGraph
-    ): void {
+        graph: StockFlowGraph,
+        parent?: Cell,
+        _?: (__: string) => void,
+        movable: boolean = true
+    ): Cell[] {
+
+        console.log("add flow")
+        console.log(parent)
+        console.log(component)
 
         var source: Cell | undefined = undefined;
         var target: Cell | undefined = undefined;
+        const newComponents: Cell[] = [];
 
         // First make sure that we can find the source and target components
         if (!this.isPoint(component.getData().from)) {
@@ -43,36 +51,47 @@ export default class FlowPresentation
         // Create clouds if necessary
         if (!source) {
             const point = this.extractPoint(component.getData().from);
+            // TODO remove the `!` after the bug in maxgraph is fixed
             source = graph.insertVertex(
                 this.makeCloudArgs(
-                    graph.getDefaultParent(),
+                    parent ?? graph.getDefaultParent(),
                     point.x,
                     point.y,
-                    this.makeCloudId(component.getId(), true)
+                    this.makeCloudId(component.getId(), true),
+                    !movable
                 )
             );
+            newComponents.push(source);
         }
         if (!target) {
             const point = this.extractPoint(component.getData().to);
+            // TODO remove the `!` after the bug in maxgraph is fixed
             target = graph.insertVertex(
                 this.makeCloudArgs(
-                    graph.getDefaultParent(),
+                    parent ?? graph.getDefaultParent(),
                     point.x,
                     point.y,
-                    this.makeCloudId(component.getId(), false)
+                    this.makeCloudId(component.getId(), false),
+                    !movable
                 )
             );
+            newComponents.push(target);
         }
 
-        graph.insertEdge(
-            this.makeFlowArgs(
-                component,
-                graph.getDefaultParent(),
-                source,
-                target,
-                component.getId()
+        // TODO remove the `!` after the bug in maxgraph is fixed
+        newComponents.push(
+            graph.insertEdge(
+                this.makeFlowArgs(
+                    component,
+                    parent ?? graph.getDefaultParent(),
+                    source,
+                    target,
+                    component.getId(),
+                    !movable
+                )
             )
         );
+        return newComponents;
     }
 
     public updateCell(
@@ -178,8 +197,10 @@ export default class FlowPresentation
         parent: Cell,
         fr: Cell,
         to: Cell,
-        id: string
+        id: string,
+        movable: boolean
     ): EdgeParameters {
+        console.log("flowargs")
         return {
             parent,
             id,
@@ -197,6 +218,7 @@ export default class FlowPresentation
                 curved: false,
                 bendable: true,
                 edgeStyle: 'elbowEdgeStyle',
+                movable,
             }
         };
     }
@@ -205,8 +227,10 @@ export default class FlowPresentation
         parent: Cell,
         x: number,
         y: number,
-        id: string
+        id: string,
+        movable: boolean
     ): VertexParameters {
+        console.log("cloudargs")
         return {
             parent,
             id,
@@ -218,7 +242,8 @@ export default class FlowPresentation
             style: {
                 shape: "cloud",
                 fillColor: FlowPresentation.FILL_COLOUR,
-                strokeColor: FlowPresentation.STROKE_COLOUR
+                strokeColor: FlowPresentation.STROKE_COLOUR,
+                movable,
             }
         };
     }

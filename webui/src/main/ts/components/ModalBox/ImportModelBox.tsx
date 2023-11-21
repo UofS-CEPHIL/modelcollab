@@ -1,7 +1,7 @@
 import { ListItem, ListItemText, ListItemButton } from '@mui/material';
 import { ReactElement } from 'react';
 
-import ButtonListBox, { Props, State as BaseState } from '../ButtonListBox/ButtonListBox';
+import ButtonListBox, { Props, State as BaseState } from './ButtonListBox';
 
 
 interface State extends BaseState {
@@ -16,7 +16,7 @@ export default class ImportModelBox extends ButtonListBox<Props, State> {
     }
 
     public componentDidMount(): void {
-        this.props.database.subscribeToModelList(
+        this.props.firebaseDataModel.subscribeToModelList(
             savedModelNames => this.setState({ savedModelNames })
         );
     }
@@ -31,4 +31,3 @@ export default class ImportModelBox extends ButtonListBox<Props, State> {
         ));
     }
 }
-

@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import ButtonListBox, { Props as BaseProps, State as BaseState } from "../ButtonListBox/ButtonListBox";
+import ButtonListBox, { Props as BaseProps, State as BaseState } from "./ButtonListBox";
 
 import { FirebaseComponentModel as schema } from "database/build/export";
 
@@ -13,9 +13,9 @@ import EditIcon from '@mui/icons-material/Edit';
 export interface Props extends BaseProps {
     handleCancel: () => void;
     handleSubmit: (selected: string) => void;
-    handleEdit: (name: string) => void;
+    startEditingScenario: (name: string) => void;
     generateNewId: () => string;
-    database: FirebaseDataModel;
+    firebaseDataModel: FirebaseDataModel;
     initialSelected: string | null;
     sessionId: string;
 }
@@ -36,7 +36,7 @@ export default class ScenariosBox extends ButtonListBox<Props, State> {
     }
 
     componentDidMount(): void {
-        this.props.database.subscribeToSession(
+        this.props.firebaseDataModel.subscribeToSession(
             this.props.sessionId,
             cpts => this.setState({ ...this.state, scenarios: this.findScenarios(cpts) })
         );
@@ -50,7 +50,7 @@ export default class ScenariosBox extends ButtonListBox<Props, State> {
     private handleDelete(name: string): void {
         const scenario = this.state.scenarios.find(s => s.getData().name === name);
         if (!scenario) throw new Error("Unable to find scenario for deletion: " + name);
-        this.props.database.removeComponent(this.props.sessionId, scenario.getId());
+        this.props.firebaseDataModel.removeComponent(this.props.sessionId, scenario.getId());
     }
 
     private handleChangeSelected(name: string | null): void {
@@ -62,7 +62,7 @@ export default class ScenariosBox extends ButtonListBox<Props, State> {
     }
 
     private handleAddScenario(): void {
-        this.props.database.updateComponent(
+        this.props.firebaseDataModel.updateComponent(
             this.props.sessionId,
             new schema.ScenarioFirebaseComponent(
                 this.props.generateNewId(),
@@ -127,7 +127,7 @@ export default class ScenariosBox extends ButtonListBox<Props, State> {
                         <DeleteIcon />
                     </Button>
                     <Button
-                        onClick={() => this.props.handleEdit(name)}
+                        onClick={() => this.props.startEditingScenario(name)}
                     >
                         <EditIcon />
                     </Button>

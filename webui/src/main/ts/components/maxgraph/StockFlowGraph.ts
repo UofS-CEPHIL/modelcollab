@@ -1,34 +1,23 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
 import { Cell, Graph } from "@maxgraph/core";
-import StockPresentation from "./presentation/StockPresentation";
-import FlowPresentation from "./presentation/FlowPresentation";
-import DynamicVariablePresentation from "./presentation/DynamicVariablePresentation";
-import SumVariablePresentation from "./presentation/SumVariablePresentation";
-import ParameterPresentation from "./presentation/ParameterPresentation";
-import ComponentPresentation from "./presentation/ComponentPresentation";
-import ConnectionPresentation from "./presentation/ConnectionPresentation";
+import PresentationGetter from "./presentation/PresentationGetter";
+import { LoadedStaticModel } from "./CanvasScreen";
 
 // This class extends the default MaxGraph `Graph` class with functions to add
 // and style specific Stock & Flow diagram components
 export default class StockFlowGraph extends Graph {
 
-    // Presentation objects for each component type. Use these to add components
-    // with the appropriate styling etc.
-    private readonly stockPresentation = new StockPresentation();
-    private readonly sumvarPresentation = new SumVariablePresentation();
-    private readonly dynvarPresentation = new DynamicVariablePresentation();
-    private readonly paramPresentation = new ParameterPresentation();
-    private readonly flowPresentation = new FlowPresentation();
-    private readonly connectionPresentation = new ConnectionPresentation();
-
     private getFirebaseState: () => schema.FirebaseDataComponent<any>[];
+    private loadStaticModelComponents: (name: string) => void;
 
     public constructor(
         container: HTMLElement,
-        getFirebaseState: () => schema.FirebaseDataComponent<any>[]
+        getFirebaseState: () => schema.FirebaseDataComponent<any>[],
+        loadStaticModelComponents: (name: string) => void
     ) {
         super(container);
         this.getFirebaseState = getFirebaseState;
+        this.loadStaticModelComponents = loadStaticModelComponents;
         this.setAutoSizeCells(true);
         // Override the cellLabelChanged function. For some reason, this
         // is the way we have to do it...
@@ -38,8 +27,13 @@ export default class StockFlowGraph extends Graph {
     // Override
     // Returns the string representation of a particular cell
     public convertValueToString(cell: Cell): string {
-        const component = cell.getValue() as schema.FirebaseDataComponent<any>;
-        return component.getData().text ?? "";
+        const val = cell.getValue();
+        if (val instanceof schema.FirebaseDataComponent<any>) {
+            return val.getData().text ?? "";
+        }
+        else {
+            return "";
+        }
     }
 
     // Update the state when user changes a cell's text. For some reason we
@@ -56,13 +50,11 @@ export default class StockFlowGraph extends Graph {
 
     public refreshComponents(
         newComponents: schema.FirebaseDataComponent<any>[],
-        oldComponents: schema.FirebaseDataComponent<any>[]
+        oldComponents: schema.FirebaseDataComponent<any>[],
+        loadedStaticModels: LoadedStaticModel[]
     ): void {
         const findComponent = (id: string) =>
             newComponents.find(c => c.getId() === id)!;
-        const isEdge = (cpt: schema.FirebaseDataComponent<any>) =>
-            [schema.ComponentType.CONNECTION, schema.ComponentType.FLOW]
-                .includes(cpt.getType());
         const updates = this.findComponentUpdates(newComponents, oldComponents);
         if (
             updates.newIds.length === 0
@@ -71,16 +63,13 @@ export default class StockFlowGraph extends Graph {
         ) return;
 
         const toAdd = updates.newIds.map(findComponent);
-        const verticesToAdd = toAdd.filter(c => !isEdge(c));
-        const edgesToAdd = toAdd.filter(c => isEdge(c));
         const toUpdate = updates.updatedIds.map(findComponent);
 
         this.batchUpdate(() => {
             // Add vertices first so that we don't end up in a situation where
             // and edge can't find its source or target
-            verticesToAdd.forEach(v => this.addComponent(v));
-            edgesToAdd.forEach(e => this.addComponent(e));
-            toUpdate.forEach(c => this.updateComponent(c));
+            this.addComponentsInCorrectOrder(toAdd);
+            toUpdate.forEach(c => this.updateComponent(c, loadedStaticModels));
             updates.deletedIds.forEach(id => this.deleteComponent(id));
             this.deleteOrphanedClouds(newComponents);
             this.refreshLabels(
@@ -89,10 +78,35 @@ export default class StockFlowGraph extends Graph {
         });
     }
 
+    public addComponentsInCorrectOrder(
+        toAdd: schema.FirebaseDataComponent<any>[],
+        parent?: Cell,
+        movable?: boolean
+    ): Cell[] {
+        const isEdge = (cpt: schema.FirebaseDataComponent<any>) =>
+            [schema.ComponentType.CONNECTION, schema.ComponentType.FLOW]
+                .includes(cpt.getType());
+
+        return [
+            ...toAdd
+                .filter(c => !isEdge(c))
+                .flatMap(vtx => this.addComponent(vtx, parent, movable)),
+            ...toAdd
+                .filter(c => isEdge(c))
+                .flatMap(edge => this.addComponent(edge, parent, movable))
+        ];
+
+    }
+
     // Update a component. Call this in the middle of a batch update.
-    public updateComponent(c: schema.FirebaseDataComponent<any>): void {
+    public updateComponent(
+        c: schema.FirebaseDataComponent<any>,
+        loadedStaticModels: LoadedStaticModel[]
+    ): void {
         const cell = this.getCellWithId(c.getId())!;
-        this.getRelevantPresentation(c).updateCell(c, cell, this);
+        PresentationGetter
+            .getRelevantPresentation(c)
+            .updateCell(c, cell, this, loadedStaticModels);
     }
 
     // Delete a component. Call this in the middle of a batch update.
@@ -107,12 +121,46 @@ export default class StockFlowGraph extends Graph {
     }
 
     // Add a new component. Call this in the middle of a batch update.
-    public addComponent(c: schema.FirebaseDataComponent<any>): void {
-        this.getRelevantPresentation(c).addComponent(c, this);
+    public addComponent(
+        c: schema.FirebaseDataComponent<any>,
+        parent: Cell = this.getDefaultParent(),
+        movable: boolean = true
+    ): Cell | Cell[] {
+        const result: Cell | Cell[] = PresentationGetter
+            .getRelevantPresentation(c)
+            .addComponent(
+                c,
+                this,
+                parent,
+                (name: string) => this.loadStaticModelComponents(name),
+                movable
+            );
+        return result;
     }
 
     public getCellWithId(id: string): Cell | undefined {
-        return this.getDataModel().cells![id];
+        const isPrefixed = (id: string) => id.includes('/');
+
+        if (isPrefixed(id)) {
+            const split = id.split('/');
+            const parentId = split[0];
+            const parent = this.getCellWithId(parentId);
+            if (!parent) {
+                throw new Error(
+                    "Unable to find static model for component. "
+                    + `Full path: ${id}. Static model id: ${parentId}`
+                );
+            }
+            return parent
+                .getChildren()
+                .find(c =>
+                    c.getValue() instanceof schema.FirebaseDataComponent<any>
+                    && c.getValue().getId() === id
+                );
+        }
+        else {
+            return this.getDataModel().cells![id];
+        }
     }
 
     private refreshLabels(cells: Cell[]): void {
@@ -137,9 +185,9 @@ export default class StockFlowGraph extends Graph {
                     newIds.push(component.getId());
                 }
                 else if (
-                    !this
+                    !PresentationGetter
                         .getRelevantPresentation(component)
-                        .isEqual(component, cell)
+                        .isEqual(component, cell, this)
                 ) {
                     // Cell exists but has updates
                     updatedIds.push(component.getId());
@@ -152,29 +200,6 @@ export default class StockFlowGraph extends Graph {
             }
         }
         return { newIds, updatedIds, deletedIds };
-    }
-
-    public getRelevantPresentation(
-        component: schema.FirebaseDataComponent<any>
-    ): ComponentPresentation<any> {
-        switch (component.getType()) {
-            case schema.ComponentType.STOCK:
-                return this.stockPresentation;
-            case schema.ComponentType.VARIABLE:
-                return this.dynvarPresentation;
-            case schema.ComponentType.PARAMETER:
-                return this.paramPresentation;
-            case schema.ComponentType.SUM_VARIABLE:
-                return this.sumvarPresentation;
-            case schema.ComponentType.FLOW:
-                return this.flowPresentation;
-            case schema.ComponentType.CONNECTION:
-                return this.connectionPresentation;
-            default:
-                throw new Error(
-                    "No available presentation for type: " + component.getType()
-                );
-        }
     }
 
     public isCellType(cell: Cell, cptType: schema.ComponentType): boolean {

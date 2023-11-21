@@ -15,17 +15,23 @@ export default class StockPresentation
 
     public addComponent(
         stock: schema.StockFirebaseComponent,
-        graph: StockFlowGraph
-    ): void {
-        graph.insertVertex(this.getGraphArgs(
-            graph.getDefaultParent(),
-            stock
+        graph: StockFlowGraph,
+        parent?: Cell,
+        _?: (__: string) => void,
+        movable: boolean = true
+    ): Cell {
+        return graph.insertVertex(this.getStockArgs(
+            parent ?? graph.getDefaultParent(),
+            stock,
+            // TODO remove the `!` after the bug in maxgraph is fixed
+            !movable
         ));
     }
 
-    private getGraphArgs(
+    private getStockArgs(
         parent: Cell,
-        stock: schema.StockFirebaseComponent
+        stock: schema.StockFirebaseComponent,
+        movable: boolean
     ): VertexParameters {
         return {
             parent,
@@ -42,7 +48,8 @@ export default class StockPresentation
                 strokeWidth: StockPresentation.STROKE_WIDTH_PX,
                 strokeColor: StockPresentation.STROKE_COLOUR,
                 fontSize: StockPresentation.DEFAULT_FONT_SIZE,
-                fontColor: StockPresentation.STROKE_COLOUR
+                fontColor: StockPresentation.STROKE_COLOUR,
+                movable,
             }
         };
     }

@@ -217,7 +217,7 @@ export abstract class PointFirebaseComponent<DataType extends PointComponentData
 
     public withUpdatedLocation(dx: number, dy: number): PointFirebaseComponent<DataType> {
         const oldData = this.getData();
-        return this.withData({...oldData, x: oldData.x + dx, y: oldData.y + dy});
+        return this.withData({ ...oldData, x: oldData.x + dx, y: oldData.y + dy });
     }
 }
 

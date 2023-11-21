@@ -7,7 +7,8 @@ import ArrowBehaviour from "./ArrowBehaviour";
 export class ConnectModeBehaviour extends ArrowBehaviour {
 
     protected canConnect(source: Cell | Point, target: Cell | Point): boolean {
-        // No clouds allowed
+        // No clouds allowed TODO
+        // TODO prevent from connecting with static models
         if (!(source instanceof Cell && target instanceof Cell)) {
             throw new Error(
                 "Trying to attach a non-component with a connection. "

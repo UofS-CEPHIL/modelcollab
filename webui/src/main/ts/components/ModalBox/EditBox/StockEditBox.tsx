@@ -15,4 +15,3 @@ export default class StockEditBox extends EditBox<schema.StockFirebaseComponent>
         return "Stock";
     }
 }
-

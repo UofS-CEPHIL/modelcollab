@@ -3,7 +3,6 @@ import FirebaseManager from "./FirebaseManager";
 import { FirebaseComponentModel as schema, FirebaseSchema } from "database/build/export";
 
 import FirebaseDataModel from "./FirebaseDataModel";
-import ComponentUiData from "../components/Canvas/ScreenObjects/ComponentUiData";
 
 export default class FirebaseDataModelImpl implements FirebaseDataModel {
 
@@ -155,7 +154,10 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    addModelToLibrary(modelId: string, components: ComponentUiData[]): void {
+    addModelToLibrary(
+        modelId: string,
+        components: schema.FirebaseDataComponent<any>[]
+    ): void {
         set(
             ref(
                 this.firebaseManager.getDb(),

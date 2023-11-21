@@ -1,5 +1,6 @@
 import { Cell } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
+import { LoadedStaticModel } from "../CanvasScreen";
 import StockFlowGraph from "../StockFlowGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
@@ -9,13 +10,17 @@ export default abstract class PointComponentPresentation
 {
     public abstract addComponent(
         component: DataType,
-        graph: StockFlowGraph
-    ): void;
+        graph: StockFlowGraph,
+        parent?: Cell,
+        loadStaticModelComponents?: (name: string) => void,
+        movable?: boolean
+    ): Cell | Cell[];
 
     public updateCell(
         component: DataType,
         cell: Cell,
-        graph: StockFlowGraph
+        graph: StockFlowGraph,
+        _: LoadedStaticModel[]
     ): void {
         const newGeo = cell.getGeometry()!.clone();
         newGeo.x = component.getData().x;
@@ -23,14 +28,22 @@ export default abstract class PointComponentPresentation
         graph.getDataModel().setGeometry(cell, newGeo);
     }
 
-    public updateComponent(component: DataType, cell: Cell): DataType {
+    public updateComponent(
+        component: DataType,
+        cell: Cell,
+        _: StockFlowGraph
+    ): DataType {
         const geo = cell.getGeometry()!;
         return component.withData(
             { ...component.getData(), x: geo.x, y: geo.y }
         ) as DataType;
     }
 
-    public isEqual(component: DataType, cell: Cell): boolean {
+    public isEqual(
+        component: DataType,
+        cell: Cell,
+        _: StockFlowGraph
+    ): boolean {
         const cpntX = component.getData().x;
         const cellX = cell.getGeometry()!.getPoint().x;
         const cpntY = component.getData().y;

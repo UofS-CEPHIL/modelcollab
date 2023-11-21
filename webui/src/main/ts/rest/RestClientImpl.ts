@@ -1,5 +1,5 @@
 import Axios, { AxiosResponse } from "axios";
-import ScenariosBox from "../components/ScenariosBox/ScenariosBox";
+import ScenariosBox from "../components/ModalBox/ScenariosBox";
 import applicationConfig from '../config/applicationConfig';
 
 export default class RestClientImpl {

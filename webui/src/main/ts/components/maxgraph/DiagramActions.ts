@@ -1,6 +1,8 @@
 import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, UndoableChange, ValueChange } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
 import FirebaseDataModel from '../../data/FirebaseDataModel';
+import { LoadedStaticModel } from "./CanvasScreen";
+import PresentationGetter from "./presentation/PresentationGetter";
 import StockFlowGraph from "./StockFlowGraph";
 
 // This class contains the logic for making changes to the diagram, including
@@ -22,19 +24,22 @@ export default class DiagramActions {
     private setCurrentComponents:
         (c: schema.FirebaseDataComponent<any>[]) => void;
     private getCurrentComponents: () => schema.FirebaseDataComponent<any>[];
+    private getLoadedStaticModels: () => LoadedStaticModel[];
 
     public constructor(
         fbData: FirebaseDataModel,
         graph: StockFlowGraph,
         sessionId: string,
         setCurrentComponents: (c: schema.FirebaseDataComponent<any>[]) => void,
-        getCurrentComponents: () => schema.FirebaseDataComponent<any>[]
+        getCurrentComponents: () => schema.FirebaseDataComponent<any>[],
+        getLoadedStaticModels: () => LoadedStaticModel[]
     ) {
         this.fbData = fbData;
         this.graph = graph;
         this.sessionId = sessionId;
         this.setCurrentComponents = setCurrentComponents;
         this.getCurrentComponents = getCurrentComponents;
+        this.getLoadedStaticModels = getLoadedStaticModels;
 
         // Subscribe to remote updates from Firebase
         this.fbData.subscribeToSession(
@@ -108,9 +113,9 @@ export default class DiagramActions {
                     updatedComponents
                 );
                 const oldComponent = updatedComponents[idx];
-                updatedComponents[idx] = this.graph
+                updatedComponents[idx] = PresentationGetter
                     .getRelevantPresentation(oldComponent)
-                    .updateComponent(oldComponent, change.cell);
+                    .updateComponent(oldComponent, change.cell, this.graph);
             }
             else if (change instanceof ChildChange) {
                 const isDeletion: boolean = !change.parent;
@@ -214,7 +219,11 @@ export default class DiagramActions {
     ): void {
         const oldComponents = this.getCurrentComponents();
         this.setCurrentComponents(newComponents);
-        this.graph.refreshComponents(newComponents, oldComponents);
+        this.graph.refreshComponents(
+            newComponents,
+            oldComponents,
+            this.getLoadedStaticModels()
+        );
     }
 
     private onCellsMoved(_: EventSource, event: EventObject): void {

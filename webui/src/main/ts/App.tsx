@@ -1,19 +1,14 @@
 import React, { ReactElement } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import { FirebaseComponentModel as schema } from "database/build/export";
-
 import LoginScreen from "./components/Screens/LoginScreen";
 import CanvasScreen from "./components/maxgraph/CanvasScreen";
 import FirebaseManagerImpl from "./data/FirebaseManagerImpl";
-import CanvasScreenToolbar, { Props as ToolbarProps } from './components/Toolbar/CanvasScreenToolbar';
-import ImportModelBox from './components/ImportModelBox/ImportModelBox';
-import { Props as ImportModelBoxProps } from './components/ButtonListBox/ButtonListBox';
-import ScenariosBox, { Props as ScenariosBoxProps } from "./components/ScenariosBox/ScenariosBox";
-import SaveModelBox, { Props as SaveModelBoxProps } from "./components/SaveModelBox/SaveModelBox";
 import FirebaseDataModelImpl from "./data/FirebaseDataModelImpl";
-
-const firebaseManager = new FirebaseManagerImpl();
+import FirebaseManager from "./data/FirebaseManager";
+import FirebaseDataModel from "./data/FirebaseDataModel";
+import RestClientImpl from "./rest/RestClientImpl";
+import RestClient from "./rest/RestClient";
 
 interface Props {
 
@@ -25,11 +20,19 @@ interface State {
 }
 
 export default class App extends React.Component<Props, State> {
+
+    private firebaseDataModel: FirebaseDataModel;
+    private firebaseManager: FirebaseManager;
+    private restClient: RestClient;
+
     constructor(props: Props) {
         super(props);
         this.state = { isSignedIn: false, currentSession: null };
+        this.restClient = new RestClientImpl();
+        this.firebaseManager = new FirebaseManagerImpl();
+        this.firebaseDataModel = new FirebaseDataModelImpl(this.firebaseManager);
 
-        firebaseManager.registerAuthChangedCallback(
+        this.firebaseManager.registerAuthChangedCallback(
             isSignedIn => this.setState({ isSignedIn })
         );
     }
@@ -41,7 +44,11 @@ export default class App extends React.Component<Props, State> {
                     <Routes>
                         <Route
                             path="/"
-                            element={<LoginScreen firebaseManager={firebaseManager} />}
+                            element={
+                                <LoginScreen
+                                    firebaseManager={this.firebaseManager}
+                                />
+                            }
                         />
                     </Routes>
                 </Router>
@@ -69,7 +76,11 @@ export default class App extends React.Component<Props, State> {
                             path="/"
                             element={
                                 <CanvasScreen
-                                    firebaseDataModel={new FirebaseDataModelImpl(firebaseManager)}
+                                    firebaseDataModel={this.firebaseDataModel}
+                                    restClient={this.restClient}
+                                    returnToSessionSelect={
+                                        () => console.error("Not implemented")
+                                    }
                                     sessionId={"NULL"}
                                 />
                             }
@@ -78,27 +89,5 @@ export default class App extends React.Component<Props, State> {
                 </Router>
             );
         }
-    }
-
-    private createScenariosBox(props: ScenariosBoxProps): ReactElement {
-        return (<ScenariosBox {...props} />);
-    }
-
-    private createImportModelBox(props: ImportModelBoxProps): ReactElement {
-        return (
-            <ImportModelBox {...props} />
-        );
-    }
-
-    private createSaveModelBox(props: SaveModelBoxProps): ReactElement {
-        return (
-            <SaveModelBox {...props} />
-        );
-    }
-
-    private createToolbar(props: ToolbarProps): ReactElement {
-        return (
-            <CanvasScreenToolbar {...props} />
-        );
     }
 }

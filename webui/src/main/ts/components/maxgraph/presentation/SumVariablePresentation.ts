@@ -14,17 +14,23 @@ export default class SumVariablePresentation
 
     public addComponent(
         sumvar: schema.SumVariableFirebaseComponent,
-        graph: StockFlowGraph
-    ) {
-        graph.insertVertex(this.getGraphArgs(
-            graph.getDefaultParent(),
-            sumvar
+        graph: StockFlowGraph,
+        parent?: Cell,
+        _?: (__: string) => void,
+        movable: boolean = true
+    ): Cell {
+        // TODO remove the `!` after the bug in maxgraph is fixed
+        return graph.insertVertex(this.getGraphArgs(
+            parent ?? graph.getDefaultParent(),
+            sumvar,
+            !movable
         ));
     }
 
     private getGraphArgs(
         parent: Cell,
-        sumvar: schema.SumVariableFirebaseComponent
+        sumvar: schema.SumVariableFirebaseComponent,
+        movable: boolean
     ): VertexParameters {
         return {
             parent,
@@ -40,7 +46,8 @@ export default class SumVariablePresentation
                 strokeColor: SumVariablePresentation.STROKE_COLOUR,
                 fontColor: SumVariablePresentation.STROKE_COLOUR,
                 fontSize: SumVariablePresentation.DEFAULT_FONT_SIZE,
-                fontStyle: 1
+                fontStyle: 1,
+                movable,
             }
         };
     }

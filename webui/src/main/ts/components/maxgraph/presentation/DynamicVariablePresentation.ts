@@ -15,17 +15,23 @@ export default class DynamicVariablePresentation
 
     public addComponent(
         dynvar: schema.VariableFirebaseComponent,
-        graph: StockFlowGraph
-    ) {
-        graph.insertVertex(this.getGraphArgs(
-            graph.getDefaultParent(),
-            dynvar
+        graph: StockFlowGraph,
+        parent?: Cell,
+        _?: (__: string) => void,
+        movable: boolean = true
+    ): Cell {
+        // TODO remove the `!` after the bug in maxgraph is fixed
+        return graph.insertVertex(this.getGraphArgs(
+            parent ?? graph.getDefaultParent(),
+            dynvar,
+            !movable
         ));
     }
 
     private getGraphArgs(
         parent: Cell,
-        dynvar: schema.VariableFirebaseComponent
+        dynvar: schema.VariableFirebaseComponent,
+        movable: boolean
     ): VertexParameters {
         return {
             parent,
@@ -41,7 +47,8 @@ export default class DynamicVariablePresentation
                 strokeColor: DynamicVariablePresentation.STROKE_COLOUR,
                 fontColor: DynamicVariablePresentation.STROKE_COLOUR,
                 fontSize: DynamicVariablePresentation.DEFAULT_FONT_SIZE,
-                fontStyle: 3
+                fontStyle: 3,
+                movable
             }
         };
     }

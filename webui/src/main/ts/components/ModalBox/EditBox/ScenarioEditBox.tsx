@@ -1,12 +1,12 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import FirebaseDataModel from "../../data/FirebaseDataModel";
+import FirebaseDataModel from "../../../data/FirebaseDataModel";
 import { ExtensibleEditBox, Props as BaseProps, State as BaseState } from "./EditBox";
 
 export interface Props extends BaseProps<schema.ScenarioFirebaseComponent> {
     initialComponent: schema.ScenarioFirebaseComponent;
     handleSave: (c: schema.ScenarioFirebaseComponent) => void;
     handleCancel: () => void;
-    db: FirebaseDataModel;
+    firebaseDataModel: FirebaseDataModel;
     sessionId: string;
 }
 
@@ -25,7 +25,7 @@ export default class ScenarioEditBox extends ExtensibleEditBox
     }
 
     componentDidMount(): void {
-        this.props.db.subscribeToSession(
+        this.props.firebaseDataModel.subscribeToSession(
             this.props.sessionId,
             cpts => this.setState({ ...this.state, allModelComponents: cpts })
         );
@@ -40,7 +40,7 @@ export default class ScenarioEditBox extends ExtensibleEditBox
     }
 
     private getParameters(): schema.ParameterFirebaseComponent[] {
-        return this.state.allModelComponents.filter(c => c.getType() === schema.ComponentType.PARAMETER);
+        return this.state.allModelComponents.filter(c => c.getType() === schema.ComponentType.PARAMETER) as schema.ParameterFirebaseComponent[];
     }
 
     protected getFieldsAndLabels(): { [field: string]: string } {
@@ -69,5 +69,3 @@ export default class ScenarioEditBox extends ExtensibleEditBox
         return old.withData({ ...old.getData(), paramOverrides });
     }
 }
-
-

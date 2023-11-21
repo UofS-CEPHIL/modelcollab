@@ -4,11 +4,11 @@ import { UiMode } from '../../UiMode';
 import ModalBox, { Props as BaseProps, State as BaseState } from '../ModalBox/ModalBox';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import InfoIcon from '@mui/icons-material/Info';
-import MainToolbarButtons from "../Toolbar/MainToolbarButtons";
+import MainToolbarButtons from "../maxgraph/toolbar/MainToolbarButtons";
 
 export interface Props extends BaseProps {
     onClose: () => void;
-    width: number;
+    width?: number;
 }
 
 export interface State extends BaseState {
@@ -50,11 +50,9 @@ export default class HelpBox extends ModalBox<Props, State> {
             this.makeParamBulletPoint(),
             this.makeDynamicVariableBulletPoint(),
             this.makeSumVariableBulletPoint(),
-            this.makeDeleteBulletPoint(),
             this.makeMoveBulletPoint(),
             this.makeEditBulletPoint(),
             this.makeConnectBulletPoint(),
-            this.makeCloudBulletPoint(),
             this.makeIdentifyBulletPoint(),
             this.makeScenariosBulletPoint(),
             this.makeGetCodeBulletPoint(),
@@ -152,14 +150,6 @@ export default class HelpBox extends ModalBox<Props, State> {
         return this.makeBulletPoint(text, icon);
     }
 
-    private makeDeleteBulletPoint(): ReactElement {
-        const text = "Delete mode deletes existing components. Left click on the component to be deleted. Only outer "
-            + "components may be deleted, e.g. an inner model can be deleted but none of its components can. If "
-            + "deletion causes any flows or connections to become orphaned, those components will also be deleted.";
-        const icon = MainToolbarButtons.getIconForMode(UiMode.DELETE);
-        return this.makeBulletPoint(text, icon);
-    }
-
     private makeMoveBulletPoint(): ReactElement {
         const text = "Move mode is for moving components and allows the selection and moving of multiple components by "
             + "left click and dragging. Nothing happens when components or the background are clicked.";
@@ -182,14 +172,6 @@ export default class HelpBox extends ModalBox<Props, State> {
             + "in a component's equation. E.g. in a typical SIR model, the flow from S=>I will depend on S, I, the "
             + "total population in the model, and possibly several parameters.";
         const icon = MainToolbarButtons.getIconForMode(UiMode.CONNECT);
-        return this.makeBulletPoint(text, icon);
-    }
-
-    private makeCloudBulletPoint(): ReactElement {
-        const text = "Cloud mode creates a 'cloud' component. A cloud represents a stock whose value is always "
-            + "infinite. This mode will be deleted in a future update, and instead a 'cloud' will automatically appear "
-            + "for any flows with no source or destination.";
-        const icon = MainToolbarButtons.getIconForMode(UiMode.CLOUD);
         return this.makeBulletPoint(text, icon);
     }
 
@@ -231,7 +213,7 @@ export default class HelpBox extends ModalBox<Props, State> {
         const text = "The Run Model button allows the user to run the current scenario with ODE semantics. This will "
             + "be updated for other semantics in a future update. Model computation may take up to several minutes, "
             + "and is cancelled if the user navigates away from the page.";
-        const icon = MainToolbarButtons.getDefaultComputeModelIcon();
+        const icon = MainToolbarButtons.getSemanticSelectIcon();
         return this.makeBulletPoint(text, icon);
     }
 

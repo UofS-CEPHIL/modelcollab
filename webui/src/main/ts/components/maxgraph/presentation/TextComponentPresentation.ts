@@ -1,5 +1,6 @@
 import { Cell } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
+import { LoadedStaticModel } from "../CanvasScreen";
 import StockFlowGraph from "../StockFlowGraph";
 import PointComponentPresentation from "./PointComponentPresentation";
 
@@ -11,22 +12,31 @@ export default abstract class TextComponentPresentation
     public updateCell(
         component: DataType,
         cell: Cell,
-        graph: StockFlowGraph
+        graph: StockFlowGraph,
+        loadedModels: LoadedStaticModel[]
     ): void {
-        super.updateCell(component, cell, graph);
+        super.updateCell(component, cell, graph, loadedModels);
         cell.setValue(component);
     }
 
-    public updateComponent(component: DataType, cell: Cell): DataType {
-        const update: DataType = super.updateComponent(component, cell);
+    public updateComponent(
+        component: DataType,
+        cell: Cell,
+        graph: StockFlowGraph
+    ): DataType {
+        const update: DataType = super.updateComponent(component, cell, graph);
         return update.withData(
             { ...update.getData(), text: cell.getValue().getData().text }
         ) as DataType;
     }
 
-    public isEqual(component: DataType, cell: Cell): boolean {
+    public isEqual(
+        component: DataType,
+        cell: Cell,
+        graph: StockFlowGraph
+    ): boolean {
         const cpntText = component.getData().text;
         const cellText = cell.getValue().getData().text;
-        return super.isEqual(component, cell) && cpntText === cellText;
+        return super.isEqual(component, cell, graph) && cpntText === cellText;
     }
 }

@@ -6,7 +6,7 @@ import ModalBox, { Props as BaseProps, State as BaseState } from '../ModalBox/Mo
 export interface Props extends BaseProps {
     handleCancel: () => void;
     handleSubmit: (selected: string) => void;
-    database: FirebaseDataModel;
+    firebaseDataModel: FirebaseDataModel;
 }
 
 export interface State extends BaseState {

@@ -1,5 +1,4 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import ComponentUiData from "../components/Canvas/ScreenObjects/ComponentUiData";
 
 export default interface FirebaseDataModel {
     updateComponent: (sessionId: string, data: schema.FirebaseDataComponent<any>) => void;
@@ -11,6 +10,6 @@ export default interface FirebaseDataModel {
     removeComponent: (sessionId: string, componentId: string) => void;
     removeComponents: (sessionId: string, componentId: string[], allComponents: schema.FirebaseDataComponent<any>[]) => void;
     setAllComponents: (sessionId: string, updatedComponentsList: schema.FirebaseDataComponent<any>[]) => void;
-    addModelToLibrary: (modelId: string, components: ComponentUiData[]) => void;
+    addModelToLibrary: (modelId: string, components: schema.FirebaseDataComponent<any>[]) => void;
     getComponentsForSavedModel: (modelId: string, onResults: (components: schema.FirebaseDataComponent<any>[]) => void) => void;
 }
