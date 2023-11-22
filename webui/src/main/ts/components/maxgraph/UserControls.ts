@@ -179,9 +179,8 @@ export default class UserControls {
                     this.modeBehaviour.canvasRightClicked(pos.x, pos.y);
                 }
                 else {
-                    // No cell indicates click on background.
-                    // We ignore clicks on cells because that behaviour happens
-                    // through the selectionChanged listener.
+                    // Only handle clicks on canvas. Component
+                    // clicks are handled by selectionChanged listeners
                     if (!event.getProperty("cell")) {
                         this.modeBehaviour.canvasClicked(pos.x, pos.y);
                     }

@@ -7,24 +7,34 @@ import ArrowBehaviour from "./ArrowBehaviour";
 export class ConnectModeBehaviour extends ArrowBehaviour {
 
     protected canConnect(source: Cell | Point, target: Cell | Point): boolean {
-        // No clouds allowed TODO
-        // TODO prevent from connecting with static models
+
+        // Can't connect anything to a point on the canvas background.
+        // This shouldn't be possible but is left here as a sanity check
         if (!(source instanceof Cell && target instanceof Cell)) {
-            throw new Error(
-                "Trying to attach a non-component with a connection. "
+            console.error(
+                "Trying to connect using a canvas point instead of a cell. "
                 + `Source ${source}, target ${target}`
             );
+            return false;
         }
 
-        // Parameters have to be standalone
+        // Can't connect to or from a cloud
+        if (!(
+            source.getValue() instanceof schema.FirebaseDataComponent<any>
+            && target.getValue() instanceof schema.FirebaseDataComponent<any>)
+        ) {
+            return false;
+        }
+
+        // Can't connect to a parameter
         if (
             this.getGraph().isCellType(target, schema.ComponentType.PARAMETER)
         ) {
             return false;
         }
 
-        // Flows can't connect to anything
-        if (this.getGraph().isCellType(source, schema.ComponentType.FLOW)) {
+        // Can't connect from a flow
+        if (source.getValue().getType() === schema.ComponentType.FLOW) {
             return false;
         }
 

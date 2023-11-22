@@ -1,5 +1,5 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import { Cell, EdgeParameters, Graph, VertexParameters } from "@maxgraph/core";
+import { Cell, EdgeParameters, Graph, InternalMouseEvent, SelectionHandler, VertexParameters } from "@maxgraph/core";
 import PresentationGetter from "./presentation/PresentationGetter";
 import { LoadedStaticModel } from "./CanvasScreen";
 
@@ -22,6 +22,15 @@ export default class StockFlowGraph extends Graph {
         // Override the cellLabelChanged function. For some reason, this
         // is the way we have to do it...
         this.cellLabelChanged = this.onCellLabelChanged;
+
+        const selHandler =
+            this.getPlugin("SelectionHandler") as SelectionHandler;
+        selHandler.getInitialCellForEvent = (me: InternalMouseEvent) => {
+            if (me.getState() && me.getState()!.cell) {
+                return me.getState()!.cell;
+            }
+            return null;
+        }
     }
 
     // Override
@@ -66,7 +75,6 @@ export default class StockFlowGraph extends Graph {
         const toUpdate = updates.updatedIds.map(findComponent);
 
         this.batchUpdate(() => {
-            console.log("start update")
             // Add vertices first so that we don't end up in a situation where
             // and edge can't find its source or target
             this.addComponentsInCorrectOrder(toAdd);
@@ -76,7 +84,6 @@ export default class StockFlowGraph extends Graph {
             this.refreshLabels(
                 toUpdate.map(c => this.getCellWithId(c.getId())!)
             );
-            console.log("end update")
         });
     }
 
@@ -205,13 +212,8 @@ export default class StockFlowGraph extends Graph {
     }
 
     public isCellType(cell: Cell, cptType: schema.ComponentType): boolean {
-        const cellId = cell.getId()!;
-        const components = this.getFirebaseState();
-        const match = components.find(c => c.getId() === cellId);
-        if (!match) {
-            throw new Error(`Unable to find component with id ${cellId}`);
-        }
-        return match.getType() === cptType;
+        return cell.getValue() instanceof schema.FirebaseDataComponent<any>
+            && cell.getValue().getType() === cptType;
     }
 
     private isCloudId(id: string): boolean {
@@ -235,5 +237,4 @@ export default class StockFlowGraph extends Graph {
         const orphanedClouds = clouds.filter(isCloudOrphan);
         this.removeCells(orphanedClouds);
     }
-
 }
