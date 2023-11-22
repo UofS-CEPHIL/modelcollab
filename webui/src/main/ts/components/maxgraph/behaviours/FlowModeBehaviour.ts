@@ -37,9 +37,8 @@ export default class FlowModeBehaviour extends ArrowBehaviour {
         source: Cell | Point,
         target: Cell | Point
     ): void {
-        function getStringRepresentation(c: Cell | Point): string {
-            // TODO store this logic with Firebase stuff
-            return c instanceof Cell ? c.getId()! : `p${c.x},${c.y}`;
+        const getStringRepresentation = (c: Cell | Point) => {
+            return c instanceof Cell ? c.getId()! : this.makePoint(c.x, c.y);
         }
 
         var fromId: string = getStringRepresentation(source);
@@ -54,5 +53,10 @@ export default class FlowModeBehaviour extends ArrowBehaviour {
 
     private isCellStock(cell: Cell): boolean {
         return this.getGraph().isCellType(cell, schema.ComponentType.STOCK);
+    }
+
+    // TODO store this with firebase stuff
+    private makePoint(x: number, y: number): string {
+        return `p${x},${y}`;
     }
 }

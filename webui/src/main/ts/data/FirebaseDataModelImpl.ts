@@ -28,7 +28,10 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         callback(components);
     }
 
-    updateComponent(sessionId: string, data: schema.FirebaseDataComponent<any>) {
+    public updateComponent(
+        sessionId: string,
+        data: schema.FirebaseDataComponent<any>
+    ) {
         set(
             ref(
                 this.firebaseManager.getDb(),
@@ -41,7 +44,10 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    getDataForSession(sessionId: string, callback: (data: any) => void) {
+    public getDataForSession(
+        sessionId: string,
+        callback: (data: any) => void
+    ) {
         function formatDataForExport(snapshot: DataSnapshot): any {
             return {
                 [`${sessionId}`]: snapshot.val()
@@ -57,7 +63,10 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    subscribeToSession(sessionId: string, callback: (snapshot: schema.FirebaseDataComponent<any>[]) => void) {
+    public subscribeToSession(
+        sessionId: string,
+        callback: (snapshot: schema.FirebaseDataComponent<any>[]) => void
+    ) {
         onValue(
             ref(
                 this.firebaseManager.getDb(),
@@ -67,26 +76,31 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    subscribeToSessionList(onChanged: (sessions: string[]) => void) {
-        const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeSessionIdsPath());
+    public subscribeToSessionList(onChanged: (sessions: string[]) => void) {
+        const listRef = ref(
+            this.firebaseManager.getDb(),
+            FirebaseSchema.makeSessionIdsPath()
+        );
         onValue(listRef, snap => {
-            let childValues: string[] = [];
-            snap.forEach(childSnap => { childValues.push(childSnap.val() as string) })
-            onChanged(childValues);
+            onChanged(Object.values(snap.val()));
         });
     }
 
-    subscribeToModelList(onChanged: (models: string[]) => void): void {
-        const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeModelIdsPath());
+    public subscribeToModelList(onChanged: (models: string[]) => void): void {
+        const listRef = ref(
+            this.firebaseManager.getDb(),
+            FirebaseSchema.makeModelIdsPath()
+        );
         onValue(listRef, snap => {
-            let childValues: string[] = [];
-            snap.forEach(childSnap => { childValues.push(childSnap.val() as string); console.log(childValues) });
-            onChanged(childValues);
+            onChanged(Object.values(snap.val()));
         });
     }
 
-    addSession(id: string) {
-        const listRef = ref(this.firebaseManager.getDb(), FirebaseSchema.makeSessionIdsPath());
+    public addSession(id: string) {
+        const listRef = ref(
+            this.firebaseManager.getDb(),
+            FirebaseSchema.makeSessionIdsPath()
+        );
         const newRef = push(listRef);
         set(newRef, id);
         this.setAllComponents(
@@ -113,8 +127,9 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             ]);
     }
 
-    removeComponent(sessionId: string, componentId: string) {
-        const componentPath = FirebaseSchema.makeComponentPath(sessionId, componentId);
+    public removeComponent(sessionId: string, componentId: string) {
+        const componentPath =
+            FirebaseSchema.makeComponentPath(sessionId, componentId);
         remove(
             ref(
                 this.firebaseManager.getDb(),
@@ -123,7 +138,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    removeComponents(
+    public removeComponents(
         sessionId: string,
         componentIds: string[],
         allComponents: schema.FirebaseDataComponent<any>[]
@@ -133,7 +148,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         this.setAllComponents(sessionId, newComponentsList);
     }
 
-    setAllComponents(
+    public setAllComponents(
         sessionId: string,
         updatedComponentsList: schema.FirebaseDataComponent<any>[]
     ): void {
@@ -154,7 +169,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    addModelToLibrary(
+    public addModelToLibrary(
         modelId: string,
         components: schema.FirebaseDataComponent<any>[]
     ): void {
@@ -184,7 +199,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         );
     }
 
-    getComponentsForSavedModel(
+    public getComponentsForSavedModel(
         modelId: string,
         onData: (components: schema.FirebaseDataComponent<any>[]) => void
     ): void {

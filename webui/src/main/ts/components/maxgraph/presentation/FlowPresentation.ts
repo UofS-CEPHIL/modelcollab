@@ -11,8 +11,9 @@ export default class FlowPresentation
     public static readonly STROKE_WIDTH = 2;
     public static readonly DEFAULT_FONT_SIZE = 14;
     public static readonly FLOW_STROKE_WIDTH = 1.5;
-    public static readonly CLOUD_DEFAULT_WIDTH_PX = 50
-    public static readonly CLOUD_DEFAULT_HEIGHT_PX = 50
+    public static readonly CLOUD_DEFAULT_WIDTH_PX = 50;
+    public static readonly CLOUD_DEFAULT_HEIGHT_PX = 50;
+
 
     public addComponent(
         component: schema.FlowFirebaseComponent,
@@ -21,10 +22,6 @@ export default class FlowPresentation
         _?: (__: string) => void,
         movable: boolean = true
     ): Cell[] {
-
-        console.log("add flow")
-        console.log(parent)
-        console.log(component)
 
         var source: Cell | undefined = undefined;
         var target: Cell | undefined = undefined;
@@ -200,7 +197,6 @@ export default class FlowPresentation
         id: string,
         movable: boolean
     ): EdgeParameters {
-        console.log("flowargs")
         return {
             parent,
             id,
@@ -230,7 +226,6 @@ export default class FlowPresentation
         id: string,
         movable: boolean
     ): VertexParameters {
-        console.log("cloudargs")
         return {
             parent,
             id,

@@ -1,5 +1,5 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import { Cell, Graph } from "@maxgraph/core";
+import { Cell, EdgeParameters, Graph, VertexParameters } from "@maxgraph/core";
 import PresentationGetter from "./presentation/PresentationGetter";
 import { LoadedStaticModel } from "./CanvasScreen";
 
@@ -66,6 +66,7 @@ export default class StockFlowGraph extends Graph {
         const toUpdate = updates.updatedIds.map(findComponent);
 
         this.batchUpdate(() => {
+            console.log("start update")
             // Add vertices first so that we don't end up in a situation where
             // and edge can't find its source or target
             this.addComponentsInCorrectOrder(toAdd);
@@ -75,6 +76,7 @@ export default class StockFlowGraph extends Graph {
             this.refreshLabels(
                 toUpdate.map(c => this.getCellWithId(c.getId())!)
             );
+            console.log("end update")
         });
     }
 
@@ -224,9 +226,11 @@ export default class StockFlowGraph extends Graph {
             return !components.find(c => c.getId() === flowid);
         }
 
+        // Only do this for top-level clouds. Assume that imported models have
+        // no orphaned clouds
         const clouds = Object.values(this
-            .getDataModel()
-            .cells!
+            .getDefaultParent()
+            .children
         ).filter(c => this.isCloudId(c.getId()!));
         const orphanedClouds = clouds.filter(isCloudOrphan);
         this.removeCells(orphanedClouds);
