@@ -233,7 +233,6 @@ export default class DiagramActions {
 
         const isCloudId = (id: string) => id.includes('.');
         const clouds = cells.filter(cell => isCloudId(cell.getId()!));
-
         const components = cells
             .filter(c => !isCloudId(c.getId()!))
             .map(c => c.getId()!)

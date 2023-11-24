@@ -7,12 +7,12 @@ import ArrowBehaviour from "./ArrowBehaviour";
 export class ConnectModeBehaviour extends ArrowBehaviour {
 
     protected canConnect(source: Cell | Point, target: Cell | Point): boolean {
-
-        // Can't connect anything to a point on the canvas background.
-        // This shouldn't be possible but is left here as a sanity check
+        // Can't connect anything with a point on the canvas background. This
+        // shouldn't be possible at all but is required to avoid compiler
+        // errors, and is a useful sanity check
         if (!(source instanceof Cell && target instanceof Cell)) {
             console.error(
-                "Trying to connect using a canvas point instead of a cell. "
+                "Trying to attach a non-component with a connection. "
                 + `Source ${source}, target ${target}`
             );
             return false;
@@ -45,11 +45,15 @@ export class ConnectModeBehaviour extends ArrowBehaviour {
         source: Cell | Point,
         target: Cell | Point
     ): void {
+        // Can't connect anything with a point on the canvas background. This
+        // shouldn't be possible at all but is required to avoid compiler
+        // errors, and is a useful sanity check
         if (!(source instanceof Cell && target instanceof Cell)) {
-            throw new Error(
+            console.error(
                 "Trying to attach a non-component with a connection. "
                 + `Source ${source}, target ${target}`
             );
+            return;
         }
 
         var fromId: string = source.getId()!;

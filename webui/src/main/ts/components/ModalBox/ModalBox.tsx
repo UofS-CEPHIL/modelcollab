@@ -14,13 +14,13 @@ export interface State {
 export default abstract class ModalBox<BoxProps extends Props, BoxState extends State>
     extends React.Component<BoxProps, BoxState> {
 
+    private static readonly DEFAULT_WIDTH_PX = 700;
+
     protected abstract getBoxContents(): ReactElement;
 
     public render(): ReactElement {
         const style = modalStyle;
-        if (this.props.width) {
-            style.width = this.props.width;
-        }
+        style.width = this.props.width ?? ModalBox.DEFAULT_WIDTH_PX;
 
         return (
             <Modal open={true} data-testid={"EditBox"}>

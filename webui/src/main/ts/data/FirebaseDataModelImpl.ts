@@ -92,7 +92,7 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
             FirebaseSchema.makeModelIdsPath()
         );
         onValue(listRef, snap => {
-            onChanged(Object.values(snap.val()));
+            onChanged(snap.val() ? Object.values(snap.val()) : []);
         });
     }
 

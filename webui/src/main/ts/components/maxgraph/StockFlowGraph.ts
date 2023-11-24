@@ -1,5 +1,5 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import { Cell, EdgeParameters, Graph, InternalMouseEvent, SelectionHandler, VertexParameters } from "@maxgraph/core";
+import { Cell, Graph, InternalMouseEvent, SelectionHandler, VertexParameters } from "@maxgraph/core";
 import PresentationGetter from "./presentation/PresentationGetter";
 import { LoadedStaticModel } from "./CanvasScreen";
 
@@ -84,6 +84,7 @@ export default class StockFlowGraph extends Graph {
             this.refreshLabels(
                 toUpdate.map(c => this.getCellWithId(c.getId())!)
             );
+            this.applySubstitutions(newComponents);
         });
     }
 
@@ -101,10 +102,9 @@ export default class StockFlowGraph extends Graph {
                 .filter(c => !isEdge(c))
                 .flatMap(vtx => this.addComponent(vtx, parent, movable)),
             ...toAdd
-                .filter(c => isEdge(c))
+                .filter(isEdge)
                 .flatMap(edge => this.addComponent(edge, parent, movable))
         ];
-
     }
 
     // Update a component. Call this in the middle of a batch update.
@@ -122,7 +122,23 @@ export default class StockFlowGraph extends Graph {
     public deleteComponent(id: string): void {
         const cell = this.getCellWithId(id);
         if (!cell) {
-            throw new Error("Unable to find component with ID " + id);
+            // Maybe it was an invisible component
+            const components = this.getFirebaseState();
+            const component = components.find(c => c.getId() === id);
+            if (!component) {
+                throw new Error("Unable to find component with ID " + id);
+            }
+            else if (component.getType() === schema.ComponentType.SUBSTITUTION) {
+                this.unapplySubstitution(component);
+            }
+            // Do nothing for scenarios. If it's anything else, something has
+            // gone wrong
+            else if (component.getType() !== schema.ComponentType.SCENARIO) {
+                console.error(
+                    "Trying to delete component but can't find cell with ID "
+                    + component.getId()
+                );
+            }
         }
         else {
             this.removeCells([cell]);
@@ -148,28 +164,11 @@ export default class StockFlowGraph extends Graph {
     }
 
     public getCellWithId(id: string): Cell | undefined {
-        const isPrefixed = (id: string) => id.includes('/');
+        return this.getAllCells().find(c => c.getId() === id);
+    }
 
-        if (isPrefixed(id)) {
-            const split = id.split('/');
-            const parentId = split[0];
-            const parent = this.getCellWithId(parentId);
-            if (!parent) {
-                throw new Error(
-                    "Unable to find static model for component. "
-                    + `Full path: ${id}. Static model id: ${parentId}`
-                );
-            }
-            return parent
-                .getChildren()
-                .find(c =>
-                    c.getValue() instanceof schema.FirebaseDataComponent<any>
-                    && c.getValue().getId() === id
-                );
-        }
-        else {
-            return this.getDataModel().cells![id];
-        }
+    private isInnerComponentId(id: string): boolean {
+        return id.includes('/');
     }
 
     private refreshLabels(cells: Cell[]): void {
@@ -216,8 +215,131 @@ export default class StockFlowGraph extends Graph {
             && cell.getValue().getType() === cptType;
     }
 
+    private applySubstitutions(
+        components: schema.FirebaseDataComponent<any>[]
+    ): void {
+        const allCells = this.getAllCells();
+        const subs = components
+            .filter(c => c.getType() === schema.ComponentType.SUBSTITUTION);
+
+        for (const sub of subs) {
+            const replacedId = sub.getData().replacedId;
+            const replacementId = sub.getData().replacementId;
+            const replacedCell =
+                allCells.find(c => c.getId() === replacedId);
+            if (!replacedCell) {
+                console.error(
+                    "Cannot find replaced cell with id " + replacedId
+                );
+                return;
+            }
+
+            if (replacedCell.getParent()!.getId() !== replacementId) {
+                const replacementCell =
+                    allCells.find(c => c.getId() === replacementId);
+                if (!replacementCell) {
+                    console.error(
+                        "Cannot find replacement cell with id " + replacementId
+                    );
+                    return;
+                }
+                replacedCell.setVisible(false);
+                const geo = replacedCell.getGeometry()!.clone();
+                geo.x = 0;
+                geo.y = 0;
+                geo.height = 0;
+                geo.width = 0;
+                replacedCell.setGeometry(geo);
+                this.addCell(replacedCell, replacementCell);
+            }
+        }
+    }
+
+    private unapplySubstitution(
+        sub: schema.SubstitutionFirebaseComponent
+    ): void {
+        const allCells = this.getAllCells();
+        const substitutedCell =
+            allCells.find(c => c.getId() === sub.getData().replacedId);
+
+        if (!substitutedCell) {
+            console.error(
+                "Can't delete substitution: can't find substituted "
+                + "cell with id " + sub.getData().replacedId
+            );
+            return;
+        }
+        const substitutedComponent = substitutedCell.getValue();
+
+        if (
+            substitutedCell.getParent()!.getId() !== sub.getData().replacementId
+        ) {
+            console.error(
+                "Can't delete substitution: component was not substituted. "
+                + "Found parent with id "
+                + substitutedCell.getParent()!.getId()
+                + " but expected "
+                + sub.getData().replacementId
+            );
+            return;
+        }
+
+        // Make a new version of the substituted component and redirect all
+        // arrows to the new version
+        const newCell = PresentationGetter
+            .getRelevantPresentation(substitutedComponent)
+            .addComponent(
+                substitutedComponent,
+                this,
+                this.getDefaultParentForCell(substitutedCell),
+                undefined,
+                true
+            );
+        if (newCell instanceof Array) {
+            throw new Error(
+                "Un-substituted a component with multiple parts: "
+                + "should be impossible"
+            );
+        }
+        substitutedCell
+            .getIncomingEdges()
+            .forEach(e => this.getDataModel().setTerminal(e, newCell, false));
+        substitutedCell
+            .getOutgoingEdges()
+            .forEach(e => this.getDataModel().setTerminal(e, newCell, true));
+        this.removeCells([substitutedCell]);
+        newCell.setId(substitutedCell.getId()!);
+    }
+
+    private getDefaultParentForCell(cell: Cell): Cell {
+        if (this.isInnerComponentId(cell.getId()!)) {
+            const split = cell.getId()!.split('/');
+            const parentId = split[0];
+            const parent = this.getCellWithId(parentId);
+            if (!parent) {
+                throw new Error(
+                    "Unable to find static model for component. "
+                    + `Full path: ${cell.getId()}. Static model id: ${parentId}`
+                );
+            }
+            return parent;
+        }
+        else {
+            return this.getDefaultParent();
+        }
+    }
+
     private isCloudId(id: string): boolean {
         return id.includes('.');
+    }
+
+    private getAllCells(
+        parent: Cell = this.getDefaultParent()
+    ): Cell[] {
+        return parent
+            .getChildren()
+            .flatMap(c => this.getAllCells(c))
+            .concat(parent.getChildren());
     }
 
     private deleteOrphanedClouds(

@@ -17,6 +17,8 @@ export interface State extends BaseState {
 
 export default class HelpBox extends ModalBox<Props, State> {
 
+    private key: number = 0;
+
     protected getBoxContents(): ReactElement {
         return (
             <Grid container>
@@ -42,6 +44,7 @@ export default class HelpBox extends ModalBox<Props, State> {
     }
 
     private makeBulletPoints(): ReactElement[] {
+        this.key = 0;
         return [
             this.makeInfoBulletPoint(),
             this.makeOverviewBulletPoint(),
@@ -66,7 +69,7 @@ export default class HelpBox extends ModalBox<Props, State> {
 
     private makeBulletPoint(text: string, icon: ReactElement): ReactElement {
         return (
-            <ListItem>
+            <ListItem key={this.key++}>
                 <ListItemIcon>
                     {icon}
                 </ListItemIcon>

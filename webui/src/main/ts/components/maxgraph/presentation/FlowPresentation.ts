@@ -13,6 +13,7 @@ export default class FlowPresentation
     public static readonly FLOW_STROKE_WIDTH = 1.5;
     public static readonly CLOUD_DEFAULT_WIDTH_PX = 50;
     public static readonly CLOUD_DEFAULT_HEIGHT_PX = 50;
+    public static readonly CLOUD_VALUE = "cloud";
 
 
     public addComponent(
@@ -229,7 +230,7 @@ export default class FlowPresentation
         return {
             parent,
             id,
-            value: "",
+            value: FlowPresentation.CLOUD_VALUE,
             x,
             y,
             width: FlowPresentation.CLOUD_DEFAULT_WIDTH_PX,

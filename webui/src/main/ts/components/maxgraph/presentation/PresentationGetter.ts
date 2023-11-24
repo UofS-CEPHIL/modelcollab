@@ -3,6 +3,7 @@ import ComponentPresentation from "./ComponentPresentation";
 import ConnectionPresentation from "./ConnectionPresentation";
 import DynamicVariablePresentation from "./DynamicVariablePresentation";
 import FlowPresentation from "./FlowPresentation";
+import NoModelPresentation from "./NoModelPresentation";
 import ParameterPresentation from "./ParameterPresentation";
 import StaticModelPresentation from "./StaticModelPresentation";
 import StockPresentation from "./StockPresentation";
@@ -17,6 +18,7 @@ export default class PresentationGetter {
     private static readonly sumvar = new SumVariablePresentation();
     private static readonly conn = new ConnectionPresentation();
     private static readonly model = new StaticModelPresentation();
+    private static readonly none = new NoModelPresentation();
 
     public static getRelevantPresentation(
         component: schema.FirebaseDataComponent<any>
@@ -36,6 +38,9 @@ export default class PresentationGetter {
                 return PresentationGetter.conn;
             case schema.ComponentType.STATIC_MODEL:
                 return PresentationGetter.model;
+            case schema.ComponentType.SCENARIO:
+            case schema.ComponentType.SUBSTITUTION:
+                return PresentationGetter.none;
             default:
                 throw new Error(
                     "No available presentation for type: " + component.getType()

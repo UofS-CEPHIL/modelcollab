@@ -12,6 +12,7 @@ import StockFlowGraph from "../StockFlowGraph";
 import { ConnectModeBehaviour } from "./ConnectModeBehaviour";
 import EditModeBehaviour from "./EditModeBehaviour";
 import ModalBoxType from "../../ModalBox/ModalBoxType";
+import IdentifyModeBehaviour from "./IdentifyModeBehaviour";
 
 // This class is basically just a map between UI modes and their associated
 // behaviour classes. This was originally a static method on ModeBehaviour but
@@ -55,6 +56,10 @@ export default class BehaviourGetter {
                 );
             case UiMode.EDIT:
                 return new EditModeBehaviour(
+                    graph, actions, getFirebaseState, setOpenModalBox
+                );
+            case UiMode.IDENTIFY:
+                return new IdentifyModeBehaviour(
                     graph, actions, getFirebaseState, setOpenModalBox
                 );
             default:
