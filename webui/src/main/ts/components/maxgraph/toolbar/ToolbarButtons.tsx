@@ -18,8 +18,8 @@ export default abstract class ToolbarButtons<T> extends Component<T> {
         );
     }
 
-    public isSelected(buttonText: string, mode: string): boolean {
-        return mode.toString() === buttonText;
+    public isSelected(buttonText: string, mode?: string): boolean {
+        return mode !== undefined && mode.toString() === buttonText;
     }
 
     protected abstract getButtons(): ReactElement[];
@@ -34,7 +34,11 @@ export default abstract class ToolbarButtons<T> extends Component<T> {
         return (
             <ListItem
                 key={text}
-                disablePadding sx={{ display: 'block' }}
+                disablePadding
+                sx={{
+                    display: 'block',
+                    backgroundColor: this.isSelected(text, mode) ? "rgba(39, 84, 245, 0.08)" : "white"
+                }}
                 id={text}
             >
                 <ListItemButton
@@ -44,7 +48,7 @@ export default abstract class ToolbarButtons<T> extends Component<T> {
                         px: 2.5
                     }}
                     onClick={e => onClick(e)}
-                    selected={mode !== undefined && this.isSelected(text, mode)}
+                    selected={this.isSelected(text, mode)}
                     id={text}
                 >
                     <ListItemIcon

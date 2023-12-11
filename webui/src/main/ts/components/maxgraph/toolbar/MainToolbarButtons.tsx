@@ -23,6 +23,8 @@ import ModalBoxType from "../../ModalBox/ModalBoxType";
 import RestClient from "../../../rest/RestClient";
 import FirebaseDataModel from "../../../data/FirebaseDataModel";
 
+import style from "../../style/toolbarStyle";
+
 export interface Props {
     mode: UiMode;
     open: boolean;

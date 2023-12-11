@@ -9,27 +9,40 @@ import MainToolbarButtons from "./MainToolbarButtons";
 import RestClient from "../../../rest/RestClient";
 import FirebaseDataModel from "../../../data/FirebaseDataModel";
 
+import style from "../../style/toolbarStyle";
+import SemanticSelectToolbarButtons from "./SemanticSelectToolbarButtons";
+import { AxiosResponse } from "axios";
+import ToolbarMode from "./ToolbarMode";
 
 export interface Props {
     onModeChanged: (mode: UiMode) => void;
     setOpenModalBox: (boxType: ModalBoxType) => void;
     sessionId: string;
+    scenario: string;
     restClient: RestClient;
     firebaseDataModel: FirebaseDataModel;
     exitCanvasScreen: () => void;
 }
 
 export interface State {
-    mode: UiMode;
+    uiMode: UiMode;
+    toolbarMode: ToolbarMode;
+    waitingForResults: boolean;
 }
 
 export default class CanvasToolbar extends Component<Props, State> {
 
     public static readonly DRAWER_WIDTH = "240";
+    public static readonly POLLING_TIME_MS = 1000;
+    public static readonly DEFAULT_MODE = UiMode.MOVE;
 
     public constructor(props: Props) {
         super(props);
-        this.state = { mode: UiMode.MOVE };
+        this.state = {
+            uiMode: CanvasToolbar.DEFAULT_MODE,
+            toolbarMode: ToolbarMode.MAIN,
+            waitingForResults: false
+        };
     }
 
 
@@ -123,26 +136,118 @@ export default class CanvasToolbar extends Component<Props, State> {
                     </Toolbar>
                 </AppBar>
                 <Drawer variant="permanent" open={true}>
-                    <MainToolbarButtons
-                        mode={this.state.mode}
-                        open={true}
-                        changeMode={m => this.changeMode(m)}
-                        setOpenModalBox={this.props.setOpenModalBox}
-                        sessionId={this.props.sessionId}
-                        restClient={this.props.restClient}
-                        firebaseDataModel={this.props.firebaseDataModel}
-                        exitCanvasScreen={this.props.exitCanvasScreen}
-                        goToSemanticSelect={() =>
-                            console.error("Semantic Select not implemented")
-                        }
-                    />
+                    {this.makeButtonsForMode(this.state.toolbarMode)}
                 </Drawer>
             </Box>
         );
     }
 
+    private makeButtonsForMode(mode: ToolbarMode): ReactElement {
+        switch (mode) {
+            case ToolbarMode.MAIN:
+                return this.makeMainToolbarButtons();
+            case ToolbarMode.SEMANTIC_SELECT:
+                return this.makeSemanticSelectToolbarButtons();
+            default:
+                console.error("Unknown toolbar mode: " + mode);
+                return this.makeMainToolbarButtons();
+        }
+    }
+
+    private makeMainToolbarButtons(): ReactElement {
+        return (
+            <MainToolbarButtons
+                mode={this.state.uiMode}
+                open={true}
+                changeMode={m => this.changeMode(m)}
+                setOpenModalBox={this.props.setOpenModalBox}
+                sessionId={this.props.sessionId}
+                restClient={this.props.restClient}
+                firebaseDataModel={this.props.firebaseDataModel}
+                exitCanvasScreen={this.props.exitCanvasScreen}
+                goToSemanticSelect={() => this.setState({
+                    toolbarMode: ToolbarMode.SEMANTIC_SELECT
+                })}
+            />
+        );
+    }
+
+    private makeSemanticSelectToolbarButtons(): ReactElement {
+        return (
+            <SemanticSelectToolbarButtons
+                onSelectODE={() => this.computeModel()}
+                onSelectBack={() => this.setState({
+                    toolbarMode: ToolbarMode.MAIN
+                })}
+                waitingForResults={this.state.waitingForResults}
+            />
+        );
+    }
+
     private changeMode(mode: UiMode): void {
-        this.setState({ ...this.state, mode });
+        this.setState({ ...this.state, uiMode: mode });
         this.props.onModeChanged(mode);
+    }
+
+    private computeModel(): void {
+        console.log("Computing model. Scenario = " + this.props.scenario);
+        const pollOnce = (id: string) => {
+            this.props.restClient.getResults(
+                id,
+                res => {
+                    if (res.status === 200) {
+                        try {
+                            const blob = new Blob(
+                                [res.data],
+                                { type: res.headers['content-type'] }
+                            );
+                            this.downloadData(blob, "ModelResults.png");
+                        }
+                        finally {
+                            this.setState({ waitingForResults: false });
+                        }
+                    }
+                    else if (res.status === 204) {
+                        startPolling(id);
+                    }
+                    else {
+                        console.error("Received bad response from server");
+                        console.error(res);
+                        this.setState({ waitingForResults: false });
+                    }
+                }
+            );
+        }
+
+        const startPolling = (id: string) => setTimeout(
+            () => pollOnce(id),
+            CanvasToolbar.POLLING_TIME_MS
+        );
+
+        if (!this.state.waitingForResults) {
+            this.props.restClient.computeModel(
+                this.props.sessionId,
+                this.props.scenario,
+                (res: AxiosResponse) => {
+                    if (res.status === 200) {
+                        this.setState({ waitingForResults: true });
+                        startPolling(res.data);
+                    }
+                    else {
+                        console.error("Received bad response from server");
+                        console.error(res);
+                    }
+                });
+        }
+    }
+
+    private downloadData(blob: Blob, filename: string): void {
+        let a = document.createElement('a');
+        a.href = window.URL.createObjectURL(blob);
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 }

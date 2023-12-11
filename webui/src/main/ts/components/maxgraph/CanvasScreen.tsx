@@ -116,6 +116,7 @@ export default class CanvasScreen extends Component<Props, State> {
                             { ...this.state, displayedModalBox: boxType }
                         )}
                         sessionId={this.props.sessionId}
+                        scenario={this.state.scenario}
                         restClient={this.props.restClient}
                         firebaseDataModel={this.props.firebaseDataModel}
                         exitCanvasScreen={this.props.returnToSessionSelect}
@@ -209,8 +210,9 @@ export default class CanvasScreen extends Component<Props, State> {
                 <ScenariosBox
                     handleCancel={() => this.closeModalBox()}
                     handleSubmit={s => this.setState({ ...this.state, scenario: s })}
-                    startEditingScenario={() => this.setState({
+                    startEditingScenario={(name: string) => this.setState({
                         ...this.state,
+                        scenario: name,
                         displayedModalBox: ModalBoxType.EDIT_SCENARIO
                     })}
                     firebaseDataModel={this.props.firebaseDataModel}
