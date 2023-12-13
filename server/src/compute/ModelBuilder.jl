@@ -4,6 +4,7 @@ using ..FirebaseComponents
 using ..ModelComponents
 using ..ComponentBuilder
 using ..StringGraph
+using ..CodeGenerator
 
 struct InvalidModelException <: Exception
     reason::String
@@ -13,6 +14,8 @@ Base.showerror(io::IO, e::InvalidModelException) = print(
     io,
     "InvalidModelException: $(e.reason)"
 )
+
+OUTER_MODEL_NAME = "_outer"
 
 function make_stockflow_models(
     outers::Vector{FirebaseDataObject},
@@ -26,6 +29,8 @@ function make_stockflow_models(
 
     add_outers_to_models_dict!(outers, inners)
     all_models = inners # rename the var to reflect the change
+
+    #convert_constants_to_parameters!(all_models)
 
     if (scenario_name !== nothing)
         scenario = findfirst(s -> s.name == scenario_name, scenarios)
@@ -172,7 +177,7 @@ function add_outers_to_models_dict!(
     # then add it as its own model to the list. Otherwise, add any necessary
     # information to the first inner model.
     if (has_relevant_components(outers))
-        dict["_outer"] = outers
+        dict[OUTER_MODEL_NAME] = outers
     else
         if (length(dict) == 0)
             throw(
@@ -223,6 +228,49 @@ function apply_substitutions!(
             end
         end
     end
+end
+
+
+# TODO what the hell?? How do we do a constant?
+function convert_constants_to_parameters!(
+    models::Dict{String, Vector{FirebaseDataObject}}
+)::Nothing
+    for cptlist in values(models)
+        # Replaces the text in the equation AND adds a new param
+        function replace_const(num::AbstractString)::String
+            paramidx = findfirst(
+                p -> firebase_isparam(p) && p.value.value == num,
+                cptlist
+            )
+            if (paramidx == nothing)
+                paramname = "const_" * replace(num, "."=>"_")
+                param = FirebaseParameter(
+                    paramname,
+                    FirebasePoint(0, 0),
+                    FirebaseText(paramname),
+                    FirebaseValue(num)
+                )
+                push!(cptlist, param)
+            else
+                param = cptlist[paramidx]
+            end
+            return param.text.text
+        end
+        for i in 1:length(cptlist)
+            cpt = cptlist[i]
+            if (firebase_isflow(cpt) || firebase_isdynvar(cpt))
+                cptlist[i] = newvalue(
+                    FirebaseValue(CodeGenerator.replace_symbols(
+                        cpt.value.value,
+                        (s::AbstractString) -> s,
+                        replace_const
+                    )),
+                    cpt
+                )
+            end
+        end
+    end
+    return
 end
 
 function apply_scenario!(

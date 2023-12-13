@@ -1,12 +1,14 @@
 module CodeGenerator
 
 using ..FootBuilder
-using ..ModelBuilder
 using ..ModelComponents
 using ..ModelValidator
 
 const IMPORT_LIST = [
     "StockFlow",
+    "StockFlow.Syntax",
+    "StockFlow.Syntax.Stratification",
+    "StockFlow.Syntax.Composition",
     "Catlab",
     "Catlab.CategoricalAlgebra",
     "LabelledArrays",
@@ -52,6 +54,10 @@ function make_import_lines()::Vector{String}
     return map(i -> "using $i", IMPORT_LIST)
 end
 
+function make_model_name(modelid::String)::String
+    return "model_" * modelid
+end
+
 function make_var_list(names::Vector{String}, addcolon::Bool=false)
     prefix = addcolon ? ":" : ""
     if (length(names) == 0)
@@ -64,75 +70,12 @@ function make_var_list(names::Vector{String}, addcolon::Bool=false)
     end
 end
 
-function make_flow_var_name(flow::Flow)::String
-    return "var_" * flow.name;
-end
-
-function make_model_varname(model::StockFlowModel)::String
-    return "model_" * model.firebaseid
-end
-
 function enforce_floating_point(numstring::AbstractString)::String
     if (occursin(r"^\d+$", numstring)) # If it's only digits and no decimal
         return numstring * ".0"
     else
         return numstring
     end
-end
-
-# Find all symbols in the equation that are words not numbers,
-# and replace them according to replacement_func. Func should be
-# (AbstractString) -> String
-function replace_symbols(value::String, replacement_func::Function)::String
-
-    function is_simple_number(s::AbstractString)::Bool
-        return occursin(r"^\d+(\.\d+)?$", s)
-    end
-
-    function replace_one_symbol(s::AbstractString, func::Function)::String
-        # Get the actual symbol ignoring any whitespace
-        re = r"(?<pre>[^\w\d.]+|^)(?<grp>[\w\d.]+)(?<post>[^\w\d.]+|$)"
-        m = match(re, s)
-        if (m === nothing)
-            throw(InvalidModelException("Unable to parse symbol: $s"))
-        end
-
-        replstr = func(m["grp"])
-        return replace(
-            s,
-            re => SubstitutionString("\\g<pre>$(replstr)\\g<post>")
-        )
-    end
-
-    if (value == "")
-        throw(InvalidModelException("Cannot find any symbols in value: $value"))
-    end
-
-    # Split along any space, paren, or operator
-    split_regex = r"[-\/*+\(\)\s]"
-    split_items = split(value, split_regex)
-
-    out::String = value
-    for value in split_items
-        if (value != "")
-            # For every item that we found that isn't a number,
-            # use a regex to find it and replace it with the
-            # value as specified by the replacement function
-            regex = Regex("(?<pre>[^\\w\\d.]+|^)$value(?<post>[^\\w\\d.]+|\$)")
-            if (is_simple_number(value))
-                out = replace(
-                    out,
-                    regex => m -> replace_one_symbol(m, enforce_floating_point)
-                )
-            else
-                out = replace(
-                    out,
-                    regex => m -> replace_one_symbol(m, replacement_func)
-                )
-            end
-        end
-    end
-    return out
 end
 
 # This only works on functions that have a "firebaseid" field. Up to you
@@ -157,124 +100,86 @@ end
 
 function make_stockflow_line(model::StockFlowModel)::String
 
-    function makeline(names::Vector{String}, alt::String)::String
-        length(names) > 0 ? make_var_list(names, true) : alt
-    end
-
-    function is_relevant_flowname(flowname::String)::Bool
-        findfirst(f -> f.name == flowname, model.flows) !== nothing
-    end
-
-    function is_relevant_dynvarname(varname::String)::Bool
-        findfirst(v -> v.name == varname, model.dynvars) !== nothing
-    end
-
-    function is_relevant_sumvarname(varname::String)::Bool
-        findfirst(v -> v.name == varname, model.sumvars) !== nothing
-    end
-
-    function make_single_stock_entry(stock::Stock)::String
-
-        # Inflows and outflows
-        relevant_inflow_names =
-            filter(f -> is_relevant_flowname(f), stock.inflow_names)
-        inflows_line = makeline(relevant_inflow_names, ":F_NONE")
-        relevant_outflow_names =
-            filter(f -> is_relevant_flowname(f), stock.outflow_names)
-        outflows_line = makeline(relevant_outflow_names, ":F_NONE")
-
-        # Contributing dynamic variables (incl flows)
-        contributing_flows = filter(
-            f -> in(f.name, stock.contributing_flow_names),
-            model.flows
-        )
-        relevant_contributing_flows = filter(
-            f -> is_relevant_flowname(f.name),
-            contributing_flows
-        )
-
-        relevant_flow_varnames =
-            make_flow_var_name.(relevant_contributing_flows)
-        relevant_dynvar_names =
-            filter(is_relevant_dynvarname, stock.contributing_dynvar_names)
-        relevant_names =
-            vcat(relevant_flow_varnames, relevant_dynvar_names)
-        dynvars_line = makeline(relevant_names, ":V_NONE")
-
-        # Contributing sum variables
-        relevant_names = filter(
-            is_relevant_sumvarname,
-            stock.contributing_sumvar_names
-        )
-        sumvars_line = makeline(relevant_names, ":SV_NONE")
-
-        # Join together & return
-        commasep = join(
-            [inflows_line, outflows_line, dynvars_line, sumvars_line],
-            ","
-        )
-        return ":$(stock.name) => ($commasep)"
-    end
-
-    function make_single_flow_entry(flow::Flow)::String
-        varname = make_flow_var_name(flow)
-        return ":$(flow.name) => :$(varname)"
-    end
-
-    function conv_flow_to_var(flow::Flow)::DynamicVariable
-        return DynamicVariable(
-            make_flow_var_name(flow),
-            flow.firebaseid,
-            flow.equation,
-            flow.depended_stock_names,
-            flow.depended_sumvar_names
-        )
-    end
-
-    allvars = [model.dynvars; conv_flow_to_var.(model.flows)]
-
-    function translate_var_equation(var::DynamicVariable)::String
-        function translate_one(symbol::AbstractString)::String
-            if (in(symbol, var.depended_stock_names))
-                return "u.$(symbol)"
-            elseif (in(symbol, var.depended_sumvar_names))
-                return "uN.$(symbol)(u,t)"
-            else
-                return "p.$(symbol)"
-            end
+    function make_stocks_or_params_block(isStocks::Bool)::String
+        if (isStocks)
+            header = "stocks"
+            components = model.stocks
+        else
+            header = "parameters"
+            components = model.parameters
         end
-        return replace_symbols(var.value, translate_one)
-    end
 
-    function make_single_var_entry(var::DynamicVariable)::String
-        func_signature = "(u, uN, p, t)"
-        equation = translate_var_equation(var)
-        return ":$(var.name) => $(func_signature) -> $equation"
-    end
-
-    function make_single_sumvar_entry(sumvar::SumVariable)::String
-        svname = sumvar.name
-        vars = map(
-            v -> v.name,
-            filter(v -> in(svname, v.depended_sumvar_names), allvars)
+        items = join(
+            map(c -> "\t" * c.name, components),
+            "\n"
         )
-        varlist = length(vars) > 0 ? make_var_list(vars, true) : ":SVV_NONE"
-        return ":$svname => $varlist"
+        return "\t:$header\n$items\n\n"
     end
 
-    modelname = make_model_varname(model)
-    stocklines = join(make_single_stock_entry.(model.stocks), ", ")
-    flowlines = join(make_single_flow_entry.(model.flows), ", ")
-    dynvar_lines = join(make_single_var_entry.(allvars), ", ")
-    sumvar_lines = join(make_single_sumvar_entry.(model.sumvars), ", ")
+    function make_stocks_block()::String
+        return make_stocks_or_params_block(true)
+    end
 
+    function make_parameters_block()::String
+        return make_stocks_or_params_block(false)
+    end
+
+    function make_sumvars_block()::String
+        stocknames = map(s -> s.name, model.stocks)
+        function make_single_sumvar_line(sv::SumVariable)::String
+            stocks = filter(name -> name  in stocknames, sv.depended_stock_names)
+            stocklist = join(stocks, ", ")
+            name = sv.name
+            return "\t$name = [$stocklist]"
+        end
+        items = join(
+            map(make_single_sumvar_line, model.sumvars),
+            "\n"
+        )
+        return "\t:sums\n$items\n\n"
+    end
+
+    function make_dynvars_block()::String
+        function make_single_dynvar_line(dv::DynamicVariable)::String
+            name = dv.name
+            eqn = dv.value
+            return "\t$name = $eqn"
+        end
+        items = join(
+            map(make_single_dynvar_line, model.dynvars),
+            "\n"
+        )
+        return (
+            "\t:dynamic_variables\n$items\n\n"
+        )
+    end
+
+    function make_flows_block()::String
+        function make_single_flow_line(flow::Flow)::String
+            name = flow.name
+            eqn = flow.equation
+            from = flow.from == nothing ? "CLOUD" : flow.from
+            to = flow.to == nothing ? "CLOUD" : flow.to
+            return "\t$from => $name($eqn) => $to"
+        end
+        items = join(
+            map(make_single_flow_line, model.flows),
+            "\n"
+        )
+        return (
+            "\t:flows\n$items\n\n"
+        )
+    end
+
+    modelname = make_model_name(model.firebaseid)
     return (
-        "$modelname = StockAndFlow("
-        * "($stocklines), "
-        * "($flowlines), "
-        * "($dynvar_lines), "
-        * "($sumvar_lines)"
-        * ")"
+        "$modelname = @stock_and_flow begin\n"
+        * make_stocks_block()
+        * make_parameters_block()
+        * make_sumvars_block()
+        * make_dynvars_block()
+        * make_flows_block()
+        * "end"
     )
 end
 
@@ -284,92 +189,80 @@ function make_feet_and_apex_lines(
     models::Vector{StockFlowModel}
 )::Vector{String}
 
-    function make_foot_name(foot::Foot)::String
-        stockname = foot.stock_name
-        svnames = join(sort(foot.sumvar_names), "")
-        return "$(stockname)_$(svnames)"
-    end
+    COMPOSED_MODEL_NAME = "model_composed"
+    OPEN_COMPOSED_MODEL_NAME = "opencomposed"
 
-    function make_open_varname(model::StockFlowModel)::String
-        modelname = make_model_varname(model)
-        return "$(modelname)_open"
-    end
-
-    function make_foot_line(foot::Foot)::String
-        sumvar_list = make_var_list(foot.sumvar_names, true)
-        footname = make_foot_name(foot)
-        if (foot.stock_name === nothing)
-            return "$footname = foot((), $sumvar_list, ())"
+    function make_foot_arrow_list(foot::Foot)::String
+        if (foot.stock_name != nothing)
+            if (length(foot.sumvar_names) > 0)
+                arrowlist = join(
+                    map(
+                        svn -> "$(foot.stock_name)=>$svn",
+                        foot.sumvar_names
+                    ),
+                    ", "
+                )
+            else
+                    arrowlist = "$(foot.stock_name)=>()"
+            end
         else
-            stockname = foot.stock_name
-            sumvar_arrowlist = make_var_list(map(
-                svname -> ":$stockname => :$svname",
-                foot.sumvar_names
-            ))
-            return ("$footname = foot(:$stockname, "
-                    * "$sumvar_list, $sumvar_arrowlist)")
+            if (length(foot.sumvar_names > 0))
+                arrowlist = join(map(svn -> "()=>$svn"), ",")
+            else
+                throw(ErrorException("Empty foot"))
+            end
         end
     end
 
-    function get_relevant_footnames(model::StockFlowModel)::Vector{String}
-        function is_relevant_foot(foot::Foot)::Bool
-            findfirst(s -> s.name == foot.stock_name, model.stocks) !== nothing
-        end
-        relevant_feet = filter(is_relevant_foot, feet)
-        relevant_footnames = map(make_foot_name, relevant_feet)
-        return sort(relevant_footnames)
-    end
-
-    function make_open_line(model::StockFlowModel)::String
-        model_feet_commasep = join(get_relevant_footnames(model), ",")
-        open_varname = make_open_varname(model)
-        stockflow_varname = make_model_varname(model)
-        return "$open_varname = Open($stockflow_varname, $model_feet_commasep)"
-    end
-
-    function make_apex_line(open_varname::String)::String
-        return "modelapex = apex($open_varname)"
-    end
-
-    function make_relation_line()::String
-        function make_single_model_entry(model::StockFlowModel)::String
-            name = make_model_varname(model)
-            relevant_footnames = get_relevant_footnames(model)
-            model_footnames_commasep = join(relevant_footnames, ",")
-            return "$(name)($(model_footnames_commasep))"
+    function make_compose_line()::String
+        function make_single_foot_line(foot::Foot)::String
+            relevant_model_names = join(make_model_name.(foot.model_ids), ", ")
+            arrowlist = make_foot_arrow_list(foot)
+            return "\t$relevant_model_names ^ $arrowlist"
         end
 
-        footnames_commasep = join(
-            sort(map(make_foot_name, feet)),
+        modelnames_commasep = join(
+            map(m -> make_model_name(m.firebaseid), models),
             ","
         )
-        if (length(feet) == 1)
-            footnames_commasep *= ","
-        end
-        model_entries_semicolonsep = join(make_single_model_entry.(models), ";")
-
-        return ("relation = @relation ($footnames_commasep) begin "
-             * "$model_entries_semicolonsep end")
+        modelnames_spacesep = join(
+            map(m -> make_model_name(m.firebaseid), models),
+            " "
+        )
+        footlines = join(make_single_foot_line.(feet), "\n")
+        return (
+            "$COMPOSED_MODEL_NAME = @compose $modelnames_spacesep begin\n"
+            * "\t($modelnames_commasep)\n"
+            * "$footlines\n"
+            * "end"
+        )
     end
 
-    function make_oapply_line()::String
-        open_varnames_commasep = join(make_open_varname.(models), ",")
-        return "composedopen = oapply(relation, [$open_varnames_commasep])"
+    function make_open_line()::String
+        function make_single_foot_entry(foot::Foot)
+            arrowlist = make_foot_arrow_list(foot)
+            return "(@foot $arrowlist)"
+        end
+        model_feet_commasep = join(make_single_foot_entry.(feet), ",")
+        return (
+            "$OPEN_COMPOSED_MODEL_NAME = "
+            * "Open($COMPOSED_MODEL_NAME, $model_feet_commasep)"
+        )
+    end
+
+    function make_apex_line()::String
+        return "modelapex = apex($OPEN_COMPOSED_MODEL_NAME)"
     end
 
     if (length(models) == 0)
         throw(InvalidModelException("No valid models found"))
     else
-        footlines = make_foot_line.(feet)
-        relation_line = make_relation_line()
-        open_lines = make_open_line.(models)
-        oapply_line = make_oapply_line()
-        apex_line = make_apex_line("composedopen")
+        compose_line = make_compose_line()
+        open_line = make_open_line()
+        apex_line = make_apex_line()
         return [
-            footlines;
-            relation_line;
-            open_lines;
-            oapply_line;
+            compose_line,
+            open_line,
             apex_line
         ]
     end
@@ -427,5 +320,68 @@ function make_save_fig_lines(filename::String)::Vector{String}
         "savefig(\"$filename\")"
     ]
 end
+
+# Replace all symbols in the equation that are words not numbers according to
+# symbol_replacement_func, and ones that are just numbers with
+# const_replacement_func. Funcs should be (AbstractString) -> String
+function replace_symbols(
+    value::String,
+    symbol_replacement_func::Function,
+    const_replacement_func::Function = (s::AbstractString) -> s
+)::String
+
+    function is_simple_number(s::AbstractString)::Bool
+        return occursin(r"^\d+(\.\d+)?$", s)
+    end
+
+    function replace_one_symbol(s::AbstractString, func::Function)::String
+        # Get the actual symbol ignoring any whitespace
+        re = r"(?<pre>[^\w\d.]+|^)(?<grp>[\w\d.]+)(?<post>[^\w\d.]+|$)"
+        m = match(re, s)
+        if (m === nothing)
+            throw(InvalidModelException("Unable to parse symbol: $s"))
+        end
+
+        replstr = func(m["grp"])
+        return replace(
+            s,
+            re => SubstitutionString("\\g<pre>$(replstr)\\g<post>")
+        )
+    end
+
+    if (value == "")
+        throw(InvalidModelException("Cannot find any symbols in value: $value"))
+    end
+
+    # Split along any space, paren, or operator
+    split_regex = r"[-\/*+\(\)\s]"
+    split_items = split(value, split_regex)
+
+    out::String = value
+    for value in split_items
+        if (value != "")
+            # For every item that we found that isn't a number,
+            # use a regex to find it and replace it with the
+            # value as specified by the replacement function
+            regex = Regex("(?<pre>[^\\w\\d.]+|^)$value(?<post>[^\\w\\d.]+|\$)")
+            if (is_simple_number(value))
+                out = replace(
+                    out,
+                    regex => m -> replace_one_symbol(
+                        enforce_floating_point(m),
+                        const_replacement_func
+                    )
+                )
+            else
+                out = replace(
+                    out,
+                    regex => m -> replace_one_symbol(m, symbol_replacement_func)
+                )
+            end
+        end
+    end
+    return out
+end
+export replace_symbols
 
 end # CodeGenerator Namespace

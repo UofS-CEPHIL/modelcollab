@@ -174,6 +174,10 @@ export FirebaseParameter
 function newid(id::String, o::FirebaseParameter)::FirebaseParameter
     return FirebaseParameter(id, o.location, o.text, o.value)
 end
+function newvalue(val::FirebaseValue, o::FirebaseParameter)::FirebaseParameter
+    return FirebaseParameter(o.id, o.location, o.text, val)
+end
+export newvalue
 
 struct FirebaseDynamicVariable <: FirebaseDataObject
     id::String
@@ -185,6 +189,10 @@ export FirebaseDynamicVariable
 function newid(id::String, o::FirebaseDynamicVariable)::FirebaseDynamicVariable
     return FirebaseDynamicVariable(id, o.location, o.text, o.value)
 end
+function newvalue(val::FirebaseValue, o::FirebaseDynamicVariable)::FirebaseDynamicVariable
+    return FirebaseDynamicVariable(o.id, o.location, o.text, val)
+end
+
 
 ############################## Flow / Connection ###############################
 
@@ -240,6 +248,14 @@ function newdest(destid::String, o::FirebaseFlow)::FirebaseFlow
         o.text
     )
 end
+function newvalue(val::FirebaseValue, o::FirebaseFlow)::FirebaseFlow
+    return FirebaseFlow(
+        o.id,
+        o.pointer,
+        val,
+        o.text
+    )
+end
 
 #################################### Stock #####################################
 
@@ -252,6 +268,9 @@ end
 export FirebaseStock
 function newid(id::String, o::FirebaseStock)::FirebaseStock
     return FirebaseStock(id, o.location, o.text, o.value)
+end
+function newvalue(val::FirebaseValue, o::FirebaseStock)::FirebaseStock
+    return FirebaseStock(o.id, o.location, o.text, val)
 end
 
 struct FirebaseCloud <: FirebaseDataObject
