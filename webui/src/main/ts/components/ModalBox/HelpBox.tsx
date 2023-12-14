@@ -4,7 +4,8 @@ import { UiMode } from '../../UiMode';
 import ModalBox, { Props as BaseProps, State as BaseState } from '../ModalBox/ModalBox';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import InfoIcon from '@mui/icons-material/Info';
-import MainToolbarButtons from "../maxgraph/toolbar/MainToolbarButtons";
+import UiModeSpeedDial from "../maxgraph/toolbar/UiModeSpeedDial";
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 
 export interface Props extends BaseProps {
     onClose: () => void;
@@ -109,7 +110,7 @@ export default class HelpBox extends ModalBox<Props, State> {
     private makeStockBulletPoint(): ReactElement {
         const text = "Stock mode is used to create new stocks. Stocks are created by left-clicking on the "
             + "canvas. Edit the stock's starting value using Edit mode."
-        const icon = MainToolbarButtons.getIconForMode(UiMode.STOCK);
+        const icon = UiModeSpeedDial.getIconForMode(UiMode.STOCK);
         return this.makeBulletPoint(text, icon);
     }
 
@@ -120,7 +121,7 @@ export default class HelpBox extends ModalBox<Props, State> {
             + "and may take unexpected paths to the destination stock. This can be remedied by moving the two stocks "
             + "in relation to each other, and may require some artistry to make it look good. This will be fixed "
             + "in a future update.";
-        const icon = MainToolbarButtons.getIconForMode(UiMode.FLOW);
+        const icon = UiModeSpeedDial.getIconForMode(UiMode.FLOW);
         return this.makeBulletPoint(text, icon);
     }
 
@@ -130,7 +131,7 @@ export default class HelpBox extends ModalBox<Props, State> {
             + "and override parameters by creating a new scenario. All models must contain a startTime and "
             + "stopTime parameter, which are populated automatically. If startTime or stopTime is found in an "
             + "inner model, it is disregarded.";
-        const icon = MainToolbarButtons.getIconForMode(UiMode.PARAM);
+        const icon = UiModeSpeedDial.getIconForMode(UiMode.PARAM);
         return this.makeBulletPoint(text, icon);
     }
 
@@ -140,7 +141,7 @@ export default class HelpBox extends ModalBox<Props, State> {
             + "new variable, then edit it using Edit mode. No components may depend on a "
             + "dynamic variable - that is, no flows, stocks, or other dynamic variables may use a dynamic variable "
             + "in their equation. This feature will be added in a future update.";
-        const icon = MainToolbarButtons.getIconForMode(UiMode.DYN_VARIABLE);
+        const icon = UiModeSpeedDial.getIconForMode(UiMode.DYN_VARIABLE);
         return this.makeBulletPoint(text, icon);
     }
 
@@ -149,21 +150,21 @@ export default class HelpBox extends ModalBox<Props, State> {
             + "represents a computed dynamic value. However, a sum variable is specifically the sum of zero or "
             + "more stocks. Create a new sum variable by left clicking on the canvas, then mark the tallied stocks "
             + "by creating a connection from the stock to the sum variable. See 'Connect' for more.";
-        const icon = MainToolbarButtons.getIconForMode(UiMode.SUM_VARIABLE);
+        const icon = UiModeSpeedDial.getIconForMode(UiMode.SUM_VARIABLE);
         return this.makeBulletPoint(text, icon);
     }
 
     private makeMoveBulletPoint(): ReactElement {
         const text = "Move mode is for moving components and allows the selection and moving of multiple components by "
             + "left click and dragging. Nothing happens when components or the background are clicked.";
-        const icon = MainToolbarButtons.getIconForMode(UiMode.MOVE);
+        const icon = UiModeSpeedDial.getIconForMode(UiMode.MOVE);
         return this.makeBulletPoint(text, icon);
     }
 
     private makeEditBulletPoint(): ReactElement {
         const text = "Edit mode allows users to edit existing components. Left click on the component to edit it. "
             + "A dialog box will appear and allow the component to be edited. Only outer components may be edited.";
-        const icon = MainToolbarButtons.getIconForMode(UiMode.EDIT);
+        const icon = UiModeSpeedDial.getIconForMode(UiMode.EDIT);
         return this.makeBulletPoint(text, icon);
     }
 
@@ -174,7 +175,7 @@ export default class HelpBox extends ModalBox<Props, State> {
             + "components to each component that depends on it. A 'depended component' is any component that appears "
             + "in a component's equation. E.g. in a typical SIR model, the flow from S=>I will depend on S, I, the "
             + "total population in the model, and possibly several parameters.";
-        const icon = MainToolbarButtons.getIconForMode(UiMode.CONNECT);
+        const icon = UiModeSpeedDial.getIconForMode(UiMode.CONNECT);
         return this.makeBulletPoint(text, icon);
     }
 
@@ -185,7 +186,7 @@ export default class HelpBox extends ModalBox<Props, State> {
             + "of the identical components, then the other. The first one to be clicked will be the only one that is "
             + "rendered onscreen, i.e. all flows and connections previously going to the second clicked component "
             + "will be diverted to the first clicked component.";
-        const icon = MainToolbarButtons.getIconForMode(UiMode.IDENTIFY);
+        const icon = UiModeSpeedDial.getIconForMode(UiMode.IDENTIFY);
         return this.makeBulletPoint(text, icon);
     }
 
@@ -193,14 +194,14 @@ export default class HelpBox extends ModalBox<Props, State> {
         const text = "Scenarios represent a set of parameter values. Use the scenarios edit box to create new "
             + "scenarios, edit or delete existing ones, and choose the scenario to be run when the 'run model' button "
             + "is clicked";
-        const icon = MainToolbarButtons.getScenariosIcon();
+        const icon = this.makeDefaultIcon();
         return this.makeBulletPoint(text, icon);
     }
 
     private makeGetCodeBulletPoint(): ReactElement {
         const text = "The Get Code button allows the user to download the current model as Julia code, designed to "
             + "work with the package StockFlow.jl";
-        const icon = MainToolbarButtons.getGetCodeIcon();
+        const icon = this.makeDefaultIcon();
         return this.makeBulletPoint(text, icon);
     }
 
@@ -208,7 +209,7 @@ export default class HelpBox extends ModalBox<Props, State> {
         const text = "The Get Data button allows the user to download the current model as JSON data. Currently, this "
             + "data can only be imported by directly modifying the database, but a future version will include the "
             + "ability to import model data from such JSON files.";
-        const icon = MainToolbarButtons.getGetJsonIcon();
+        const icon = this.makeDefaultIcon();
         return this.makeBulletPoint(text, icon);
     }
 
@@ -216,7 +217,7 @@ export default class HelpBox extends ModalBox<Props, State> {
         const text = "The Run Model button allows the user to run the current scenario with ODE semantics. This will "
             + "be updated for other semantics in a future update. Model computation may take up to several minutes, "
             + "and is cancelled if the user navigates away from the page.";
-        const icon = MainToolbarButtons.getSemanticSelectIcon();
+        const icon = this.makeDefaultIcon();
         return this.makeBulletPoint(text, icon);
     }
 
@@ -224,19 +225,23 @@ export default class HelpBox extends ModalBox<Props, State> {
         const text = "The Publish Model button allows the user to publish the current model to be imported into another "
             + "model. The behaviour is undefined for saving models which contain other models, and should not be done."
             + "A future update will allow such models to be saved in a 'flattened' form.";
-        const icon = MainToolbarButtons.getPublishModelIcon();
+        const icon = this.makeDefaultIcon();
         return this.makeBulletPoint(text, icon);
     }
 
     private makeImportModelBulletPoint(): ReactElement {
         const text = "The Import Model button allows the user to import an existing model to be extended.";
-        const icon = MainToolbarButtons.getImportModelIcon();
+        const icon = this.makeDefaultIcon();
         return this.makeBulletPoint(text, icon);
     }
 
     private makeGoBackBulletPoint(): ReactElement {
         const text = "The Back button sends the user back to the session selection screen.";
-        const icon = MainToolbarButtons.getGoBackIcon();
+        const icon = this.makeDefaultIcon();
         return this.makeBulletPoint(text, icon);
+    }
+
+    private makeDefaultIcon(): ReactElement {
+        return (<CheckBoxOutlineBlankIcon />);
     }
 }

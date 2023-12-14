@@ -1,18 +1,16 @@
 import { Component, ReactElement } from "react";
-import { Toolbar, Drawer as MuiDrawer, AppBar as MuiAppBar, AppBarProps as MuiAppBarProps, Box, CssBaseline, IconButton, Typography } from '@mui/material';
-import { styled, CSSObject, Theme } from "@mui/material/styles";
-import MenuIcon from '@mui/icons-material/Menu';
-
+import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, MenuItem, CircularProgress } from '@mui/material';
+import CatchingPokemonIcon from '@mui/icons-material/CatchingPokemon'
+import LogoutIcon from '@mui/icons-material/Logout';
+import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import PlayArrow from "@mui/icons-material/PlayArrow";
+import { AxiosResponse } from "axios";
+import UiModeSpeedDial from "./UiModeSpeedDial";
 import ModalBoxType from "../../ModalBox/ModalBoxType";
 import { UiMode } from "../../../UiMode";
-import MainToolbarButtons from "./MainToolbarButtons";
 import RestClient from "../../../rest/RestClient";
 import FirebaseDataModel from "../../../data/FirebaseDataModel";
-
-import style from "../../style/toolbarStyle";
-import SemanticSelectToolbarButtons from "./SemanticSelectToolbarButtons";
-import { AxiosResponse } from "axios";
-import ToolbarMode from "./ToolbarMode";
 
 export interface Props {
     onModeChanged: (mode: UiMode) => void;
@@ -26,8 +24,10 @@ export interface Props {
 
 export interface State {
     uiMode: UiMode;
-    toolbarMode: ToolbarMode;
     waitingForResults: boolean;
+    interpretMenuAnchor: HTMLElement | null;
+    modelActionsMenuAnchor: HTMLElement | null;
+    sidebarOpen: boolean;
 }
 
 export default class CanvasToolbar extends Component<Props, State> {
@@ -36,151 +36,167 @@ export default class CanvasToolbar extends Component<Props, State> {
     public static readonly POLLING_TIME_MS = 1000;
     public static readonly DEFAULT_MODE = UiMode.MOVE;
 
+    private static readonly MODEL_ACTIONS_BUTTON_ID = "model-actions-button";
+    private static readonly MODEL_ACTIONS_MENU_ID = "model-actions-menu";
+    private static readonly INTERPRET_BUTTON_ID = "interpret-button";
+    private static readonly INTERPRET_MENU_ID = "interpret-menu";
+
     public constructor(props: Props) {
         super(props);
         this.state = {
             uiMode: CanvasToolbar.DEFAULT_MODE,
-            toolbarMode: ToolbarMode.MAIN,
-            waitingForResults: false
+            waitingForResults: false,
+            interpretMenuAnchor: null,
+            modelActionsMenuAnchor: null,
+            sidebarOpen: false
         };
     }
 
 
     public render(): ReactElement {
-
-        // Apply styles to components. Copied from
-        // https://mui.com/material-ui/react-drawer/
-        const openedMixin = (theme: Theme): CSSObject => ({
-            width: CanvasToolbar.DRAWER_WIDTH,
-            transition: theme.transitions.create('width', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-            }),
-            overflowX: 'hidden'
-        });
-        const closedMixin = (theme: Theme): CSSObject => ({
-            transition: theme.transitions.create('width', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.leavingScreen,
-            }),
-            overflowX: 'hidden',
-            width: `calc(${theme.spacing(7)} + 5px)`,
-            [theme.breakpoints.up('sm')]: {
-                width: `calc(${theme.spacing(8)} + 1px)`,
-            },
-        });
-        const DrawerHeader = styled('div')(({ theme }) => ({
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            padding: theme.spacing(0, 1),
-            // necessary for content to be below app bar
-            ...theme.mixins.toolbar
-        }));
-        const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
-            ({ theme, open }) => ({
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-                boxSizing: 'border-box',
-                ...(open && {
-                    ...openedMixin(theme),
-                    '& .MuiDrawer-paper': openedMixin(theme),
-                }),
-                ...(!open && {
-                    ...closedMixin(theme),
-                    '& .MuiDrawer-paper': closedMixin(theme),
-                }),
-            }),
-        );
-        interface AppBarProps extends MuiAppBarProps {
-            open?: boolean;
-        }
-        const AppBar = styled(MuiAppBar, {
-            shouldForwardProp: (prop) => prop !== 'open',
-        })<AppBarProps>(({ theme, open }) => ({
-            zIndex: theme.zIndex.drawer + 1,
-            transition: theme.transitions.create(['width', 'margin'], {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.leavingScreen,
-            }),
-            ...(open && {
-                marginLeft: CanvasToolbar.DRAWER_WIDTH,
-                width: `calc(100% - ${CanvasToolbar.DRAWER_WIDTH}px)`,
-                transition: theme.transitions.create(['width', 'margin'], {
-                    easing: theme.transitions.easing.sharp,
-                    duration: theme.transitions.duration.enteringScreen,
-                }),
-            }),
-        }));
-
         return (
-            <Box sx={{ display: "flex" }} >
-                <CssBaseline />
-                <AppBar position={"fixed"} open={true}>
-                    <Toolbar>
+            <AppBar position={"static"}>
+                <Toolbar>
+                    <CatchingPokemonIcon
+                        aria-label="mc-logo"
+                        color="inherit"
+                        sx={{ marginRight: 2 }}
+                    />
+                    <Typography
+                        variant="h6"
+                        noWrap
+                        component="div"
+                        sx={{ flexGrow: 1 }}
+                    >
+                        {this.props.sessionId}
+                    </Typography>
+
+                    <Stack direction="row" spacing={2}>
+
                         <IconButton
                             color="inherit"
-                            aria-label="open drawer"
-                            //onClick={() => this.toggleDrawerOpen()}
-                            edge="start"
-                            sx={{
-                                marginRight: 5,
-                                ...({ display: 'none' }),
+                            id="back-button"
+                            onClick={_ => this.props.exitCanvasScreen()}
+                        >
+                            <LogoutIcon />
+                        </IconButton>
+
+                        <IconButton
+                            color="inherit"
+                            id={CanvasToolbar.MODEL_ACTIONS_BUTTON_ID}
+                            onClick={e => this.setState({
+                                modelActionsMenuAnchor: e.currentTarget,
+                                interpretMenuAnchor: null
+                            })}
+                            aria-controls={
+                                this.state.modelActionsMenuAnchor != null
+                                    ? CanvasToolbar.MODEL_ACTIONS_MENU_ID
+                                    : undefined
+                            }
+                            aria-haspopup="true"
+                            aria-expanded={
+                                this.state.modelActionsMenuAnchor != null
+                            }
+                        >
+                            <MoreHorizIcon />
+                        </IconButton>
+
+                        <IconButton
+                            color="inherit"
+                            id={CanvasToolbar.INTERPRET_BUTTON_ID}
+                            onClick={e => this.setState({
+                                interpretMenuAnchor: e.currentTarget,
+                                modelActionsMenuAnchor: null
+                            })}
+                            aria-controls={
+                                this.state.interpretMenuAnchor != null
+                                    ? CanvasToolbar.INTERPRET_MENU_ID
+                                    : undefined
+                            }
+                            aria-haspopup="true"
+                            aria-expanded={
+                                this.state.interpretMenuAnchor != null
+                            }
+                        >
+                            {
+                                this.state.waitingForResults
+                                    ? <CircularProgress color="inherit" />
+                                    : <PlayArrow />
+                            }
+                        </IconButton>
+                        {
+                            // TODO implement the sidebar
+                            // <IconButton
+                            //     color="inherit"
+                            //     id="open-sidebar-button"
+                            //     onClick={() => console.log("not implemented")}
+                            // >
+                            //     <ViewSidebarIcon />
+                            // </IconButton>
+                        }
+                    </Stack>
+                    <Menu
+                        id={CanvasToolbar.INTERPRET_MENU_ID}
+                        anchorEl={this.state.interpretMenuAnchor}
+                        open={this.state.interpretMenuAnchor != null}
+                        MenuListProps={{
+                            "aria-labelledby": CanvasToolbar.INTERPRET_BUTTON_ID
+                        }}
+                        onClose={() => this.setState({
+                            interpretMenuAnchor: null
+                        })}
+                    >
+                        <MenuItem
+                            onClick={() => {
+                                this.setState({
+                                    interpretMenuAnchor: null
+                                });
+                                this.computeModel();
                             }}
                         >
-                            <MenuIcon />
-                        </IconButton>
-                        <Typography variant="h6" noWrap component="div">
-                            {"Modelcollab    |    " + "NULL"}
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
-                <Drawer variant="permanent" open={true}>
-                    {this.makeButtonsForMode(this.state.toolbarMode)}
-                </Drawer>
-            </Box>
-        );
-    }
-
-    private makeButtonsForMode(mode: ToolbarMode): ReactElement {
-        switch (mode) {
-            case ToolbarMode.MAIN:
-                return this.makeMainToolbarButtons();
-            case ToolbarMode.SEMANTIC_SELECT:
-                return this.makeSemanticSelectToolbarButtons();
-            default:
-                console.error("Unknown toolbar mode: " + mode);
-                return this.makeMainToolbarButtons();
-        }
-    }
-
-    private makeMainToolbarButtons(): ReactElement {
-        return (
-            <MainToolbarButtons
-                mode={this.state.uiMode}
-                open={true}
-                changeMode={m => this.changeMode(m)}
-                setOpenModalBox={this.props.setOpenModalBox}
-                sessionId={this.props.sessionId}
-                restClient={this.props.restClient}
-                firebaseDataModel={this.props.firebaseDataModel}
-                exitCanvasScreen={this.props.exitCanvasScreen}
-                goToSemanticSelect={() => this.setState({
-                    toolbarMode: ToolbarMode.SEMANTIC_SELECT
-                })}
-            />
-        );
-    }
-
-    private makeSemanticSelectToolbarButtons(): ReactElement {
-        return (
-            <SemanticSelectToolbarButtons
-                onSelectODE={() => this.computeModel()}
-                onSelectBack={() => this.setState({
-                    toolbarMode: ToolbarMode.MAIN
-                })}
-                waitingForResults={this.state.waitingForResults}
-            />
+                            ODE
+                        </MenuItem>
+                    </Menu>
+                    <Menu
+                        id={CanvasToolbar.MODEL_ACTIONS_MENU_ID}
+                        anchorEl={this.state.modelActionsMenuAnchor}
+                        open={this.state.modelActionsMenuAnchor != null}
+                        MenuListProps={{
+                            "aria-labelledby": CanvasToolbar.MODEL_ACTIONS_BUTTON_ID
+                        }}
+                        onClose={() => this.setState({
+                            modelActionsMenuAnchor: null
+                        })}
+                    >
+                        <MenuItem onClick={() => this.getCode()} >
+                            Get Code
+                        </MenuItem>
+                        <MenuItem onClick={() => this.getModelAsJson()} >
+                            Get JSON
+                        </MenuItem>
+                        <MenuItem onClick={() =>
+                            this.props.setOpenModalBox(ModalBoxType.IMPORT_MODEL)
+                        } >
+                            Import Model
+                        </MenuItem>
+                        <MenuItem onClick={() =>
+                            this.props.setOpenModalBox(ModalBoxType.EXPORT_MODEL)
+                        } >
+                            Publish Model
+                        </MenuItem>
+                        <MenuItem onClick={() =>
+                            this.props.setOpenModalBox(ModalBoxType.SELECT_SCENARIO)
+                        } >
+                            Manage scenarios
+                        </MenuItem>
+                    </Menu>
+                    <UiModeSpeedDial
+                        mode={this.state.uiMode}
+                        changeMode={mode => this.changeMode(mode)}
+                        sx={{ left: 30, top: 100 }}
+                    />
+                </Toolbar>
+            </AppBar >
         );
     }
 
@@ -239,6 +255,23 @@ export default class CanvasToolbar extends Component<Props, State> {
                     }
                 });
         }
+    }
+
+    private getCode(): void {
+        this.props.restClient.getCode(
+            this.props.sessionId,
+            (code: string) => this.downloadData(new Blob([code]), "Model.jl")
+        );
+    }
+
+    private getModelAsJson(): void {
+        this.props.firebaseDataModel.getDataForSession(
+            this.props.sessionId,
+            (data: any) => this.downloadData(
+                new Blob([JSON.stringify(data)]),
+                `${this.props.sessionId}.json`
+            )
+        );
     }
 
     private downloadData(blob: Blob, filename: string): void {

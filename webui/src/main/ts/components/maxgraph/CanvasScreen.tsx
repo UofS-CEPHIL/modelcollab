@@ -1,5 +1,5 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import { Component, createRef, Fragment, ReactElement, RefObject } from 'react';
+import React, { Component, createRef, Fragment, ReactElement, RefObject } from 'react';
 import CanvasToolbar from './toolbar/CanvasToolbar';
 import { InternalEvent, RubberBandHandler } from '@maxgraph/core';
 import UserControls from './UserControls';
@@ -109,31 +109,26 @@ export default class CanvasScreen extends Component<Props, State> {
     public render(): ReactElement {
         return (
             <Fragment>
-                {
-                    <CanvasToolbar
-                        onModeChanged={mode => this.setMode(mode)}
-                        setOpenModalBox={boxType => this.setState(
-                            { ...this.state, displayedModalBox: boxType }
-                        )}
-                        sessionId={this.props.sessionId}
-                        scenario={this.state.scenario}
-                        restClient={this.props.restClient}
-                        firebaseDataModel={this.props.firebaseDataModel}
-                        exitCanvasScreen={this.props.returnToSessionSelect}
-                    />
-                }
+
+                <CanvasToolbar
+                    onModeChanged={mode => this.setMode(mode)}
+                    setOpenModalBox={boxType => this.setState(
+                        { ...this.state, displayedModalBox: boxType }
+                    )}
+                    sessionId={this.props.sessionId}
+                    scenario={this.state.scenario}
+                    restClient={this.props.restClient}
+                    firebaseDataModel={this.props.firebaseDataModel}
+                    exitCanvasScreen={this.props.returnToSessionSelect}
+                />
                 {
                     this.makeModalBoxIfNecessary()
                 }
-                {
-                    // Force the graph to 1000px for now. There's some sort of
-                    // panning mechanism built into maxgraph -- TODO Figure out
-                    // how to use it
-                    <div
-                        id="graph-container"
-                        ref={this.graphRef}
-                    />
-                }
+                <div
+                    id="graph-container"
+                    ref={this.graphRef}
+                />
+
             </Fragment>
         );
     }
