@@ -31,7 +31,6 @@ export default class ConnectionPresentation
             );
         }
 
-        // TODO remove the `!` after the bug in maxgraph is fixed
         return graph.insertEdge(
             this.makeConnectionArgs(
                 component,
@@ -39,7 +38,7 @@ export default class ConnectionPresentation
                 source,
                 target,
                 component.getId(),
-                !movable
+                movable
             )
         );
     }

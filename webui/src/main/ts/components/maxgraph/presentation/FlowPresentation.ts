@@ -49,34 +49,31 @@ export default class FlowPresentation
         // Create clouds if necessary
         if (!source) {
             const point = this.extractPoint(component.getData().from);
-            // TODO remove the `!` after the bug in maxgraph is fixed
             source = graph.insertVertex(
                 this.makeCloudArgs(
                     parent ?? graph.getDefaultParent(),
                     point.x,
                     point.y,
                     this.makeCloudId(component.getId(), true),
-                    !movable
+                    movable
                 )
             );
             newComponents.push(source);
         }
         if (!target) {
             const point = this.extractPoint(component.getData().to);
-            // TODO remove the `!` after the bug in maxgraph is fixed
             target = graph.insertVertex(
                 this.makeCloudArgs(
                     parent ?? graph.getDefaultParent(),
                     point.x,
                     point.y,
                     this.makeCloudId(component.getId(), false),
-                    !movable
+                    movable
                 )
             );
             newComponents.push(target);
         }
 
-        // TODO remove the `!` after the bug in maxgraph is fixed
         newComponents.push(
             graph.insertEdge(
                 this.makeFlowArgs(
@@ -85,7 +82,7 @@ export default class FlowPresentation
                     source,
                     target,
                     component.getId(),
-                    !movable
+                    movable
                 )
             )
         );

@@ -23,8 +23,7 @@ export default class StockPresentation
         return graph.insertVertex(this.getStockArgs(
             parent ?? graph.getDefaultParent(),
             stock,
-            // TODO remove the `!` after the bug in maxgraph is fixed
-            !movable
+            movable
         ));
     }
 

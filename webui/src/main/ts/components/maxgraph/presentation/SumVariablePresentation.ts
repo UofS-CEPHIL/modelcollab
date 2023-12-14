@@ -19,11 +19,10 @@ export default class SumVariablePresentation
         _?: (__: string) => void,
         movable: boolean = true
     ): Cell {
-        // TODO remove the `!` after the bug in maxgraph is fixed
         return graph.insertVertex(this.getGraphArgs(
             parent ?? graph.getDefaultParent(),
             sumvar,
-            !movable
+            movable
         ));
     }
 
