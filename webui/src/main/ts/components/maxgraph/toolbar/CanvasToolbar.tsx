@@ -1,5 +1,5 @@
-import { Component, ReactElement } from "react";
-import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, MenuItem, CircularProgress } from '@mui/material';
+import { Component, Fragment, ReactElement } from "react";
+import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, MenuItem, CircularProgress, Drawer, Box } from '@mui/material';
 import CatchingPokemonIcon from '@mui/icons-material/CatchingPokemon'
 import LogoutIcon from '@mui/icons-material/Logout';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
@@ -20,6 +20,7 @@ export interface Props {
     restClient: RestClient;
     firebaseDataModel: FirebaseDataModel;
     exitCanvasScreen: () => void;
+    toggleSidebarOpen: () => void;
 }
 
 export interface State {
@@ -27,12 +28,11 @@ export interface State {
     waitingForResults: boolean;
     interpretMenuAnchor: HTMLElement | null;
     modelActionsMenuAnchor: HTMLElement | null;
-    sidebarOpen: boolean;
 }
 
 export default class CanvasToolbar extends Component<Props, State> {
 
-    public static readonly DRAWER_WIDTH = "240";
+    public static readonly DRAWER_WIDTH_PX = 240;
     public static readonly POLLING_TIME_MS = 1000;
     public static readonly DEFAULT_MODE = UiMode.MOVE;
 
@@ -48,14 +48,13 @@ export default class CanvasToolbar extends Component<Props, State> {
             waitingForResults: false,
             interpretMenuAnchor: null,
             modelActionsMenuAnchor: null,
-            sidebarOpen: false
         };
     }
 
 
     public render(): ReactElement {
         return (
-            <AppBar position={"static"}>
+            <AppBar position={"static"} >
                 <Toolbar>
                     <CatchingPokemonIcon
                         aria-label="mc-logo"
@@ -70,133 +69,143 @@ export default class CanvasToolbar extends Component<Props, State> {
                     >
                         {this.props.sessionId}
                     </Typography>
-
-                    <Stack direction="row" spacing={2}>
-
-                        <IconButton
-                            color="inherit"
-                            id="back-button"
-                            onClick={_ => this.props.exitCanvasScreen()}
-                        >
-                            <LogoutIcon />
-                        </IconButton>
-
-                        <IconButton
-                            color="inherit"
-                            id={CanvasToolbar.MODEL_ACTIONS_BUTTON_ID}
-                            onClick={e => this.setState({
-                                modelActionsMenuAnchor: e.currentTarget,
-                                interpretMenuAnchor: null
-                            })}
-                            aria-controls={
-                                this.state.modelActionsMenuAnchor != null
-                                    ? CanvasToolbar.MODEL_ACTIONS_MENU_ID
-                                    : undefined
-                            }
-                            aria-haspopup="true"
-                            aria-expanded={
-                                this.state.modelActionsMenuAnchor != null
-                            }
-                        >
-                            <MoreHorizIcon />
-                        </IconButton>
-
-                        <IconButton
-                            color="inherit"
-                            id={CanvasToolbar.INTERPRET_BUTTON_ID}
-                            onClick={e => this.setState({
-                                interpretMenuAnchor: e.currentTarget,
-                                modelActionsMenuAnchor: null
-                            })}
-                            aria-controls={
-                                this.state.interpretMenuAnchor != null
-                                    ? CanvasToolbar.INTERPRET_MENU_ID
-                                    : undefined
-                            }
-                            aria-haspopup="true"
-                            aria-expanded={
-                                this.state.interpretMenuAnchor != null
-                            }
-                        >
-                            {
-                                this.state.waitingForResults
-                                    ? <CircularProgress color="inherit" />
-                                    : <PlayArrow />
-                            }
-                        </IconButton>
-                        {
-                            // TODO implement the sidebar
-                            // <IconButton
-                            //     color="inherit"
-                            //     id="open-sidebar-button"
-                            //     onClick={() => console.log("not implemented")}
-                            // >
-                            //     <ViewSidebarIcon />
-                            // </IconButton>
-                        }
-                    </Stack>
-                    <Menu
-                        id={CanvasToolbar.INTERPRET_MENU_ID}
-                        anchorEl={this.state.interpretMenuAnchor}
-                        open={this.state.interpretMenuAnchor != null}
-                        MenuListProps={{
-                            "aria-labelledby": CanvasToolbar.INTERPRET_BUTTON_ID
-                        }}
-                        onClose={() => this.setState({
-                            interpretMenuAnchor: null
-                        })}
-                    >
-                        <MenuItem
-                            onClick={() => {
-                                this.setState({
-                                    interpretMenuAnchor: null
-                                });
-                                this.computeModel();
-                            }}
-                        >
-                            ODE
-                        </MenuItem>
-                    </Menu>
-                    <Menu
-                        id={CanvasToolbar.MODEL_ACTIONS_MENU_ID}
-                        anchorEl={this.state.modelActionsMenuAnchor}
-                        open={this.state.modelActionsMenuAnchor != null}
-                        MenuListProps={{
-                            "aria-labelledby": CanvasToolbar.MODEL_ACTIONS_BUTTON_ID
-                        }}
-                        onClose={() => this.setState({
-                            modelActionsMenuAnchor: null
-                        })}
-                    >
-                        <MenuItem onClick={() => this.getCode()} >
-                            Get Code
-                        </MenuItem>
-                        <MenuItem onClick={() => this.getModelAsJson()} >
-                            Get JSON
-                        </MenuItem>
-                        <MenuItem onClick={() =>
-                            this.props.setOpenModalBox(ModalBoxType.IMPORT_MODEL)
-                        } >
-                            Import Model
-                        </MenuItem>
-                        <MenuItem onClick={() =>
-                            this.props.setOpenModalBox(ModalBoxType.EXPORT_MODEL)
-                        } >
-                            Publish Model
-                        </MenuItem>
-                        <MenuItem onClick={() =>
-                            this.props.setOpenModalBox(ModalBoxType.SELECT_SCENARIO)
-                        } >
-                            Manage scenarios
-                        </MenuItem>
-                    </Menu>
-                    <UiModeSpeedDial
-                        mode={this.state.uiMode}
-                        changeMode={mode => this.changeMode(mode)}
-                        sx={{ left: 30, top: 100 }}
-                    />
+                    {this.makeAppBarButtons()}
+                    {this.makeAppBarDropdowns()}
                 </Toolbar>
             </AppBar >
+        );
+    }
+
+    private makeAppBarButtons(): ReactElement {
+        return (
+            <Stack direction="row" spacing={2}>
+                {/*Back button*/}
+                <IconButton
+                    color="inherit"
+                    id="back-button"
+                    onClick={_ => this.props.exitCanvasScreen()}
+                >
+                    <LogoutIcon />
+                </IconButton>
+
+                {/*Model actions*/}
+                <IconButton
+                    color="inherit"
+                    id={CanvasToolbar.MODEL_ACTIONS_BUTTON_ID}
+                    onClick={e => this.setState({
+                        modelActionsMenuAnchor: e.currentTarget,
+                        interpretMenuAnchor: null
+                    })}
+                    aria-controls={
+                        this.state.modelActionsMenuAnchor != null
+                            ? CanvasToolbar.MODEL_ACTIONS_MENU_ID
+                            : undefined
+                    }
+                    aria-haspopup="true"
+                    aria-expanded={
+                        this.state.modelActionsMenuAnchor != null
+                    }
+                >
+                    <MoreHorizIcon />
+                </IconButton>
+
+                {/*Interpret*/}
+                <IconButton
+                    color="inherit"
+                    id={CanvasToolbar.INTERPRET_BUTTON_ID}
+                    onClick={e => this.setState({
+                        interpretMenuAnchor: e.currentTarget,
+                        modelActionsMenuAnchor: null
+                    })}
+                    aria-controls={
+                        this.state.interpretMenuAnchor != null
+                            ? CanvasToolbar.INTERPRET_MENU_ID
+                            : undefined
+                    }
+                    aria-haspopup="true"
+                    aria-expanded={
+                        this.state.interpretMenuAnchor != null
+                    }
+                >
+                    {
+                        this.state.waitingForResults
+                            ? <CircularProgress color="inherit" />
+                            : <PlayArrow />
+                    }
+                </IconButton>
+
+                {/*Open / Close Sidebar*/}
+                <IconButton
+                    color="inherit"
+                    id="open-sidebar-button"
+                    onClick={() => this.props.toggleSidebarOpen()}
+                >
+                    <ViewSidebarIcon />
+                </IconButton>
+
+            </Stack>
+        );
+    }
+
+    private makeAppBarDropdowns(): ReactElement {
+        return (
+            <Fragment>
+                <Menu
+                    id={CanvasToolbar.INTERPRET_MENU_ID}
+                    anchorEl={this.state.interpretMenuAnchor}
+                    open={this.state.interpretMenuAnchor != null}
+                    MenuListProps={{
+                        "aria-labelledby": CanvasToolbar.INTERPRET_BUTTON_ID
+                    }}
+                    onClose={() => this.setState({
+                        interpretMenuAnchor: null
+                    })}
+                >
+                    <MenuItem
+                        onClick={() => {
+                            this.setState({
+                                interpretMenuAnchor: null
+                            });
+                            this.computeModel();
+                        }}
+                    >
+                        ODE
+                    </MenuItem>
+                </Menu>
+                <Menu
+                    id={CanvasToolbar.MODEL_ACTIONS_MENU_ID}
+                    anchorEl={this.state.modelActionsMenuAnchor}
+                    open={this.state.modelActionsMenuAnchor != null}
+                    MenuListProps={{
+                        "aria-labelledby": CanvasToolbar.MODEL_ACTIONS_BUTTON_ID
+                    }}
+                    onClose={() => this.setState({
+                        modelActionsMenuAnchor: null
+                    })}
+                >
+                    <MenuItem onClick={() => this.getCode()} >
+                        Get Code
+                    </MenuItem>
+                    <MenuItem onClick={() => this.getModelAsJson()} >
+                        Get JSON
+                    </MenuItem>
+                    <MenuItem onClick={() =>
+                        this.props.setOpenModalBox(ModalBoxType.IMPORT_MODEL)
+                    } >
+                        Import Model
+                    </MenuItem>
+                    <MenuItem onClick={() =>
+                        this.props.setOpenModalBox(ModalBoxType.EXPORT_MODEL)
+                    } >
+                        Publish Model
+                    </MenuItem>
+                </Menu>
+                <UiModeSpeedDial
+                    mode={this.state.uiMode}
+                    changeMode={mode => this.changeMode(mode)}
+                    sx={{ left: 30, top: 100 }}
+                />
+            </Fragment>
         );
     }
 

@@ -14,7 +14,7 @@ export interface State {
 export default abstract class ModalBox<BoxProps extends Props, BoxState extends State>
     extends React.Component<BoxProps, BoxState> {
 
-    private static readonly DEFAULT_WIDTH_PX = 700;
+    private static readonly DEFAULT_WIDTH_PX = 400;
 
     protected abstract getBoxContents(): ReactElement;
 

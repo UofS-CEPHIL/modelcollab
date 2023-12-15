@@ -19,6 +19,9 @@ import ScenariosBox from "../ModalBox/ScenariosBox";
 import IdGenerator from "../../IdGenerator";
 import ScenarioEditBox from "../ModalBox/EditBox/ScenarioEditBox";
 import { StaticModelFirebaseComponent } from "database/build/FirebaseComponentModel";
+import { Grid } from "@mui/material";
+import CanvasSidebar from "./toolbar/CanvasSidebar";
+import YesNoModalBox from "../ModalBox/YesNoModalBox";
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -39,6 +42,13 @@ interface State {
     displayedModalBox: ModalBoxType | null;
     scenario: string;
     loadedModels: LoadedStaticModel[];
+    sidebarWidth: number;
+    sidebarVisible: boolean;
+
+    // For 'delete scenario' modal box
+    // TODO this probably isn't the best way to handle this
+    modalBoxComponent: schema.FirebaseDataComponent<any> | null;
+    afterScenarioDeleted: (() => void) | null;
 }
 
 export default class CanvasScreen extends Component<Props, State> {
@@ -57,8 +67,12 @@ export default class CanvasScreen extends Component<Props, State> {
             clipboard: [],
             components: [],
             displayedModalBox: null,
+            modalBoxComponent: null,
             scenario: "",
-            loadedModels: []
+            loadedModels: [],
+            sidebarWidth: CanvasSidebar.DEFAULT_WIDTH_PX,
+            sidebarVisible: CanvasSidebar.DEFAULT_VISIBILITY,
+            afterScenarioDeleted: null
         };
     }
 
@@ -107,29 +121,62 @@ export default class CanvasScreen extends Component<Props, State> {
     }
 
     public render(): ReactElement {
+        const sidebarWidth = this.state.sidebarVisible
+            ? this.state.sidebarWidth
+            : 0;
+        const canvasWidth = `calc(100% - ${sidebarWidth}px)`;
         return (
             <Fragment>
-
-                <CanvasToolbar
-                    onModeChanged={mode => this.setMode(mode)}
-                    setOpenModalBox={boxType => this.setState(
-                        { ...this.state, displayedModalBox: boxType }
-                    )}
-                    sessionId={this.props.sessionId}
-                    scenario={this.state.scenario}
-                    restClient={this.props.restClient}
-                    firebaseDataModel={this.props.firebaseDataModel}
-                    exitCanvasScreen={this.props.returnToSessionSelect}
-                />
-                {
-                    this.makeModalBoxIfNecessary()
-                }
-                <div
-                    id="graph-container"
-                    ref={this.graphRef}
-                />
-
-            </Fragment>
+                <Grid container direction="column" spacing={0}>
+                    <Grid item xs={12}>
+                        <CanvasToolbar
+                            onModeChanged={mode => this.setMode(mode)}
+                            setOpenModalBox={boxType => this.setState(
+                                { ...this.state, displayedModalBox: boxType }
+                            )}
+                            sessionId={this.props.sessionId}
+                            scenario={this.state.scenario}
+                            restClient={this.props.restClient}
+                            firebaseDataModel={this.props.firebaseDataModel}
+                            exitCanvasScreen={this.props.returnToSessionSelect}
+                            toggleSidebarOpen={() => this.toggleSidebarOpen()}
+                        />
+                    </Grid>
+                    <Grid container direction="row">
+                        <Grid
+                            item
+                            width={canvasWidth}
+                        >
+                            <div
+                                id="graph-container"
+                                ref={this.graphRef}
+                            />
+                        </Grid>
+                        <Grid
+                            item
+                            width={sidebarWidth}
+                        >
+                            <CanvasSidebar
+                                onResize={w =>
+                                    this.setState({ sidebarWidth: w })
+                                }
+                                getIsVisible={() => this.state.sidebarVisible}
+                                firebaseDataModel={this.props.firebaseDataModel}
+                                sessionId={this.props.sessionId}
+                                selectScenario={s => this.setState({ scenario: s })}
+                                getSelectedScenario={() => this.state.scenario}
+                                getComponents={() => this.state.components}
+                                deleteScenario={(s, c) => this.setState({
+                                    modalBoxComponent: s,
+                                    afterScenarioDeleted: c,
+                                    displayedModalBox: ModalBoxType.DELETE_SCENARIO
+                                })}
+                            />
+                        </Grid>
+                    </Grid >
+                </Grid >
+                {this.makeModalBoxIfNecessary()}
+            </Fragment >
         );
     }
 
@@ -200,42 +247,32 @@ export default class CanvasScreen extends Component<Props, State> {
                 />
             );
         }
-        else if (this.state.displayedModalBox === ModalBoxType.SELECT_SCENARIO) {
+        else if (this.state.displayedModalBox === ModalBoxType.DELETE_SCENARIO) {
+            const scenario = this.state.modalBoxComponent;
+            if (!scenario || scenario.getType() !== schema.ComponentType.SCENARIO) {
+                console.error("Invalid scenario " + scenario);
+                return (<div />);
+            }
             return (
-                <ScenariosBox
-                    handleCancel={() => this.closeModalBox()}
-                    handleSubmit={s => this.setState({ ...this.state, scenario: s })}
-                    startEditingScenario={(name: string) => this.setState({
-                        ...this.state,
-                        scenario: name,
-                        displayedModalBox: ModalBoxType.EDIT_SCENARIO
+                <YesNoModalBox
+                    prompt={`Delete scenario ${scenario!.getData().name}?`}
+                    onYes={() => {
+                        this.props.firebaseDataModel.removeComponent(
+                            this.props.sessionId,
+                            scenario!.getId()
+                        );
+                        this.state.afterScenarioDeleted!();
+                        this.setState({
+                            modalBoxComponent: null,
+                            displayedModalBox: null,
+                            afterScenarioDeleted: null
+                        });
+
+                    }}
+                    onNo={() => this.setState({
+                        modalBoxComponent: null,
+                        displayedModalBox: null
                     })}
-                    firebaseDataModel={this.props.firebaseDataModel}
-                    initialSelected={this.state.scenario}
-                    generateNewId={() =>
-                        IdGenerator.generateUniqueId(this.state.components)
-                    }
-                    sessionId={this.props.sessionId}
-                />
-            );
-        }
-        else if (this.state.displayedModalBox === ModalBoxType.EDIT_SCENARIO) {
-            const scenario = this.state.components.find(c =>
-                c.getType() === schema.ComponentType.SCENARIO
-                && c.getData().name === this.state.scenario
-            );
-            if (!scenario)
-                throw new Error("Can't find scenario " + this.state.scenario);
-            return (
-                <ScenarioEditBox
-                    initialComponent={scenario}
-                    handleSave={c => this.actions?.updateComponent(c)}
-                    handleCancel={() => this.setState({
-                        ...this.state,
-                        displayedModalBox: ModalBoxType.SELECT_SCENARIO
-                    })}
-                    firebaseDataModel={this.props.firebaseDataModel}
-                    sessionId={this.props.sessionId}
                 />
             );
         }
@@ -248,7 +285,11 @@ export default class CanvasScreen extends Component<Props, State> {
     }
 
     private closeModalBox(): void {
-        this.setState({ ...this.state, displayedModalBox: null });
+        this.setState({ displayedModalBox: null });
+    }
+
+    private toggleSidebarOpen(): void {
+        this.setState({ sidebarVisible: !this.state.sidebarVisible });
     }
 
     private importStaticModel(modelName: string): void {

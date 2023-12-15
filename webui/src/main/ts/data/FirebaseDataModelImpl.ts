@@ -48,17 +48,12 @@ export default class FirebaseDataModelImpl implements FirebaseDataModel {
         sessionId: string,
         callback: (data: any) => void
     ) {
-        function formatDataForExport(snapshot: DataSnapshot): any {
-            return {
-                [`${sessionId}`]: snapshot.val()
-            };
-        }
         onValue(
             ref(
                 this.firebaseManager.getDb(),
                 FirebaseSchema.makeAllComponentsForSessionPath(sessionId)
             ),
-            (s: DataSnapshot) => callback(formatDataForExport(s)),
+            (s: DataSnapshot) => this.triggerCallback(s, callback),
             { onlyOnce: true }
         );
     }
