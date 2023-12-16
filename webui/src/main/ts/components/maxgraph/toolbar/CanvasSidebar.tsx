@@ -4,6 +4,7 @@ import React, { ReactElement } from 'react';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
 import EditScenariosSidebarContent from './EditScenariosSidebarContent';
 import SelectScenarioSidebarContent from "./SelectScenarioSidebarContent";
+import SidebarDragHandle from "./SidebarDragHandle";
 
 export enum SidebarMode {
     EDIT_SCENARIOS = "Edit Scenarios",
@@ -86,7 +87,9 @@ export default class CanvasSidebar extends React.Component<Props, State> {
                     <nav aria-label="sidebar-content" key="content-nav">
                         {this.makeContentForMode()}
                     </nav>
-                    {this.makeDragHandle()}
+                    <SidebarDragHandle
+                        onChangeWidth={w => this.props.onResize(w)}
+                    />
                 </Paper >
             )
             : (<div />);
@@ -109,79 +112,24 @@ export default class CanvasSidebar extends React.Component<Props, State> {
                     />
                 );
             case SidebarMode.SELECT_SCENARIO:
-                const scenarios = this.props.getComponents().filter(c => c.getType() === schema.ComponentType.SCENARIO);
-                const selected = scenarios.find(s => s.getData().name === this.props.getSelectedScenario());
+                const scenarios = this.props.getComponents().filter(c =>
+                    c.getType() === schema.ComponentType.SCENARIO
+                );
+                const selected = scenarios.find(s =>
+                    s.getData().name === this.props.getSelectedScenario()
+                );
                 return (
                     <SelectScenarioSidebarContent
                         scenarios={scenarios}
                         selected={selected}
-                        onSelectionChanged={s => this.props.selectScenario(s.getData().name)}
+                        onSelectionChanged={s =>
+                            this.props.selectScenario(s.getData().name)
+                        }
                     />
                 );
             default:
                 console.error("Unrecognized sidebar mode: " + this.state.mode);
                 return (<div />);
         }
-    }
-
-    private makeDragHandle(): ReactElement {
-        return (
-            <div
-                id="sidebar-drag-handle"
-                style={{
-                    width: "5px",
-                    height: "calc(100vh - 64px)",
-                    backgroundColor: "#f4f7f9",
-                    cursor: "ew-resize",
-                    padding: "4px 0 0",
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    bottom: 0,
-                    zIndex: 100
-                }}
-                onMouseDown={() => this.handleMouseDownOnDragHandle()}
-            />
-        );
-    }
-
-    private handleMouseDownOnDragHandle() {
-        const handleMoveDragHandle = (e: MouseEvent) => {
-            const newWidth =
-                document.body.offsetLeft
-                + document.body.offsetWidth
-                - e.clientX
-                + 20;
-            if (
-                newWidth > CanvasSidebar.MIN_WIDTH_PX
-                && newWidth < CanvasSidebar.MAX_WIDTH_PX
-            ) {
-                this.props.onResize(newWidth);
-            }
-        }
-
-        const handleMouseUpFromDragHandle = () => {
-            document.removeEventListener(
-                'mouseup',
-                handleMouseUpFromDragHandle,
-                true
-            );
-            document.removeEventListener(
-                'mousemove',
-                handleMoveDragHandle,
-                true
-            );
-        }
-
-        document.addEventListener(
-            'mouseup',
-            handleMouseUpFromDragHandle,
-            true
-        );
-        document.addEventListener(
-            'mousemove',
-            handleMoveDragHandle,
-            true
-        );
     }
 }

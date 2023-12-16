@@ -8,6 +8,7 @@ import React, { ReactElement } from 'react';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
 import IdGenerator from "../../../IdGenerator";
 import ModelValidator from "../../../validation/ModelValitador";
+import { theme } from "../../../Themes";
 
 export interface Props {
     sessionId: string;
@@ -232,6 +233,9 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
     ): ReactElement {
         const paramName = param.getData().text;
         const isError = !ModelValidator.isValidParameterValue(value);
+        const color = isGrayed
+            ? theme.palette.grayed.main
+            : theme.palette.canvas.contrastText;
 
         return (
             <ListItem key={key}>
@@ -244,7 +248,7 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                     inputProps={{
                         id: `${paramName}-editbox`,
                     }}
-                    sx={{ input: { color: isGrayed ? "gray" : "black" } }}
+                    sx={{ input: { color: color } }}
                     disabled={isDisabled}
                 />
             </ListItem>
@@ -258,16 +262,16 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                     onClick={() => this.deleteScenario()}
                     disabled={this.state.scenarioEditing === null}
                 >
-                    <ListItemIcon sx={{ color: "red" }}>
+                    <ListItemIcon sx={{ color: theme.palette.error.main }}>
                         <DeleteIcon />
                     </ListItemIcon>
-                    <ListItemText sx={{ color: "red" }} >
+                    <ListItemText sx={{ color: theme.palette.error.main }} >
                         <Typography variant="h6" component="div">
                             Delete Scenario
                         </Typography>
                     </ListItemText>
                 </ListItemButton>
-            </ListItem>
+            </ListItem >
         );
     }
 

@@ -1,17 +1,12 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
+import { theme } from "../../../Themes";
 import StockFlowGraph from "../StockFlowGraph";
 import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class DynamicVariablePresentation
     extends TextComponentPresentation<schema.VariableFirebaseComponent>
 {
-
-    public static readonly FILL_COLOUR = "White"
-    public static readonly STROKE_COLOUR = "Black"
-    public static readonly DEFAULT_WIDTH_PX = 80
-    public static readonly DEFAULT_HEIGHT_PX = 25
-    public static readonly DEFAULT_FONT_SIZE = 14;
 
     public addComponent(
         dynvar: schema.VariableFirebaseComponent,
@@ -38,14 +33,14 @@ export default class DynamicVariablePresentation
             id: dynvar.getId(),
             x: dynvar.getData().x,
             y: dynvar.getData().y,
-            width: DynamicVariablePresentation.DEFAULT_WIDTH_PX,
-            height: DynamicVariablePresentation.DEFAULT_HEIGHT_PX,
+            width: theme.custom.maxgraph.textComponent.defaultWidthPx,
+            height: theme.custom.maxgraph.textComponent.defaultHeightPx,
             style: {
                 shape: "text",
-                fillColor: DynamicVariablePresentation.FILL_COLOUR,
-                strokeColor: DynamicVariablePresentation.STROKE_COLOUR,
-                fontColor: DynamicVariablePresentation.STROKE_COLOUR,
-                fontSize: DynamicVariablePresentation.DEFAULT_FONT_SIZE,
+                fillColor: theme.palette.canvas.main,
+                strokeColor: theme.palette.canvas.contrastText,
+                fontColor: theme.palette.canvas.contrastText,
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 fontStyle: 3,
                 movable
             }

@@ -1,5 +1,6 @@
 import { Cell, EdgeParameters } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
+import { theme } from "../../../Themes";
 import StockFlowGraph from "../StockFlowGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
@@ -8,8 +9,6 @@ export default class ConnectionPresentation
 {
 
     public static readonly NAME = "Connection"
-    public static readonly STROKE_COLOUR = "Blue"
-    public static readonly STROKE_WIDTH = 2
 
     public addComponent(
         component: schema.ConnectionFirebaseComponent,
@@ -85,12 +84,12 @@ export default class ConnectionPresentation
             source: fr,
             target: to,
             style: {
-                endArrow: "classic",
-                strokeColor: ConnectionPresentation.STROKE_COLOUR,
-                strokeWidth: ConnectionPresentation.STROKE_WIDTH,
+                endArrow: theme.custom.maxgraph.connection.endArrow,
+                strokeColor: theme.palette.primary.main,
+                strokeWidth: theme.custom.maxgraph.connection.strokeWidthPx,
                 curved: true,
                 bendable: true,
-                edgeStyle: 'orthogonalEdgeStyle',
+                edgeStyle: theme.custom.maxgraph.connection.edgeStyle,
                 movable
             }
         }

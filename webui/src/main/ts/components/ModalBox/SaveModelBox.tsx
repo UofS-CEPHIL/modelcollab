@@ -1,7 +1,6 @@
 import { Button, Grid, Modal, TextField, Box } from "@mui/material";
 import React, { ReactElement } from "react";
-import modalStyle from "../style/modalStyle";
-
+import { theme } from "../../Themes";
 
 export interface Props {
     handleSave: (modelId: string) => void;
@@ -22,9 +21,10 @@ export default class SaveModelBox extends React.Component<Props, State> {
     }
 
     public render(): ReactElement {
+        const style = theme.custom.modal;
         return (
             <Modal open={true} data-testid={"EditBox"}>
-                <Box sx={modalStyle}>
+                <Box sx={{ ...style, bgcolor: 'background.paper' }}>
                     <Grid container>
                         <Grid item xs={12}>
                             <TextField

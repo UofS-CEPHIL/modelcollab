@@ -1,17 +1,12 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
+import { theme } from "../../../Themes";
 import StockFlowGraph from "../StockFlowGraph";
 import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class StockPresentation
     extends TextComponentPresentation<schema.StockFirebaseComponent>
 {
-    public static readonly FILL_COLOUR = "White"
-    public static readonly STROKE_COLOUR = "Black"
-    public static readonly STROKE_WIDTH_PX = 1.5
-    public static readonly DEFAULT_WIDTH_PX = 80;
-    public static readonly DEFAULT_HEIGHT_PX = 60;
-    public static readonly DEFAULT_FONT_SIZE = 14
 
     public addComponent(
         stock: schema.StockFirebaseComponent,
@@ -38,16 +33,16 @@ export default class StockPresentation
             value: stock,
             x: stock.getData().x,
             y: stock.getData().y,
-            width: StockPresentation.DEFAULT_WIDTH_PX,
-            height: StockPresentation.DEFAULT_HEIGHT_PX,
+            width: theme.custom.maxgraph.stock.defaultWidthPx,
+            height: theme.custom.maxgraph.stock.defaultHeightPx,
             style: {
                 shape: "rectangle",
-                fillColor: StockPresentation.FILL_COLOUR,
+                fillColor: theme.palette.canvas.main,
                 rounded: true,
-                strokeWidth: StockPresentation.STROKE_WIDTH_PX,
-                strokeColor: StockPresentation.STROKE_COLOUR,
-                fontSize: StockPresentation.DEFAULT_FONT_SIZE,
-                fontColor: StockPresentation.STROKE_COLOUR,
+                strokeWidth: theme.custom.maxgraph.stock.strokeWidth,
+                strokeColor: theme.palette.canvas.contrastText,
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
+                fontColor: theme.palette.canvas.contrastText,
                 movable,
             }
         };

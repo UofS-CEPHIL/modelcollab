@@ -9,6 +9,8 @@ import FirebaseManager from "./data/FirebaseManager";
 import FirebaseDataModel from "./data/FirebaseDataModel";
 import RestClientImpl from "./rest/RestClientImpl";
 import RestClient from "./rest/RestClient";
+import { ThemeProvider } from "@emotion/react";
+import { theme } from "./Themes";
 
 interface Props {
 
@@ -70,23 +72,25 @@ export default class App extends React.Component<Props, State> {
         // }
         else {
             return (
-                <Router>
-                    <Routes>
-                        <Route
-                            path="/"
-                            element={
-                                <CanvasScreen
-                                    firebaseDataModel={this.firebaseDataModel}
-                                    restClient={this.restClient}
-                                    returnToSessionSelect={
-                                        () => console.error("Not implemented")
-                                    }
-                                    sessionId={"NULL"}
-                                />
-                            }
-                        />
-                    </Routes>
-                </Router>
+                <ThemeProvider theme={theme}>
+                    <Router>
+                        <Routes>
+                            <Route
+                                path="/"
+                                element={
+                                    <CanvasScreen
+                                        firebaseDataModel={this.firebaseDataModel}
+                                        restClient={this.restClient}
+                                        returnToSessionSelect={
+                                            () => console.error("Not implemented")
+                                        }
+                                        sessionId={"NULL"}
+                                    />
+                                }
+                            />
+                        </Routes>
+                    </Router>
+                </ThemeProvider>
             );
         }
     }

@@ -7,19 +7,16 @@ import { UiMode } from '../../UiMode';
 import StockFlowGraph from "./StockFlowGraph";
 import DiagramActions from "./DiagramActions";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
-
-import "../style/mxstyle.css";
 import ModalBoxType from "../ModalBox/ModalBoxType";
 import EditBoxBuilder from "../ModalBox/EditBox/EditBoxBuilder";
 import HelpBox from "../ModalBox/HelpBox";
 import RestClient from "../../rest/RestClient";
 import ExportModelBox from "../ModalBox/ExportModelBox";
 import ImportModelBox from "../ModalBox/ImportModelBox";
-import ScenariosBox from "../ModalBox/ScenariosBox";
 import IdGenerator from "../../IdGenerator";
-import ScenarioEditBox from "../ModalBox/EditBox/ScenarioEditBox";
 import { StaticModelFirebaseComponent } from "database/build/FirebaseComponentModel";
-import { Grid } from "@mui/material";
+import { Grid, styled } from "@mui/material";
+import { theme } from "../../Themes";
 import CanvasSidebar from "./toolbar/CanvasSidebar";
 import YesNoModalBox from "../ModalBox/YesNoModalBox";
 
@@ -95,7 +92,8 @@ export default class CanvasScreen extends Component<Props, State> {
                 () => this.state.components,
                 () => this.state.loadedModels
             );
-            new RubberBandHandler(this.graph);
+            const rbHandler = new RubberBandHandler(this.graph);
+            rbHandler.fadeOut = true;
             this.controls = new UserControls(
                 this.graph,
                 this.actions,
@@ -146,10 +144,24 @@ export default class CanvasScreen extends Component<Props, State> {
                         <Grid
                             item
                             width={canvasWidth}
+                            sx={{
+                                ["div.mxRubberband"]: {
+                                    borderColor: theme.palette.primary.dark,
+                                    background: theme.palette.primary.light,
+                                    position: "absolute"
+                                }
+                            }}
                         >
                             <div
                                 id="graph-container"
                                 ref={this.graphRef}
+                                style={{
+                                    border: theme.palette.grayed.main
+                                        + " "
+                                        + theme.custom.maxgraph.canvas.borderWidthPx
+                                        + "px solid",
+                                    height: "calc(100vh - 64px)"
+                                }}
                             />
                         </Grid>
                         <Grid

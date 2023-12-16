@@ -1,18 +1,12 @@
 import { Cell, EdgeParameters, VertexParameters } from "@maxgraph/core";
 import { FirebaseComponentModel as schema } from "database/build/export";
+import { theme } from "../../../Themes";
 import StockFlowGraph from "../StockFlowGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
 export default class FlowPresentation
     implements ComponentPresentation<schema.FlowFirebaseComponent>
 {
-    public static readonly FILL_COLOUR = "White"
-    public static readonly STROKE_COLOUR = "Black"
-    public static readonly STROKE_WIDTH = 2;
-    public static readonly DEFAULT_FONT_SIZE = 14;
-    public static readonly FLOW_STROKE_WIDTH = 1.5;
-    public static readonly CLOUD_DEFAULT_WIDTH_PX = 50;
-    public static readonly CLOUD_DEFAULT_HEIGHT_PX = 50;
     public static readonly CLOUD_VALUE = "cloud";
 
 
@@ -202,16 +196,16 @@ export default class FlowPresentation
             source: fr,
             target: to,
             style: {
-                shape: "arrowConnector",
-                strokeColor: FlowPresentation.STROKE_COLOUR,
-                strokeWidth: FlowPresentation.STROKE_WIDTH,
-                fillColor: FlowPresentation.FILL_COLOUR,
-                fontColor: FlowPresentation.STROKE_COLOUR,
-                fontSize: FlowPresentation.DEFAULT_FONT_SIZE,
+                shape: theme.custom.maxgraph.flow.shape,
+                strokeColor: theme.palette.canvas.contrastText,
+                strokeWidth: theme.custom.maxgraph.flow.strokeWidthPx,
+                fillColor: theme.palette.canvas.main,
+                fontColor: theme.palette.canvas.contrastText,
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 fontStyle: 1,
                 curved: false,
                 bendable: true,
-                edgeStyle: 'elbowEdgeStyle',
+                edgeStyle: theme.custom.maxgraph.flow.edgeStyle,
                 movable,
             }
         };
@@ -230,12 +224,12 @@ export default class FlowPresentation
             value: FlowPresentation.CLOUD_VALUE,
             x,
             y,
-            width: FlowPresentation.CLOUD_DEFAULT_WIDTH_PX,
-            height: FlowPresentation.CLOUD_DEFAULT_HEIGHT_PX,
+            width: theme.custom.maxgraph.cloud.defaultWidthPx,
+            height: theme.custom.maxgraph.cloud.defaultHeightPx,
             style: {
                 shape: "cloud",
-                fillColor: FlowPresentation.FILL_COLOUR,
-                strokeColor: FlowPresentation.STROKE_COLOUR,
+                fillColor: theme.palette.canvas.main,
+                strokeColor: theme.palette.canvas.contrastText,
                 movable,
             }
         };
