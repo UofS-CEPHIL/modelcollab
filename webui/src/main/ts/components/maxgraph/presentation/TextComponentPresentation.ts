@@ -29,14 +29,4 @@ export default abstract class TextComponentPresentation
             { ...update.getData(), text: cell.getValue().getData().text }
         ) as DataType;
     }
-
-    public isEqual(
-        component: DataType,
-        cell: Cell,
-        graph: StockFlowGraph
-    ): boolean {
-        const cpntText = component.getData().text;
-        const cellText = cell.getValue().getData().text;
-        return super.isEqual(component, cell, graph) && cpntText === cellText;
-    }
 }

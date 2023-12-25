@@ -38,16 +38,4 @@ export default abstract class PointComponentPresentation
             { ...component.getData(), x: geo.x, y: geo.y }
         ) as DataType;
     }
-
-    public isEqual(
-        component: DataType,
-        cell: Cell,
-        _: StockFlowGraph
-    ): boolean {
-        const cpntX = component.getData().x;
-        const cellX = cell.getGeometry()!.getPoint().x;
-        const cpntY = component.getData().y;
-        const cellY = cell.getGeometry()!.getPoint().y;
-        return (cpntX === cellX && cpntY === cellY);
-    }
 }

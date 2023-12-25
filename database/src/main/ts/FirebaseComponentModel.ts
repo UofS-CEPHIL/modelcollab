@@ -44,6 +44,20 @@ export abstract class FirebaseDataComponent<DataType extends FirebaseDataObject>
         return this.withId(this.getId());
     }
 
+    public equals(other: FirebaseDataComponent<any>): boolean {
+        // https://stackoverflow.com/questions/201183/how-can-i-determine-equality-for-two-javascript-objects
+        function deepEquals(x: any, y: any): boolean {
+            const ok = Object.keys, tx = typeof x, ty = typeof y;
+            return x && y && tx === 'object' && tx === ty ? (
+                ok(x).length === ok(y).length &&
+                ok(x).every(key => deepEquals(x[key], y[key]))
+            ) : (x === y);
+        }
+
+        return other.getType() === this.getType()
+            && deepEquals(this.getData(), other.getData());
+    }
+
     abstract getType(): ComponentType;
     abstract withData(d: DataType): FirebaseDataComponent<DataType>;
     abstract withId(id: string): FirebaseDataComponent<DataType>;

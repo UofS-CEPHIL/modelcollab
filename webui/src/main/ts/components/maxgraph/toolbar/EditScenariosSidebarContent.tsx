@@ -232,7 +232,7 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         handleChange?: (e: ReactChangeEvent) => void
     ): ReactElement {
         const paramName = param.getData().text;
-        const isError = !ModelValidator.isValidParameterValue(value);
+        const isError = !ModelValidator.isValidNumber(value);
         const color = isGrayed
             ? theme.palette.grayed.main
             : theme.palette.canvas.contrastText;

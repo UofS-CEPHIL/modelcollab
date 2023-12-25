@@ -31,14 +31,6 @@ export default class NoModelPresentation
         // Do nothing
     }
 
-    public isEqual(
-        _: InvisibleComponent,
-        __: Cell,
-        ___?: StockFlowGraph | undefined
-    ): boolean {
-        return true;
-    }
-
     public updateComponent(
         _: InvisibleComponent,
         __: Cell,

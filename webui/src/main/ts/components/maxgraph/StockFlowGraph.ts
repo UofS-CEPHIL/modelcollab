@@ -2,6 +2,8 @@ import { FirebaseComponentModel as schema } from "database/build/export";
 import { Cell, Graph, InternalMouseEvent, SelectionHandler, VertexParameters } from "@maxgraph/core";
 import PresentationGetter from "./presentation/PresentationGetter";
 import { LoadedStaticModel } from "./CanvasScreen";
+import ModelValidator, { ComponentErrors } from "../../validation/ModelValitador";
+import { theme } from "../../Themes";
 
 // This class extends the default MaxGraph `Graph` class with functions to add
 // and style specific Stock & Flow diagram components
@@ -64,13 +66,13 @@ export default class StockFlowGraph extends Graph {
     ): void {
         const findComponent = (id: string) =>
             newComponents.find(c => c.getId() === id)!;
-        const updates = this.findComponentUpdates(newComponents, oldComponents);
-        if (
-            updates.newIds.length === 0
-            && updates.deletedIds.length === 0
-            && updates.updatedIds.length === 0
-        ) return;
 
+        const errors = ModelValidator.findErrors(
+            newComponents,
+            loadedStaticModels
+        );
+
+        const updates = this.findComponentUpdates(newComponents, oldComponents);
         const toAdd = updates.newIds.map(findComponent);
         const toUpdate = updates.updatedIds.map(findComponent);
 
@@ -85,6 +87,7 @@ export default class StockFlowGraph extends Graph {
                 toUpdate.map(c => this.getCellWithId(c.getId())!)
             );
             this.applySubstitutions(newComponents);
+            this.showErrors(errors);
         });
     }
 
@@ -193,9 +196,7 @@ export default class StockFlowGraph extends Graph {
                     newIds.push(component.getId());
                 }
                 else if (
-                    !PresentationGetter
-                        .getRelevantPresentation(component)
-                        .isEqual(component, cell, this)
+                    !cell.getValue().equals(component)
                 ) {
                     // Cell exists but has updates
                     updatedIds.push(component.getId());
@@ -309,6 +310,42 @@ export default class StockFlowGraph extends Graph {
             .forEach(e => this.getDataModel().setTerminal(e, newCell, true));
         this.removeCells([substitutedCell]);
         newCell.setId(substitutedCell.getId()!);
+    }
+
+    private showErrors(errors: ComponentErrors) {
+        const isCellError = (c: Cell) =>
+            c.getStyle().strokeColor === theme.palette.error.light;
+        const cells = this.getAllCells();
+        for (const cell of cells) {
+            if (
+                cell.getId() !== null
+                && cell.getValue() instanceof schema.FirebaseDataComponent<any>
+            ) {
+                const messages = errors[cell.getId()!];
+                const isError = isCellError(cell);
+                if (messages && !isError) {
+                    this.setCellStyle(
+                        {
+                            ...cell.getStyle(),
+                            strokeColor: theme.palette.error.light,
+                            fontColor: theme.palette.error.light,
+                        },
+                        [cell]
+                    );
+                    // TODO show tooltips
+                }
+                else if (!messages && isError) {
+                    this.setCellStyle(
+                        {
+                            ...cell.getStyle(),
+                            strokeColor: theme.palette.canvas.contrastText,
+                            fontColor: theme.palette.canvas.contrastText,
+                        },
+                        [cell]
+                    );
+                }
+            }
+        }
     }
 
     private getDefaultParentForCell(cell: Cell): Cell {

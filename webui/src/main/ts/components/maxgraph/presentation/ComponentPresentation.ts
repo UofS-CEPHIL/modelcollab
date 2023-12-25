@@ -29,10 +29,6 @@ export default interface ComponentPresentation<
         loadedModels?: LoadedStaticModel[]
     ): void;
 
-    // Returns true if the given component contains all the same data as the
-    // cell that represents it, ignoring any irrelevant values
-    isEqual(component: T, cell: Cell, graph?: StockFlowGraph): boolean;
-
     // Return the given component with the data updated to match the given cell
     updateComponent(component: T, cell: Cell, graph?: StockFlowGraph): T;
 }

@@ -51,15 +51,6 @@ export default class ConnectionPresentation
         // a little more about how we'll be changing the Firebase schema
     }
 
-    public isEqual(
-        component: schema.ConnectionFirebaseComponent,
-        cell: Cell
-    ): boolean {
-        // This is always true for now. TODO update this once we figure out a
-        // little more about how we'll be changing the Firebase schema
-        return true;
-    }
-
     public updateComponent(
         component: schema.ConnectionFirebaseComponent,
         cell: Cell

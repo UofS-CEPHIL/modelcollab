@@ -28,16 +28,6 @@ export default class StaticModelPresentation
         ));
     }
 
-    public isEqual(
-        component: schema.StaticModelFirebaseComponent,
-        cell: Cell,
-        graph: StockFlowGraph
-    ): boolean {
-        // This always returns false until the inner components are loaded
-        const innerComponentsLoaded = cell.getChildCount() > 0;
-        return super.isEqual(component, cell, graph) && innerComponentsLoaded;
-    }
-
     public updateCell(
         component: schema.StaticModelFirebaseComponent,
         cell: Cell,

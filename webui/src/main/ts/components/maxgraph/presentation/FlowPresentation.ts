@@ -114,42 +114,6 @@ export default class FlowPresentation
         throw new Error("Not Implemented");
     }
 
-    public isEqual(flow: schema.FlowFirebaseComponent, cell: Cell): boolean {
-        const cpntText = flow.getData().text;
-        const cellText = cell.getValue().getData().text;
-
-        // If the source/target is a cloud, check whether it's been
-        // moved. Otherwise, there's nothing to check since a flow can't change
-        // its source or target stock
-        const cpntFrom = flow.getData().from;
-        const cpntTo = flow.getData().to;
-        var fromEqual = true;
-        var toEqual = true;
-        if (this.isPoint(cpntFrom)) {
-            fromEqual = this.isCloudEqual(
-                this.extractPoint(cpntFrom),
-                cell.getTerminal(true)!
-            );
-        }
-        if (this.isPoint(cpntTo)) {
-            toEqual = this.isCloudEqual(
-                this.extractPoint(cpntTo),
-                cell.getTerminal(false)!
-            );
-        }
-
-        return cpntText === cellText && fromEqual && toEqual;
-    }
-
-    private isCloudEqual(
-        point: { x: number, y: number },
-        cloud: Cell
-    ): boolean {
-        const cellX = cloud.getGeometry()!.getPoint().x;
-        const cellY = cloud.getGeometry()!.getPoint().y;
-        return (point.x === cellX && point.y === cellY);
-    }
-
     private updateCloud(
         point: { x: number, y: number },
         cloud: Cell,
