@@ -1,5 +1,5 @@
 import { FirebaseComponentModel as schema } from "database/build/export";
-import React, { Component, createRef, Fragment, ReactElement, RefObject } from 'react';
+import React, { createRef, Fragment, ReactElement, RefObject } from 'react';
 import CanvasToolbar from './toolbar/CanvasToolbar';
 import { InternalEvent, RubberBandHandler } from '@maxgraph/core';
 import UserControls from './UserControls';
@@ -15,7 +15,7 @@ import ExportModelBox from "../ModalBox/ExportModelBox";
 import ImportModelBox from "../ModalBox/ImportModelBox";
 import IdGenerator from "../../IdGenerator";
 import { StaticModelFirebaseComponent } from "database/build/FirebaseComponentModel";
-import { Grid, styled } from "@mui/material";
+import { Grid } from "@mui/material";
 import { theme } from "../../Themes";
 import CanvasSidebar from "./toolbar/CanvasSidebar";
 import YesNoModalBox from "../ModalBox/YesNoModalBox";
@@ -48,7 +48,7 @@ interface State {
     afterScenarioDeleted: (() => void) | null;
 }
 
-export default class CanvasScreen extends Component<Props, State> {
+export default class CanvasScreen extends React.Component<Props, State> {
 
     public static readonly INIT_MODE = UiMode.MOVE;
 
@@ -138,6 +138,8 @@ export default class CanvasScreen extends Component<Props, State> {
                             firebaseDataModel={this.props.firebaseDataModel}
                             exitCanvasScreen={this.props.returnToSessionSelect}
                             toggleSidebarOpen={() => this.toggleSidebarOpen()}
+                            components={this.state.components}
+                            loadedModels={this.state.loadedModels}
                         />
                     </Grid>
                     <Grid container direction="row">

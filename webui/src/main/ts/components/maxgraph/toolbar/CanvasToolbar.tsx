@@ -1,9 +1,12 @@
+import { FirebaseComponentModel as schema } from "database/build/export";
 import { Component, Fragment, ReactElement } from "react";
-import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, MenuItem, CircularProgress, Drawer, Box } from '@mui/material';
+import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, MenuItem, CircularProgress, Drawer, Box, Badge, ListItem } from '@mui/material';
 import CatchingPokemonIcon from '@mui/icons-material/CatchingPokemon'
 import LogoutIcon from '@mui/icons-material/Logout';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
+import ErrorIcon from '@mui/icons-material/Error';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PlayArrow from "@mui/icons-material/PlayArrow";
 import { AxiosResponse } from "axios";
 import UiModeSpeedDial from "./UiModeSpeedDial";
@@ -11,6 +14,8 @@ import ModalBoxType from "../../ModalBox/ModalBoxType";
 import { UiMode } from "../../../UiMode";
 import RestClient from "../../../rest/RestClient";
 import FirebaseDataModel from "../../../data/FirebaseDataModel";
+import { LoadedStaticModel } from "../CanvasScreen";
+import ModelValidator, { ComponentErrors } from "../../../validation/ModelValitador";
 
 export interface Props {
     onModeChanged: (mode: UiMode) => void;
@@ -21,6 +26,8 @@ export interface Props {
     firebaseDataModel: FirebaseDataModel;
     exitCanvasScreen: () => void;
     toggleSidebarOpen: () => void;
+    components: schema.FirebaseDataComponent<any>[];
+    loadedModels: LoadedStaticModel[];
 }
 
 export interface State {
@@ -28,6 +35,7 @@ export interface State {
     waitingForResults: boolean;
     interpretMenuAnchor: HTMLElement | null;
     modelActionsMenuAnchor: HTMLElement | null;
+    errorsMenuAnchor: HTMLElement | null;
 }
 
 export default class CanvasToolbar extends Component<Props, State> {
@@ -40,6 +48,8 @@ export default class CanvasToolbar extends Component<Props, State> {
     private static readonly MODEL_ACTIONS_MENU_ID = "model-actions-menu";
     private static readonly INTERPRET_BUTTON_ID = "interpret-button";
     private static readonly INTERPRET_MENU_ID = "interpret-menu";
+    private static readonly ERRORS_BUTTON_ID = "errors-button";
+    private static readonly ERRORS_MENU_ID = "errors-menu";
 
     public constructor(props: Props) {
         super(props);
@@ -48,11 +58,16 @@ export default class CanvasToolbar extends Component<Props, State> {
             waitingForResults: false,
             interpretMenuAnchor: null,
             modelActionsMenuAnchor: null,
+            errorsMenuAnchor: null,
         };
     }
 
 
     public render(): ReactElement {
+        const errors = ModelValidator.findErrors(
+            this.props.components,
+            this.props.loadedModels
+        );
         return (
             <AppBar position={"static"} >
                 <Toolbar>
@@ -69,14 +84,20 @@ export default class CanvasToolbar extends Component<Props, State> {
                     >
                         {this.props.sessionId}
                     </Typography>
-                    {this.makeAppBarButtons()}
-                    {this.makeAppBarDropdowns()}
+                    {this.makeAppBarButtons(errors)}
+                    {this.makeAppBarDropdowns(errors)}
+                    <UiModeSpeedDial
+                        mode={this.state.uiMode}
+                        changeMode={mode => this.changeMode(mode)}
+                        sx={{ left: 30, top: 100 }}
+                    />
                 </Toolbar>
             </AppBar >
         );
     }
 
-    private makeAppBarButtons(): ReactElement {
+    private makeAppBarButtons(errors: ComponentErrors): ReactElement {
+        const numErrors = Object.values(errors).length;
         return (
             <Stack direction="row" spacing={2}>
                 {/*Back button*/}
@@ -86,6 +107,26 @@ export default class CanvasToolbar extends Component<Props, State> {
                     onClick={_ => this.props.exitCanvasScreen()}
                 >
                     <LogoutIcon />
+                </IconButton>
+
+                {/*Errors*/}
+                <IconButton
+                    color="inherit"
+                    id={CanvasToolbar.ERRORS_BUTTON_ID}
+                    onClick={e =>
+                        this.setState({ errorsMenuAnchor: e.currentTarget })
+                    }
+                >
+                    <Badge
+                        badgeContent={numErrors}
+                        color="error"
+                    >
+                        {
+                            numErrors === 0
+                                ? (<CheckCircleIcon color="inherit" />)
+                                : (<ErrorIcon color="inherit" />)
+                        }
+                    </Badge>
                 </IconButton>
 
                 {/*Model actions*/}
@@ -147,13 +188,13 @@ export default class CanvasToolbar extends Component<Props, State> {
         );
     }
 
-    private makeAppBarDropdowns(): ReactElement {
+    private makeAppBarDropdowns(errors: ComponentErrors): ReactElement {
         return (
             <Fragment>
                 <Menu
                     id={CanvasToolbar.INTERPRET_MENU_ID}
                     anchorEl={this.state.interpretMenuAnchor}
-                    open={this.state.interpretMenuAnchor != null}
+                    open={this.state.interpretMenuAnchor !== null}
                     MenuListProps={{
                         "aria-labelledby": CanvasToolbar.INTERPRET_BUTTON_ID
                     }}
@@ -173,9 +214,20 @@ export default class CanvasToolbar extends Component<Props, State> {
                     </MenuItem>
                 </Menu>
                 <Menu
+                    id={CanvasToolbar.ERRORS_MENU_ID}
+                    open={this.state.errorsMenuAnchor !== null}
+                    anchorEl={this.state.errorsMenuAnchor}
+                    MenuListProps={{
+                        "aria-labelledby": CanvasToolbar.ERRORS_BUTTON_ID
+                    }}
+                    onClose={() => this.setState({ errorsMenuAnchor: null })}
+                >
+                    {this.makeErrorEntries(errors)}
+                </Menu>
+                <Menu
                     id={CanvasToolbar.MODEL_ACTIONS_MENU_ID}
                     anchorEl={this.state.modelActionsMenuAnchor}
-                    open={this.state.modelActionsMenuAnchor != null}
+                    open={this.state.modelActionsMenuAnchor !== null}
                     MenuListProps={{
                         "aria-labelledby": CanvasToolbar.MODEL_ACTIONS_BUTTON_ID
                     }}
@@ -200,12 +252,58 @@ export default class CanvasToolbar extends Component<Props, State> {
                         Publish Model
                     </MenuItem>
                 </Menu>
-                <UiModeSpeedDial
-                    mode={this.state.uiMode}
-                    changeMode={mode => this.changeMode(mode)}
-                    sx={{ left: 30, top: 100 }}
-                />
             </Fragment>
+        );
+    }
+
+    private getComponentNames(): { [id: string]: string } {
+        function getComponentName(c: schema.FirebaseDataComponent<any>): string {
+            if (c.getData().text !== undefined) return c.getData().text;
+            switch (c.getType()) {
+                case schema.ComponentType.CONNECTION:
+                    return "Connection " + c.getId();
+                default:
+                    throw new Error("Invalid type for error: " + c.getType());
+            }
+        }
+        return Object.fromEntries(
+            this.props.loadedModels
+                .flatMap(m => m.components)
+                .concat(this.props.components)
+                .map(c => [c.getId(), getComponentName(c)])
+        );
+    }
+
+    private makeErrorEntries(errors: ComponentErrors): ReactElement[] {
+        let i = 0;
+        const names = this.getComponentNames();
+        function makeSingleErrorEntry(id: string, error: string): ReactElement {
+            return (
+                <ListItem
+                    key={i++}
+                >
+                    <Typography variant="body1">
+                        "{names[id]}": {error}
+                    </Typography>
+                </ListItem>
+            );
+        }
+
+        if (Object.keys(errors).length === 0)
+            return [(
+                <ListItem
+                    key={1}
+                >
+                    <Typography variant="body1" fontStyle='italic'>
+                        No errors found
+                    </Typography>
+                </ListItem>
+            )];
+        else return (
+            Object.entries(errors)
+                .flatMap((es) =>
+                    es[1].map(e => makeSingleErrorEntry(es[0], e))
+                )
         );
     }
 
