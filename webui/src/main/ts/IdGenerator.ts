@@ -1,8 +1,8 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
+import FirebaseComponent from "./data/components/FirebaseComponent";
 
 export default class IdGenerator {
 
-    static generateUniqueId(existing: schema.FirebaseDataComponent<any>[]): string {
+    static generateUniqueId(existing: FirebaseComponent[]): string {
         let componentId: string;
         let isUsed: boolean;
 

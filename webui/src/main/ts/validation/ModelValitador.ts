@@ -1,5 +1,11 @@
-import { FirebaseComponentModel as schema } from "database/build/export";
-import { LoadedStaticModel } from "../components/maxgraph/CanvasScreen";
+import ComponentType from "../data/components/ComponentType";
+import FirebaseComponent from "../data/components/FirebaseComponent";
+import FirebaseDynamicVariable from "../data/components/FirebaseDynamicVariable";
+import FirebaseFlow from "../data/components/FirebaseFlow";
+import FirebaseParameter from "../data/components/FirebaseParameter";
+import FirebaseStock from "../data/components/FirebaseStock";
+import FirebaseSumVariable from "../data/components/FirebaseSumVariable";
+import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
 
 export type ComponentErrors = { [cptId: string]: string[] };
 
@@ -12,7 +18,7 @@ export default class ModelValidator {
         " .-@#$%^&*()-+=\\|{}[]'\":;/?<>,`~".split('');
 
     public static findErrors(
-        components: schema.FirebaseDataComponent<any>[],
+        components: FirebaseComponent[],
         loadedModels: LoadedStaticModel[]
     ): ComponentErrors {
         const errors: ComponentErrors = {};
@@ -40,11 +46,11 @@ export default class ModelValidator {
     }
 
     public static getIdsWithDuplicateNames(
-        components: schema.FirebaseDataComponent<any>[],
+        components: FirebaseComponent[],
         loadedModels: LoadedStaticModel[]
     ): string[] {
         const subbedIds = components.filter(c =>
-            c.getType() === schema.ComponentType.SUBSTITUTION
+            c.getType() === ComponentType.SUBSTITUTION
         ).map(c => c.getData().substitudedId);
         const allComponents = loadedModels
             .flatMap(m => m.components)
@@ -60,42 +66,34 @@ export default class ModelValidator {
     }
 
     public static getComponentErrors(
-        cpt: schema.FirebaseDataComponent<any>
+        cpt: FirebaseComponent
     ): string[] {
         switch (cpt.getType()) {
-            case schema.ComponentType.PARAMETER:
-                return this.getParameterErrors(
-                    cpt as schema.ParameterFirebaseComponent
-                );
-            case schema.ComponentType.SUM_VARIABLE:
-                return this.getSumVariableErrors(
-                    cpt as schema.SumVariableFirebaseComponent
-                );
-            case schema.ComponentType.STOCK:
-                return this.getStockErrors(
-                    cpt as schema.StockFirebaseComponent
-                );
-            case schema.ComponentType.VARIABLE:
+            case ComponentType.PARAMETER:
+                return this.getParameterErrors(cpt as FirebaseParameter);
+            case ComponentType.SUM_VARIABLE:
+                return this.getSumVariableErrors(cpt as FirebaseSumVariable);
+            case ComponentType.STOCK:
+                return this.getStockErrors(cpt as FirebaseStock);
+            case ComponentType.VARIABLE:
                 return this.getDynamicVariableErrors(
-                    cpt as schema.VariableFirebaseComponent
+                    cpt as FirebaseDynamicVariable
                 );
-            case schema.ComponentType.FLOW:
-                return this.getFlowErrors(
-                    cpt as schema.FlowFirebaseComponent
-                );
+            case ComponentType.FLOW:
+                return this.getFlowErrors(cpt as FirebaseFlow);
             default:
                 return [];
         }
     }
 
-    public static getStockErrors(cpt: schema.StockFirebaseComponent): string[] {
+    public static getStockErrors(cpt: FirebaseStock): string[] {
         return [
             ...this.getComponentNameErrors(cpt.getData().text),
             ...this.getStockInitValueErrors(cpt.getData().initvalue)
         ];
     }
 
-    public static getFlowErrors(cpt: schema.FlowFirebaseComponent): string[] {
+    public static getFlowErrors(cpt: FirebaseFlow): string[] {
         return [
             ...this.getComponentNameErrors(cpt.getData().text),
             ...this.getEquationErrors(cpt.getData().equation)
@@ -103,7 +101,7 @@ export default class ModelValidator {
     }
 
     public static getDynamicVariableErrors(
-        cpt: schema.VariableFirebaseComponent
+        cpt: FirebaseDynamicVariable
     ): string[] {
         return [
             ...this.getComponentNameErrors(cpt.getData().text),
@@ -111,15 +109,11 @@ export default class ModelValidator {
         ];
     }
 
-    public static getSumVariableErrors(
-        cpt: schema.SumVariableFirebaseComponent
-    ): string[] {
+    public static getSumVariableErrors(cpt: FirebaseSumVariable): string[] {
         return this.getComponentNameErrors(cpt.getData().text);
     }
 
-    public static getParameterErrors(
-        cpt: schema.ParameterFirebaseComponent
-    ): string[] {
+    public static getParameterErrors(cpt: FirebaseParameter): string[] {
         const errors = [
             ...this.getComponentNameErrors(cpt.getData().text),
         ];
@@ -172,7 +166,7 @@ export default class ModelValidator {
 
     public static isDuplicateName(
         val: string,
-        components: schema.FirebaseDataComponent<any>[]
+        components: FirebaseComponent[]
     ) {
         return components.find(c => c.getData().text === val) !== undefined;
     }

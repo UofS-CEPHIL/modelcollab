@@ -1,13 +1,11 @@
 import React, { ReactElement } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import LoginScreen from "./components/Screens/LoginScreen";
-import CanvasScreen from "./components/maxgraph/CanvasScreen";
+import LoginScreen from "./view/Screens/LoginScreen";
+import StockFlowScreen from "./view/Screens/StockFlowScreen";
 import FirebaseManagerImpl from "./data/FirebaseManagerImpl";
-import FirebaseDataModelImpl from "./data/FirebaseDataModelImpl";
 import FirebaseManager from "./data/FirebaseManager";
 import FirebaseDataModel from "./data/FirebaseDataModel";
-import RestClientImpl from "./rest/RestClientImpl";
 import RestClient from "./rest/RestClient";
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./Themes";
@@ -30,9 +28,9 @@ export default class App extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = { isSignedIn: false, currentSession: null };
-        this.restClient = new RestClientImpl();
+        this.restClient = new RestClient();
         this.firebaseManager = new FirebaseManagerImpl();
-        this.firebaseDataModel = new FirebaseDataModelImpl(this.firebaseManager);
+        this.firebaseDataModel = new FirebaseDataModel(this.firebaseManager);
 
         this.firebaseManager.registerAuthChangedCallback(
             isSignedIn => this.setState({ isSignedIn })
@@ -78,7 +76,7 @@ export default class App extends React.Component<Props, State> {
                             <Route
                                 path="/"
                                 element={
-                                    <CanvasScreen
+                                    <StockFlowScreen
                                         firebaseDataModel={this.firebaseDataModel}
                                         restClient={this.restClient}
                                         returnToSessionSelect={
