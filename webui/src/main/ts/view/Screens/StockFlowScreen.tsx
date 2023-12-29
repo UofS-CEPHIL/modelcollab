@@ -21,6 +21,7 @@ import FirebaseComponent from '../../data/components/FirebaseComponent';
 import FirebasePointComponent from '../../data/components/FirebasePointComponent';
 import ComponentType from '../../data/components/ComponentType';
 import FirebaseStaticModel from '../../data/components/FirebaseStaticModel';
+import ModelValidator, { ComponentErrors } from '../../validation/ModelValitador';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -38,6 +39,7 @@ interface State {
     mode: UiMode;
     clipboard: FirebaseComponent[];
     components: FirebaseComponent[];
+    errors: ComponentErrors;
     displayedModalBox: ModalBoxType | null;
     scenario: string;
     loadedModels: LoadedStaticModel[];
@@ -65,6 +67,7 @@ export default class StockFlowScreen extends React.Component<Props, State> {
             mode: StockFlowScreen.INIT_MODE,
             clipboard: [],
             components: [],
+            errors: {},
             displayedModalBox: null,
             modalBoxComponent: null,
             scenario: "",
@@ -84,13 +87,14 @@ export default class StockFlowScreen extends React.Component<Props, State> {
             this.graph = new StockFlowGraph(
                 this.graphRef.current,
                 () => this.state.components,
-                name => this.loadStaticModelInnerComponents(name)
+                name => this.loadStaticModelInnerComponents(name),
+                () => this.state.errors
             );
             this.actions = new DiagramActions(
                 this.props.firebaseDataModel,
                 this.graph,
                 this.props.sessionId,
-                components => this.setState({ components }),
+                components => this.onComponentsUpdated(components),
                 () => this.state.components,
                 () => this.state.loadedModels
             );
@@ -105,6 +109,12 @@ export default class StockFlowScreen extends React.Component<Props, State> {
                 m => this.setState({ ...this.state, displayedModalBox: m })
             );
         }
+    }
+
+    private onComponentsUpdated(components: FirebaseComponent[]): void {
+        const errors = ModelValidator
+            .findErrors(components, this.state.loadedModels);
+        this.setState({ components, errors });
     }
 
     private pasteComponents(): FirebaseComponent[] {
@@ -142,6 +152,7 @@ export default class StockFlowScreen extends React.Component<Props, State> {
                             toggleSidebarOpen={() => this.toggleSidebarOpen()}
                             components={this.state.components}
                             loadedModels={this.state.loadedModels}
+                            errors={this.state.errors}
                         />
                     </Grid>
                     <Grid container direction="row">
@@ -325,19 +336,21 @@ export default class StockFlowScreen extends React.Component<Props, State> {
     private loadStaticModelInnerComponents(modelName: string): void {
         this.props.firebaseDataModel.getComponentsForSavedModel(
             modelName,
-            newComponents => {
+            modelComponents => {
                 if (!this.isStaticModelLoaded(modelName)) {
-                    this.setState(
+                    const loadedModels = [
+                        ...this.state.loadedModels,
                         {
-                            ...this.state,
-                            loadedModels: [
-                                ...this.state.loadedModels,
-                                {
-                                    modelId: modelName,
-                                    components: newComponents
-                                }
-                            ]
-                        },
+                            modelId: modelName,
+                            components: modelComponents
+                        }
+                    ];
+                    const errors = ModelValidator.findErrors(
+                        this.state.components,
+                        loadedModels
+                    );
+                    this.setState(
+                        { loadedModels, errors },
                         () => this.graph!.refreshComponents(
                             this.state.components,
                             this.state.components,

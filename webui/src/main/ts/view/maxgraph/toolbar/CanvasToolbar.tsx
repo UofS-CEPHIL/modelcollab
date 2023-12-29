@@ -14,7 +14,7 @@ import { UiMode } from "../../../UiMode";
 import RestClient from "../../../rest/RestClient";
 import FirebaseDataModel from "../../../data/FirebaseDataModel";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
-import ModelValidator, { ComponentErrors } from "../../../validation/ModelValitador";
+import { ComponentErrors } from "../../../validation/ModelValitador";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import ComponentType from "../../../data/components/ComponentType";
 
@@ -29,6 +29,7 @@ export interface Props {
     toggleSidebarOpen: () => void;
     components: FirebaseComponent[];
     loadedModels: LoadedStaticModel[];
+    errors: ComponentErrors;
 }
 
 export interface State {
@@ -65,10 +66,6 @@ export default class CanvasToolbar extends Component<Props, State> {
 
 
     public render(): ReactElement {
-        const errors = ModelValidator.findErrors(
-            this.props.components,
-            this.props.loadedModels
-        );
         return (
             <AppBar position={"static"} >
                 <Toolbar>
@@ -85,8 +82,8 @@ export default class CanvasToolbar extends Component<Props, State> {
                     >
                         {this.props.sessionId}
                     </Typography>
-                    {this.makeAppBarButtons(errors)}
-                    {this.makeAppBarDropdowns(errors)}
+                    {this.makeAppBarButtons(this.props.errors)}
+                    {this.makeAppBarDropdowns(this.props.errors)}
                     <UiModeSpeedDial
                         mode={this.state.uiMode}
                         changeMode={mode => this.changeMode(mode)}

@@ -1,4 +1,4 @@
-import { Cell, Graph, InternalMouseEvent, SelectionHandler } from "@maxgraph/core";
+import { Cell, Graph, InternalMouseEvent, SelectionHandler, TooltipHandler } from "@maxgraph/core";
 import PresentationGetter from "./presentation/PresentationGetter";
 import { LoadedStaticModel } from "../Screens/StockFlowScreen";
 import ModelValidator, { ComponentErrors } from "../../validation/ModelValitador";
@@ -13,19 +13,19 @@ export default class StockFlowGraph extends Graph {
 
     private getFirebaseState: () => FirebaseComponent[];
     private loadStaticModelComponents: (name: string) => void;
+    private getErrors: () => ComponentErrors;
 
     public constructor(
         container: HTMLElement,
         getFirebaseState: () => FirebaseComponent[],
-        loadStaticModelComponents: (name: string) => void
+        loadStaticModelComponents: (name: string) => void,
+        getErrors: () => ComponentErrors
     ) {
         super(container);
         this.getFirebaseState = getFirebaseState;
         this.loadStaticModelComponents = loadStaticModelComponents;
+        this.getErrors = getErrors;
         this.setAutoSizeCells(true);
-        // Override the cellLabelChanged function. For some reason, this
-        // is the way we have to do it...
-        this.cellLabelChanged = this.onCellLabelChanged;
 
         const selHandler =
             this.getPlugin("SelectionHandler") as SelectionHandler;
@@ -35,6 +35,38 @@ export default class StockFlowGraph extends Graph {
             }
             return null;
         }
+
+        this.setupTooltips();
+    }
+
+    private setupTooltips(): void {
+        this.setTooltips(true);
+        const tooltipHandler = this.getPlugin("TooltipHandler") as TooltipHandler;
+        const style = tooltipHandler.div.style;
+        style.position = 'absolute';
+        style.background = theme.palette.canvas.main;
+        style.padding = '8px';
+        style.border = '1px solid ' + theme.palette.text.primary;
+        style.borderRadius = '5px';
+        style.fontFamily = theme.typography.fontFamily || "sans-serif";
+        style.fontSize = theme.typography.fontSize.toString();
+    }
+
+    public cellLabelChanged = (
+        cell: Cell,
+        newValue: string,
+        resize: boolean = false
+    ) => {
+        // TODO
+        throw new Error("Not implemented");
+    }
+
+    public getTooltipForCell = (cell: Cell) => {
+        if (!cell.getId()) return "";
+        const errs = this.getErrors()[cell.getId()!];
+        if (!errs) return "No errors found!";
+
+        return errs.join('\n');
     }
 
     // Override
@@ -49,17 +81,6 @@ export default class StockFlowGraph extends Graph {
         }
     }
 
-    // Update the state when user changes a cell's text. For some reason we
-    // need to define this separately and set the override in the constructor.
-    // TS still confuses me sometimes.
-    private onCellLabelChanged(
-        cell: Cell,
-        newValue: string,
-        resize: boolean = false
-    ): void {
-        // TODO
-        throw new Error("Not implemented");
-    }
 
     public refreshComponents(
         newComponents: FirebaseComponent[],
