@@ -2,7 +2,6 @@ import { SpeedDial, SpeedDialAction, SpeedDialIcon } from "@mui/material";
 import NorthEastIcon from '@mui/icons-material/NorthEast';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import EditIcon from '@mui/icons-material/Edit';
 import EastIcon from '@mui/icons-material/East';
 import MediationIcon from '@mui/icons-material/Mediation';
 import OpenWithIcon from '@mui/icons-material/OpenWith';
@@ -18,7 +17,24 @@ export interface Props {
     changeMode: (mode: UiMode) => void;
 }
 
-export default class UiModeSpeedDial extends React.Component<Props> {
+export interface State {
+    open: boolean;
+}
+
+export default class UiModeSpeedDial extends React.Component<Props, State> {
+
+    public constructor(props: Props) {
+        super(props);
+        this.state = {
+            open: false
+        }
+    }
+
+    public componentDidUpdate(oldProps: Props, oldState: State): void {
+        if (oldProps.mode !== this.props.mode) {
+            this.setState({ open: oldState.open });
+        }
+    }
 
     public render(): ReactElement {
         return (
@@ -27,6 +43,8 @@ export default class UiModeSpeedDial extends React.Component<Props> {
                 sx={{ position: "absolute", ...this.props.sx }}
                 icon={this.makeSpeedDialIcon()}
                 direction="down"
+                open={this.state.open}
+                onClick={() => this.setState({ open: !this.state.open })}
             >
                 {
                     Object.values(UiMode)

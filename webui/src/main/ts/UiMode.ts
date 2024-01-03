@@ -1,22 +1,22 @@
 export enum UiMode {
+    MOVE = "Move",
     STOCK = "Stock",
     FLOW = "Flow",
     PARAM = "Param",
     DYN_VARIABLE = "Dynamic Variable",
     SUM_VARIABLE = "Sum Variable",
-    MOVE = "Move",
     CONNECT = "Connect",
     IDENTIFY = "Identify"
 };
 
 export function modeFromString(s: string): UiMode | null {
     switch (s.toUpperCase()) {
+        case "MOVE":
+            return UiMode.MOVE;
         case "STOCK":
             return UiMode.STOCK;
         case "FLOW":
             return UiMode.FLOW;
-        case "MOVE":
-            return UiMode.MOVE;
         case "PARAM":
         case "PARAMETER":
             return UiMode.PARAM;
