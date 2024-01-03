@@ -1,9 +1,10 @@
-import { List, ListItem, ListItemText, TextField, Typography } from '@mui/material';
+import { List, ListItem, TextField } from '@mui/material';
 import React, { ReactElement } from 'react';
 import ComponentType from '../../../data/components/ComponentType';
 import FirebaseComponent from '../../../data/components/FirebaseComponent';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
 import RefreshAndSaveListItem from './RefreshAndSaveListItem';
+import TypographyListItem from './TypographyListItem';
 
 export interface Props {
     component: FirebaseComponent | null;
@@ -50,11 +51,11 @@ export default class EditComponentsSidebarContent
                 />
                 {
                     this.props.component?.getType() &&
-                    this.makeTypographyListItem(
-                        "Edit " + this.props.component.getType(),
-                        true,
-                        true
-                    )
+                    <TypographyListItem
+                        text={"Edit " + this.props.component.getType()}
+                        italic
+                        bold
+                    />
                 }
                 {this.makeListItems()}
             </List>
@@ -85,17 +86,21 @@ export default class EditComponentsSidebarContent
                         this.makeTextBoxListItem("equation", "Equation"),
                     ];
                 default:
-                    return [this.makeTypographyListItem(
-                        "Selected component not editable",
-                        true
-                    )];
+                    return [
+                        <TypographyListItem
+                            text={"Selected component not editable."}
+                            italic
+                        />
+                    ];
             }
         }
         else {
-            return [this.makeTypographyListItem(
-                "Select a component...",
-                true
-            )];
+            return [
+                <TypographyListItem
+                    text={"Select a component..."}
+                    italic
+                />
+            ];
         }
     }
 
@@ -120,26 +125,6 @@ export default class EditComponentsSidebarContent
                         id: `${fieldName}-editbox`,
                     }}
                 />
-            </ListItem>
-        );
-    }
-
-    private makeTypographyListItem(
-        text: string,
-        italic: boolean = false,
-        bold: boolean = false
-    ): ReactElement {
-        return (
-            <ListItem key={0}>
-                <ListItemText>
-                    <Typography
-                        variant="h6"
-                        fontStyle={italic ? "italic" : ""}
-                        fontWeight={bold ? "bold" : ""}
-                    >
-                        {text}
-                    </Typography>
-                </ListItemText>
             </ListItem>
         );
     }

@@ -1,6 +1,7 @@
 import React, { ReactElement } from 'react';
 import { List, ListItem, ListItemButton, ListItemText, Typography } from '@mui/material';
 import FirebaseScenario from '../../../data/components/FirebaseScenario';
+import TypographyListItem from './TypographyListItem';
 
 export interface Props {
     scenarios: FirebaseScenario[];
@@ -22,17 +23,10 @@ export default class SelectScenarioSidebarContent extends React.Component<Props>
 
         if (this.props.scenarios.length == 0) {
             return [
-                <ListItem key={0}>
-                    <ListItemText>
-                        <Typography
-                            component='div'
-                            fontStyle='italic'
-                        >
-                            No scenarios...
-                        </Typography>
-                    </ListItemText>
-                </ListItem>
-
+                <TypographyListItem
+                    text={"No scenarios..."}
+                    italic
+                />
             ];
         }
         else {
