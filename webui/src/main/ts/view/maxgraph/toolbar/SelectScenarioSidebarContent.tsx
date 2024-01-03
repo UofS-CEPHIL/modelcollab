@@ -25,7 +25,6 @@ export default class SelectScenarioSidebarContent extends React.Component<Props>
                 <ListItem key={0}>
                     <ListItemText>
                         <Typography
-                            variant='h6'
                             component='div'
                             fontStyle='italic'
                         >

@@ -7,7 +7,6 @@ import StockFlowGraph from "../maxgraph/StockFlowGraph";
 import DiagramActions from "../maxgraph/DiagramActions";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 import ModalBoxType from "../ModalBox/ModalBoxType";
-import EditBoxBuilder from "../ModalBox/EditBox/EditBoxBuilder";
 import HelpBox from "../ModalBox/HelpBox";
 import RestClient from "../../rest/RestClient";
 import ExportModelBox from "../ModalBox/ExportModelBox";
@@ -18,7 +17,6 @@ import { theme } from "../../Themes";
 import CanvasSidebar from "../maxgraph/toolbar/CanvasSidebar";
 import YesNoModalBox from "../ModalBox/YesNoModalBox";
 import FirebaseComponent from '../../data/components/FirebaseComponent';
-import FirebasePointComponent from '../../data/components/FirebasePointComponent';
 import ComponentType from '../../data/components/ComponentType';
 import FirebaseStaticModel from '../../data/components/FirebaseStaticModel';
 import ModelValidator, { ComponentErrors } from '../../validation/ModelValitador';
@@ -39,6 +37,7 @@ interface State {
     mode: UiMode;
     clipboard: FirebaseComponent[];
     components: FirebaseComponent[];
+    selectedComponent: FirebaseComponent | null;
     errors: ComponentErrors;
     displayedModalBox: ModalBoxType | null;
     scenario: string;
@@ -54,6 +53,9 @@ interface State {
 
 export default class StockFlowScreen extends React.Component<Props, State> {
 
+    // TODO add selected component to state, make callback in graph to make that happen,
+    // make sidebar edit currently selected component
+
     public static readonly INIT_MODE = UiMode.MOVE;
 
     private graphRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>();
@@ -67,6 +69,7 @@ export default class StockFlowScreen extends React.Component<Props, State> {
             mode: StockFlowScreen.INIT_MODE,
             clipboard: [],
             components: [],
+            selectedComponent: null,
             errors: {},
             displayedModalBox: null,
             modalBoxComponent: null,
@@ -88,7 +91,7 @@ export default class StockFlowScreen extends React.Component<Props, State> {
                 this.graphRef.current,
                 () => this.state.components,
                 name => this.loadStaticModelInnerComponents(name),
-                () => this.state.errors
+                () => this.state.errors,
             );
             this.actions = new DiagramActions(
                 this.props.firebaseDataModel,
@@ -106,7 +109,8 @@ export default class StockFlowScreen extends React.Component<Props, State> {
                 c => this.setState({ clipboard: c }),
                 () => this.pasteComponents(),
                 () => this.state.components,
-                m => this.setState({ ...this.state, displayedModalBox: m })
+                m => this.setState({ ...this.state, displayedModalBox: m }),
+                sel => this.setState({ selectedComponent: sel }),
             );
         }
     }
@@ -198,6 +202,7 @@ export default class StockFlowScreen extends React.Component<Props, State> {
                                     afterScenarioDeleted: c,
                                     displayedModalBox: ModalBoxType.DELETE_SCENARIO
                                 })}
+                                selectedComponent={this.state.selectedComponent}
                             />
                         </Grid>
                     </Grid >
@@ -210,44 +215,6 @@ export default class StockFlowScreen extends React.Component<Props, State> {
     private makeModalBoxIfNecessary(): ReactElement | null {
         if (!this.graph || this.state.displayedModalBox == null) {
             return null;
-        }
-
-        if (this.state.displayedModalBox === ModalBoxType.EDIT_COMPONENT) {
-            const selected = this.graph.getSelectionCells();
-            if (selected.length != 1) {
-                throw new Error(
-                    `Showing edit box with ${selected.length} cells `
-                    + "selected, expected exactly 1"
-                );
-            }
-            return EditBoxBuilder.build(
-                selected[0].getValue(),
-                c => {
-                    const cell = this.graph!.getCellWithId(c.getId());
-                    if (!cell) {
-                        console.info(
-                            "Edited cell was deleted "
-                            + `while editing. Id=${c.getId()}`
-                        );
-                        return;
-                    }
-                    if (c instanceof FirebasePointComponent) {
-                        const upToDateGeometry = cell.getGeometry()!;
-                        c = c.withData({
-                            ...c.getData(),
-                            x: upToDateGeometry.x,
-                            y: upToDateGeometry.y
-                        });
-                    }
-                    this.closeModalBox();
-                    this.actions!.updateComponent(c);
-                    this.graph!.setSelectionCells([]);
-                },
-                () => {
-                    this.closeModalBox();
-                    this.graph!.setSelectionCells([]);
-                }
-            );
         }
         else if (this.state.displayedModalBox === ModalBoxType.HELP) {
             return (

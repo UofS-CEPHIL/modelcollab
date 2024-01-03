@@ -4,13 +4,15 @@ import ComponentType from '../../../data/components/ComponentType';
 import FirebaseComponent from '../../../data/components/FirebaseComponent';
 import FirebaseScenario from '../../../data/components/FirebaseScenario';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
+import EditComponentsSidebarContent from './EditComponentsSidebarContent';
 import EditScenariosSidebarContent from './EditScenariosSidebarContent';
 import SelectScenarioSidebarContent from "./SelectScenarioSidebarContent";
 import SidebarDragHandle from "./SidebarDragHandle";
 
 export enum SidebarMode {
     EDIT_SCENARIOS = "Edit Scenarios",
-    SELECT_SCENARIO = "Select Scenario"
+    SELECT_SCENARIO = "Select Scenario",
+    EDIT_COMPONENTS = "Edit Component"
 }
 
 export interface Props {
@@ -20,6 +22,7 @@ export interface Props {
     sessionId: string;
     getComponents: () => FirebaseComponent[];
     getSelectedScenario: () => string;
+    selectedComponent: FirebaseComponent | null;
     selectScenario: (s: string) => void;
     deleteScenario: (s: FirebaseScenario, callback: () => void) => void;
 }
@@ -127,6 +130,14 @@ export default class CanvasSidebar extends React.Component<Props, State> {
                         onSelectionChanged={s =>
                             this.props.selectScenario(s.getData().name)
                         }
+                    />
+                );
+            case SidebarMode.EDIT_COMPONENTS:
+                return (
+                    <EditComponentsSidebarContent
+                        component={this.props.selectedComponent}
+                        firebaseDataModel={this.props.firebaseDataModel}
+                        sessionId={this.props.sessionId}
                     />
                 );
             default:

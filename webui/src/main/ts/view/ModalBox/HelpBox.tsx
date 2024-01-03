@@ -55,7 +55,6 @@ export default class HelpBox extends ModalBox<Props, State> {
             this.makeDynamicVariableBulletPoint(),
             this.makeSumVariableBulletPoint(),
             this.makeMoveBulletPoint(),
-            this.makeEditBulletPoint(),
             this.makeConnectBulletPoint(),
             this.makeIdentifyBulletPoint(),
             this.makeScenariosBulletPoint(),
@@ -158,13 +157,6 @@ export default class HelpBox extends ModalBox<Props, State> {
         const text = "Move mode is for moving components and allows the selection and moving of multiple components by "
             + "left click and dragging. Nothing happens when components or the background are clicked.";
         const icon = UiModeSpeedDial.getIconForMode(UiMode.MOVE);
-        return this.makeBulletPoint(text, icon);
-    }
-
-    private makeEditBulletPoint(): ReactElement {
-        const text = "Edit mode allows users to edit existing components. Left click on the component to edit it. "
-            + "A dialog box will appear and allow the component to be edited. Only outer components may be edited.";
-        const icon = UiModeSpeedDial.getIconForMode(UiMode.EDIT);
         return this.makeBulletPoint(text, icon);
     }
 

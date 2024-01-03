@@ -1,8 +1,6 @@
 import { FormControl, InputLabel, List, ListItem, ListItemButton, ListItemIcon, ListItemText, MenuItem, Select, SelectChangeEvent, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import SaveIcon from '@mui/icons-material/Save';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import React, { ReactElement } from 'react';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
 import IdGenerator from "../../../IdGenerator";
@@ -12,6 +10,7 @@ import FirebaseScenario from '../../../data/components/FirebaseScenario';
 import FirebaseComponent from '../../../data/components/FirebaseComponent';
 import FirebaseParameter from '../../../data/components/FirebaseParameter';
 import ComponentType from '../../../data/components/ComponentType';
+import RefreshAndSaveListItem from './RefreshAndSaveListItem';
 
 export interface Props {
     sessionId: string;
@@ -52,7 +51,11 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
             <List>
                 {this.makeAddScenarioListItem()}
                 {this.makeSelectScenarioListItem()}
-                {this.makeRefreshAndSaveListItem()}
+                <RefreshAndSaveListItem
+                    onSave={() => this.updateScenario()}
+                    onRefresh={() => this.refreshComponents()}
+                    disabled={!this.state.scenarioEditing}
+                />
                 {this.makeParameterListItems()}
                 {this.makeDeleteScenarioListItem()}
             </List>
@@ -122,31 +125,6 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                         }
                     </Select>
                 </FormControl>
-            </ListItem>
-        );
-    }
-
-    private makeRefreshAndSaveListItem(): ReactElement {
-        return (
-            <ListItem>
-                <ListItemButton
-                    onClick={() => this.updateScenario()}
-                    sx={{ justifyContent: "center" }}
-                    disabled={!this.state.scenarioEditing}
-                >
-                    <ListItemIcon sx={{ justifyContent: "center" }}>
-                        <SaveIcon />
-                    </ListItemIcon>
-                </ListItemButton>
-                <ListItemButton
-                    onClick={() => this.refreshComponents()}
-                    sx={{ justifyContent: "center" }}
-                    disabled={!this.state.scenarioEditing}
-                >
-                    <ListItemIcon sx={{ justifyContent: "center" }}>
-                        <RefreshIcon />
-                    </ListItemIcon>
-                </ListItemButton>
             </ListItem>
         );
     }

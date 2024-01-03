@@ -11,7 +11,7 @@ import BehaviourGetter from "./behaviours/BehaviourGetter";
 import DiagramActions from "./DiagramActions";
 import StockFlowGraph from "./StockFlowGraph";
 import ModalBoxType from "../ModalBox/ModalBoxType";
-import FirebaseComponent from "../../data/components/FirebaseComponent";
+import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 
 export default class UserControls {
 
@@ -25,6 +25,7 @@ export default class UserControls {
     private pasteCells: () => FirebaseComponent[];
     private getCurrentComponents: () => FirebaseComponent[];
     private setOpenModalBox: (m: ModalBoxType) => void;
+    private onSelectionChanged: (s: FirebaseComponent | null) => void;
 
     public constructor(
         graph: StockFlowGraph,
@@ -33,7 +34,8 @@ export default class UserControls {
         pasteCells: () => FirebaseComponent[],
         getCurrentComponents: () => FirebaseComponent[],
         setOpenModalBox: (m: ModalBoxType) => void,
-        mode?: ModeBehaviour
+        onSelectionChanged: (s: FirebaseComponent | null) => void,
+        mode?: ModeBehaviour,
     ) {
 
         this.graph = graph;
@@ -51,6 +53,7 @@ export default class UserControls {
         this.copyCells = copyCells;
         this.pasteCells = pasteCells;
         this.getCurrentComponents = getCurrentComponents;
+        this.onSelectionChanged = onSelectionChanged;
 
         this.undoManager = new UndoManager();
         this.setupUndoManager();
@@ -190,9 +193,17 @@ export default class UserControls {
         this.graph.getSelectionModel().addListener(
             InternalEvent.CHANGE,
             (_: EventTarget, __: EventObject) => {
-                this.modeBehaviour.selectionChanged(
-                    this.graph.getSelectionCells()
-                )
+                const selectionCells = this.graph.getSelectionCells();
+                this.modeBehaviour.selectionChanged(selectionCells);
+
+                let selectedComponent = null;
+                if (selectionCells.length == 1) {
+                    const val = selectionCells[0].getValue();
+                    if (val instanceof FirebaseComponentBase) {
+                        selectedComponent = selectionCells[0].getValue();
+                    }
+                }
+                this.onSelectionChanged(selectedComponent);
             }
         )
     }

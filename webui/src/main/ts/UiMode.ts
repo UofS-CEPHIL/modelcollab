@@ -5,7 +5,6 @@ export enum UiMode {
     DYN_VARIABLE = "Dynamic Variable",
     SUM_VARIABLE = "Sum Variable",
     MOVE = "Move",
-    EDIT = "Edit",
     CONNECT = "Connect",
     IDENTIFY = "Identify"
 };
@@ -18,8 +17,6 @@ export function modeFromString(s: string): UiMode | null {
             return UiMode.FLOW;
         case "MOVE":
             return UiMode.MOVE;
-        case "EDIT":
-            return UiMode.EDIT;
         case "PARAM":
         case "PARAMETER":
             return UiMode.PARAM;

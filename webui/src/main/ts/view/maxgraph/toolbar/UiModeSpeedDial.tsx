@@ -66,8 +66,6 @@ export default class UiModeSpeedDial extends React.Component<Props> {
                 return (<AddCircleIcon />);
             case UiMode.SUM_VARIABLE:
                 return (<AddCircleOutlineIcon />);
-            case UiMode.EDIT:
-                return (<EditIcon />);
             case UiMode.FLOW:
                 return (<EastIcon />);
             case UiMode.IDENTIFY:

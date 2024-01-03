@@ -9,7 +9,6 @@ import FlowModeBehaviour from "./FlowModeBehaviour";
 import DiagramActions from "../DiagramActions";
 import StockFlowGraph from "../StockFlowGraph";
 import { ConnectModeBehaviour } from "./ConnectModeBehaviour";
-import EditModeBehaviour from "./EditModeBehaviour";
 import ModalBoxType from "../../ModalBox/ModalBoxType";
 import IdentifyModeBehaviour from "./IdentifyModeBehaviour";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
@@ -52,10 +51,6 @@ export default class BehaviourGetter {
                 );
             case UiMode.CONNECT:
                 return new ConnectModeBehaviour(
-                    graph, actions, getFirebaseState, setOpenModalBox
-                );
-            case UiMode.EDIT:
-                return new EditModeBehaviour(
                     graph, actions, getFirebaseState, setOpenModalBox
                 );
             case UiMode.IDENTIFY:
