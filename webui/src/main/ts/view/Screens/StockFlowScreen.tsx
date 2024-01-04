@@ -30,7 +30,7 @@ interface Props {
     firebaseDataModel: FirebaseDataModel;
     sessionId: string;
     restClient: RestClient;
-    returnToSessionSelect: () => void;
+    logOut: () => void;
 }
 
 interface State {
@@ -52,9 +52,6 @@ interface State {
 }
 
 export default class StockFlowScreen extends React.Component<Props, State> {
-
-    // TODO add selected component to state, make callback in graph to make that happen,
-    // make sidebar edit currently selected component
 
     public static readonly INIT_MODE = UiMode.MOVE;
 
@@ -152,7 +149,7 @@ export default class StockFlowScreen extends React.Component<Props, State> {
                             scenario={this.state.scenario}
                             restClient={this.props.restClient}
                             firebaseDataModel={this.props.firebaseDataModel}
-                            exitCanvasScreen={this.props.returnToSessionSelect}
+                            logOut={this.props.logOut}
                             toggleSidebarOpen={() => this.toggleSidebarOpen()}
                             components={this.state.components}
                             loadedModels={this.state.loadedModels}
@@ -165,7 +162,6 @@ export default class StockFlowScreen extends React.Component<Props, State> {
                             width={canvasWidth}
                             sx={{
                                 ["div.mxRubberband"]: {
-                                    borderColor: theme.palette.primary.dark,
                                     background: theme.palette.primary.light,
                                     position: "absolute"
                                 }

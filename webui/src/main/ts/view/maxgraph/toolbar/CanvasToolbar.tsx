@@ -25,7 +25,7 @@ export interface Props {
     scenario: string;
     restClient: RestClient;
     firebaseDataModel: FirebaseDataModel;
-    exitCanvasScreen: () => void;
+    logOut: () => void;
     toggleSidebarOpen: () => void;
     components: FirebaseComponent[];
     loadedModels: LoadedStaticModel[];
@@ -102,7 +102,7 @@ export default class CanvasToolbar extends Component<Props, State> {
                 <IconButton
                     color="inherit"
                     id="back-button"
-                    onClick={_ => this.props.exitCanvasScreen()}
+                    onClick={_ => this.props.logOut()}
                 >
                     <LogoutIcon />
                 </IconButton>
