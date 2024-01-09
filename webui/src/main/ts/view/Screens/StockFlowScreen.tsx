@@ -9,7 +9,6 @@ import FirebaseDataModel from "../../data/FirebaseDataModel";
 import ModalBoxType from "../ModalBox/ModalBoxType";
 import HelpBox from "../ModalBox/HelpBox";
 import RestClient from "../../rest/RestClient";
-import ExportModelBox from "../ModalBox/ExportModelBox";
 import ImportModelBox from "../ModalBox/ImportModelBox";
 import IdGenerator from "../../IdGenerator";
 import { Grid } from "@mui/material";
@@ -20,6 +19,9 @@ import FirebaseComponent from '../../data/components/FirebaseComponent';
 import ComponentType from '../../data/components/ComponentType';
 import FirebaseStaticModel from '../../data/components/FirebaseStaticModel';
 import ModelValidator, { ComponentErrors } from '../../validation/ModelValitador';
+import { useParams } from 'react-router';
+import FirebaseSessionDataGetter from '../../data/FirebaseSessionDataGetter';
+import FirebaseScenario from '../../data/components/FirebaseScenario';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -28,30 +30,32 @@ export interface LoadedStaticModel {
 
 interface Props {
     firebaseDataModel: FirebaseDataModel;
-    sessionId: string;
     restClient: RestClient;
     logOut: () => void;
+    modelUuid?: string;
 }
 
 interface State {
     mode: UiMode;
-    clipboard: FirebaseComponent[];
+    modelName: string | null;
     components: FirebaseComponent[];
+    scenarios: FirebaseScenario[];
+    clipboard: FirebaseComponent[];
     selectedComponent: FirebaseComponent | null;
     errors: ComponentErrors;
     displayedModalBox: ModalBoxType | null;
-    scenario: string;
+    selectedScenarioId: string;
     loadedModels: LoadedStaticModel[];
     sidebarWidth: number;
     sidebarVisible: boolean;
 
     // For 'delete scenario' modal box
     // TODO this probably isn't the best way to handle this
-    modalBoxComponent: FirebaseComponent | null;
+    modalBoxComponent: FirebaseScenario | null;
     afterScenarioDeleted: (() => void) | null;
 }
 
-export default class StockFlowScreen extends React.Component<Props, State> {
+class StockFlowScreen extends React.Component<Props, State> {
 
     public static readonly INIT_MODE = UiMode.MOVE;
 
@@ -59,18 +63,23 @@ export default class StockFlowScreen extends React.Component<Props, State> {
     private graph: StockFlowGraph | null = null;
     private controls: UserControls | null = null;
     private actions: DiagramActions | null = null;
+    private unsubscribeFromDatabase: (() => void) | null = null;
+
+    private hasLoaded: boolean = false;
 
     public constructor(props: Props) {
         super(props);
         this.state = {
             mode: StockFlowScreen.INIT_MODE,
+            modelName: null,
             clipboard: [],
             components: [],
+            scenarios: [],
             selectedComponent: null,
             errors: {},
             displayedModalBox: null,
             modalBoxComponent: null,
-            scenario: "",
+            selectedScenarioId: "",
             loadedModels: [],
             sidebarWidth: CanvasSidebar.DEFAULT_WIDTH_PX,
             sidebarVisible: CanvasSidebar.DEFAULT_VISIBILITY,
@@ -79,43 +88,82 @@ export default class StockFlowScreen extends React.Component<Props, State> {
     }
 
     public componentDidMount(): void {
-        // Set up the graph only if the ref has been created but the graph
-        // hasn't been created yet
-        if (this.graphRef.current && !this.graph) {
-            // Allow right-click on canvas
-            InternalEvent.disableContextMenu(this.graphRef.current);
-            this.graph = new StockFlowGraph(
-                this.graphRef.current,
-                () => this.state.components,
-                name => this.loadStaticModelInnerComponents(name),
-                () => this.state.errors,
+        // First make sure that the model editing session exists in RTDB
+        // and we've subscribed to it.
+        if (!this.hasLoaded) {
+            this.hasLoaded = true;
+            this.unsubscribeFromDatabase = new FirebaseSessionDataGetter(
+                this.props.firebaseDataModel
+            ).loadModel(
+                this.props.modelUuid!,
+                n => this.setState({ modelName: n }),
+                c => this.onComponentsUpdated(c),
+                m => this.setState({ loadedModels: m }),
+                s => this.setState({ scenarios: s }),
+                () => this.graph || this.setupGraph()
             );
-            this.actions = new DiagramActions(
-                this.props.firebaseDataModel,
-                this.graph,
-                this.props.sessionId,
-                components => this.onComponentsUpdated(components),
-                () => this.state.components,
-                () => this.state.loadedModels
-            );
-            const rbHandler = new RubberBandHandler(this.graph);
-            rbHandler.fadeOut = true;
-            this.controls = new UserControls(
-                this.graph,
-                this.actions,
-                c => this.setState({ clipboard: c }),
-                () => this.pasteComponents(),
-                () => this.state.components,
-                m => this.setState({ ...this.state, displayedModalBox: m }),
-                sel => this.setState({ selectedComponent: sel }),
+            window.addEventListener(
+                "beforeunload",
+                _ => this.componentWillUnmount(),
+                { once: true }
             );
         }
     }
 
+    private setupGraph(): void {
+        if (this.graph) throw new Error("Already initialized");
+        // Allow right-click on canvas
+        InternalEvent.disableContextMenu(this.graphRef.current!);
+        this.graph = new StockFlowGraph(
+            this.graphRef.current!,
+            () => this.state.components,
+            name => this.loadStaticModelInnerComponents(name),
+            () => this.state.errors,
+        );
+        this.actions = new DiagramActions(
+            this.props.firebaseDataModel,
+            this.graph,
+            this.props.modelUuid!,
+            () => this.state.components,
+            () => this.state.loadedModels
+        );
+        const rbHandler = new RubberBandHandler(this.graph);
+        rbHandler.fadeOut = true;
+        this.controls = new UserControls(
+            this.graph,
+            this.actions,
+            c => this.setState({ clipboard: c }),
+            () => this.pasteComponents(),
+            () => this.state.components,
+            () => this.state.mode,
+            m => this.setState({ displayedModalBox: m }),
+            sel => this.setState({ selectedComponent: sel }),
+        );
+    }
+
+    public componentWillUnmount(): void {
+        console.log("componenWillUnmount, " + this.hasLoaded);
+        if (this.hasLoaded) {
+            if (this.unsubscribeFromDatabase) this.unsubscribeFromDatabase();
+            this.hasLoaded = false;
+        }
+    }
+
     private onComponentsUpdated(components: FirebaseComponent[]): void {
+        const tryUpdateGraph = () => {
+            this.graph != null
+                ? this.graph.refreshComponents(
+                    components,
+                    oldComponents,
+                    this.state.loadedModels
+                )
+                : setTimeout(tryUpdateGraph, 200);
+        }
         const errors = ModelValidator
             .findErrors(components, this.state.loadedModels);
+        const oldComponents = this.state.components;
         this.setState({ components, errors });
+        tryUpdateGraph();
     }
 
     private pasteComponents(): FirebaseComponent[] {
@@ -123,12 +171,6 @@ export default class StockFlowScreen extends React.Component<Props, State> {
         // TODO assign new IDs
         this.setState({ clipboard: [] });
         return components;
-    }
-
-    private setMode(mode: UiMode): void {
-        if (!this.controls) throw new Error("Not initialized");
-        this.controls?.changeMode(mode);
-        this.setState({ ...this.state, mode });
     }
 
     public render(): ReactElement {
@@ -141,12 +183,13 @@ export default class StockFlowScreen extends React.Component<Props, State> {
                 <Grid container direction="column" spacing={0}>
                     <Grid item xs={12}>
                         <CanvasToolbar
-                            onModeChanged={mode => this.setMode(mode)}
+                            onModeChanged={mode => this.setState({ mode })}
                             setOpenModalBox={boxType => this.setState(
                                 { ...this.state, displayedModalBox: boxType }
                             )}
-                            sessionId={this.props.sessionId}
-                            scenario={this.state.scenario}
+                            sessionId={this.props.modelUuid!}
+                            modelName={this.state.modelName || ""}
+                            scenario={this.state.selectedScenarioId}
                             restClient={this.props.restClient}
                             firebaseDataModel={this.props.firebaseDataModel}
                             logOut={this.props.logOut}
@@ -189,10 +232,11 @@ export default class StockFlowScreen extends React.Component<Props, State> {
                                 }
                                 getIsVisible={() => this.state.sidebarVisible}
                                 firebaseDataModel={this.props.firebaseDataModel}
-                                sessionId={this.props.sessionId}
-                                selectScenario={s => this.setState({ scenario: s })}
-                                getSelectedScenario={() => this.state.scenario}
-                                getComponents={() => this.state.components}
+                                modelUuid={this.props.modelUuid!}
+                                selectScenario={s => this.setState({ selectedScenarioId: s })}
+                                selectedScenarioId={this.state.selectedScenarioId}
+                                components={this.state.components}
+                                scenarios={this.state.scenarios}
                                 deleteScenario={(s, c) => this.setState({
                                     modalBoxComponent: s,
                                     afterScenarioDeleted: c,
@@ -219,15 +263,6 @@ export default class StockFlowScreen extends React.Component<Props, State> {
                 />
             );
         }
-        else if (this.state.displayedModalBox === ModalBoxType.EXPORT_MODEL) {
-            return (
-                <ExportModelBox
-                    onClose={() => this.closeModalBox()}
-                    firebaseDataModel={this.props.firebaseDataModel}
-                    getComponents={() => this.state.components}
-                />
-            );
-        }
         else if (this.state.displayedModalBox === ModalBoxType.IMPORT_MODEL) {
             return (
                 <ImportModelBox
@@ -239,16 +274,16 @@ export default class StockFlowScreen extends React.Component<Props, State> {
         }
         else if (this.state.displayedModalBox === ModalBoxType.DELETE_SCENARIO) {
             const scenario = this.state.modalBoxComponent;
-            if (!scenario || scenario.getType() !== ComponentType.SCENARIO) {
+            if (!scenario) {
                 console.error("Invalid scenario " + scenario);
-                return (<div />);
+                return null;
             }
             return (
                 <YesNoModalBox
                     prompt={`Delete scenario ${scenario!.getData().name}?`}
                     onYes={() => {
-                        this.props.firebaseDataModel.removeComponent(
-                            this.props.sessionId,
+                        this.props.firebaseDataModel.deleteScenario(
+                            this.props.modelUuid!,
                             scenario!.getId()
                         );
                         this.state.afterScenarioDeleted!();
@@ -351,3 +386,8 @@ export default class StockFlowScreen extends React.Component<Props, State> {
             .find(m => m.modelId === name) !== undefined;
     }
 }
+
+export default function StockFlowScreenWithParams(props: Props) {
+    let { uuid } = useParams();
+    return (<StockFlowScreen {...props} modelUuid={uuid} />);
+};

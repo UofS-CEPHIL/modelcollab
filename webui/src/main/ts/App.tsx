@@ -1,5 +1,5 @@
 import React, { ReactElement } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import LoginScreen from "./view/Screens/LoginScreen";
 import StockFlowScreen from "./view/Screens/StockFlowScreen";
@@ -8,6 +8,7 @@ import FirebaseDataModel from "./data/FirebaseDataModel";
 import RestClient from "./rest/RestClient";
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./Themes";
+import ModelSelectScreen from "./view/Screens/ModelSelectScreen";
 
 interface Props {
 
@@ -15,7 +16,6 @@ interface Props {
 
 interface State {
     isSignedIn: boolean;
-    currentSession: string | null;
 }
 
 export default class App extends React.Component<Props, State> {
@@ -26,7 +26,9 @@ export default class App extends React.Component<Props, State> {
 
     public constructor(props: Props) {
         super(props);
-        this.state = { isSignedIn: false, currentSession: null };
+        this.state = {
+            isSignedIn: false,
+        };
         this.restClient = new RestClient();
         this.firebaseManager = new FirebaseManager();
         this.firebaseDataModel = new FirebaseDataModel(this.firebaseManager);
@@ -36,9 +38,18 @@ export default class App extends React.Component<Props, State> {
         this.firebaseManager.registerAuthChangedCallback(
             isSignedIn => this.setState({ isSignedIn })
         );
+        document.title = "ModelCollab";
     }
 
     public render(): ReactElement {
+        return (
+            <ThemeProvider theme={theme}>
+                {this.getRoutes()}
+            </ThemeProvider>
+        );
+    }
+
+    private getRoutes(): ReactElement {
         if (!this.state.isSignedIn) {
             return (
                 <Router>
@@ -51,31 +62,40 @@ export default class App extends React.Component<Props, State> {
                                 />
                             }
                         />
+                        <Route
+                            path="*"
+                            element={
+                                <Navigate to="/" />
+                            }
+                        />
                     </Routes>
                 </Router>
             );
         }
         else {
             return (
-                <ThemeProvider theme={theme}>
-                    <Router>
-                        <Routes>
-                            <Route
-                                path="/"
-                                element={
-                                    <StockFlowScreen
-                                        firebaseDataModel={this.firebaseDataModel}
-                                        restClient={this.restClient}
-                                        logOut={
-                                            () => this.firebaseManager.logOut()
-                                        }
-                                        sessionId={"NULL"}
-                                    />
-                                }
-                            />
-                        </Routes>
-                    </Router>
-                </ThemeProvider>
+                <Router>
+                    <Routes>
+                        <Route
+                            path="/"
+                            element={
+                                <ModelSelectScreen
+                                    firebaseDataModel={this.firebaseDataModel}
+                                />
+                            }
+                        />
+                        <Route
+                            path="/:uuid"
+                            element={
+                                <StockFlowScreen
+                                    firebaseDataModel={this.firebaseDataModel}
+                                    restClient={this.restClient}
+                                    logOut={() => this.firebaseManager.logOut()}
+                                />
+                            }
+                        />
+                    </Routes>
+                </Router>
             );
         }
     }

@@ -21,6 +21,7 @@ import ComponentType from "../../../data/components/ComponentType";
 export interface Props {
     onModeChanged: (mode: UiMode) => void;
     setOpenModalBox: (boxType: ModalBoxType) => void;
+    modelName: string;
     sessionId: string;
     scenario: string;
     restClient: RestClient;
@@ -80,7 +81,7 @@ export default class CanvasToolbar extends Component<Props, State> {
                         component="div"
                         sx={{ flexGrow: 1 }}
                     >
-                        {this.props.sessionId}
+                        {this.props.modelName}
                     </Typography>
                     {this.makeAppBarButtons(this.props.errors)}
                     {this.makeAppBarDropdowns(this.props.errors)}
@@ -243,11 +244,6 @@ export default class CanvasToolbar extends Component<Props, State> {
                         this.props.setOpenModalBox(ModalBoxType.IMPORT_MODEL)
                     } >
                         Import Model
-                    </MenuItem>
-                    <MenuItem onClick={() =>
-                        this.props.setOpenModalBox(ModalBoxType.EXPORT_MODEL)
-                    } >
-                        Publish Model
                     </MenuItem>
                 </Menu>
             </Fragment>

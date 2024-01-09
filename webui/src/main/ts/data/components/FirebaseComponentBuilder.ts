@@ -4,7 +4,6 @@ import FirebaseConnection from "./FirebaseConnection";
 import FirebaseDynamicVariable from "./FirebaseDynamicVariable";
 import FirebaseFlow from "./FirebaseFlow";
 import FirebaseParameter from "./FirebaseParameter";
-import FirebaseScenario, { ParameterOverrides } from "./FirebaseScenario";
 import FirebaseStaticModel from "./FirebaseStaticModel";
 import FirebaseStock from "./FirebaseStock";
 import { FirebaseSubstitution } from "./FirebaseSubstitution";
@@ -110,17 +109,6 @@ export function createFirebaseDataComponent(
                 {
                     replacedId: dataVal.replacedId as string,
                     replacementId: dataVal.replacementId as string
-                }
-            );
-            break;
-        case ComponentType.SCENARIO.toString():
-            component = new FirebaseScenario(
-                id,
-                {
-                    name: dataVal.name as string,
-                    paramOverrides: dataVal.paramOverrides
-                        ? dataVal.paramOverrides as ParameterOverrides
-                        : {}
                 }
             );
             break;

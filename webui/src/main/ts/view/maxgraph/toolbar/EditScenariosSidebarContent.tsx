@@ -3,7 +3,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import React, { ReactElement } from 'react';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
-import IdGenerator from "../../../IdGenerator";
 import ModelValidator from "../../../validation/ModelValitador";
 import { theme } from "../../../Themes";
 import FirebaseScenario from '../../../data/components/FirebaseScenario';
@@ -13,13 +12,14 @@ import ComponentType from '../../../data/components/ComponentType';
 import RefreshAndSaveListItem from './RefreshAndSaveListItem';
 
 export interface Props {
-    sessionId: string;
+    modelUuid: string;
     firebaseDataModel: FirebaseDataModel;
+    components: FirebaseComponent[];
+    scenarios: FirebaseScenario[];
     deleteScenario: (s: FirebaseScenario, callback: () => void) => void;
 }
 
 export interface State {
-    components: FirebaseComponent[];
     scenarioEditing: FirebaseScenario | null;
     newScenarioName: string;
     newScenarioNameIsError: boolean;
@@ -35,7 +35,6 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
     public constructor(props: Props) {
         super(props);
         this.state = {
-            components: [],
             scenarioEditing: null,
             newScenarioName: "",
             newScenarioNameIsError: false
@@ -43,7 +42,7 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
     }
 
     public componentDidMount() {
-        this.refreshComponents();
+        this.refresh();
     }
 
     public render(): ReactElement {
@@ -53,8 +52,9 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                 {this.makeSelectScenarioListItem()}
                 <RefreshAndSaveListItem
                     onSave={() => this.updateScenario()}
-                    onRefresh={() => this.refreshComponents()}
+                    onRefresh={() => this.refresh()}
                     disabled={!this.state.scenarioEditing}
+                    key={'refreshandsave'}
                 />
                 {this.makeParameterListItems()}
                 {this.makeDeleteScenarioListItem()}
@@ -89,7 +89,7 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
     }
 
     private makeSelectScenarioListItem(): ReactElement {
-        const scenarioNames = this.getScenarios().map(s => s.getData().name);
+        const scenarioNames = this.props.scenarios.map(s => s.getData().name);
         return (
             <ListItem key="scenario-select">
                 <FormControl fullWidth variant="standard">
@@ -125,7 +125,7 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                         }
                     </Select>
                 </FormControl>
-            </ListItem>
+            </ListItem >
         );
     }
 
@@ -147,7 +147,7 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                     i
                 );
         }
-        return this.state.components
+        return this.props.components
             .filter(c => c.getType() === ComponentType.PARAMETER)
             .map((p, i) => itemFunc(p, i));
     }
@@ -189,9 +189,8 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                 ...this.state.scenarioEditing!.getData(),
                 paramOverrides: newOverrides
             };
-            this.setState({
-                scenarioEditing: this.state.scenarioEditing!.withData(newData)
-            });
+            const newScenario = this.state.scenarioEditing!.withData(newData);
+            this.setState({ scenarioEditing: newScenario });
         }
 
         return this.makeOneParameterListItem(
@@ -256,43 +255,25 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         );
     }
 
-    private getScenarios(): FirebaseScenario[] {
-        return this.state.components
-            .filter(c => c.getType() === ComponentType.SCENARIO);
-    }
-
-    private refreshComponents(): void {
-        this.props.firebaseDataModel.getDataForSession(
-            this.props.sessionId,
-            cpts => {
-                const updatedScenario = this.state.scenarioEditing
-                    ? cpts.find((cpt: any) =>
-                        cpt.getType() === ComponentType.SCENARIO
-                        && cpt.getId() === this.state.scenarioEditing!.getId()
-                    ) : undefined;
-                if (this.state.scenarioEditing !== null && updatedScenario) {
-                    this.setState({
-                        components: cpts,
-                        scenarioEditing: updatedScenario
-                    });
-                }
-                else {
-                    this.setState({
-                        components: cpts,
-                        scenarioEditing: null
-                    });
-                }
-            }
-        );
+    private refresh(): void {
+        if (this.state.scenarioEditing) {
+            const revertedScenario = this.props.scenarios.find(
+                s => s.getId() === this.state.scenarioEditing!.getId()
+            );
+            if (!revertedScenario)
+                throw new Error(
+                    "Can't find scenario " + this.state.scenarioEditing
+                );
+            this.setState({ scenarioEditing: revertedScenario });
+        }
     }
 
     private onScenarioSelectionChanged(event: SelectChangeEvent): void {
-        const scenario = this.getScenarios()
+        const scenario = this.props.scenarios
             .find(s => s.getData().name === event.target.value);
         if (!scenario)
             throw new Error("Selected unknown scenario " + event.target.value);
         this.setState({ scenarioEditing: scenario });
-        setTimeout(() => this.refreshComponents());
     }
 
     private onNewScenarioTextChanged(e: ReactChangeEvent): void {
@@ -301,19 +282,15 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
 
     private addNewScenario(): void {
         if (this.isValidScenarioName(this.state.newScenarioName)) {
-            const newComponent = new FirebaseScenario(
-                IdGenerator.generateUniqueId(this.state.components),
-                { name: this.state.newScenarioName, paramOverrides: {} }
-            );
-            this.props.firebaseDataModel.updateComponent(
-                this.props.sessionId,
-                newComponent
+            this.props.firebaseDataModel.addNewScenario(
+                this.props.modelUuid,
+                this.state.newScenarioName,
             );
             this.setState({
                 newScenarioName: "",
-                newScenarioNameIsError: false,
-                components: this.state.components.concat([newComponent])
+                newScenarioNameIsError: false
             });
+            setTimeout(() => this.refresh());
         }
         else {
             this.setState({ newScenarioNameIsError: true });
@@ -322,8 +299,8 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
 
     private updateScenario(): void {
         if (this.state.scenarioEditing) {
-            this.props.firebaseDataModel.updateComponent(
-                this.props.sessionId,
+            this.props.firebaseDataModel.updateScenario(
+                this.props.modelUuid,
                 this.state.scenarioEditing
             );
         }
@@ -333,14 +310,14 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         if (this.state.scenarioEditing) {
             this.props.deleteScenario(
                 this.state.scenarioEditing,
-                () => this.refreshComponents()
+                () => this.refresh()
             );
         }
     }
 
     private isValidScenarioName(name: string): boolean {
         return name.length > 0 &&
-            !this.getScenarios()
+            !this.props.scenarios
                 .find(c => c.getData().name === this.state.newScenarioName);
     }
 }

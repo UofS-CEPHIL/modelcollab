@@ -26,6 +26,7 @@ export default class SelectScenarioSidebarContent extends React.Component<Props>
                 <TypographyListItem
                     text={"No scenarios..."}
                     italic
+                    key={1}
                 />
             ];
         }

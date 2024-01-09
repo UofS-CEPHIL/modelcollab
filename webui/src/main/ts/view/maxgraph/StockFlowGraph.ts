@@ -157,14 +157,6 @@ export default class StockFlowGraph extends Graph {
             else if (component.getType() === ComponentType.SUBSTITUTION) {
                 this.unapplySubstitution(component);
             }
-            // Do nothing for scenarios. If it's anything else, something has
-            // gone wrong
-            else if (component.getType() !== ComponentType.SCENARIO) {
-                console.error(
-                    "Trying to delete component but can't find cell with ID "
-                    + component.getId()
-                );
-            }
         }
         else {
             this.removeCells([cell]);

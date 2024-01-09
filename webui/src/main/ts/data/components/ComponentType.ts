@@ -7,7 +7,6 @@ enum ComponentType {
     CONNECTION = "connection",
     STATIC_MODEL = "static_model",
     SUBSTITUTION = "substitution",
-    SCENARIO = "scenario",
 };
 
 export default ComponentType;

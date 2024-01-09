@@ -48,6 +48,7 @@ export default class EditComponentsSidebarContent
                         )
                     }
                     disabled={this.props.component === null}
+                    key={-1}
                 />
                 {
                     this.props.component?.getType() &&
@@ -55,6 +56,7 @@ export default class EditComponentsSidebarContent
                         text={"Edit " + this.props.component.getType()}
                         italic
                         bold
+                        key={-2}
                     />
                 }
                 {this.makeListItems()}
@@ -90,6 +92,7 @@ export default class EditComponentsSidebarContent
                         <TypographyListItem
                             text={"Selected component not editable."}
                             italic
+                            key={-3}
                         />
                     ];
             }
@@ -99,6 +102,7 @@ export default class EditComponentsSidebarContent
                 <TypographyListItem
                     text={"Select a component..."}
                     italic
+                    key={-3}
                 />
             ];
         }

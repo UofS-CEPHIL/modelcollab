@@ -15,7 +15,6 @@ export default class IdentifyModeBehaviour extends ArrowBehaviour {
         ComponentType.FLOW,
         ComponentType.CONNECTION,
         ComponentType.STATIC_MODEL,
-        ComponentType.SCENARIO,
         ComponentType.SUBSTITUTION
     ];
 

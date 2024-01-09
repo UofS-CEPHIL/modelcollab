@@ -7,6 +7,7 @@ export interface Props {
     onRefresh: () => void;
     onSave: () => void;
     disabled: boolean;
+    key: any;
 }
 
 export default class RefreshAndSaveListItem extends React.Component<Props> {

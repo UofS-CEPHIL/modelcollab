@@ -9,10 +9,7 @@ import PresentationGetter from "./presentation/PresentationGetter";
 import StockFlowGraph from "./StockFlowGraph";
 
 // This class contains the logic for making changes to the diagram, including
-// the positions of the components and their values. This component is
-// responsible for making sure that the firebase state, the local state of
-// Firebase components (i.e. by using setCurrentComponents), and the local Graph
-// representation
+// the positions of the components and their values.
 //
 // Actions are almost always performed by first updating Firebase and allowing
 // the change to propagate via the listeners. The only exceptions to this are
@@ -23,32 +20,22 @@ export default class DiagramActions {
 
     private fbData: FirebaseDataModel;
     private graph: StockFlowGraph;
-    private sessionId: string;
-    private setCurrentComponents:
-        (c: FirebaseComponent[]) => void;
+    private modelUuid: string;
     private getCurrentComponents: () => FirebaseComponent[];
     private getLoadedStaticModels: () => LoadedStaticModel[];
 
     public constructor(
         fbData: FirebaseDataModel,
         graph: StockFlowGraph,
-        sessionId: string,
-        setCurrentComponents: (c: FirebaseComponent[]) => void,
+        modelUuid: string,
         getCurrentComponents: () => FirebaseComponent[],
         getLoadedStaticModels: () => LoadedStaticModel[]
     ) {
         this.fbData = fbData;
         this.graph = graph;
-        this.sessionId = sessionId;
-        this.setCurrentComponents = setCurrentComponents;
+        this.modelUuid = modelUuid;
         this.getCurrentComponents = getCurrentComponents;
         this.getLoadedStaticModels = getLoadedStaticModels;
-
-        // Subscribe to remote updates from Firebase
-        this.fbData.subscribeToSession(
-            this.sessionId,
-            newComponents => this.onFbDataChanged(newComponents)
-        );
 
         // Listen for graph actions and update Firebase when they happen. This
         // is only for actions that don't originate from "UserControls" and
@@ -95,13 +82,13 @@ export default class DiagramActions {
                 .withUpdatedLocation(dx, dy)
         );
         this.fbData.setAllComponents(
-            this.sessionId,
+            this.modelUuid,
             [...updatedVertices, ...updatedFlows, ...others]
         );
     }
 
     public updateComponent(component: FirebaseComponent): void {
-        this.fbData.updateComponent(this.sessionId, component);
+        this.fbData.updateComponent(this.modelUuid, component);
     }
 
     public handleChanges(changes: UndoableChange[]): void {
@@ -138,7 +125,7 @@ export default class DiagramActions {
                 console.error("Unknown change type occurred: " + change);
             }
         }
-        this.fbData.setAllComponents(this.sessionId, updatedComponents);
+        this.fbData.setAllComponents(this.modelUuid, updatedComponents);
     }
 
     public deleteSelection(): void {
@@ -151,7 +138,7 @@ export default class DiagramActions {
                 allComponents
             );
             this.fbData.removeComponents(
-                this.sessionId,
+                this.modelUuid,
                 [...selectedIds, ...orphans],
                 allComponents
             );
@@ -164,7 +151,7 @@ export default class DiagramActions {
         if (component instanceof FirebaseComponentBase<any>) {
             component = component.getId();
         }
-        this.fbData.removeComponent(this.sessionId, component);
+        this.fbData.removeComponent(this.modelUuid, component);
     }
 
     private moveFlowClouds(
@@ -215,18 +202,6 @@ export default class DiagramActions {
         }
 
         return updatedFlows;
-    }
-
-    private onFbDataChanged(
-        newComponents: FirebaseComponent[]
-    ): void {
-        const oldComponents = this.getCurrentComponents();
-        this.setCurrentComponents(newComponents);
-        this.graph.refreshComponents(
-            newComponents,
-            oldComponents,
-            this.getLoadedStaticModels()
-        );
     }
 
     private onCellsMoved(_: EventSource, event: EventObject): void {

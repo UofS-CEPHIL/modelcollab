@@ -1,11 +1,10 @@
 import { Cell } from "@maxgraph/core";
-import FirebaseScenario from "../../../data/components/FirebaseScenario";
 import { FirebaseSubstitution } from "../../../data/components/FirebaseSubstitution";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import StockFlowGraph from "../StockFlowGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
-type InvisibleComponent = FirebaseSubstitution | FirebaseScenario;
+type InvisibleComponent = FirebaseSubstitution;
 
 // "Presentation" for components that aren't shown
 export default class NoModelPresentation

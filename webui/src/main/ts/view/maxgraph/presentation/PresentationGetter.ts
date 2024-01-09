@@ -39,7 +39,6 @@ export default class PresentationGetter {
                 return PresentationGetter.conn;
             case ComponentType.STATIC_MODEL:
                 return PresentationGetter.model;
-            case ComponentType.SCENARIO:
             case ComponentType.SUBSTITUTION:
                 return PresentationGetter.none;
             default:

@@ -8,10 +8,15 @@ export interface FirebasePointerData {
     to: string
 };
 
+export interface FirebaseEntity {
+    toFirebaseEntry: () => Object;
+}
+
 // Represents all components as they are represented inside Firebase
 export abstract class FirebaseComponentBase
     <DataType extends FirebaseDataObject>
-{
+    implements FirebaseEntity {
+
     private readonly id: string;
     private readonly data: DataType;
 
@@ -57,9 +62,19 @@ export abstract class FirebaseComponentBase
             && deepEquals(this.getData(), other.getData());
     }
 
-    abstract getType(): ComponentType;
-    abstract withData(d: DataType): FirebaseComponentBase<DataType>;
-    abstract withId(id: string): FirebaseComponentBase<DataType>;
+    public toFirebaseEntry() {
+        return [
+            this.getId(),
+            {
+                "type": this.getType(),
+                "data": this.getData()
+            }
+        ];
+    }
+
+    public abstract getType(): ComponentType;
+    public abstract withData(d: DataType): FirebaseComponentBase<DataType>;
+    public abstract withId(id: string): FirebaseComponentBase<DataType>;
 }
 
 type FirebaseComponent = FirebaseComponentBase<any>;

@@ -1,6 +1,5 @@
 import { Paper, ListItem, List, FormControl, InputLabel, Select, SelectChangeEvent, MenuItem, Divider } from '@mui/material';
 import React, { ReactElement } from 'react';
-import ComponentType from '../../../data/components/ComponentType';
 import FirebaseComponent from '../../../data/components/FirebaseComponent';
 import FirebaseScenario from '../../../data/components/FirebaseScenario';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
@@ -19,9 +18,10 @@ export interface Props {
     onResize: (widthPx: number) => void;
     getIsVisible: () => boolean;
     firebaseDataModel: FirebaseDataModel;
-    sessionId: string;
-    getComponents: () => FirebaseComponent[];
-    getSelectedScenario: () => string;
+    modelUuid: string;
+    components: FirebaseComponent[],
+    scenarios: FirebaseScenario[],
+    selectedScenarioId: string,
     selectedComponent: FirebaseComponent | null;
     selectScenario: (s: string) => void;
     deleteScenario: (s: FirebaseScenario, callback: () => void) => void;
@@ -112,23 +112,22 @@ export default class CanvasSidebar extends React.Component<Props, State> {
                 return (
                     <EditScenariosSidebarContent
                         firebaseDataModel={this.props.firebaseDataModel}
-                        sessionId={this.props.sessionId}
+                        modelUuid={this.props.modelUuid}
                         deleteScenario={this.props.deleteScenario}
+                        components={this.props.components}
+                        scenarios={this.props.scenarios}
                     />
                 );
             case SidebarMode.SELECT_SCENARIO:
-                const scenarios = this.props.getComponents().filter(c =>
-                    c.getType() === ComponentType.SCENARIO
-                );
-                const selected = scenarios.find(s =>
-                    s.getData().name === this.props.getSelectedScenario()
+                const selected = this.props.scenarios.find(s =>
+                    s.getId() === this.props.selectedScenarioId
                 );
                 return (
                     <SelectScenarioSidebarContent
-                        scenarios={scenarios}
+                        scenarios={this.props.scenarios}
                         selected={selected}
                         onSelectionChanged={s =>
-                            this.props.selectScenario(s.getData().name)
+                            this.props.selectScenario(s.getId())
                         }
                     />
                 );
@@ -137,7 +136,7 @@ export default class CanvasSidebar extends React.Component<Props, State> {
                     <EditComponentsSidebarContent
                         component={this.props.selectedComponent}
                         firebaseDataModel={this.props.firebaseDataModel}
-                        sessionId={this.props.sessionId}
+                        sessionId={this.props.modelUuid}
                     />
                 );
             default:

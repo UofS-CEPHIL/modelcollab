@@ -5,12 +5,13 @@ export interface Props {
     italic?: boolean;
     bold?: boolean;
     text: string;
+    key: any;
 }
 
 export default class TypographyListItem extends React.Component<Props> {
     public render(): ReactElement {
         return (
-            <ListItem key={0}>
+            <ListItem>
                 <ListItemText>
                     <Typography
                         variant="h6"

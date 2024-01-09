@@ -16,9 +16,7 @@ export default class ImportModelBox extends ButtonListBox<Props, State> {
     }
 
     public componentDidMount(): void {
-        this.props.firebaseDataModel.subscribeToModelList(
-            savedModelNames => this.setState({ savedModelNames })
-        );
+        // TODO get available models
     }
 
     protected makeListItems(): ReactElement[] {

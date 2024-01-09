@@ -1,9 +1,15 @@
-import { ref, set, onValue, remove, DataSnapshot, push, get } from "firebase/database";
+import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, increment } from "firebase/database";
+// @ts-ignore can't find types
+import { v4 as createUuid } from "uuid";
 import FirebaseComponent from "./components/FirebaseComponent";
 import { createFirebaseDataComponent } from "./components/FirebaseComponentBuilder";
-import FirebaseParameter from "./components/FirebaseParameter";
 import FirebaseManager from "./FirebaseManager";
-import FirebaseSchema from "./FirebaseSchema";
+import RTDBSchema from "./RTDBSchema";
+import FirebaseStockFlowModel from "./FirebaseStockFlowModel";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import FirestoreSchema from "./FirestoreSchema";
+import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
+import FirebaseScenario from "./components/FirebaseScenario";
 
 export default class FirebaseDataModel {
 
@@ -16,7 +22,7 @@ export default class FirebaseDataModel {
     private triggerCallback(
         snapshot: DataSnapshot,
         callback: (data: FirebaseComponent[]) => void
-    ) {
+    ): void {
         let components: FirebaseComponent[] = [];
         if (snapshot.exists() && snapshot.key) {
             components =
@@ -30,106 +36,251 @@ export default class FirebaseDataModel {
     }
 
     public updateComponent(
-        sessionId: string,
-        data: FirebaseComponent
-    ) {
-        set(
+        modelUuid: string,
+        component: FirebaseComponent
+    ): Promise<void> {
+        return set(
             ref(
                 this.firebaseManager.getDb(),
-                FirebaseSchema.makeComponentPath(sessionId, data.getId())
+                RTDBSchema.makeComponentPath(modelUuid, component.getId())
             ),
             {
-                type: data.getType().toString(),
-                data: data.getData()
+                type: component.getType().toString(),
+                data: component.getData()
             }
         );
     }
 
     public getDataForSession(
         sessionId: string,
-        callback: (data: any) => void
-    ) {
+        callback: (data: DataSnapshot) => void
+    ): void {
         onValue(
             ref(
                 this.firebaseManager.getDb(),
-                FirebaseSchema.makeAllComponentsForSessionPath(sessionId)
+                RTDBSchema.makeSessionPath(sessionId)
             ),
-            (s: DataSnapshot) => this.triggerCallback(s, callback),
+            callback,
             { onlyOnce: true }
         );
     }
 
-    public subscribeToSession(
+    public subscribeToSessionComponents(
         sessionId: string,
         callback: (snapshot: FirebaseComponent[]) => void
-    ) {
-        onValue(
+    ): Unsubscribe {
+        return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                FirebaseSchema.makeAllComponentsForSessionPath(sessionId)
+                RTDBSchema.makeComponentsPath(sessionId)
             ),
             s => this.triggerCallback(s, callback)
         );
     }
 
-    public subscribeToSessionList(onChanged: (sessions: string[]) => void) {
-        const listRef = ref(
-            this.firebaseManager.getDb(),
-            FirebaseSchema.makeSessionIdsPath()
+    public async getOwnedModels(): Promise<{ [uuid: string]: string }> {
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in");
+        const result = await getDocs(
+            collection(
+                this.firebaseManager.getFirestore(),
+                FirestoreSchema.makeUserOwnedModelsPath(user.uid)
+            )
         );
-        onValue(listRef, snap => {
-            onChanged(Object.values(snap.val()));
-        });
+        return Object.fromEntries(result.docs.map(d => [d.id, d.data().name]));
     }
 
-    public subscribeToModelList(onChanged: (models: string[]) => void): void {
-        const listRef = ref(
-            this.firebaseManager.getDb(),
-            FirebaseSchema.makeModelIdsPath()
-        );
-        onValue(listRef, snap => {
-            onChanged(snap.val() ? Object.values(snap.val()) : []);
-        });
-    }
+    public async loadModelIntoRTDB(modelUuid: string): Promise<void> {
+        const user = this.firebaseManager.getUser()
+        if (!user) throw new Error("Not logged in");
 
-    public addSession(id: string) {
-        const listRef = ref(
-            this.firebaseManager.getDb(),
-            FirebaseSchema.makeSessionIdsPath()
+        const savedModel = await getDoc(
+            doc(
+                this.firebaseManager.getFirestore(),
+                FirestoreSchema.makeModelPath(modelUuid)
+            )
         );
-        const newRef = push(listRef);
-        set(newRef, id);
-        this.setAllComponents(
-            id,
-            [
-                new FirebaseParameter(
-                    "0",
-                    {
-                        x: 100,
-                        y: 100,
-                        text: "startTime",
-                        value: "0.0"
-                    }
-                ),
-                new FirebaseParameter(
-                    "1",
-                    {
-                        x: 100,
-                        y: 130,
-                        text: "stopTime",
-                        value: "0.0"
-                    }
-                ),
-            ]);
-    }
+        if (!savedModel.exists) {
+            throw new Error("Unable to find model: " + modelUuid);
+        }
 
-    public removeComponent(sessionId: string, componentId: string) {
-        const componentPath =
-            FirebaseSchema.makeComponentPath(sessionId, componentId);
-        remove(
+        set(
             ref(
                 this.firebaseManager.getDb(),
-                componentPath
+                RTDBSchema.makeSessionPath(modelUuid)
+            ),
+            {
+                ...savedModel.data(),
+                [RTDBSchema.getNumUsingName()]: 0
+            }
+        );
+    }
+
+    public async saveModelToFirestore(
+        modelUuid: string,
+        components: FirebaseComponent[],
+        scenarios: FirebaseScenario[],
+        loadedModels: LoadedStaticModel[]
+    ): Promise<void> {
+        return setDoc(
+            doc(
+                this.firebaseManager.getFirestore(),
+                FirestoreSchema.makeModelPath(modelUuid)
+            ),
+            FirestoreSchema.arrangeModelData(components, scenarios, loadedModels)
+        );
+    }
+
+    public declareIsUsingSession(modelUuid: string): Promise<void> {
+        return set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeNumUsingPath(modelUuid)
+            ),
+            increment(1)
+        );
+    }
+
+    public declareStoppedUsingSession(modelUuid: string): Promise<void> {
+        return set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeNumUsingPath(modelUuid)
+            ),
+            increment(-1)
+        );
+    }
+
+    public subscribeToSessionModelName(
+        modelUuid: string,
+        callback: (name: string) => void
+    ): Unsubscribe {
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeModelNamePath(modelUuid)
+            ),
+            s => callback(s.val())
+        );
+    }
+
+    public subscribeToSessionScenarios(
+        modelUuid: string,
+        callback: (s: FirebaseScenario[]) => void
+    ): Unsubscribe {
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeScenariosPath(modelUuid)
+            ),
+            s =>
+                callback(
+                    Object.entries(s.val() ?? {})
+                        .map(e => FirebaseScenario.fromData(e[0], e[1]))
+                )
+        );
+    }
+
+    public subscribeToSessionModels(
+        modelUuid: string,
+        callback: (models: LoadedStaticModel[]) => void
+    ): Unsubscribe {
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeSavedModelsPath(modelUuid)
+            ),
+            s => callback(
+                !s.exists() ? [] : Object.entries(s.val()).map(modelEntry => {
+                    return {
+                        modelId: modelEntry[0],
+                        components: Object
+                            // @ts-ignore
+                            .entries(modelEntry[1])
+                            .map(
+                                ([k, v]) => createFirebaseDataComponent(k, v)
+                            )
+                    }
+                })
+            )
+        );
+    }
+
+    public addNewScenario(
+        modelUuid: string,
+        scenarioName: string
+    ): Promise<void> {
+        const newScenario = FirebaseScenario.newScenario(
+            createUuid(),
+            scenarioName
+        );
+        return set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeScenarioPath(modelUuid, newScenario.getId())
+            ),
+            newScenario.getData()
+        );
+    }
+
+    public updateScenario(
+        modelUuid: string,
+        scenario: FirebaseScenario
+    ): Promise<void> {
+        return set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeScenarioPath(modelUuid, scenario.getId())
+            ),
+            scenario.getData()
+        );
+    }
+
+    public deleteScenario(modelUuid: string, scenarioId: string): Promise<void> {
+        return remove(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeScenarioPath(modelUuid, scenarioId)
+            )
+        );
+    }
+
+    public async addStockFlowModel(name: string): Promise<void> {
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in");
+
+        const model = FirebaseStockFlowModel.newStockFlow(
+            createUuid(),
+            name,
+            user.uid
+        );
+
+        // Add the model to the user's list
+        const userDocRef = doc(
+            this.firebaseManager.getFirestore(),
+            FirestoreSchema.makeUserOwnedModelPath(user.uid, model.uuid)
+        );
+        await setDoc(
+            userDocRef,
+            { name: model.data.name }
+        );
+
+        // Add the model to the global list of models
+        const modelsRef = doc(
+            this.firebaseManager.getFirestore(),
+            `/models/${model.uuid}`
+        );
+        setDoc(modelsRef, model.data);
+    }
+
+    public removeComponent(
+        sessionId: string,
+        componentId: string
+    ): Promise<void> {
+        return remove(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeComponentPath(sessionId, componentId)
             )
         );
     }
@@ -138,20 +289,20 @@ export default class FirebaseDataModel {
         sessionId: string,
         componentIds: string[],
         allComponents: FirebaseComponent[]
-    ): void {
+    ): Promise<void> {
         const newComponentsList =
             allComponents.filter(c => !componentIds.includes(c.getId()));
-        this.setAllComponents(sessionId, newComponentsList);
+        return this.setAllComponents(sessionId, newComponentsList);
     }
 
     public setAllComponents(
         sessionId: string,
         updatedComponentsList: FirebaseComponent[]
-    ): void {
-        set(
+    ): Promise<void> {
+        return set(
             ref(
                 this.firebaseManager.getDb(),
-                FirebaseSchema.makeAllComponentsForSessionPath(sessionId)
+                RTDBSchema.makeComponentsPath(sessionId)
             ),
             Object.fromEntries(updatedComponentsList.map(c => {
                 return [
@@ -165,45 +316,11 @@ export default class FirebaseDataModel {
         );
     }
 
-    public addModelToLibrary(
-        modelId: string,
-        components: FirebaseComponent[]
-    ): void {
-        set(
-            ref(
-                this.firebaseManager.getDb(),
-                FirebaseSchema.makeSavedModelPath(modelId)
-            ),
-            Object.fromEntries(components.map(c => {
-                return [
-                    c.getId(),
-                    {
-                        type: c.getType().toString(),
-                        data: c.getData()
-                    }
-                ];
-            }))
-        );
-        set(
-            push(
-                ref(
-                    this.firebaseManager.getDb(),
-                    FirebaseSchema.makeModelIdsPath()
-                )
-            ),
-            modelId
-        );
-    }
-
     public getComponentsForSavedModel(
         modelId: string,
         onData: (components: FirebaseComponent[]) => void
-    ): void {
-        get(
-            ref(
-                this.firebaseManager.getDb(),
-                FirebaseSchema.makeSavedModelPath(modelId)
-            )
-        ).then(s => this.triggerCallback(s, onData));
+    ): Promise<void> {
+        // TODO update for firestore
+        return new Promise<void>(() => console.error("TODO"));
     }
 }

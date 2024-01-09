@@ -20,10 +20,10 @@ export default class UserControls {
     private undoManager: UndoManager;
     private diagramActions: DiagramActions;
 
-    private modeBehaviour: ModeBehaviour;
     private copyCells: (c: FirebaseComponent[]) => void;
     private pasteCells: () => FirebaseComponent[];
     private getCurrentComponents: () => FirebaseComponent[];
+    private getMode: () => UiMode;
     private setOpenModalBox: (m: ModalBoxType) => void;
     private onSelectionChanged: (s: FirebaseComponent | null) => void;
 
@@ -33,23 +33,15 @@ export default class UserControls {
         copyCells: (c: FirebaseComponent[]) => void,
         pasteCells: () => FirebaseComponent[],
         getCurrentComponents: () => FirebaseComponent[],
+        getMode: () => UiMode,
         setOpenModalBox: (m: ModalBoxType) => void,
         onSelectionChanged: (s: FirebaseComponent | null) => void,
-        mode?: ModeBehaviour,
     ) {
-
         this.graph = graph;
         this.diagramActions = actions;
         this.keyHandler = new KeyHandler(graph);
         this.setOpenModalBox = setOpenModalBox;
-        if (!mode) mode = BehaviourGetter.getBehaviourForMode(
-            UiMode.MOVE,
-            this.graph,
-            this.diagramActions,
-            () => this.getCurrentComponents(),
-            m => this.setOpenModalBox(m)
-        );
-        this.modeBehaviour = mode;
+        this.getMode = getMode;
         this.copyCells = copyCells;
         this.pasteCells = pasteCells;
         this.getCurrentComponents = getCurrentComponents;
@@ -59,16 +51,6 @@ export default class UserControls {
         this.setupUndoManager();
         this.setupUniversalKeyboardShortcuts();
         this.setupModeBehaviours();
-    }
-
-    public changeMode(mode: UiMode): void {
-        this.modeBehaviour = BehaviourGetter.getBehaviourForMode(
-            mode,
-            this.graph,
-            this.diagramActions,
-            () => this.getCurrentComponents(),
-            m => this.setOpenModalBox(m)
-        );
     }
 
     private setupUndoManager(): void {
@@ -170,6 +152,16 @@ export default class UserControls {
         }
     }
 
+    private getBehaviour(): ModeBehaviour {
+        return BehaviourGetter.getBehaviourForMode(
+            this.getMode(),
+            this.graph,
+            this.diagramActions,
+            this.getCurrentComponents,
+            this.setOpenModalBox
+        );
+    }
+
     private setupModeBehaviours(): void {
         // Canvas click
         this.graph.addListener(
@@ -177,13 +169,13 @@ export default class UserControls {
             (_: EventTarget, event: EventObject) => {
                 const pos = this.getClickLocation(event);
                 if (this.isRightClick(event)) {
-                    this.modeBehaviour.canvasRightClicked(pos.x, pos.y);
+                    this.getBehaviour().canvasRightClicked(pos.x, pos.y);
                 }
                 else {
                     // Only handle clicks on canvas. Component
                     // clicks are handled by selectionChanged listeners
                     if (!event.getProperty("cell")) {
-                        this.modeBehaviour.canvasClicked(pos.x, pos.y);
+                        this.getBehaviour().canvasClicked(pos.x, pos.y);
                     }
                 }
             }
@@ -194,7 +186,7 @@ export default class UserControls {
             InternalEvent.CHANGE,
             (_: EventTarget, __: EventObject) => {
                 const selectionCells = this.graph.getSelectionCells();
-                this.modeBehaviour.selectionChanged(selectionCells);
+                this.getBehaviour().selectionChanged(selectionCells);
 
                 let selectedComponent = null;
                 if (selectionCells.length == 1) {
