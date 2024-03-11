@@ -1,8 +1,8 @@
-import React, { createRef, Fragment, ReactElement, RefObject } from 'react';
+import { ReactElement } from 'react';
 import CanvasToolbar from '../maxgraph/toolbar/CanvasToolbar';
-import { InternalEvent, RubberBandHandler } from '@maxgraph/core';
 import UserControls from '../maxgraph/UserControls';
 import { UiMode } from '../../UiMode';
+import CanvasScreen, { Props as CanvasScreenProps, State as CanvasScreenState } from "./CanvasScreen";
 import StockFlowGraph from "../maxgraph/StockFlowGraph";
 import DiagramActions from "../maxgraph/DiagramActions";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
@@ -11,8 +11,6 @@ import HelpBox from "../ModalBox/HelpBox";
 import RestClient from "../../rest/RestClient";
 import ImportModelBox from "../ModalBox/ImportModelBox";
 import IdGenerator from "../../IdGenerator";
-import { Grid } from "@mui/material";
-import { theme } from "../../Themes";
 import CanvasSidebar from "../maxgraph/toolbar/CanvasSidebar";
 import YesNoModalBox from "../ModalBox/YesNoModalBox";
 import FirebaseComponent from '../../data/components/FirebaseComponent';
@@ -28,14 +26,14 @@ export interface LoadedStaticModel {
     components: FirebaseComponent[];
 }
 
-interface Props {
+interface Props extends CanvasScreenProps {
     firebaseDataModel: FirebaseDataModel;
     restClient: RestClient;
     logOut: () => void;
     modelUuid?: string;
 }
 
-interface State {
+interface State extends CanvasScreenState {
     mode: UiMode;
     modelName: string | null;
     components: FirebaseComponent[];
@@ -55,22 +53,11 @@ interface State {
     afterScenarioDeleted: (() => void) | null;
 }
 
-class StockFlowScreen extends React.Component<Props, State> {
+class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
 
-    public static readonly INIT_MODE = UiMode.MOVE;
-
-    private graphRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>();
-    private graph: StockFlowGraph | null = null;
-    private controls: UserControls | null = null;
-    private actions: DiagramActions | null = null;
-    private unsubscribeFromDatabase: (() => void) | null = null;
-
-    private hasLoaded: boolean = false;
-
-    public constructor(props: Props) {
-        super(props);
-        this.state = {
-            mode: StockFlowScreen.INIT_MODE,
+    protected makeInitialState(): State {
+        return {
+            mode: CanvasScreen.INIT_MODE,
             modelName: null,
             clipboard: [],
             components: [],
@@ -87,49 +74,29 @@ class StockFlowScreen extends React.Component<Props, State> {
         };
     }
 
-    public componentDidMount(): void {
-        // First make sure that the model editing session exists in RTDB
-        // and we've subscribed to it.
-        if (!this.hasLoaded) {
-            this.hasLoaded = true;
-            this.unsubscribeFromDatabase = new FirebaseSessionDataGetter(
-                this.props.firebaseDataModel
-            ).loadModel(
-                this.props.modelUuid!,
-                n => this.setState({ modelName: n }),
-                c => this.onComponentsUpdated(c),
-                m => this.setState({ loadedModels: m }),
-                s => this.setState({ scenarios: s }),
-                () => this.graph || this.setupGraph()
-            );
-            window.addEventListener(
-                "beforeunload",
-                _ => this.componentWillUnmount(),
-                { once: true }
-            );
-        }
-    }
-
-    private setupGraph(): void {
-        if (this.graph) throw new Error("Already initialized");
-        // Allow right-click on canvas
-        InternalEvent.disableContextMenu(this.graphRef.current!);
-        this.graph = new StockFlowGraph(
+    protected makeGraph(): StockFlowGraph {
+        return new StockFlowGraph(
             this.graphRef.current!,
             () => this.state.components,
             name => this.loadStaticModelInnerComponents(name),
             () => this.state.errors,
         );
-        this.actions = new DiagramActions(
+    }
+
+    protected makeActions(): DiagramActions {
+        if (!this.graph) throw new Error("Not initialized");
+        return new DiagramActions(
             this.props.firebaseDataModel,
             this.graph,
             this.props.modelUuid!,
             () => this.state.components,
             () => this.state.loadedModels
         );
-        const rbHandler = new RubberBandHandler(this.graph);
-        rbHandler.fadeOut = true;
-        this.controls = new UserControls(
+    }
+
+    protected makeUserControls(): UserControls {
+        if (!this.graph || !this.actions) throw new Error("Not initialized");
+        return new UserControls(
             this.graph,
             this.actions,
             c => this.setState({ clipboard: c }),
@@ -141,15 +108,7 @@ class StockFlowScreen extends React.Component<Props, State> {
         );
     }
 
-    public componentWillUnmount(): void {
-        console.log("componenWillUnmount, " + this.hasLoaded);
-        if (this.hasLoaded) {
-            if (this.unsubscribeFromDatabase) this.unsubscribeFromDatabase();
-            this.hasLoaded = false;
-        }
-    }
-
-    private onComponentsUpdated(components: FirebaseComponent[]): void {
+    protected onComponentsUpdated(components: FirebaseComponent[]): void {
         const tryUpdateGraph = () => {
             this.graph != null
                 ? this.graph.refreshComponents(
@@ -166,93 +125,64 @@ class StockFlowScreen extends React.Component<Props, State> {
         tryUpdateGraph();
     }
 
-    private pasteComponents(): FirebaseComponent[] {
-        const components = this.state.clipboard;
-        // TODO assign new IDs
-        this.setState({ clipboard: [] });
-        return components;
-    }
-
-    public render(): ReactElement {
-        const sidebarWidth = this.state.sidebarVisible
-            ? this.state.sidebarWidth
-            : 0;
-        const canvasWidth = `calc(100% - ${sidebarWidth}px)`;
+    protected makeSidebar(): ReactElement {
         return (
-            <Fragment>
-                <Grid container direction="column" spacing={0}>
-                    <Grid item xs={12}>
-                        <CanvasToolbar
-                            onModeChanged={mode => this.setState({ mode })}
-                            setOpenModalBox={boxType => this.setState(
-                                { ...this.state, displayedModalBox: boxType }
-                            )}
-                            sessionId={this.props.modelUuid!}
-                            modelName={this.state.modelName || ""}
-                            scenario={this.state.selectedScenarioId}
-                            restClient={this.props.restClient}
-                            firebaseDataModel={this.props.firebaseDataModel}
-                            logOut={this.props.logOut}
-                            toggleSidebarOpen={() => this.toggleSidebarOpen()}
-                            components={this.state.components}
-                            loadedModels={this.state.loadedModels}
-                            errors={this.state.errors}
-                        />
-                    </Grid>
-                    <Grid container direction="row">
-                        <Grid
-                            item
-                            width={canvasWidth}
-                            sx={{
-                                ["div.mxRubberband"]: {
-                                    background: theme.palette.primary.light,
-                                    position: "absolute"
-                                }
-                            }}
-                        >
-                            <div
-                                id="graph-container"
-                                ref={this.graphRef}
-                                style={{
-                                    border: theme.palette.grayed.main
-                                        + " "
-                                        + theme.custom.maxgraph.canvas.borderWidthPx
-                                        + "px solid",
-                                    height: "calc(100vh - 64px)"
-                                }}
-                            />
-                        </Grid>
-                        <Grid
-                            item
-                            width={sidebarWidth}
-                        >
-                            <CanvasSidebar
-                                onResize={w =>
-                                    this.setState({ sidebarWidth: w })
-                                }
-                                getIsVisible={() => this.state.sidebarVisible}
-                                firebaseDataModel={this.props.firebaseDataModel}
-                                modelUuid={this.props.modelUuid!}
-                                selectScenario={s => this.setState({ selectedScenarioId: s })}
-                                selectedScenarioId={this.state.selectedScenarioId}
-                                components={this.state.components}
-                                scenarios={this.state.scenarios}
-                                deleteScenario={(s, c) => this.setState({
-                                    modalBoxComponent: s,
-                                    afterScenarioDeleted: c,
-                                    displayedModalBox: ModalBoxType.DELETE_SCENARIO
-                                })}
-                                selectedComponent={this.state.selectedComponent}
-                            />
-                        </Grid>
-                    </Grid >
-                </Grid >
-                {this.makeModalBoxIfNecessary()}
-            </Fragment >
+            <CanvasSidebar
+                onResize={w =>
+                    this.setState({ sidebarWidth: w })
+                }
+                getIsVisible={() => this.state.sidebarVisible}
+                firebaseDataModel={this.props.firebaseDataModel}
+                modelUuid={this.props.modelUuid!}
+                selectScenario={s => this.setState({ selectedScenarioId: s })}
+                selectedScenarioId={this.state.selectedScenarioId}
+                components={this.state.components}
+                scenarios={this.state.scenarios}
+                deleteScenario={(s, c) => this.setState({
+                    modalBoxComponent: s,
+                    afterScenarioDeleted: c,
+                    displayedModalBox: ModalBoxType.DELETE_SCENARIO
+                })}
+                selectedComponent={this.state.selectedComponent}
+            />
         );
     }
 
-    private makeModalBoxIfNecessary(): ReactElement | null {
+    protected makeToolbar(): ReactElement {
+        return (
+            <CanvasToolbar
+                onModeChanged={mode => this.setState({ mode })}
+                setOpenModalBox={boxType => this.setState(
+                    { ...this.state, displayedModalBox: boxType }
+                )}
+                sessionId={this.props.modelUuid!}
+                modelName={this.state.modelName || ""}
+                scenario={this.state.selectedScenarioId}
+                restClient={this.props.restClient}
+                firebaseDataModel={this.props.firebaseDataModel}
+                logOut={this.props.logOut}
+                toggleSidebarOpen={() => this.toggleSidebarOpen()}
+                components={this.state.components}
+                loadedModels={this.state.loadedModels}
+                errors={this.state.errors}
+            />
+        );
+    }
+
+    protected subscribeToFirebase(): () => void {
+        return new FirebaseSessionDataGetter(
+            this.props.firebaseDataModel
+        ).loadModel(
+            this.props.modelUuid!,
+            n => this.setState({ modelName: n }),
+            c => this.onComponentsUpdated(c),
+            m => this.setState({ loadedModels: m }),
+            s => this.setState({ scenarios: s }),
+            () => this.graph || this.setupGraph()
+        );
+    }
+
+    protected makeModalBoxIfNecessary(): ReactElement | null {
         if (!this.graph || this.state.displayedModalBox == null) {
             return null;
         }
@@ -307,14 +237,6 @@ class StockFlowScreen extends React.Component<Props, State> {
             );
         }
         return null;
-    }
-
-    private closeModalBox(): void {
-        this.setState({ displayedModalBox: null });
-    }
-
-    private toggleSidebarOpen(): void {
-        this.setState({ sidebarVisible: !this.state.sidebarVisible });
     }
 
     private importStaticModel(modelName: string): void {
