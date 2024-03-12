@@ -1,5 +1,9 @@
+import { Cell } from "@maxgraph/core";
 import ComponentType from "../../../data/components/ComponentType";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
+import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
+import MCGraph from "../MCGraph";
+import StockFlowGraph from "../StockFlowGraph";
 import ComponentPresentation from "./ComponentPresentation";
 import ConnectionPresentation from "./ConnectionPresentation";
 import DynamicVariablePresentation from "./DynamicVariablePresentation";
@@ -10,37 +14,88 @@ import StaticModelPresentation from "./StaticModelPresentation";
 import StockPresentation from "./StockPresentation";
 import SumVariablePresentation from "./SumVariablePresentation";
 
-export default class PresentationGetter {
+export default abstract class PresentationGetter {
+    public abstract getRelevantPresentation(
+        component: FirebaseComponent
+    ): ComponentPresentation<any>;
+}
 
-    private static readonly stock = new StockPresentation();
-    private static readonly flow = new FlowPresentation();
-    private static readonly dynvar = new DynamicVariablePresentation();
-    private static readonly param = new ParameterPresentation();
-    private static readonly sumvar = new SumVariablePresentation();
-    private static readonly conn = new ConnectionPresentation();
-    private static readonly model = new StaticModelPresentation();
-    private static readonly none = new NoModelPresentation();
+export class StockFlowPresentationGetter
+    extends PresentationGetter
+    implements ComponentPresentation<FirebaseComponent>
+{
 
-    public static getRelevantPresentation(
+    private static readonly PRESENTATIONS = {
+        stock: new StockPresentation(),
+        flow: new FlowPresentation(),
+        dynvar: new DynamicVariablePresentation(),
+        param: new ParameterPresentation(),
+        sumvar: new SumVariablePresentation(),
+        conn: new ConnectionPresentation(),
+        model: new StaticModelPresentation(),
+        none: new NoModelPresentation()
+    }
+
+    public addComponent(
+        component: FirebaseComponent,
+        graph: StockFlowGraph,
+        parent?: Cell,
+        loadStaticModelComponents?: ((name: string) => void),
+        movable?: boolean
+    ): Cell | Cell[] {
+        return this
+            .getRelevantPresentation(component)
+            .addComponent(
+                component,
+                graph,
+                parent,
+                loadStaticModelComponents,
+                movable
+            );
+    }
+
+    public updateCell(
+        component: FirebaseComponent,
+        cell: Cell,
+        graph: StockFlowGraph,
+        loadedModels?: LoadedStaticModel[]
+    ): void {
+        return this
+            .getRelevantPresentation(component)
+            .updateCell(component, cell, graph, loadedModels);
+    }
+
+
+    public updateComponent(
+        component: FirebaseComponent,
+        cell: Cell,
+        graph?: MCGraph
+    ) {
+        return this
+            .getRelevantPresentation(component)
+            .updateComponent(component, cell, graph);
+    }
+
+    public getRelevantPresentation(
         component: FirebaseComponent
     ): ComponentPresentation<any> {
         switch (component.getType()) {
             case ComponentType.STOCK:
-                return PresentationGetter.stock;
+                return StockFlowPresentationGetter.PRESENTATIONS.stock;
             case ComponentType.VARIABLE:
-                return PresentationGetter.dynvar;
+                return StockFlowPresentationGetter.PRESENTATIONS.dynvar;
             case ComponentType.PARAMETER:
-                return PresentationGetter.param;
+                return StockFlowPresentationGetter.PRESENTATIONS.param;
             case ComponentType.SUM_VARIABLE:
-                return PresentationGetter.sumvar;
+                return StockFlowPresentationGetter.PRESENTATIONS.sumvar;
             case ComponentType.FLOW:
-                return PresentationGetter.flow;
+                return StockFlowPresentationGetter.PRESENTATIONS.flow;
             case ComponentType.CONNECTION:
-                return PresentationGetter.conn;
+                return StockFlowPresentationGetter.PRESENTATIONS.conn;
             case ComponentType.STATIC_MODEL:
-                return PresentationGetter.model;
+                return StockFlowPresentationGetter.PRESENTATIONS.model;
             case ComponentType.SUBSTITUTION:
-                return PresentationGetter.none;
+                return StockFlowPresentationGetter.PRESENTATIONS.none;
             default:
                 throw new Error(
                     "No available presentation for type: " + component.getType()

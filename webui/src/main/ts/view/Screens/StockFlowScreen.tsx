@@ -3,7 +3,6 @@ import UserControls from '../maxgraph/UserControls';
 import { UiMode } from '../../UiMode';
 import CanvasScreen, { Props as CanvasScreenProps, State as CanvasScreenState } from "./CanvasScreen";
 import StockFlowGraph from "../maxgraph/StockFlowGraph";
-import DiagramActions from "../maxgraph/DiagramActions";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 import ModalBoxType from "../ModalBox/ModalBoxType";
 import HelpBox from "../ModalBox/HelpBox";
@@ -22,6 +21,8 @@ import FirebaseScenario from '../../data/components/FirebaseScenario';
 import StockFlowToolbar from '../maxgraph/toolbar/StockFlowToolbar';
 import StockFlowSidebar from '../maxgraph/toolbar/StockFlowSidebar';
 import StockFlowDiagramActions from '../maxgraph/StockFlowDiagramActions';
+import { StockFlowBehaviourGetter } from '../maxgraph/behaviours/BehaviourGetter';
+import { StockFlowPresentationGetter } from '../maxgraph/presentation/PresentationGetter';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -57,6 +58,8 @@ interface State extends CanvasScreenState {
 
 class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
 
+    public static readonly presentation = new StockFlowPresentationGetter();
+
     protected makeInitialState(): State {
         return {
             mode: CanvasScreen.INIT_MODE,
@@ -79,6 +82,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
     protected makeGraph(): StockFlowGraph {
         return new StockFlowGraph(
             this.graphRef.current!,
+            StockFlowScreen.presentation,
             () => this.state.components,
             name => this.loadStaticModelInnerComponents(name),
             () => this.state.errors,
@@ -89,6 +93,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
         if (!this.graph) throw new Error("Not initialized");
         return new StockFlowDiagramActions(
             this.props.firebaseDataModel,
+            StockFlowScreen.presentation,
             this.graph,
             this.props.modelUuid!,
             () => this.state.components,
@@ -101,6 +106,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
         return new UserControls(
             this.graph,
             this.actions,
+            new StockFlowBehaviourGetter(),
             c => this.setState({ clipboard: c }),
             () => this.pasteComponents(),
             () => this.state.components,

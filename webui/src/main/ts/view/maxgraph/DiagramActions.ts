@@ -20,18 +20,17 @@ export default abstract class DiagramActions<G extends MCGraph> {
     protected graph: G;
     protected modelUuid: string;
     protected getCurrentComponents: () => FirebaseComponent[];
-
-    protected abstract getPresentation<T extends FirebaseComponent>(
-        cpt: T
-    ): ComponentPresentation<T>;
+    protected presentation: ComponentPresentation<FirebaseComponent>;
 
     public constructor(
         fbData: FirebaseDataModel,
+        presentation: ComponentPresentation<FirebaseComponent>,
         graph: G,
         modelUuid: string,
         getCurrentComponents: () => FirebaseComponent[],
     ) {
         this.fbData = fbData;
+        this.presentation = presentation;
         this.graph = graph;
         this.modelUuid = modelUuid;
         this.getCurrentComponents = getCurrentComponents;
@@ -70,7 +69,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
                     updatedComponents
                 );
                 const oldComponent = updatedComponents[idx];
-                updatedComponents[idx] = this.getPresentation(oldComponent)
+                updatedComponents[idx] = this.presentation
                     .updateComponent(oldComponent, change.cell, this.graph);
             }
             else if (change instanceof ChildChange) {

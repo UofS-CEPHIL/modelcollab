@@ -1,11 +1,11 @@
 import { Cell } from "@maxgraph/core";
-import PresentationGetter from "./presentation/PresentationGetter";
 import { LoadedStaticModel } from "../Screens/StockFlowScreen";
 import ModelValidator, { ComponentErrors } from "../../validation/ModelValitador";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import { FirebaseSubstitution } from "../../data/components/FirebaseSubstitution";
 import ComponentType from "../../data/components/ComponentType";
 import MCGraph from "./MCGraph";
+import ComponentPresentation from "./presentation/ComponentPresentation";
 
 
 export default class StockFlowGraph extends MCGraph {
@@ -14,11 +14,12 @@ export default class StockFlowGraph extends MCGraph {
 
     public constructor(
         container: HTMLElement,
+        presentation: ComponentPresentation<FirebaseComponent>,
         getFirebaseState: () => FirebaseComponent[],
         loadStaticModelComponents: (name: string) => void,
         getErrors: () => ComponentErrors
     ) {
-        super(container, getFirebaseState, getErrors);
+        super(container, presentation, getFirebaseState, getErrors);
         this.loadStaticModelComponents = loadStaticModelComponents;
     }
 
@@ -60,8 +61,7 @@ export default class StockFlowGraph extends MCGraph {
         loadedStaticModels: LoadedStaticModel[]
     ): void {
         const cell = this.getCellWithId(c.getId())!;
-        PresentationGetter
-            .getRelevantPresentation(c)
+        this.presentation
             .updateCell(c, cell, this, loadedStaticModels);
     }
 
@@ -71,8 +71,7 @@ export default class StockFlowGraph extends MCGraph {
         parent: Cell = this.getDefaultParent(),
         movable: boolean = true
     ): Cell | Cell[] {
-        const result: Cell | Cell[] = PresentationGetter
-            .getRelevantPresentation(c)
+        const result: Cell | Cell[] = this.presentation
             .addComponent(
                 c,
                 this,
@@ -196,8 +195,7 @@ export default class StockFlowGraph extends MCGraph {
 
         // Make a new version of the substituted component and redirect all
         // arrows to the new version
-        const newCell = PresentationGetter
-            .getRelevantPresentation(substitutedComponent)
+        const newCell = this.presentation
             .addComponent(
                 substitutedComponent,
                 this,

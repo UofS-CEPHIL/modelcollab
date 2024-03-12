@@ -19,6 +19,7 @@ export default class UserControls {
     private keyHandler: KeyHandler;
     private undoManager: UndoManager;
     private diagramActions: DiagramActions<any>;
+    private behaviourGetter: BehaviourGetter;
 
     private copyCells: (c: FirebaseComponent[]) => void;
     private pasteCells: () => FirebaseComponent[];
@@ -30,6 +31,7 @@ export default class UserControls {
     public constructor(
         graph: StockFlowGraph,
         actions: DiagramActions<any>,
+        behaviourGetter: BehaviourGetter,
         copyCells: (c: FirebaseComponent[]) => void,
         pasteCells: () => FirebaseComponent[],
         getCurrentComponents: () => FirebaseComponent[],
@@ -39,6 +41,7 @@ export default class UserControls {
     ) {
         this.graph = graph;
         this.diagramActions = actions;
+        this.behaviourGetter = behaviourGetter;
         this.keyHandler = new KeyHandler(graph);
         this.setOpenModalBox = setOpenModalBox;
         this.getMode = getMode;
@@ -153,7 +156,7 @@ export default class UserControls {
     }
 
     private getBehaviour(): ModeBehaviour {
-        return BehaviourGetter.getBehaviourForMode(
+        return this.behaviourGetter.getBehaviourForMode(
             this.getMode(),
             this.graph,
             this.diagramActions,

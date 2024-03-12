@@ -6,7 +6,6 @@ import FirebaseDataModel from "../../data/FirebaseDataModel";
 import { LoadedStaticModel } from "../Screens/StockFlowScreen";
 import DiagramActions from "./DiagramActions";
 import ComponentPresentation from "./presentation/ComponentPresentation";
-import PresentationGetter from "./presentation/PresentationGetter";
 import StockFlowGraph from "./StockFlowGraph";
 
 export default class StockFlowDiagramActions
@@ -17,19 +16,14 @@ export default class StockFlowDiagramActions
 
     public constructor(
         fbData: FirebaseDataModel,
+        presentation: ComponentPresentation<FirebaseComponent>,
         graph: StockFlowGraph,
         modelUuid: string,
         getCurrentComponents: () => FirebaseComponent[],
         getLoadedStaticModels: () => LoadedStaticModel[]
     ) {
-        super(fbData, graph, modelUuid, getCurrentComponents);
+        super(fbData, presentation, graph, modelUuid, getCurrentComponents);
         this.getLoadedStaticModels = getLoadedStaticModels;
-    }
-
-    protected getPresentation<T extends FirebaseComponent>(
-        cpt: T
-    ): ComponentPresentation<T> {
-        return PresentationGetter.getRelevantPresentation(cpt);
     }
 
     // Override to handle clouds

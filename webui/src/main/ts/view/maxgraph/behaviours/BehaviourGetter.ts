@@ -16,8 +16,18 @@ import FirebaseComponent from "../../../data/components/FirebaseComponent";
 // This class is basically just a map between UI modes and their associated
 // behaviour classes. This was originally a static method on ModeBehaviour but
 // that caused a circular dependency, so now it gets its own class.
-export default class BehaviourGetter {
-    static getBehaviourForMode(
+export default abstract class BehaviourGetter {
+    public abstract getBehaviourForMode(
+        mode: UiMode,
+        graph: StockFlowGraph,
+        actions: DiagramActions<any>,
+        getFirebaseState: () => FirebaseComponent[],
+        setOpenModalBox: (t: ModalBoxType) => void
+    ): ModeBehaviour;
+}
+
+export class StockFlowBehaviourGetter extends BehaviourGetter {
+    public getBehaviourForMode(
         mode: UiMode,
         graph: StockFlowGraph,
         actions: DiagramActions<any>,

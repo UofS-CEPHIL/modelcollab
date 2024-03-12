@@ -3,12 +3,14 @@ import ComponentType from "../../data/components/ComponentType";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import { theme } from "../../Themes";
 import { ComponentErrors } from "../../validation/ModelValitador";
+import ComponentPresentation from "./presentation/ComponentPresentation";
 
 // Parent class for graphs in ModelCollab
 export default abstract class MCGraph extends Graph {
 
     protected getFirebaseState: () => FirebaseComponent[];
     protected getErrors: () => ComponentErrors;
+    protected presentation: ComponentPresentation<FirebaseComponent>;
 
     public abstract addComponent(
         c: FirebaseComponent,
@@ -18,10 +20,12 @@ export default abstract class MCGraph extends Graph {
 
     public constructor(
         container: HTMLElement,
+        presentation: ComponentPresentation<FirebaseComponent>,
         getFirebaseState: () => FirebaseComponent[],
         getErrors: () => ComponentErrors
     ) {
         super(container);
+        this.presentation = presentation;
         this.getFirebaseState = getFirebaseState;
         this.getErrors = getErrors;
         this.setAutoSizeCells(true);
