@@ -4,7 +4,7 @@ import RestClient from "../../../rest/RestClient";
 import ModalBoxType from '../../ModalBox/ModalBoxType';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
 import FirebaseComponent from '../../../data/components/FirebaseComponent';
-import { LoadedStaticModel } from '../../Screens/CanvasScreen';
+import { LoadedStaticModel } from '../../Screens/StockFlowScreen';
 import { ComponentErrors } from '../../../validation/ModelValitador';
 import CanvasToolbar, { Props as CanvasToolbarProps, State as CanvasToolbarState } from './CanvasToolbar';
 import { AxiosResponse } from 'axios';

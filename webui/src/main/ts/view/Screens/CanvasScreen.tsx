@@ -11,11 +11,6 @@ import { theme } from "../../Themes";
 import FirebaseComponent from '../../data/components/FirebaseComponent';
 import { ComponentErrors } from '../../validation/ModelValitador';
 
-export interface LoadedStaticModel {
-    modelId: string;
-    components: FirebaseComponent[];
-}
-
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
     restClient: RestClient;
@@ -44,7 +39,7 @@ export default abstract class CanvasScreen
     protected graphRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>();
     protected graph: G | null = null;
     protected controls: UserControls | null = null;
-    protected actions: DiagramActions | null = null;
+    protected actions: DiagramActions<any> | null = null;
     protected unsubscribeFromDatabase: (() => void) | null = null;
 
     private hasLoaded: boolean = false;
@@ -53,7 +48,7 @@ export default abstract class CanvasScreen
     protected abstract subscribeToFirebase(): () => void;
     protected abstract makeInitialState(): S;
     protected abstract makeGraph(): G;
-    protected abstract makeActions(): DiagramActions;
+    protected abstract makeActions(): DiagramActions<any>;
     protected abstract makeUserControls(): UserControls;
     protected abstract onComponentsUpdated(cpts: FirebaseComponent[]): void;
     protected abstract makeToolbar(): ReactElement;

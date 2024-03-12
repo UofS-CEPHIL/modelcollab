@@ -7,13 +7,13 @@ import FirebaseComponent from "../../../data/components/FirebaseComponent";
 export default abstract class ModeBehaviour {
 
     private graph: StockFlowGraph;
-    private actions: DiagramActions;
+    private actions: DiagramActions<any>;
     protected getFirebaseState: () => FirebaseComponent[]
     protected setOpenModalBox: (t: ModalBoxType) => void;
 
     public constructor(
         graph: StockFlowGraph,
-        actions: DiagramActions,
+        actions: DiagramActions<any>,
         getFirebaseState: () => FirebaseComponent[],
         setOpenModalBox: (t: ModalBoxType) => void
     ) {
@@ -27,7 +27,7 @@ export default abstract class ModeBehaviour {
         return this.graph;
     }
 
-    public getActions(): DiagramActions {
+    public getActions(): DiagramActions<any> {
         return this.actions;
     }
 

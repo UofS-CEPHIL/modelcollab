@@ -21,6 +21,7 @@ import FirebaseSessionDataGetter from '../../data/FirebaseSessionDataGetter';
 import FirebaseScenario from '../../data/components/FirebaseScenario';
 import StockFlowToolbar from '../maxgraph/toolbar/StockFlowToolbar';
 import StockFlowSidebar from '../maxgraph/toolbar/StockFlowSidebar';
+import StockFlowDiagramActions from '../maxgraph/StockFlowDiagramActions';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -84,9 +85,9 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
         );
     }
 
-    protected makeActions(): DiagramActions {
+    protected makeActions(): StockFlowDiagramActions {
         if (!this.graph) throw new Error("Not initialized");
-        return new DiagramActions(
+        return new StockFlowDiagramActions(
             this.props.firebaseDataModel,
             this.graph,
             this.props.modelUuid!,

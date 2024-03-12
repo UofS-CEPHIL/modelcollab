@@ -20,7 +20,7 @@ export default class BehaviourGetter {
     static getBehaviourForMode(
         mode: UiMode,
         graph: StockFlowGraph,
-        actions: DiagramActions,
+        actions: DiagramActions<any>,
         getFirebaseState: () => FirebaseComponent[],
         setOpenModalBox: (t: ModalBoxType) => void
     ): ModeBehaviour {

@@ -1,7 +1,7 @@
 import { Cell } from "@maxgraph/core";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
-import StockFlowGraph from "../StockFlowGraph";
+import MCGraph from "../MCGraph";
 
 // This class contains the logic for styling different component types for
 // addition into the on-screen graph
@@ -11,7 +11,7 @@ export default interface ComponentPresentation<T extends FirebaseComponent> {
     // StockFlowGraph
     addComponent(
         component: T,
-        graph: StockFlowGraph,
+        graph: MCGraph,
         parent?: Cell,
         loadStaticModelComponents?: (name: string) => void,
         movable?: boolean
@@ -23,10 +23,10 @@ export default interface ComponentPresentation<T extends FirebaseComponent> {
     updateCell(
         component: T,
         cell: Cell,
-        graph: StockFlowGraph,
+        graph: MCGraph,
         loadedModels?: LoadedStaticModel[]
     ): void;
 
     // Return the given component with the data updated to match the given cell
-    updateComponent(component: T, cell: Cell, graph?: StockFlowGraph): T;
+    updateComponent(component: T, cell: Cell, graph?: MCGraph): T;
 }

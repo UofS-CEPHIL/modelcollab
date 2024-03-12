@@ -1,12 +1,10 @@
 import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, UndoableChange, ValueChange } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
-import FirebaseFlow from "../../data/components/FirebaseFlow";
 import FirebasePointComponent from "../../data/components/FirebasePointComponent";
 import FirebaseDataModel from '../../data/FirebaseDataModel';
-import { LoadedStaticModel } from "../Screens/StockFlowScreen";
-import PresentationGetter from "./presentation/PresentationGetter";
-import StockFlowGraph from "./StockFlowGraph";
+import MCGraph from "./MCGraph";
+import ComponentPresentation from "./presentation/ComponentPresentation";
 
 // This class contains the logic for making changes to the diagram, including
 // the positions of the components and their values.
@@ -16,26 +14,27 @@ import StockFlowGraph from "./StockFlowGraph";
 // ones that must be triggered by performing actions on individual graph cells,
 // such as moving or resizing an existing component. In such cases, we set up
 // listeners for the event and update Firebase within them.
-export default class DiagramActions {
+export default abstract class DiagramActions<G extends MCGraph> {
 
-    private fbData: FirebaseDataModel;
-    private graph: StockFlowGraph;
-    private modelUuid: string;
-    private getCurrentComponents: () => FirebaseComponent[];
-    private getLoadedStaticModels: () => LoadedStaticModel[];
+    protected fbData: FirebaseDataModel;
+    protected graph: G;
+    protected modelUuid: string;
+    protected getCurrentComponents: () => FirebaseComponent[];
+
+    protected abstract getPresentation<T extends FirebaseComponent>(
+        cpt: T
+    ): ComponentPresentation<T>;
 
     public constructor(
         fbData: FirebaseDataModel,
-        graph: StockFlowGraph,
+        graph: G,
         modelUuid: string,
         getCurrentComponents: () => FirebaseComponent[],
-        getLoadedStaticModels: () => LoadedStaticModel[]
     ) {
         this.fbData = fbData;
         this.graph = graph;
         this.modelUuid = modelUuid;
         this.getCurrentComponents = getCurrentComponents;
-        this.getLoadedStaticModels = getLoadedStaticModels;
 
         // Listen for graph actions and update Firebase when they happen. This
         // is only for actions that don't originate from "UserControls" and
@@ -55,38 +54,6 @@ export default class DiagramActions {
         this.updateComponent(component);
     }
 
-    public moveComponents(
-        updatedComponents: FirebaseComponent[],
-        clouds: Cell[],
-        dx: number,
-        dy: number
-    ): void {
-        const allComponents = this.getCurrentComponents();
-        const verticesToUpdate = updatedComponents.filter(
-            c => c instanceof FirebasePointComponent
-        );
-        const updatedFlows = clouds.length > 0
-            ? this.moveFlowClouds(clouds, allComponents)
-            : allComponents.filter(
-                c => c instanceof FirebaseFlow
-            );
-
-        const others = allComponents.filter(
-            c => !(
-                verticesToUpdate.find(v => v.getId() === c.getId())
-                || updatedFlows.find(f => f.getId() === c.getId())
-            )
-        );
-        const updatedVertices = verticesToUpdate.map(v =>
-            (v as FirebasePointComponent<any>)
-                .withUpdatedLocation(dx, dy)
-        );
-        this.fbData.setAllComponents(
-            this.modelUuid,
-            [...updatedVertices, ...updatedFlows, ...others]
-        );
-    }
-
     public updateComponent(component: FirebaseComponent): void {
         this.fbData.updateComponent(this.modelUuid, component);
     }
@@ -103,8 +70,7 @@ export default class DiagramActions {
                     updatedComponents
                 );
                 const oldComponent = updatedComponents[idx];
-                updatedComponents[idx] = PresentationGetter
-                    .getRelevantPresentation(oldComponent)
+                updatedComponents[idx] = this.getPresentation(oldComponent)
                     .updateComponent(oldComponent, change.cell, this.graph);
             }
             else if (change instanceof ChildChange) {
@@ -154,71 +120,34 @@ export default class DiagramActions {
         this.fbData.removeComponent(this.modelUuid, component);
     }
 
-    private moveFlowClouds(
-        clouds: Cell[],
-        allComponents: FirebaseComponent[]
-    ): FirebaseFlow[] {
-
-        interface CloudUpdate {
-            source: boolean,
-            flowId: string,
-            newX: number,
-            newY: number
-        };
-
-        function makePointString(x: number, y: number): string {
-            return `p${x},${y}`;
-        }
-
-        function makeCloudUpdate(cloud: Cell): CloudUpdate {
-            const id = cloud.getId()!;
-            const idsplit = id.split('.');
-            const geo = cloud.getGeometry()!;
-            return {
-                source: idsplit[1] === "from",
-                flowId: idsplit[0],
-                newX: geo.x,
-                newY: geo.y
-            };
-        }
-
-        const updates = clouds.map(makeCloudUpdate);
-        const updatedFlows = allComponents
-            .filter(c => c instanceof FirebaseFlow)
-            .map(c => c.clone());
-        for (const update of updates) {
-            const idx = updatedFlows.findIndex(f => f.getId() === update.flowId);
-            if (idx < 0) throw new Error("Couldn't find flow " + update.flowId);
-            const oldData = updatedFlows[idx].getData();
-            const pointString = makePointString(update.newX, update.newY);
-            var newData;
-            if (update.source) {
-                newData = { ...oldData, from: pointString };
-            }
-            else {
-                newData = { ...oldData, to: pointString };
-            }
-            updatedFlows[idx] = updatedFlows[idx].withData(newData);
-        }
-
-        return updatedFlows;
-    }
-
-    private onCellsMoved(_: EventSource, event: EventObject): void {
+    protected onCellsMoved(_: EventSource, event: EventObject): void {
         const dx = event.properties["dx"];
         const dy = event.properties["dy"];
         const cells: Cell[] = event.properties["cells"];
-
-        const isCloudId = (id: string) => id.includes('.');
-        const clouds = cells.filter(cell => isCloudId(cell.getId()!));
-        const components = cells
-            .filter(c => !isCloudId(c.getId()!))
+        const updatedComponents = cells
             .map(c => c.getId()!)
             .map(id => this.getComponentWithIdOrThrow(id));
-        this.moveComponents(components, clouds, dx, dy);
+
+
+        const allComponents = this.getCurrentComponents();
+        const verticesToUpdate = updatedComponents.filter(
+            c => c instanceof FirebasePointComponent
+        );
+
+        const others = allComponents.filter(
+            c => !verticesToUpdate.find(v => v.getId() === c.getId())
+        );
+        const updatedVertices = verticesToUpdate.map(v =>
+            (v as FirebasePointComponent<any>)
+                .withUpdatedLocation(dx, dy)
+        );
+        this.fbData.setAllComponents(
+            this.modelUuid,
+            [...updatedVertices, ...others]
+        );
     }
 
-    private getComponentWithId(
+    protected getComponentWithId(
         id: string,
         currentComponents?: FirebaseComponent[]
     ): FirebaseComponent | undefined {
@@ -226,7 +155,7 @@ export default class DiagramActions {
         return currentComponents.find(c => c.getId() === id);
     }
 
-    private getComponentWithIdOrThrow(
+    protected getComponentWithIdOrThrow(
         id: string,
         currentComponents?: FirebaseComponent[]
     ): FirebaseComponent {
@@ -235,7 +164,7 @@ export default class DiagramActions {
         return ret;
     }
 
-    private getIdxWithIdOrThrow(
+    protected getIdxWithIdOrThrow(
         id: string,
         components: FirebaseComponent[]
     ): number {
@@ -248,7 +177,7 @@ export default class DiagramActions {
         return componentIdx;
     }
 
-    private findOrphanedArrowIds(
+    protected findOrphanedArrowIds(
         deletedIds: string[],
         allComponents: FirebaseComponent[]
     ): string[] {
