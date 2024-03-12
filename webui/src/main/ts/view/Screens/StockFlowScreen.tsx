@@ -1,5 +1,4 @@
 import { ReactElement } from 'react';
-import CanvasToolbar from '../maxgraph/toolbar/CanvasToolbar';
 import UserControls from '../maxgraph/UserControls';
 import { UiMode } from '../../UiMode';
 import CanvasScreen, { Props as CanvasScreenProps, State as CanvasScreenState } from "./CanvasScreen";
@@ -20,6 +19,7 @@ import ModelValidator, { ComponentErrors } from '../../validation/ModelValitador
 import { useParams } from 'react-router';
 import FirebaseSessionDataGetter from '../../data/FirebaseSessionDataGetter';
 import FirebaseScenario from '../../data/components/FirebaseScenario';
+import StockFlowToolbar from '../maxgraph/toolbar/StockFlowToolbar';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -150,7 +150,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
 
     protected makeToolbar(): ReactElement {
         return (
-            <CanvasToolbar
+            <StockFlowToolbar
                 onModeChanged={mode => this.setState({ mode })}
                 setOpenModalBox={boxType => this.setState(
                     { ...this.state, displayedModalBox: boxType }

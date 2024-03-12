@@ -1,19 +1,15 @@
-import { Component, Fragment, ReactElement } from "react";
-import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, MenuItem, CircularProgress, Badge, ListItem } from '@mui/material';
+import React, { Fragment, ReactElement } from "react";
+import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, Badge, ListItem } from '@mui/material';
 import CatchingPokemonIcon from '@mui/icons-material/CatchingPokemon'
 import LogoutIcon from '@mui/icons-material/Logout';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import ErrorIcon from '@mui/icons-material/Error';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PlayArrow from "@mui/icons-material/PlayArrow";
-import { AxiosResponse } from "axios";
-import UiModeSpeedDial from "./UiModeSpeedDial";
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ModalBoxType from "../../ModalBox/ModalBoxType";
 import { UiMode } from "../../../UiMode";
 import RestClient from "../../../rest/RestClient";
 import FirebaseDataModel from "../../../data/FirebaseDataModel";
-import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import { ComponentErrors } from "../../../validation/ModelValitador";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import ComponentType from "../../../data/components/ComponentType";
@@ -23,48 +19,42 @@ export interface Props {
     setOpenModalBox: (boxType: ModalBoxType) => void;
     modelName: string;
     sessionId: string;
-    scenario: string;
     restClient: RestClient;
     firebaseDataModel: FirebaseDataModel;
     logOut: () => void;
     toggleSidebarOpen: () => void;
     components: FirebaseComponent[];
-    loadedModels: LoadedStaticModel[];
     errors: ComponentErrors;
 }
 
 export interface State {
     uiMode: UiMode;
-    waitingForResults: boolean;
-    interpretMenuAnchor: HTMLElement | null;
     modelActionsMenuAnchor: HTMLElement | null;
     errorsMenuAnchor: HTMLElement | null;
 }
 
-export default class CanvasToolbar extends Component<Props, State> {
+export default abstract class CanvasToolbar<P extends Props, S extends State> extends React.Component<P, S> {
 
     public static readonly DRAWER_WIDTH_PX = 240;
     public static readonly POLLING_TIME_MS = 1000;
     public static readonly DEFAULT_MODE = UiMode.MOVE;
 
-    private static readonly MODEL_ACTIONS_BUTTON_ID = "model-actions-button";
-    private static readonly MODEL_ACTIONS_MENU_ID = "model-actions-menu";
-    private static readonly INTERPRET_BUTTON_ID = "interpret-button";
-    private static readonly INTERPRET_MENU_ID = "interpret-menu";
     private static readonly ERRORS_BUTTON_ID = "errors-button";
     private static readonly ERRORS_MENU_ID = "errors-menu";
+    private static readonly MODEL_ACTIONS_BUTTON_ID = "model-actions-button";
+    private static readonly MODEL_ACTIONS_MENU_ID = "model-actions-menu";
 
-    public constructor(props: Props) {
+    protected abstract makeCustomMenus(): ReactElement;
+    protected abstract makeDropdownsForCustomMenus(): ReactElement;
+    protected abstract makeModeSelector(): ReactElement;
+    protected abstract makeModelActionsOptions(): ReactElement;
+    protected abstract makeInitialState(): S;
+    protected abstract closeAllMenus(s: State): State;
+
+    public constructor(props: P) {
         super(props);
-        this.state = {
-            uiMode: CanvasToolbar.DEFAULT_MODE,
-            waitingForResults: false,
-            interpretMenuAnchor: null,
-            modelActionsMenuAnchor: null,
-            errorsMenuAnchor: null,
-        };
+        this.state = this.makeInitialState();
     }
-
 
     public render(): ReactElement {
         return (
@@ -85,11 +75,7 @@ export default class CanvasToolbar extends Component<Props, State> {
                     </Typography>
                     {this.makeAppBarButtons(this.props.errors)}
                     {this.makeAppBarDropdowns(this.props.errors)}
-                    <UiModeSpeedDial
-                        mode={this.state.uiMode}
-                        changeMode={mode => this.changeMode(mode)}
-                        sx={{ left: 30, top: 100 }}
-                    />
+                    {this.makeModeSelector()}
                 </Toolbar>
             </AppBar >
         );
@@ -113,7 +99,10 @@ export default class CanvasToolbar extends Component<Props, State> {
                     color="inherit"
                     id={CanvasToolbar.ERRORS_BUTTON_ID}
                     onClick={e =>
-                        this.setState({ errorsMenuAnchor: e.currentTarget })
+                        this.setState({
+                            ...this.closeAllMenus(this.state),
+                            errorsMenuAnchor: e.currentTarget
+                        })
                     }
                 >
                     <Badge
@@ -132,10 +121,12 @@ export default class CanvasToolbar extends Component<Props, State> {
                 <IconButton
                     color="inherit"
                     id={CanvasToolbar.MODEL_ACTIONS_BUTTON_ID}
-                    onClick={e => this.setState({
-                        modelActionsMenuAnchor: e.currentTarget,
-                        interpretMenuAnchor: null
-                    })}
+                    onClick={e =>
+                        this.setState({
+                            ...this.closeAllMenus(this.state),
+                            modelActionsMenuAnchor: e.currentTarget
+                        })
+                    }
                     aria-controls={
                         this.state.modelActionsMenuAnchor != null
                             ? CanvasToolbar.MODEL_ACTIONS_MENU_ID
@@ -149,30 +140,7 @@ export default class CanvasToolbar extends Component<Props, State> {
                     <MoreHorizIcon />
                 </IconButton>
 
-                {/*Interpret*/}
-                <IconButton
-                    color="inherit"
-                    id={CanvasToolbar.INTERPRET_BUTTON_ID}
-                    onClick={e => this.setState({
-                        interpretMenuAnchor: e.currentTarget,
-                        modelActionsMenuAnchor: null
-                    })}
-                    aria-controls={
-                        this.state.interpretMenuAnchor != null
-                            ? CanvasToolbar.INTERPRET_MENU_ID
-                            : undefined
-                    }
-                    aria-haspopup="true"
-                    aria-expanded={
-                        this.state.interpretMenuAnchor != null
-                    }
-                >
-                    {
-                        this.state.waitingForResults
-                            ? <CircularProgress color="inherit" />
-                            : <PlayArrow />
-                    }
-                </IconButton>
+                {this.makeCustomMenus()}
 
                 {/*Open / Close Sidebar*/}
                 <IconButton
@@ -182,7 +150,6 @@ export default class CanvasToolbar extends Component<Props, State> {
                 >
                     <ViewSidebarIcon />
                 </IconButton>
-
             </Stack>
         );
     }
@@ -190,28 +157,6 @@ export default class CanvasToolbar extends Component<Props, State> {
     private makeAppBarDropdowns(errors: ComponentErrors): ReactElement {
         return (
             <Fragment>
-                <Menu
-                    id={CanvasToolbar.INTERPRET_MENU_ID}
-                    anchorEl={this.state.interpretMenuAnchor}
-                    open={this.state.interpretMenuAnchor !== null}
-                    MenuListProps={{
-                        "aria-labelledby": CanvasToolbar.INTERPRET_BUTTON_ID
-                    }}
-                    onClose={() => this.setState({
-                        interpretMenuAnchor: null
-                    })}
-                >
-                    <MenuItem
-                        onClick={() => {
-                            this.setState({
-                                interpretMenuAnchor: null
-                            });
-                            this.computeModel();
-                        }}
-                    >
-                        ODE
-                    </MenuItem>
-                </Menu>
                 <Menu
                     id={CanvasToolbar.ERRORS_MENU_ID}
                     open={this.state.errorsMenuAnchor !== null}
@@ -234,37 +179,27 @@ export default class CanvasToolbar extends Component<Props, State> {
                         modelActionsMenuAnchor: null
                     })}
                 >
-                    <MenuItem onClick={() => this.getCode()} >
-                        Get Code
-                    </MenuItem>
-                    <MenuItem onClick={() => this.getModelAsJson()} >
-                        Get JSON
-                    </MenuItem>
-                    <MenuItem onClick={() =>
-                        this.props.setOpenModalBox(ModalBoxType.IMPORT_MODEL)
-                    } >
-                        Import Model
-                    </MenuItem>
+                    {this.makeModelActionsOptions()}
                 </Menu>
+                {this.makeDropdownsForCustomMenus()}
             </Fragment>
         );
     }
 
-    private getComponentNames(): { [id: string]: string } {
-        function getComponentName(c: FirebaseComponent): string {
-            if (c.getData().text !== undefined) return c.getData().text;
-            switch (c.getType()) {
-                case ComponentType.CONNECTION:
-                    return "Connection " + c.getId();
-                default:
-                    throw new Error("Invalid type for error: " + c.getType());
-            }
+    protected getComponentName(c: FirebaseComponent): string {
+        if (c.getData().text !== undefined) return c.getData().text;
+        switch (c.getType()) {
+            case ComponentType.CONNECTION:
+                return "Connection " + c.getId();
+            default:
+                throw new Error("Invalid type for error: " + c.getType());
         }
+    }
+
+    protected getComponentNames(): { [id: string]: string } {
         return Object.fromEntries(
-            this.props.loadedModels
-                .flatMap(m => m.components)
-                .concat(this.props.components)
-                .map(c => [c.getId(), getComponentName(c)])
+            this.props.components
+                .map(c => [c.getId(), this.getComponentName(c)])
         );
     }
 
@@ -301,71 +236,19 @@ export default class CanvasToolbar extends Component<Props, State> {
         );
     }
 
-    private changeMode(mode: UiMode): void {
+    protected changeMode(mode: UiMode): void {
         this.setState({ ...this.state, uiMode: mode });
         this.props.onModeChanged(mode);
     }
 
-    private computeModel(): void {
-        console.log("Computing model. Scenario = " + this.props.scenario);
-        const pollOnce = (id: string) => {
-            this.props.restClient.getResults(
-                id,
-                res => {
-                    if (res.status === 200) {
-                        try {
-                            const blob = new Blob(
-                                [res.data],
-                                { type: res.headers['content-type'] }
-                            );
-                            this.downloadData(blob, "ModelResults.png");
-                        }
-                        finally {
-                            this.setState({ waitingForResults: false });
-                        }
-                    }
-                    else if (res.status === 204) {
-                        startPolling(id);
-                    }
-                    else {
-                        console.error("Received bad response from server");
-                        console.error(res);
-                        this.setState({ waitingForResults: false });
-                    }
-                }
-            );
-        }
-
-        const startPolling = (id: string) => setTimeout(
-            () => pollOnce(id),
-            CanvasToolbar.POLLING_TIME_MS
-        );
-
-        if (!this.state.waitingForResults) {
-            this.props.restClient.computeModel(
-                this.props.sessionId,
-                this.props.scenario,
-                (res: AxiosResponse) => {
-                    if (res.status === 200) {
-                        this.setState({ waitingForResults: true });
-                        startPolling(res.data);
-                    }
-                    else {
-                        console.error("Received bad response from server");
-                        console.error(res);
-                    }
-                });
-        }
-    }
-
-    private getCode(): void {
+    protected getCode(): void {
         this.props.restClient.getCode(
             this.props.sessionId,
             (code: string) => this.downloadData(new Blob([code]), "Model.jl")
         );
     }
 
-    private getModelAsJson(): void {
+    protected getModelAsJson(): void {
         this.props.firebaseDataModel.getDataForSession(
             this.props.sessionId,
             (data: any) => this.downloadData(
@@ -375,7 +258,7 @@ export default class CanvasToolbar extends Component<Props, State> {
         );
     }
 
-    private downloadData(blob: Blob, filename: string): void {
+    protected downloadData(blob: Blob, filename: string): void {
         let a = document.createElement('a');
         a.href = window.URL.createObjectURL(blob);
         a.download = filename;
