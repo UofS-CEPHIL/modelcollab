@@ -1,19 +1,16 @@
-import { Cell, Graph, InternalMouseEvent, SelectionHandler, TooltipHandler } from "@maxgraph/core";
+import { Cell } from "@maxgraph/core";
 import PresentationGetter from "./presentation/PresentationGetter";
 import { LoadedStaticModel } from "../Screens/StockFlowScreen";
 import ModelValidator, { ComponentErrors } from "../../validation/ModelValitador";
-import { theme } from "../../Themes";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import { FirebaseSubstitution } from "../../data/components/FirebaseSubstitution";
 import ComponentType from "../../data/components/ComponentType";
+import MCGraph from "./MCGraph";
 
-// This class extends the default MaxGraph `Graph` class with functions to add
-// and style specific Stock & Flow diagram components
-export default class StockFlowGraph extends Graph {
 
-    private getFirebaseState: () => FirebaseComponent[];
+export default class StockFlowGraph extends MCGraph {
+
     private loadStaticModelComponents: (name: string) => void;
-    private getErrors: () => ComponentErrors;
 
     public constructor(
         container: HTMLElement,
@@ -21,66 +18,9 @@ export default class StockFlowGraph extends Graph {
         loadStaticModelComponents: (name: string) => void,
         getErrors: () => ComponentErrors
     ) {
-        super(container);
-        this.getFirebaseState = getFirebaseState;
+        super(container, getFirebaseState, getErrors);
         this.loadStaticModelComponents = loadStaticModelComponents;
-        this.getErrors = getErrors;
-        this.setAutoSizeCells(true);
-
-        const selHandler =
-            this.getPlugin("SelectionHandler") as SelectionHandler;
-        selHandler.getInitialCellForEvent = (me: InternalMouseEvent) => {
-            if (me.getState() && me.getState()!.cell) {
-                return me.getState()!.cell;
-            }
-            return null;
-        }
-
-        this.setupTooltips();
     }
-
-    private setupTooltips(): void {
-        this.setTooltips(true);
-        const tooltipHandler = this.getPlugin("TooltipHandler") as TooltipHandler;
-        const style = tooltipHandler.div.style;
-        style.position = 'absolute';
-        style.background = theme.palette.canvas.main;
-        style.padding = '8px';
-        style.border = '1px solid ' + theme.palette.text.primary;
-        style.borderRadius = '5px';
-        style.fontFamily = theme.typography.fontFamily || "sans-serif";
-        style.fontSize = theme.typography.fontSize.toString();
-    }
-
-    public cellLabelChanged = (
-        cell: Cell,
-        newValue: string,
-        resize: boolean = false
-    ) => {
-        // TODO
-        throw new Error("Not implemented");
-    }
-
-    public getTooltipForCell = (cell: Cell) => {
-        if (!cell.getId()) return "";
-        const errs = this.getErrors()[cell.getId()!];
-        if (!errs) return "No errors found!";
-
-        return errs.join('\n');
-    }
-
-    // Override
-    // Returns the string representation of a particular cell
-    public convertValueToString(cell: Cell): string {
-        const val = cell.getValue();
-        if (val instanceof FirebaseComponentBase) {
-            return val.getData().text ?? "";
-        }
-        else {
-            return "";
-        }
-    }
-
 
     public refreshComponents(
         newComponents: FirebaseComponent[],
@@ -114,25 +54,6 @@ export default class StockFlowGraph extends Graph {
         });
     }
 
-    public addComponentsInCorrectOrder(
-        toAdd: FirebaseComponent[],
-        parent?: Cell,
-        movable?: boolean
-    ): Cell[] {
-        const isEdge = (cpt: FirebaseComponent) =>
-            [ComponentType.CONNECTION, ComponentType.FLOW]
-                .includes(cpt.getType());
-
-        return [
-            ...toAdd
-                .filter(c => !isEdge(c))
-                .flatMap(vtx => this.addComponent(vtx, parent, movable)),
-            ...toAdd
-                .filter(isEdge)
-                .flatMap(edge => this.addComponent(edge, parent, movable))
-        ];
-    }
-
     // Update a component. Call this in the middle of a batch update.
     public updateComponent(
         c: FirebaseComponent,
@@ -142,25 +63,6 @@ export default class StockFlowGraph extends Graph {
         PresentationGetter
             .getRelevantPresentation(c)
             .updateCell(c, cell, this, loadedStaticModels);
-    }
-
-    // Delete a component. Call this in the middle of a batch update.
-    public deleteComponent(id: string): void {
-        const cell = this.getCellWithId(id);
-        if (!cell) {
-            // Maybe it was an invisible component
-            const components = this.getFirebaseState();
-            const component = components.find(c => c.getId() === id);
-            if (!component) {
-                throw new Error("Unable to find component with ID " + id);
-            }
-            else if (component.getType() === ComponentType.SUBSTITUTION) {
-                this.unapplySubstitution(component);
-            }
-        }
-        else {
-            this.removeCells([cell]);
-        }
     }
 
     // Add a new component. Call this in the middle of a batch update.
@@ -179,10 +81,6 @@ export default class StockFlowGraph extends Graph {
                 movable
             );
         return result;
-    }
-
-    public getCellWithId(id: string): Cell | undefined {
-        return this.getAllCells().find(c => c.getId() === id);
     }
 
     private isInnerComponentId(id: string): boolean {
@@ -323,42 +221,6 @@ export default class StockFlowGraph extends Graph {
         newCell.setId(substitutedCell.getId()!);
     }
 
-    private showErrors(errors: ComponentErrors) {
-        const isCellError = (c: Cell) =>
-            c.getStyle().strokeColor === theme.palette.error.light;
-        const cells = this.getAllCells();
-        for (const cell of cells) {
-            if (
-                cell.getId() !== null
-                && cell.getValue() instanceof FirebaseComponentBase
-            ) {
-                const messages = errors[cell.getId()!];
-                const isError = isCellError(cell);
-                if (messages && !isError) {
-                    this.setCellStyle(
-                        {
-                            ...cell.getStyle(),
-                            strokeColor: theme.palette.error.light,
-                            fontColor: theme.palette.error.light,
-                        },
-                        [cell]
-                    );
-                    // TODO show tooltips
-                }
-                else if (!messages && isError) {
-                    this.setCellStyle(
-                        {
-                            ...cell.getStyle(),
-                            strokeColor: theme.palette.canvas.contrastText,
-                            fontColor: theme.palette.canvas.contrastText,
-                        },
-                        [cell]
-                    );
-                }
-            }
-        }
-    }
-
     private getDefaultParentForCell(cell: Cell): Cell {
         if (this.isInnerComponentId(cell.getId()!)) {
             const split = cell.getId()!.split('/');
@@ -379,13 +241,6 @@ export default class StockFlowGraph extends Graph {
 
     private isCloudId(id: string): boolean {
         return id.includes('.');
-    }
-
-    private getAllCells(parent: Cell = this.getDefaultParent()): Cell[] {
-        return parent
-            .getChildren()
-            .flatMap(c => this.getAllCells(c))
-            .concat(parent.getChildren());
     }
 
     private deleteOrphanedClouds(components: FirebaseComponent[]): void {
