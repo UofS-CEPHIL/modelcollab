@@ -20,6 +20,7 @@ import { useParams } from 'react-router';
 import FirebaseSessionDataGetter from '../../data/FirebaseSessionDataGetter';
 import FirebaseScenario from '../../data/components/FirebaseScenario';
 import StockFlowToolbar from '../maxgraph/toolbar/StockFlowToolbar';
+import StockFlowSidebar from '../maxgraph/toolbar/StockFlowSidebar';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -127,7 +128,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
 
     protected makeSidebar(): ReactElement {
         return (
-            <CanvasSidebar
+            <StockFlowSidebar
                 onResize={w =>
                     this.setState({ sidebarWidth: w })
                 }
