@@ -86,43 +86,6 @@ export default class StockFlowGraph extends MCGraph {
         return id.includes('/');
     }
 
-    private refreshLabels(cells: Cell[]): void {
-        this.getView()
-            .getCellStates(cells)
-            .forEach(s => this.getCellRenderer().redrawLabel(s, true));
-    }
-
-    private findComponentUpdates(
-        newComponents: FirebaseComponent[],
-        oldComponents: FirebaseComponent[]
-    ): { newIds: string[], updatedIds: string[], deletedIds: string[] } {
-        const newIds: string[] = [];
-        const updatedIds: string[] = [];
-        const deletedIds: string[] = [];
-        // Find new and updated components
-        newComponents.forEach(
-            component => {
-                const cell = this.getCellWithId(component.getId());
-                if (!cell) {
-                    // Cell doesn't exist yet
-                    newIds.push(component.getId());
-                }
-                else if (
-                    !cell.getValue().equals(component)
-                ) {
-                    // Cell exists but has updates
-                    updatedIds.push(component.getId());
-                }
-            }
-        );
-        for (const component of oldComponents) {
-            if (!newComponents.find(c => c.getId() === component.getId())) {
-                deletedIds.push(component.getId());
-            }
-        }
-        return { newIds, updatedIds, deletedIds };
-    }
-
     public isCellType(cell: Cell, cptType: ComponentType): boolean {
         return cell.getValue() instanceof FirebaseComponentBase
             && cell.getValue().getType() === cptType;

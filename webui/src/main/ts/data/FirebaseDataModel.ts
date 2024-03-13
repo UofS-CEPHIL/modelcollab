@@ -12,10 +12,22 @@ import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
 import FirebaseScenario from "./components/FirebaseScenario";
 import { FirebaseSubstitution } from "./components/FirebaseSubstitution";
 import FirebaseModel from "./components/FirebaseModel";
+import FirebaseCausalLoopModel from "./FirebaseCausalLoopModel";
 
 export enum ModelType {
     CausalLoop = "CL",
     StockFlow = "SF"
+}
+
+export function modelTypeFromString(s: string): ModelType {
+    switch (s) {
+        case ModelType.CausalLoop:
+            return ModelType.CausalLoop;
+        case ModelType.StockFlow:
+            return ModelType.StockFlow;
+        default:
+            throw new Error("Unrecognized model type: " + s);
+    }
 }
 
 export default class FirebaseDataModel {
@@ -85,7 +97,9 @@ export default class FirebaseDataModel {
         );
     }
 
-    public async getOwnedModels(): Promise<{ [uuid: string]: string }> {
+    public async getOwnedModels():
+        Promise<{ [uuid: string]: { name: string, modelType: string } }> {
+
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in");
         const result = await getDocs(
@@ -94,7 +108,12 @@ export default class FirebaseDataModel {
                 FirestoreSchema.makeUserOwnedModelsPath(user.uid)
             )
         );
-        return Object.fromEntries(result.docs.map(d => [d.id, d.data().name]));
+        return Object.fromEntries(
+            result.docs.map(d => [
+                d.id,
+                { name: d.data().name, modelType: d.data().modelType }
+            ])
+        );
     }
 
     public async loadModelIntoRTDB(modelUuid: string): Promise<void> {
@@ -271,6 +290,19 @@ export default class FirebaseDataModel {
         this.addModel(model);
     }
 
+    public async addCausalLoopModel(name: string): Promise<void> {
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in");
+
+        const model = new FirebaseCausalLoopModel();
+        model.empty(
+            createUuid(),
+            name,
+            user.uid
+        );
+        this.addModel(model)
+    }
+
     private async addModel(newModel: FirebaseModel<any>): Promise<void> {
         // Add the model to the user's list
         const userDocRef = doc(
@@ -282,7 +314,10 @@ export default class FirebaseDataModel {
         );
         await setDoc(
             userDocRef,
-            { name: newModel.getData().name }
+            {
+                name: newModel.getData().name,
+                modelType: newModel.getData().modelType
+            }
         );
 
         // Add the model to the global list of models

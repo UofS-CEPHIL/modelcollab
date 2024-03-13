@@ -126,6 +126,7 @@ declare module '@mui/material/styles' {
 }
 
 export const theme = createTheme({
+    spacing: 8,
     palette: {
         primary: {
             main: "#1565c0",

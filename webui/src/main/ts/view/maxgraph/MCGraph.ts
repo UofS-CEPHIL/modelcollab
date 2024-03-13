@@ -121,6 +121,12 @@ export default abstract class MCGraph extends Graph {
         return this.getAllCells().find(c => c.getId() === id);
     }
 
+    public getCellWithIdOrThrow(id: string): Cell {
+        const cell = this.getCellWithId(id);
+        if (!cell) throw new Error("Can't find cell with ID " + id);
+        else return cell;
+    }
+
     public getAllCells(parent: Cell = this.getDefaultParent()): Cell[] {
         return parent
             .getChildren()
@@ -162,6 +168,43 @@ export default abstract class MCGraph extends Graph {
                 }
             }
         }
+    }
+
+    protected refreshLabels(cells: Cell[]): void {
+        this.getView()
+            .getCellStates(cells)
+            .forEach(s => this.getCellRenderer().redrawLabel(s, true));
+    }
+
+    protected findComponentUpdates(
+        newComponents: FirebaseComponent[],
+        oldComponents: FirebaseComponent[]
+    ): { newIds: string[], updatedIds: string[], deletedIds: string[] } {
+        const newIds: string[] = [];
+        const updatedIds: string[] = [];
+        const deletedIds: string[] = [];
+        // Find new and updated components
+        newComponents.forEach(
+            component => {
+                const cell = this.getCellWithId(component.getId());
+                if (!cell) {
+                    // Cell doesn't exist yet
+                    newIds.push(component.getId());
+                }
+                else if (
+                    !cell.getValue().equals(component)
+                ) {
+                    // Cell exists but has updates
+                    updatedIds.push(component.getId());
+                }
+            }
+        );
+        for (const component of oldComponents) {
+            if (!newComponents.find(c => c.getId() === component.getId())) {
+                deletedIds.push(component.getId());
+            }
+        }
+        return { newIds, updatedIds, deletedIds };
     }
 
 }

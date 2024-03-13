@@ -4,11 +4,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import LoginScreen from "./view/Screens/LoginScreen";
 import StockFlowScreen from "./view/Screens/StockFlowScreen";
 import FirebaseManager from "./data/FirebaseManager";
-import FirebaseDataModel from "./data/FirebaseDataModel";
+import FirebaseDataModel, { ModelType } from "./data/FirebaseDataModel";
 import RestClient from "./rest/RestClient";
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./Themes";
 import ModelSelectScreen from "./view/Screens/ModelSelectScreen";
+import CausalLoopScreen from "./view/Screens/CausalLoopScreen";
 
 interface Props {
 
@@ -85,9 +86,19 @@ export default class App extends React.Component<Props, State> {
                             }
                         />
                         <Route
-                            path="/:uuid"
+                            path={`/${ModelType.StockFlow}/:uuid`}
                             element={
                                 <StockFlowScreen
+                                    firebaseDataModel={this.firebaseDataModel}
+                                    restClient={this.restClient}
+                                    logOut={() => this.firebaseManager.logOut()}
+                                />
+                            }
+                        />
+                        <Route
+                            path={`/${ModelType.CausalLoop}/:uuid`}
+                            element={
+                                <CausalLoopScreen
                                     firebaseDataModel={this.firebaseDataModel}
                                     restClient={this.restClient}
                                     logOut={() => this.firebaseManager.logOut()}

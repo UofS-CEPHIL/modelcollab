@@ -37,7 +37,7 @@ export class CausalLoopBehaviourGetter extends BehaviourGetter {
         setOpenModalBox: (t: ModalBoxType) => void
     ): ModeBehaviour {
         return new MoveModeBehaviour(
-            graph as StockFlowGraph,
+            (graph as unknown) as StockFlowGraph,
             actions,
             getFirebaseState,
             setOpenModalBox
