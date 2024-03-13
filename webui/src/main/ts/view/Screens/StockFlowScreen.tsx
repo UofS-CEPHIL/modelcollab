@@ -22,7 +22,7 @@ import StockFlowToolbar from '../maxgraph/toolbar/StockFlowToolbar';
 import StockFlowSidebar from '../maxgraph/toolbar/StockFlowSidebar';
 import StockFlowDiagramActions from '../maxgraph/StockFlowDiagramActions';
 import { StockFlowBehaviourGetter } from '../maxgraph/behaviours/BehaviourGetter';
-import { StockFlowPresentationGetter } from '../maxgraph/presentation/PresentationGetter';
+import StockFlowPresentationGetter from '../maxgraph/presentation/StockFlowPresentationGetter';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -58,7 +58,7 @@ interface State extends CanvasScreenState {
 
 class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
 
-    public static readonly presentation = new StockFlowPresentationGetter();
+    private static readonly presentation = new StockFlowPresentationGetter();
 
     protected makeInitialState(): State {
         return {
@@ -91,11 +91,12 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
 
     protected makeActions(): StockFlowDiagramActions {
         if (!this.graph) throw new Error("Not initialized");
+        if (!this.props.modelUuid) throw new Error("No UUID found");
         return new StockFlowDiagramActions(
             this.props.firebaseDataModel,
             StockFlowScreen.presentation,
             this.graph,
-            this.props.modelUuid!,
+            this.props.modelUuid,
             () => this.state.components,
             () => this.state.loadedModels
         );
@@ -180,7 +181,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
     protected subscribeToFirebase(): () => void {
         return new FirebaseSessionDataGetter(
             this.props.firebaseDataModel
-        ).loadModel(
+        ).loadStockFlowModel(
             this.props.modelUuid!,
             n => this.setState({ modelName: n }),
             c => this.onComponentsUpdated(c),

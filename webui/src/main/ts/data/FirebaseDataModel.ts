@@ -10,6 +10,13 @@ import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import FirestoreSchema from "./FirestoreSchema";
 import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
 import FirebaseScenario from "./components/FirebaseScenario";
+import { FirebaseSubstitution } from "./components/FirebaseSubstitution";
+import FirebaseModel from "./components/FirebaseModel";
+
+export enum ModelType {
+    CausalLoop = "CL",
+    StockFlow = "SF"
+}
 
 export default class FirebaseDataModel {
 
@@ -116,10 +123,11 @@ export default class FirebaseDataModel {
         );
     }
 
-    public async saveModelToFirestore(
+    public async saveStockFlowModelToFirestore(
         modelUuid: string,
         components: FirebaseComponent[],
         scenarios: FirebaseScenario[],
+        substitutions: FirebaseSubstitution[],
         loadedModels: LoadedStaticModel[]
     ): Promise<void> {
         return setDoc(
@@ -127,7 +135,12 @@ export default class FirebaseDataModel {
                 this.firebaseManager.getFirestore(),
                 FirestoreSchema.makeModelPath(modelUuid)
             ),
-            FirestoreSchema.arrangeModelData(components, scenarios, loadedModels)
+            FirebaseStockFlowModel.arrangeModelData(
+                components,
+                scenarios,
+                substitutions,
+                loadedModels
+            )
         );
     }
 
@@ -249,28 +262,35 @@ export default class FirebaseDataModel {
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in");
 
-        const model = FirebaseStockFlowModel.newStockFlow(
+        const model = new FirebaseStockFlowModel();
+        model.empty(
             createUuid(),
             name,
             user.uid
         );
+        this.addModel(model);
+    }
 
+    private async addModel(newModel: FirebaseModel<any>): Promise<void> {
         // Add the model to the user's list
         const userDocRef = doc(
             this.firebaseManager.getFirestore(),
-            FirestoreSchema.makeUserOwnedModelPath(user.uid, model.uuid)
+            FirestoreSchema.makeUserOwnedModelPath(
+                newModel.getData().ownerUid,
+                newModel.getUuid()
+            )
         );
         await setDoc(
             userDocRef,
-            { name: model.data.name }
+            { name: newModel.getData().name }
         );
 
         // Add the model to the global list of models
         const modelsRef = doc(
             this.firebaseManager.getFirestore(),
-            `/models/${model.uuid}`
+            `/models/${newModel.getUuid()}`
         );
-        setDoc(modelsRef, model.data);
+        setDoc(modelsRef, newModel.getData());
     }
 
     public removeComponent(

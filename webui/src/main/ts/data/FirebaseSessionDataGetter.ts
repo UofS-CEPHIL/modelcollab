@@ -11,12 +11,10 @@ export default class FirebaseSessionDataGetter {
         this.firebaseDataModel = firebaseDataModel;
     }
 
-    public loadModel(
+    public loadCausalLoopModel(
         modelUuid: string,
         onNameUpdated: (name: string) => void,
         onComponentsUpdated: (cpts: FirebaseComponent[]) => void,
-        onLoadedModelsUpdated: (models: LoadedStaticModel[]) => void,
-        onScenariosUpdated: (scenarios: FirebaseScenario[]) => void,
         onModelLoaded?: () => void
     ): () => void {
         // Check if model UUID exists in RTDB. Load it if not.
@@ -46,6 +44,30 @@ export default class FirebaseSessionDataGetter {
             modelUuid,
             onNameUpdated
         );
+
+        return () => {
+            unsubCpts();
+            unsubName();
+            this.firebaseDataModel.declareStoppedUsingSession(modelUuid);
+        };
+    }
+
+    public loadStockFlowModel(
+        modelUuid: string,
+        onNameUpdated: (name: string) => void,
+        onComponentsUpdated: (cpts: FirebaseComponent[]) => void,
+        onLoadedModelsUpdated: (models: LoadedStaticModel[]) => void,
+        onScenariosUpdated: (scenarios: FirebaseScenario[]) => void,
+        onModelLoaded?: () => void
+    ): () => void {
+        // A stock flow model is treated the same in the DB as
+        // a CLD but with sub-models and scenarios
+        const unsubOtherComponents = this.loadCausalLoopModel(
+            modelUuid,
+            onNameUpdated,
+            onComponentsUpdated,
+            onModelLoaded
+        );
         const unsubLoadedModels = this.firebaseDataModel
             .subscribeToSessionModels(
                 modelUuid,
@@ -58,11 +80,9 @@ export default class FirebaseSessionDataGetter {
             );
 
         return () => {
-            unsubCpts();
-            unsubName();
             unsubLoadedModels();
             unsubScenarios();
-            this.firebaseDataModel.declareStoppedUsingSession(modelUuid);
+            unsubOtherComponents();
         };
     }
 }

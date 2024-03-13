@@ -174,12 +174,12 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         const scenario = this.state.scenarioEditing;
         const paramName = param.getData().text;
         const value =
-            scenario.getData().paramOverrides[param.getData().text]
+            scenario.getData().overrides[param.getData().text]
             || param.getData().value;
         const isGrayed = value === param.getData().value;
         const handleChange = (e: ReactChangeEvent) => {
             const oldOverrides =
-                this.state.scenarioEditing!.getData().paramOverrides;
+                this.state.scenarioEditing!.getData().overrides;
             const newOverrides = {
                 ...oldOverrides,
                 [`${paramName}`]: e.target.value

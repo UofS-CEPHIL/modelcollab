@@ -1,4 +1,4 @@
-import { FirebaseDataObject, FirebaseEntity } from "./FirebaseComponent";
+import { FirebaseDataObject, FirebaseEntityBase } from "./FirebaseComponent";
 
 export type ParameterOverrides = { [name: string]: string };
 
@@ -6,26 +6,12 @@ export interface ScenarioComponentData extends FirebaseDataObject {
     name: string;
     startTime: string;
     stopTime: string;
-    paramOverrides: ParameterOverrides;
+    overrides: ParameterOverrides;
 }
 
-export default class FirebaseScenario implements FirebaseEntity {
-
-    private readonly id: string;
-    private readonly data: ScenarioComponentData;
-
-    public constructor(id: string, data: ScenarioComponentData) {
-        this.id = id;
-        this.data = data;
-    }
-
-    public getId(): string {
-        return this.id;
-    }
-
-    public getData(): ScenarioComponentData {
-        return this.data;
-    }
+export default class FirebaseScenario
+    extends FirebaseEntityBase<ScenarioComponentData>
+{
 
     public withData(d: ScenarioComponentData): FirebaseScenario {
         return new FirebaseScenario(
@@ -34,7 +20,7 @@ export default class FirebaseScenario implements FirebaseEntity {
         );
     }
 
-    public toFirebaseEntry() {
+    public toFirebaseEntry(): [string, ScenarioComponentData] {
         return [
             this.getId(),
             this.getData()
@@ -48,7 +34,7 @@ export default class FirebaseScenario implements FirebaseEntity {
                 name: name,
                 startTime: "0.0",
                 stopTime: "0.0",
-                paramOverrides: {}
+                overrides: {}
             }
         );
     }
@@ -60,7 +46,7 @@ export default class FirebaseScenario implements FirebaseEntity {
                 name: data.name || "",
                 startTime: data.startTime || "",
                 stopTime: data.stopTime || "",
-                paramOverrides: data.paramOverrides || []
+                overrides: data.paramOverrides || []
             }
         );
     }

@@ -1,65 +1,94 @@
-export interface StockFlowSchema {
-    name: string,
-    ownerUid: string,
-    sharedWith: { [uid: string]: "r" | "w" },
-    openRead: boolean,
-    openWrite: boolean,
-    data: {
-        components: {
+import { LoadedStaticModel } from "../view/Screens/StockFlowScreen"
+import FirebaseComponent from "./components/FirebaseComponent"
+import FirebaseModel, { ComponentSchema, ModelSchema, SharedUsersSchema } from "./components/FirebaseModel"
+import FirebaseScenario from "./components/FirebaseScenario"
+import { FirebaseSubstitution } from "./components/FirebaseSubstitution"
+import { ModelType } from "./FirebaseDataModel"
+
+
+export interface StockFlowComponentSchema extends ComponentSchema {
+    components: {
+        [componentId: string]: {
+            type: string,
+            data: any
+        }
+    },
+    loadedModels: {
+        [modelUuid: string]: {
             [componentId: string]: {
                 type: string,
                 data: any
             }
-        },
-        loadedModels: {
-            [modelUuid: string]: {
-                [componentId: string]: {
-                    type: string,
-                    data: any
-                }
+        }
+    }
+    scenarios: {
+        [name: string]: {
+            startTime: string,
+            stopTime: string,
+            overrides: {
+                [paramId: string]: string
             }
         }
-        scenarios: {
-            [name: string]: {
-                startTime: string,
-                stopTime: string,
-                overrides: {
-                    [paramId: string]: string
-                }
-            }
-        },
-        substitutions: {
-            [replacedId: string]: string
-        }
+    },
+    substitutions: {
+        [replacedId: string]: string
     }
 }
 
-export default class FirebaseStockFlowModel {
+export interface StockFlowSchema extends ModelSchema {
+    name: string,
+    ownerUid: string,
+    modelType: ModelType,
+    sharedWith: SharedUsersSchema,
+    openRead: boolean,
+    openWrite: boolean,
+    data: StockFlowComponentSchema
+}
 
-    public readonly uuid: string;
-    public data: StockFlowSchema;
+type ComponentEntry = [string, { type: string, data: any }];
 
-    public constructor(uuid: string, data: StockFlowSchema) {
-        this.uuid = uuid;
-        this.data = data;
+export default class FirebaseStockFlowModel
+    extends FirebaseModel<StockFlowSchema>
+{
+
+    public static arrangeModelData(
+        components: FirebaseComponent[],
+        scenarios: FirebaseScenario[],
+        substitutions: FirebaseSubstitution[],
+        loadedModels: LoadedStaticModel[]
+    ): StockFlowComponentSchema {
+        return {
+            components: Object.fromEntries(
+                components.map(c =>
+                    c.toFirebaseEntry() as ComponentEntry
+                )
+            ),
+            scenarios: Object.fromEntries(
+                scenarios.map(c => c.toFirebaseEntry())
+            ),
+            substitutions: Object.fromEntries(
+                substitutions.map(c => c.toFirebaseEntry())
+            ),
+            loadedModels: {} // TODO
+        }
+
     }
 
-    public static newStockFlow(uuid: string, name: string, ownerUid: string) {
-        return new FirebaseStockFlowModel(
-            uuid,
-            {
-                name: name,
-                ownerUid: ownerUid,
-                sharedWith: {},
-                openRead: false,
-                openWrite: false,
-                data: {
-                    components: {},
-                    loadedModels: {},
-                    scenarios: {},
-                    substitutions: {}
-                }
+    public empty(uuid: string, name: string, ownerUid: string) {
+        this.uuid = uuid;
+        this.data = {
+            name: name,
+            ownerUid: ownerUid,
+            modelType: ModelType.StockFlow,
+            sharedWith: {},
+            openRead: false,
+            openWrite: false,
+            data: {
+                components: {},
+                loadedModels: {},
+                scenarios: {},
+                substitutions: {}
             }
-        );
+        };
     }
 }

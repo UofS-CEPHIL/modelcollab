@@ -1,5 +1,5 @@
 import ComponentType from "./ComponentType";
-import { FirebaseComponentBase, FirebaseDataObject } from "./FirebaseComponent";
+import { FirebaseDataObject, FirebaseEntityBase } from "./FirebaseComponent";
 
 export interface SubstitutionComponentData extends FirebaseDataObject {
     replacedId: string,
@@ -7,7 +7,9 @@ export interface SubstitutionComponentData extends FirebaseDataObject {
 }
 
 export class FirebaseSubstitution
-    extends FirebaseComponentBase<SubstitutionComponentData> {
+    extends FirebaseEntityBase<SubstitutionComponentData>
+{
+
     public getType(): ComponentType {
         return ComponentType.SUBSTITUTION;
     }
@@ -23,5 +25,9 @@ export class FirebaseSubstitution
             id,
             Object.assign({}, this.getData())
         );
+    }
+
+    public toFirebaseEntry(): [string, string] {
+        return [this.getData().replacedId, this.getData().replacementId];
     }
 }

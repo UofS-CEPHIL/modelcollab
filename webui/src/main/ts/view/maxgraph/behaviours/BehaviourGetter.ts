@@ -12,6 +12,8 @@ import { ConnectModeBehaviour } from "./ConnectModeBehaviour";
 import ModalBoxType from "../../ModalBox/ModalBoxType";
 import IdentifyModeBehaviour from "./IdentifyModeBehaviour";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
+import MCGraph from "../MCGraph";
+import CausalLoopGraph from "../CausalLoopGraph";
 
 // This class is basically just a map between UI modes and their associated
 // behaviour classes. This was originally a static method on ModeBehaviour but
@@ -19,11 +21,28 @@ import FirebaseComponent from "../../../data/components/FirebaseComponent";
 export default abstract class BehaviourGetter {
     public abstract getBehaviourForMode(
         mode: UiMode,
-        graph: StockFlowGraph,
+        graph: MCGraph,
         actions: DiagramActions<any>,
         getFirebaseState: () => FirebaseComponent[],
         setOpenModalBox: (t: ModalBoxType) => void
     ): ModeBehaviour;
+}
+
+export class CausalLoopBehaviourGetter extends BehaviourGetter {
+    public getBehaviourForMode(
+        mode: UiMode,
+        graph: CausalLoopGraph,
+        actions: DiagramActions<any>,
+        getFirebaseState: () => FirebaseComponent[],
+        setOpenModalBox: (t: ModalBoxType) => void
+    ): ModeBehaviour {
+        return new MoveModeBehaviour(
+            graph as StockFlowGraph,
+            actions,
+            getFirebaseState,
+            setOpenModalBox
+        );
+    }
 }
 
 export class StockFlowBehaviourGetter extends BehaviourGetter {

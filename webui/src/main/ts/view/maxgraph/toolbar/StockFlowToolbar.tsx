@@ -49,7 +49,7 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
         };
     }
 
-    protected closeAllMenus(s: State): State {
+    protected withMenusClosed(s: State): State {
         return {
             ...s,
             interpretMenuAnchor: null,
@@ -109,9 +109,9 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
                 MenuListProps={{
                     "aria-labelledby": StockFlowToolbar.INTERPRET_BUTTON_ID
                 }}
-                onClose={() => this.setState({
-                    interpretMenuAnchor: null
-                })}
+                onClose={() =>
+                    this.setState(this.withMenusClosed(this.state))
+                }
             >
                 <MenuItem
                     onClick={() => {
@@ -127,22 +127,20 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
         );
     }
 
-    protected makeModelActionsOptions(): ReactElement {
-        return (
-            <Fragment>
-                <MenuItem onClick={() => this.getCode()} >
-                    Get Code
-                </MenuItem>
-                <MenuItem onClick={() => this.getModelAsJson()} >
-                    Get JSON
-                </MenuItem>
-                <MenuItem onClick={() =>
-                    this.props.setOpenModalBox(ModalBoxType.IMPORT_MODEL)
-                } >
-                    Import Model
-                </MenuItem>
-            </Fragment>
-        );
+    protected makeModelActionsOptions(): ReactElement[] {
+        return [
+            <MenuItem key={"getcode"} onClick={() => this.getCode()} >
+                Get Code
+            </MenuItem>,
+            <MenuItem key={"getjson"} onClick={() => this.getModelAsJson()} >
+                Get JSON
+            </MenuItem>,
+            <MenuItem key={"importmodel"} onClick={() =>
+                this.props.setOpenModalBox(ModalBoxType.IMPORT_MODEL)
+            } >
+                Import Model
+            </MenuItem>,
+        ];
     }
 
     protected makeModeSelector(): ReactElement {

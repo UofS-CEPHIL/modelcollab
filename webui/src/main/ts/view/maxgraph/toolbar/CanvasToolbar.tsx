@@ -44,12 +44,12 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
     private static readonly MODEL_ACTIONS_BUTTON_ID = "model-actions-button";
     private static readonly MODEL_ACTIONS_MENU_ID = "model-actions-menu";
 
-    protected abstract makeCustomMenus(): ReactElement;
-    protected abstract makeDropdownsForCustomMenus(): ReactElement;
-    protected abstract makeModeSelector(): ReactElement;
-    protected abstract makeModelActionsOptions(): ReactElement;
+    protected abstract makeCustomMenus(): ReactElement | null;
+    protected abstract makeDropdownsForCustomMenus(): ReactElement | null;
+    protected abstract makeModeSelector(): ReactElement | null;
+    protected abstract makeModelActionsOptions(): ReactElement[];
     protected abstract makeInitialState(): S;
-    protected abstract closeAllMenus(s: State): State;
+    protected abstract withMenusClosed(s: State): State;
 
     public constructor(props: P) {
         super(props);
@@ -100,7 +100,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     id={CanvasToolbar.ERRORS_BUTTON_ID}
                     onClick={e =>
                         this.setState({
-                            ...this.closeAllMenus(this.state),
+                            ...this.withMenusClosed(this.state),
                             errorsMenuAnchor: e.currentTarget
                         })
                     }
@@ -123,7 +123,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     id={CanvasToolbar.MODEL_ACTIONS_BUTTON_ID}
                     onClick={e =>
                         this.setState({
-                            ...this.closeAllMenus(this.state),
+                            ...this.withMenusClosed(this.state),
                             modelActionsMenuAnchor: e.currentTarget
                         })
                     }
@@ -164,7 +164,9 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     MenuListProps={{
                         "aria-labelledby": CanvasToolbar.ERRORS_BUTTON_ID
                     }}
-                    onClose={() => this.setState({ errorsMenuAnchor: null })}
+                    onClose={() =>
+                        this.setState(this.withMenusClosed(this.state))
+                    }
                 >
                     {this.makeErrorEntries(errors)}
                 </Menu>
@@ -175,9 +177,9 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     MenuListProps={{
                         "aria-labelledby": CanvasToolbar.MODEL_ACTIONS_BUTTON_ID
                     }}
-                    onClose={() => this.setState({
-                        modelActionsMenuAnchor: null
-                    })}
+                    onClose={() =>
+                        this.setState(this.withMenusClosed(this.state))
+                    }
                 >
                     {this.makeModelActionsOptions()}
                 </Menu>

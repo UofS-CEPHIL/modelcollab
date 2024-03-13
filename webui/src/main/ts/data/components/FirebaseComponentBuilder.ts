@@ -6,7 +6,6 @@ import FirebaseFlow from "./FirebaseFlow";
 import FirebaseParameter from "./FirebaseParameter";
 import FirebaseStaticModel from "./FirebaseStaticModel";
 import FirebaseStock from "./FirebaseStock";
-import { FirebaseSubstitution } from "./FirebaseSubstitution";
 import FirebaseSumVariable from "./FirebaseSumVariable";
 
 export function createFirebaseDataComponent(
@@ -100,15 +99,6 @@ export function createFirebaseDataComponent(
                     y: dataVal.y as number,
                     modelId: dataVal.modelId as string,
                     color: dataVal.color as string
-                }
-            );
-            break;
-        case ComponentType.SUBSTITUTION.toString():
-            component = new FirebaseSubstitution(
-                id,
-                {
-                    replacedId: dataVal.replacedId as string,
-                    replacementId: dataVal.replacementId as string
                 }
             );
             break;

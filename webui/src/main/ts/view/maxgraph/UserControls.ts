@@ -9,13 +9,13 @@ import { UiMode } from "../../UiMode";
 import ModeBehaviour from "./behaviours/ModeBehaviour";
 import BehaviourGetter from "./behaviours/BehaviourGetter";
 import DiagramActions from "./DiagramActions";
-import StockFlowGraph from "./StockFlowGraph";
 import ModalBoxType from "../ModalBox/ModalBoxType";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
+import MCGraph from "./MCGraph";
 
 export default class UserControls {
 
-    private graph: StockFlowGraph;
+    private graph: MCGraph;
     private keyHandler: KeyHandler;
     private undoManager: UndoManager;
     private diagramActions: DiagramActions<any>;
@@ -29,7 +29,7 @@ export default class UserControls {
     private onSelectionChanged: (s: FirebaseComponent | null) => void;
 
     public constructor(
-        graph: StockFlowGraph,
+        graph: MCGraph,
         actions: DiagramActions<any>,
         behaviourGetter: BehaviourGetter,
         copyCells: (c: FirebaseComponent[]) => void,

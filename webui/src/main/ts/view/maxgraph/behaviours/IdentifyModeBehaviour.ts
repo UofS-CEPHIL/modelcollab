@@ -79,14 +79,16 @@ export default class IdentifyModeBehaviour extends ArrowBehaviour {
             return;
         }
 
-        this.getActions().addComponent(
-            new FirebaseSubstitution(
-                IdGenerator.generateUniqueId(this.getFirebaseState()),
-                {
-                    replacedId: source.getValue().getId(),
-                    replacementId: target.getValue().getId()
-                }
-            )
-        );
+        throw new Error("Not implemented");
+
+        // this.getActions().addComponent(
+        //     new FirebaseSubstitution(
+        //         IdGenerator.generateUniqueId(this.getFirebaseState()),
+        //         {
+        //             replacedId: source.getValue().getId(),
+        //             replacementId: target.getValue().getId()
+        //         }
+        //     )
+        // );
     }
 }

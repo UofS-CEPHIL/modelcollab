@@ -8,17 +8,12 @@ export interface FirebasePointerData {
     to: string
 };
 
-export interface FirebaseEntity {
-    toFirebaseEntry: () => Object;
-}
+export abstract class FirebaseEntityBase<DataType extends FirebaseDataObject> {
+    public abstract toFirebaseEntry(): [string, Object];
+    public abstract withData(d: DataType): FirebaseEntityBase<DataType>;
 
-// Represents all components as they are represented inside Firebase
-export abstract class FirebaseComponentBase
-    <DataType extends FirebaseDataObject>
-    implements FirebaseEntity {
-
-    private readonly id: string;
-    private readonly data: DataType;
+    protected readonly id: string;
+    protected readonly data: DataType;
 
     constructor(id: string, data: DataType) {
         this.id = id;
@@ -34,9 +29,16 @@ export abstract class FirebaseComponentBase
     }
 
     public toString() {
-        return `FirebaseDataComponent: id = ${this.getId()}, `
+        return `FirebaseEntity: id = ${this.getId()}, `
             + `data = ${Object.entries(this.getData())}`;
     }
+}
+
+
+// Represents all components as they are represented inside Firebase
+export abstract class FirebaseComponentBase
+    <DataType extends FirebaseDataObject>
+    extends FirebaseEntityBase<DataType> {
 
     public getContainingModelId(): string | undefined {
         const idSplit = this.getId().split('/');
@@ -62,7 +64,7 @@ export abstract class FirebaseComponentBase
             && deepEquals(this.getData(), other.getData());
     }
 
-    public toFirebaseEntry() {
+    public toFirebaseEntry(): [string, { type: string, data: any }] {
         return [
             this.getId(),
             {
@@ -73,10 +75,11 @@ export abstract class FirebaseComponentBase
     }
 
     public abstract getType(): ComponentType;
-    public abstract withData(d: DataType): FirebaseComponentBase<DataType>;
     public abstract withId(id: string): FirebaseComponentBase<DataType>;
+    public abstract withData(d: DataType): FirebaseComponentBase<DataType>;
 }
 
 type FirebaseComponent = FirebaseComponentBase<any>;
+export type FirebaseEntity = FirebaseEntityBase<any>
 
 export default FirebaseComponent;
