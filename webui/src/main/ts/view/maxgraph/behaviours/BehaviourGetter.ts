@@ -14,6 +14,8 @@ import IdentifyModeBehaviour from "./IdentifyModeBehaviour";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import MCGraph from "../MCGraph";
 import CausalLoopGraph from "../CausalLoopGraph";
+import CausalLoopBehaviour from "./CausalLoopBehaviour";
+import { Cell, Point } from "@maxgraph/core";
 
 // This class is basically just a map between UI modes and their associated
 // behaviour classes. This was originally a static method on ModeBehaviour but
@@ -24,7 +26,12 @@ export default abstract class BehaviourGetter {
         graph: MCGraph,
         actions: DiagramActions<any>,
         getFirebaseState: () => FirebaseComponent[],
-        setOpenModalBox: (t: ModalBoxType) => void
+        setOpenModalBox: (t: ModalBoxType) => void,
+        getCursorPosition: () => Point,
+        getKeydownPosition: () => (Point | null),
+        setKeydownPosition: (p: Point | null) => void,
+        getKeydownCell: () => (Cell | null),
+        setKeydownCell: (c: Cell | null) => void
     ): ModeBehaviour;
 }
 
@@ -34,13 +41,23 @@ export class CausalLoopBehaviourGetter extends BehaviourGetter {
         graph: CausalLoopGraph,
         actions: DiagramActions<any>,
         getFirebaseState: () => FirebaseComponent[],
-        setOpenModalBox: (t: ModalBoxType) => void
+        setOpenModalBox: (t: ModalBoxType) => void,
+        getCursorPosition: () => Point,
+        getKeydownPosition: () => (Point | null),
+        setKeydownPosition: (p: Point | null) => void,
+        getKeydownCell: () => (Cell | null),
+        setKeydownCell: (c: Cell | null) => void
     ): ModeBehaviour {
-        return new MoveModeBehaviour(
-            (graph as unknown) as StockFlowGraph,
+        return new CausalLoopBehaviour(
+            graph,
             actions,
             getFirebaseState,
-            setOpenModalBox
+            setOpenModalBox,
+            getCursorPosition,
+            getKeydownPosition,
+            setKeydownPosition,
+            getKeydownCell,
+            setKeydownCell
         );
     }
 }
@@ -51,40 +68,109 @@ export class StockFlowBehaviourGetter extends BehaviourGetter {
         graph: StockFlowGraph,
         actions: DiagramActions<any>,
         getFirebaseState: () => FirebaseComponent[],
-        setOpenModalBox: (t: ModalBoxType) => void
+        setOpenModalBox: (t: ModalBoxType) => void,
+        getCursorPosition: () => Point,
+        getKeydownPosition: () => (Point | null),
+        setKeydownPosition: (p: Point | null) => void,
+        getKeydownCell: () => (Cell | null),
+        setKeydownCell: (c: Cell | null) => void
     ): ModeBehaviour {
         switch (mode) {
             case UiMode.MOVE:
                 return new MoveModeBehaviour(
-                    graph, actions, getFirebaseState, setOpenModalBox
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell
                 );
             case UiMode.STOCK:
                 return new StockModeBehaviour(
-                    graph, actions, getFirebaseState, setOpenModalBox
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell
                 );
             case UiMode.PARAM:
                 return new ParameterModeBehaviour(
-                    graph, actions, getFirebaseState, setOpenModalBox
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell
                 );
             case UiMode.DYN_VARIABLE:
                 return new DynamicVariableModeBehaviour(
-                    graph, actions, getFirebaseState, setOpenModalBox
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell
                 );
             case UiMode.SUM_VARIABLE:
                 return new SumVariableModeBehaviour(
-                    graph, actions, getFirebaseState, setOpenModalBox
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell
                 );
             case UiMode.FLOW:
                 return new FlowModeBehaviour(
-                    graph, actions, getFirebaseState, setOpenModalBox
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell
                 );
             case UiMode.CONNECT:
                 return new ConnectModeBehaviour(
-                    graph, actions, getFirebaseState, setOpenModalBox
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell
                 );
             case UiMode.IDENTIFY:
                 return new IdentifyModeBehaviour(
-                    graph, actions, getFirebaseState, setOpenModalBox
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell
                 );
             default:
                 throw new Error("Unknown mode: " + mode);

@@ -83,6 +83,11 @@ export default abstract class MCGraph extends Graph {
         ];
     }
 
+    public isCellType(cell: Cell, cptType: ComponentType): boolean {
+        return cell.getValue() instanceof FirebaseComponentBase
+            && cell.getValue().getType() === cptType;
+    }
+
     // Delete a component. Call this in the middle of a batch update.
     public deleteComponent(id: string): void {
         const cell = this.getCellWithId(id);

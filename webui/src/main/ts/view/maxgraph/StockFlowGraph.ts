@@ -86,11 +86,6 @@ export default class StockFlowGraph extends MCGraph {
         return id.includes('/');
     }
 
-    public isCellType(cell: Cell, cptType: ComponentType): boolean {
-        return cell.getValue() instanceof FirebaseComponentBase
-            && cell.getValue().getType() === cptType;
-    }
-
     private applySubstitutions(components: FirebaseComponent[]): void {
         const allCells = this.getAllCells();
         const subs = components

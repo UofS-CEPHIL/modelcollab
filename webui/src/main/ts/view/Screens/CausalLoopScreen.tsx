@@ -16,6 +16,7 @@ import { UiMode } from '../../UiMode';
 import CausalLoopSidebar from '../maxgraph/toolbar/CausalLoopSidebar';
 import CausalLoopToolbar from '../maxgraph/toolbar/CausalLoopToolbar';
 import FirebaseSessionDataGetter from '../../data/FirebaseSessionDataGetter';
+import { Cell } from '@maxgraph/core';
 
 interface Props extends CanvasScreenProps {
     firebaseDataModel: FirebaseDataModel;
@@ -75,7 +76,10 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             errors: {},
             displayedModalBox: null,
             sidebarWidth: CanvasSidebar.DEFAULT_WIDTH_PX,
-            sidebarVisible: CanvasSidebar.DEFAULT_VISIBILITY
+            sidebarVisible: CanvasSidebar.DEFAULT_VISIBILITY,
+            cursorPosition: CanvasScreen.INIT_CURSOR,
+            keydownPosition: null,
+            keydownCell: null
         };
     }
 
@@ -111,7 +115,12 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             () => this.state.components,
             () => UiMode.MOVE,
             m => this.setState({ displayedModalBox: m }),
-            s => this.setState({ selectedComponent: s })
+            s => this.setState({ selectedComponent: s }),
+            () => this.state.cursorPosition,
+            () => this.state.keydownPosition,
+            p => this.setKeydownPosition(p),
+            () => this.state.keydownCell,
+            (c: Cell | null) => this.setKeydownCell(c),
         );
     }
 

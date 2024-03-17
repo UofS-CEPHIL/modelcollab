@@ -3,6 +3,7 @@ import {
     EventObject,
     InternalEvent,
     KeyHandler,
+    Point,
     UndoManager
 } from "@maxgraph/core";
 import { UiMode } from "../../UiMode";
@@ -12,11 +13,14 @@ import DiagramActions from "./DiagramActions";
 import ModalBoxType from "../ModalBox/ModalBoxType";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import MCGraph from "./MCGraph";
+import MCKeyHandler from "./MCKeyHandler";
+
+export const BINDABLE_KEYS = "QWER";
 
 export default class UserControls {
 
     private graph: MCGraph;
-    private keyHandler: KeyHandler;
+    private keyHandler: MCKeyHandler;
     private undoManager: UndoManager;
     private diagramActions: DiagramActions<any>;
     private behaviourGetter: BehaviourGetter;
@@ -27,6 +31,11 @@ export default class UserControls {
     private getMode: () => UiMode;
     private setOpenModalBox: (m: ModalBoxType) => void;
     private onSelectionChanged: (s: FirebaseComponent | null) => void;
+    private getCursorPosition: () => Point;
+    private getKeydownPosition: () => (Point | null);
+    private setKeydownPosition: (p: Point | null) => void;
+    private getKeydownCell: () => (Cell | null);
+    private setKeydownCell: (c: Cell | null) => void;
 
     public constructor(
         graph: MCGraph,
@@ -38,17 +47,27 @@ export default class UserControls {
         getMode: () => UiMode,
         setOpenModalBox: (m: ModalBoxType) => void,
         onSelectionChanged: (s: FirebaseComponent | null) => void,
+        getCursorPosition: () => Point,
+        getKeydownPosition: () => (Point | null),
+        setKeydownPosition: (p: Point | null) => void,
+        getKeydownCell: () => (Cell | null),
+        setKeydownCell: (c: Cell | null) => void
     ) {
         this.graph = graph;
         this.diagramActions = actions;
         this.behaviourGetter = behaviourGetter;
-        this.keyHandler = new KeyHandler(graph);
+        this.keyHandler = new MCKeyHandler(graph);
         this.setOpenModalBox = setOpenModalBox;
         this.getMode = getMode;
         this.copyCells = copyCells;
         this.pasteCells = pasteCells;
         this.getCurrentComponents = getCurrentComponents;
         this.onSelectionChanged = onSelectionChanged;
+        this.getCursorPosition = getCursorPosition;
+        this.getKeydownPosition = getKeydownPosition;
+        this.setKeydownPosition = setKeydownPosition;
+        this.getKeydownCell = getKeydownCell;
+        this.setKeydownCell = setKeydownCell;
 
         this.undoManager = new UndoManager();
         this.setupUndoManager();
@@ -161,7 +180,12 @@ export default class UserControls {
             this.graph,
             this.diagramActions,
             this.getCurrentComponents,
-            this.setOpenModalBox
+            this.setOpenModalBox,
+            this.getCursorPosition,
+            this.getKeydownPosition,
+            this.setKeydownPosition,
+            this.getKeydownCell,
+            this.setKeydownCell
         );
     }
 
@@ -200,6 +224,35 @@ export default class UserControls {
                 }
                 this.onSelectionChanged(selectedComponent);
             }
-        )
+        );
+
+        // Custom keybind behaviours
+        BINDABLE_KEYS.split('').forEach(c =>
+            this.keyHandler.bindKey(
+                this.getCharCode(c),
+                {
+                    down: (e: KeyboardEvent) => {
+                        // If user is already holding down a key then wait for
+                        // them to lift it before doing anything
+                        if (this.getKeydownPosition() != null) return;
+                        this.getBehaviour().handleKeyDown(e);
+                        this.setKeydownPosition(this.getCursorPosition());
+                    },
+                    up: (e: KeyboardEvent) => {
+                        // Shouldn't be possible to get here unless the key is
+                        // being held down
+                        if (this.getKeydownPosition() == null) {
+                            console.error(
+                                "Lifting key without keydown position"
+                            );
+                            return;
+                        }
+                        this.getBehaviour().handleKeyUp(e);
+                        this.setKeydownPosition(null);
+                        this.setKeydownCell(null);
+                    }
+                }
+            )
+        );
     }
 }

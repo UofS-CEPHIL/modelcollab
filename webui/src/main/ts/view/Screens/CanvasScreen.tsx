@@ -1,5 +1,5 @@
 import React, { createRef, Fragment, ReactElement, RefObject } from 'react';
-import { Graph, InternalEvent, RubberBandHandler } from '@maxgraph/core';
+import { Cell, EventObject, EventSource, Graph, InternalEvent, InternalMouseEvent, Point, RubberBandHandler } from '@maxgraph/core';
 import UserControls from '../maxgraph/UserControls';
 import { UiMode } from '../../UiMode';
 import DiagramActions from "../maxgraph/DiagramActions";
@@ -19,6 +19,10 @@ export interface Props {
 }
 
 export interface State {
+    cursorPosition: Point;
+    keydownPosition: Point | null;
+    keydownCell: Cell | null;
+
     modelName: string | null;
     components: FirebaseComponent[];
     clipboard: FirebaseComponent[];
@@ -35,6 +39,7 @@ export default abstract class CanvasScreen
 {
 
     public static readonly INIT_MODE = UiMode.MOVE;
+    public static readonly INIT_CURSOR = new Point(0, 0);
 
     protected graphRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>();
     protected graph: G | null = null;
@@ -88,6 +93,17 @@ export default abstract class CanvasScreen
         this.actions = this.makeActions();
         this.controls = this.makeUserControls();
         this.setupRubberBandHandler(this.graph);
+        this.graph.addMouseListener({
+            mouseDown: () => { },
+            mouseUp: () => { },
+            mouseMove: (_: EventSource, e: InternalMouseEvent) =>
+                this.setState({
+                    cursorPosition: new Point(
+                        e.getGraphX(),
+                        e.getGraphY()
+                    )
+                })
+        });
     }
 
     public componentWillUnmount(): void {
@@ -163,5 +179,13 @@ export default abstract class CanvasScreen
 
     protected toggleSidebarOpen(): void {
         this.setState({ sidebarVisible: !this.state.sidebarVisible });
+    }
+
+    protected setKeydownPosition(p: Point | null): void {
+        this.setState({ keydownPosition: p });
+    }
+
+    protected setKeydownCell(c: Cell | null): void {
+        this.setState({ keydownCell: c });
     }
 }

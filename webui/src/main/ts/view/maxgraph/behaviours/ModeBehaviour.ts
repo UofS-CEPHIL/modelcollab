@@ -1,29 +1,44 @@
-import { Cell } from "@maxgraph/core";
-import StockFlowGraph from "../StockFlowGraph";
+import { Cell, Point } from "@maxgraph/core";
 import DiagramActions from "../DiagramActions";
 import ModalBoxType from "../../ModalBox/ModalBoxType";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
+import MCGraph from "../MCGraph";
 
 export default abstract class ModeBehaviour {
 
-    private graph: StockFlowGraph;
+    private graph: MCGraph;
     private actions: DiagramActions<any>;
     protected getFirebaseState: () => FirebaseComponent[]
     protected setOpenModalBox: (t: ModalBoxType) => void;
+    protected getCursorPosition: () => Point;
+    protected getKeydownPosition: () => (Point | null);
+    protected setKeydownPosition: (p: Point | null) => void;
+    protected getKeydownCell: () => (Cell | null);
+    protected setKeydownCell: (c: Cell | null) => void;
 
     public constructor(
-        graph: StockFlowGraph,
+        graph: MCGraph,
         actions: DiagramActions<any>,
         getFirebaseState: () => FirebaseComponent[],
-        setOpenModalBox: (t: ModalBoxType) => void
+        setOpenModalBox: (t: ModalBoxType) => void,
+        getCursorPosition: () => Point,
+        getKeydownPosition: () => (Point | null),
+        setKeydownPosition: (p: Point | null) => void,
+        getKeydownCell: () => (Cell | null),
+        setKeydownCell: (c: Cell | null) => void
     ) {
         this.graph = graph;
         this.actions = actions;
         this.getFirebaseState = getFirebaseState;
         this.setOpenModalBox = setOpenModalBox;
+        this.getCursorPosition = getCursorPosition;
+        this.getKeydownPosition = getKeydownPosition;
+        this.setKeydownPosition = setKeydownPosition;
+        this.getKeydownCell = getKeydownCell;
+        this.setKeydownCell = setKeydownCell;
     }
 
-    public getGraph(): StockFlowGraph {
+    public getGraph(): MCGraph {
         return this.graph;
     }
 
@@ -34,4 +49,6 @@ export default abstract class ModeBehaviour {
     public abstract canvasClicked(x: number, y: number): void;
     public abstract canvasRightClicked(x: number, y: number): void;
     public abstract selectionChanged(selection: Cell[]): void;
+    public abstract handleKeyDown(e: KeyboardEvent): void;
+    public abstract handleKeyUp(e: KeyboardEvent): void;
 }

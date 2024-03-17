@@ -75,7 +75,10 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             loadedModels: [],
             sidebarWidth: CanvasSidebar.DEFAULT_WIDTH_PX,
             sidebarVisible: CanvasSidebar.DEFAULT_VISIBILITY,
-            afterScenarioDeleted: null
+            afterScenarioDeleted: null,
+            cursorPosition: CanvasScreen.INIT_CURSOR,
+            keydownPosition: null,
+            keydownCell: null,
         };
     }
 
@@ -114,6 +117,11 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             () => this.state.mode,
             m => this.setState({ displayedModalBox: m }),
             sel => this.setState({ selectedComponent: sel }),
+            () => this.state.cursorPosition,
+            () => this.state.keydownPosition,
+            p => this.setKeydownPosition(p),
+            () => this.state.keydownCell,
+            c => this.setKeydownCell(c)
         );
     }
 
