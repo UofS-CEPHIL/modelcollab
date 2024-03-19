@@ -17,18 +17,8 @@ export default class ConnectionPresentation
         _?: (__: string) => void,
         movable: boolean = true
     ): Cell {
-        const source = graph.getCellWithId(component.getData().from);
-        const target = graph.getCellWithId(component.getData().to);
-        if (!source) {
-            throw new Error(
-                "Unable to find source with id " + component.getData().from
-            );
-        }
-        if (!target) {
-            throw new Error(
-                "Unable to find target with id " + component.getData().to
-            );
-        }
+        const source = graph.getCellWithIdOrThrow(component.getData().from);
+        const target = graph.getCellWithIdOrThrow(component.getData().to);
 
         return graph.insertEdge(
             this.makeConnectionArgs(

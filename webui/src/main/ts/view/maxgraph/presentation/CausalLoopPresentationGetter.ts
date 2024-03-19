@@ -4,20 +4,19 @@ import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import MCGraph from "../MCGraph";
 import StockFlowGraph from "../StockFlowGraph";
+import CausalLoopLinkPresentation from "./CausalLoopLinkPresentation";
+import CausalLoopVertexPresentation from "./CausalLoopVertexPresentation";
 import ComponentPresentation from "./ComponentPresentation";
-import ConnectionPresentation from "./ConnectionPresentation";
 import PresentationGetter from "./PresentationGetter";
-import StockPresentation from "./StockPresentation";
 
 export default class CausalLoopPresentationGetter
     extends PresentationGetter
     implements ComponentPresentation<FirebaseComponent>
 {
 
-    // TODO customize this presentation
     private static readonly PRESENTATIONS = {
-        stock: new StockPresentation(),
-        conn: new ConnectionPresentation(),
+        vertex: new CausalLoopVertexPresentation(),
+        link: new CausalLoopLinkPresentation(),
     }
 
     public addComponent(
@@ -64,10 +63,10 @@ export default class CausalLoopPresentationGetter
         component: FirebaseComponent
     ): ComponentPresentation<any> {
         switch (component.getType()) {
-            case ComponentType.STOCK:
-                return CausalLoopPresentationGetter.PRESENTATIONS.stock;
-            case ComponentType.CONNECTION:
-                return CausalLoopPresentationGetter.PRESENTATIONS.conn;
+            case ComponentType.CLD_VERTEX:
+                return CausalLoopPresentationGetter.PRESENTATIONS.vertex;
+            case ComponentType.CLD_LINK:
+                return CausalLoopPresentationGetter.PRESENTATIONS.link;
             default:
                 throw new Error(
                     "No available presentation for type: " + component.getType()

@@ -1,8 +1,9 @@
-import { Cell, Graph, InternalMouseEvent, SelectionHandler, TooltipHandler } from "@maxgraph/core";
+import { Cell, CellRenderer, Graph, InternalMouseEvent, SelectionHandler, TooltipHandler } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import { theme } from "../../Themes";
 import { ComponentErrors } from "../../validation/ModelValitador";
+import CausalLoopLinkShape from "./presentation/CausalLoopLinkShape";
 import ComponentPresentation from "./presentation/ComponentPresentation";
 
 // Parent class for graphs in ModelCollab
@@ -28,7 +29,9 @@ export default abstract class MCGraph extends Graph {
         this.presentation = presentation;
         this.getFirebaseState = getFirebaseState;
         this.getErrors = getErrors;
+
         this.setAutoSizeCells(true);
+        this.setAllowDanglingEdges(false);
 
         const selHandler =
             this.getPlugin("SelectionHandler") as SelectionHandler;
@@ -40,6 +43,9 @@ export default abstract class MCGraph extends Graph {
         }
 
         this.setupTooltips();
+
+        //@ts-ignore
+        CellRenderer.registerShape("cldLink", CausalLoopLinkShape);
     }
 
     private setupTooltips(): void {
@@ -70,8 +76,11 @@ export default abstract class MCGraph extends Graph {
         movable: boolean = true
     ): Cell[] {
         const isEdge = (cpt: FirebaseComponent) =>
-            [ComponentType.CONNECTION, ComponentType.FLOW]
-                .includes(cpt.getType());
+            [
+                ComponentType.CONNECTION,
+                ComponentType.FLOW,
+                ComponentType.CLD_LINK
+            ].includes(cpt.getType());
 
         return [
             ...toAdd

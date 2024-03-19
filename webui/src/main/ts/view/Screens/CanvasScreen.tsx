@@ -1,5 +1,5 @@
 import React, { createRef, Fragment, ReactElement, RefObject } from 'react';
-import { Cell, EventObject, EventSource, Graph, InternalEvent, InternalMouseEvent, Point, RubberBandHandler } from '@maxgraph/core';
+import { Cell, EventObject, EventSource, Graph, InternalEvent, InternalMouseEvent, MarkerShape, Point, RubberBandHandler } from '@maxgraph/core';
 import UserControls from '../maxgraph/UserControls';
 import { UiMode } from '../../UiMode';
 import DiagramActions from "../maxgraph/DiagramActions";

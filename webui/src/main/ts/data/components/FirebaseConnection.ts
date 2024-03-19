@@ -11,7 +11,7 @@ export interface FirebaseConnectionData extends FirebasePointerData {
 export default class FirebaseConnection
     extends FirebaseComponentBase<FirebaseConnectionData>
 {
-    constructor(id: string, data: FirebaseConnectionData) {
+    public constructor(id: string, data: FirebaseConnectionData) {
         super(id, data);
     }
 
@@ -27,7 +27,7 @@ export default class FirebaseConnection
         return new FirebaseConnection(id, Object.assign({}, this.getData()));
     }
 
-    static toConnectionComponentData(data: any): FirebaseConnectionData {
+    public static toConnectionComponentData(data: any): FirebaseConnectionData {
         const d: FirebaseConnectionData = {
             from: data.from.toString(),
             to: data.to.toString(),

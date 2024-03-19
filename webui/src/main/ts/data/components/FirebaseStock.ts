@@ -31,7 +31,7 @@ export default class FirebaseStock
         return new FirebaseStock(id, Object.assign({}, this.getData()));
     }
 
-    static toStockComponentData(data: any): FirebaseStockData {
+    public static toStockComponentData(data: any): FirebaseStockData {
         const d: FirebaseStockData = {
             x: Number(data.x),
             y: Number(data.y),

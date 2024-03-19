@@ -1,4 +1,6 @@
 import ComponentType from "./ComponentType";
+import FirebaseCausalLoopLink from "./FirebaseCausalLoopLink";
+import FirebaseCausalLoopVertex from "./FirebaseCausalLoopVertex";
 import FirebaseComponent from "./FirebaseComponent";
 import FirebaseConnection from "./FirebaseConnection";
 import FirebaseDynamicVariable from "./FirebaseDynamicVariable";
@@ -23,16 +25,12 @@ export function createFirebaseDataComponent(
 
     let component: FirebaseComponent;
 
+    // TODO switch these to "toXComponentData" for all
     switch (componentType) {
         case ComponentType.STOCK.toString():
             component = new FirebaseStock(
                 id,
-                {
-                    x: dataVal.x as number,
-                    y: dataVal.y as number,
-                    text: dataVal.text as string,
-                    initvalue: dataVal.initvalue as string
-                }
+                FirebaseStock.toStockComponentData(dataVal)
             );
             break;
 
@@ -83,12 +81,7 @@ export function createFirebaseDataComponent(
         case ComponentType.CONNECTION.toString():
             component = new FirebaseConnection(
                 id,
-                {
-                    from: dataVal.from as string,
-                    to: dataVal.to as string,
-                    handleXOffset: dataVal.handleXOffset as number,
-                    handleYOffset: dataVal.handleYOffset as number
-                }
+                FirebaseConnection.toConnectionComponentData(dataVal)
             );
             break;
         case ComponentType.STATIC_MODEL.toString():
@@ -100,6 +93,18 @@ export function createFirebaseDataComponent(
                     modelId: dataVal.modelId as string,
                     color: dataVal.color as string
                 }
+            );
+            break;
+        case ComponentType.CLD_VERTEX.toString():
+            component = new FirebaseCausalLoopVertex(
+                id,
+                FirebaseCausalLoopVertex.toVertexComponentData(dataVal)
+            );
+            break;
+        case ComponentType.CLD_LINK.toString():
+            component = new FirebaseCausalLoopLink(
+                id,
+                FirebaseCausalLoopLink.toCausalLoopLinkData(dataVal)
             );
             break;
         default:

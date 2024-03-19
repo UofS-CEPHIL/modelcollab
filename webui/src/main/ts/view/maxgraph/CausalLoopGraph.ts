@@ -1,7 +1,19 @@
-import { Cell } from "@maxgraph/core";
+import { Cell, CellState, EdgeHandler, Rectangle, RectangleShape } from "@maxgraph/core";
+import FirebaseCausalLoopLink from "../../data/components/FirebaseCausalLoopLink";
 import FirebaseComponent from "../../data/components/FirebaseComponent";
 import { ComponentErrors } from "../../validation/ModelValitador";
 import MCGraph from "./MCGraph";
+
+class CausalLoopLinkEdgeHandler extends EdgeHandler {
+    public createLabelHandleShape() {
+        return new RectangleShape(
+            new Rectangle(0, 0, 0, 0),
+            "white",
+            "white",
+            0
+        );
+    }
+}
 
 export default class CausalLoopGraph extends MCGraph {
 
@@ -26,6 +38,30 @@ export default class CausalLoopGraph extends MCGraph {
             );
             this.showErrors(errors);
         });
+    }
+
+    public createEdgeHandler(state: CellState, edgeStyle: any): EdgeHandler {
+        if (
+            state.cell.getValue()
+            && state.cell.getValue() instanceof FirebaseCausalLoopLink
+        ) {
+            return new CausalLoopLinkEdgeHandler(state);
+        }
+        else {
+            return super.createEdgeHandler(state, edgeStyle);
+        }
+    }
+
+    // Override
+    // Returns the string representation of a particular cell
+    public convertValueToString(cell: Cell): string {
+        const val = cell.getValue();
+        if (val instanceof FirebaseCausalLoopLink) {
+            return val.getData().polarity;
+        }
+        else {
+            return super.convertValueToString(cell);
+        }
     }
 
     // Update a component. Call this in the middle of a batch update.

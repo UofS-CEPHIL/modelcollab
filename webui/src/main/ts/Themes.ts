@@ -46,6 +46,17 @@ declare module '@mui/material/styles' {
                     defaultHeightPx: number,
                     strokeWidth: number,
                 },
+                cldVertex: {
+                    defaultWidthPx: number,
+                    defaultHeightPx: number,
+                    strokeWidth: number,
+                },
+                cldLink: {
+                    strokeWidthPx: number,
+                    edgeStyle: string,
+                    endArrow: string,
+                    fontSize: number,
+                },
                 textComponent: {
                     defaultWidthPx: number,
                     defaultHeightPx: number,
@@ -100,6 +111,17 @@ declare module '@mui/material/styles' {
                     defaultWidthPx?: number,
                     defaultHeightPx?: number,
                     strokeWidth?: number,
+                },
+                cldVertex?: {
+                    defaultWidthPx?: number,
+                    defaultHeightPx?: number,
+                    strokeWidth?: number,
+                },
+                cldLink?: {
+                    strokeWidthPx?: number,
+                    edgeStyle?: string,
+                    endArrow?: string,
+                    fontSize?: number,
                 },
                 textComponent?: {
                     defaultWidthPx?: number,
@@ -185,6 +207,17 @@ export const theme = createTheme({
                 defaultWidthPx: 80,
                 defaultHeightPx: 50,
                 strokeWidth: 1.5,
+            },
+            cldVertex: {
+                defaultWidthPx: 80,
+                defaultHeightPx: 50,
+                strokeWidth: 1.5
+            },
+            cldLink: {
+                strokeWidthPx: 3,
+                edgeStyle: "orthogonalEdgeStyle",
+                endArrow: "classic",
+                fontSize: 20,
             },
             textComponent: {
                 defaultWidthPx: 80,

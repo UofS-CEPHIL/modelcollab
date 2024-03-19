@@ -1,6 +1,6 @@
 import { Cell, EventSource, InternalMouseEvent, MouseListenerSet } from "@maxgraph/core";
-import FirebaseConnection from "../../../data/components/FirebaseConnection";
-import FirebaseStock from "../../../data/components/FirebaseStock";
+import FirebaseCausalLoopLink, { Polarity } from "../../../data/components/FirebaseCausalLoopLink";
+import FirebaseCausalLoopVertex from "../../../data/components/FirebaseCausalLoopVertex";
 import IdGenerator from "../../../IdGenerator";
 import { theme } from "../../../Themes";
 import DefaultBehaviour from "./DefaultBehaviour";
@@ -25,12 +25,11 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
         const pos = this.getCursorPosition();
         switch (e.key) {
             case "q":
-                this.getActions().addComponent(new FirebaseStock(
+                this.getActions().addComponent(new FirebaseCausalLoopVertex(
                     IdGenerator.generateUniqueId(this.getFirebaseState()),
                     {
                         x: pos.x,
                         y: pos.y,
-                        initvalue: "",
                         text: ""
                     }
                 ));
@@ -38,7 +37,10 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
             case "w":
                 const keydownCell = this.getGraph().getCellAt(pos.x, pos.y);
                 this.setKeydownCell(keydownCell);
-                if (keydownCell !== null) {
+                if (
+                    keydownCell !== null
+                    && keydownCell.getValue() instanceof FirebaseCausalLoopVertex
+                ) {
                     const pointerCell = this.getGraph().insertVertex({
                         id: CausalLoopBehaviour.POINTER_CELL_ID,
                         x: pos.x,
@@ -71,6 +73,13 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
                 }
                 break;
             case "e":
+                const cell = this.getGraph().getCellAt(pos.x, pos.y);
+                if (cell && cell.getValue() instanceof FirebaseCausalLoopLink) {
+                    this.getActions().updateComponent(
+                        cell.getValue().withNextPolarity()
+                    );
+                }
+                break;
             case "r":
         }
     }
@@ -98,13 +107,12 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
                 const cell1 = this.getKeydownCell();
                 const cell2 = this.getGraph().getCellAt(pos.x, pos.y);
                 if (cell1 && cell2 && cell1.getId() !== cell2.getId()) {
-                    this.getActions().addComponent(new FirebaseConnection(
+                    this.getActions().addComponent(new FirebaseCausalLoopLink(
                         IdGenerator.generateUniqueId(this.getFirebaseState()),
                         {
                             from: cell1.getId()!,
                             to: cell2.getId()!,
-                            handleXOffset: 0,
-                            handleYOffset: 0
+                            polarity: Polarity.POSITIVE
                         }
                     ));
                 }
