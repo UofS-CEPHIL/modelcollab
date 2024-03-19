@@ -17,4 +17,8 @@ export default class FirebaseSumVariable
     public withId(id: string): FirebaseSumVariable {
         return new FirebaseSumVariable(id, Object.assign({}, this.getData()));
     }
+
+    public static toSumVariableComponentData(d: any): FirebaseTextData {
+        return FirebaseTextComponent.toTextComponentData(d);
+    }
 }

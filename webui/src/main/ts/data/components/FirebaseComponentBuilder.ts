@@ -25,7 +25,6 @@ export function createFirebaseDataComponent(
 
     let component: FirebaseComponent;
 
-    // TODO switch these to "toXComponentData" for all
     switch (componentType) {
         case ComponentType.STOCK.toString():
             component = new FirebaseStock(
@@ -37,45 +36,26 @@ export function createFirebaseDataComponent(
         case ComponentType.FLOW.toString():
             component = new FirebaseFlow(
                 id,
-                {
-                    from: dataVal.from as string,
-                    to: dataVal.to as string,
-                    equation: dataVal.equation as string,
-                    text: dataVal.text as string,
-                }
+                FirebaseFlow.toFlowComponentData(dataVal)
             );
             break;
 
         case ComponentType.PARAMETER.toString():
             component = new FirebaseParameter(
                 id,
-                {
-                    x: dataVal.x as number,
-                    y: dataVal.y as number,
-                    text: dataVal.text as string,
-                    value: dataVal.value as string
-                }
+                FirebaseParameter.toParameterComponentData(dataVal)
             );
             break;
         case ComponentType.VARIABLE.toString():
             component = new FirebaseDynamicVariable(
                 id,
-                {
-                    x: dataVal.x as number,
-                    y: dataVal.y as number,
-                    text: dataVal.text as string,
-                    value: dataVal.value as string
-                }
+                FirebaseDynamicVariable.toDynamicVariableComponentData(dataVal)
             );
             break;
         case ComponentType.SUM_VARIABLE.toString():
             component = new FirebaseSumVariable(
                 id,
-                {
-                    x: dataVal.x as number,
-                    y: dataVal.y as number,
-                    text: dataVal.text as string
-                }
+                FirebaseSumVariable.toSumVariableComponentData(dataVal)
             );
             break;
         case ComponentType.CONNECTION.toString():
@@ -87,12 +67,7 @@ export function createFirebaseDataComponent(
         case ComponentType.STATIC_MODEL.toString():
             component = new FirebaseStaticModel(
                 id,
-                {
-                    x: dataVal.x as number,
-                    y: dataVal.y as number,
-                    modelId: dataVal.modelId as string,
-                    color: dataVal.color as string
-                }
+                FirebaseStaticModel.toStaticModelComponentData(dataVal)
             );
             break;
         case ComponentType.CLD_VERTEX.toString():

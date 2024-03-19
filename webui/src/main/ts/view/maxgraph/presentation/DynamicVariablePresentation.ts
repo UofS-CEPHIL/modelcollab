@@ -33,8 +33,8 @@ export default class DynamicVariablePresentation
             id: dynvar.getId(),
             x: dynvar.getData().x,
             y: dynvar.getData().y,
-            width: theme.custom.maxgraph.textComponent.defaultWidthPx,
-            height: theme.custom.maxgraph.textComponent.defaultHeightPx,
+            width: dynvar.getData().width,
+            height: dynvar.getData().height,
             style: {
                 shape: "text",
                 fillColor: theme.palette.canvas.main,

@@ -17,4 +17,9 @@ export default class FirebaseParameter
     public withId(id: string): FirebaseParameter {
         return new FirebaseParameter(id, Object.assign({}, this.getData()));
     }
+
+    public static toParameterComponentData(d: any): FirebaseNameValueData {
+        return FirebaseTextComponent.toNameValueComponentData(d);
+    }
+
 }

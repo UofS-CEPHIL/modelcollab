@@ -70,7 +70,7 @@ export default class EditComponentsSidebarContent
                 case ComponentType.STOCK:
                     return [
                         this.makeTextBoxListItem("text", "Name"),
-                        this.makeTextBoxListItem("initvalue", "Initial Value"),
+                        this.makeTextBoxListItem("value", "Initial Value"),
                     ];
                 case ComponentType.PARAMETER:
                 case ComponentType.VARIABLE:

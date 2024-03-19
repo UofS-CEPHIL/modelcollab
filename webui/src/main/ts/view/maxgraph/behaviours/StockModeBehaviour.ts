@@ -1,5 +1,6 @@
 import FirebaseStock from "../../../data/components/FirebaseStock";
 import IdGenerator from "../../../IdGenerator";
+import { theme } from "../../../Themes";
 import DefaultBehaviour from "./DefaultBehaviour";
 
 // Stock mode listens for background clicks and adds stocks
@@ -8,7 +9,14 @@ export class StockModeBehaviour extends DefaultBehaviour {
         const newId = IdGenerator.generateUniqueId(this.getFirebaseState());
         const newStock = new FirebaseStock(
             newId,
-            { x, y, initvalue: "", text: "" }
+            {
+                x,
+                y,
+                width: theme.custom.maxgraph.stock.defaultWidthPx,
+                height: theme.custom.maxgraph.stock.defaultHeightPx,
+                value: "",
+                text: ""
+            }
         );
         this.getActions().addComponent(newStock);
     }

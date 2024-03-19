@@ -1,22 +1,16 @@
+import TextComponentPresentation from "../../view/maxgraph/presentation/TextComponentPresentation";
 import ComponentType from "./ComponentType";
-import { FirebasePointData } from "./FirebasePointComponent";
 import FirebaseTextComponent, { FirebaseTextData } from "./FirebaseTextComponent";
 
-export interface FirebaseCausalLoopVertexData extends FirebasePointData {
-    x: number;              // x position on screen
-    y: number;              // y position on screen
-    text: string;           // text on screen
-}
-
 export default class FirebaseCausalLoopVertex
-    extends FirebaseTextComponent<FirebaseCausalLoopVertexData>
+    extends FirebaseTextComponent<FirebaseTextData>
 {
 
     public getType(): ComponentType {
         return ComponentType.CLD_VERTEX;
     }
 
-    public withData(d: FirebaseCausalLoopVertexData): FirebaseCausalLoopVertex {
+    public withData(d: FirebaseTextData): FirebaseCausalLoopVertex {
         return new FirebaseCausalLoopVertex(this.getId(), d);
     }
 
@@ -27,14 +21,7 @@ export default class FirebaseCausalLoopVertex
         );
     }
 
-    public static toVertexComponentData(
-        data: any
-    ): FirebaseCausalLoopVertexData {
-        const d: FirebaseCausalLoopVertexData = {
-            x: Number(data.x),
-            y: Number(data.y),
-            text: String(data.text)
-        };
-        return d;
+    public static toVertexComponentData(d: any): FirebaseTextData {
+        return FirebaseTextComponent.toTextComponentData(d);
     }
 }

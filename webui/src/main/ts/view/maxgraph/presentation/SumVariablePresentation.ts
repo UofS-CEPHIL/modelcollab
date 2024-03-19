@@ -33,8 +33,8 @@ export default class SumVariablePresentation
             value: sumvar,
             x: sumvar.getData().x,
             y: sumvar.getData().y,
-            width: theme.custom.maxgraph.textComponent.defaultWidthPx,
-            height: theme.custom.maxgraph.textComponent.defaultHeightPx,
+            width: sumvar.getData().width,
+            height: sumvar.getData().height,
             style: {
                 shape: "text",
                 fillColor: theme.palette.canvas.main,

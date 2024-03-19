@@ -1,4 +1,5 @@
 import FirebaseDynamicVariable from "../../../data/components/FirebaseDynamicVariable";
+import { theme } from "../../../Themes";
 import IdGenerator from "../../../IdGenerator";
 import DefaultBehaviour from "./DefaultBehaviour";
 
@@ -14,7 +15,14 @@ export default class DynamicVariableModeBehaviour extends DefaultBehaviour {
         const newId = IdGenerator.generateUniqueId(this.getFirebaseState());
         const newVar = new FirebaseDynamicVariable(
             newId,
-            { x, y, value: "", text: "" }
+            {
+                x,
+                y,
+                width: theme.custom.maxgraph.textComponent.defaultWidthPx,
+                height: theme.custom.maxgraph.textComponent.defaultHeightPx,
+                value: "",
+                text: ""
+            }
         );
         this.getActions().addComponent(newVar);
     }

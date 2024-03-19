@@ -1,7 +1,8 @@
-import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, UndoableChange, ValueChange } from "@maxgraph/core";
+import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, Rectangle, UndoableChange, ValueChange } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointComponent from "../../data/components/FirebasePointComponent";
+import FirebaseRectangleComponent from "../../data/components/FirebaseRectangleComponent";
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import MCGraph from "./MCGraph";
 import ComponentPresentation from "./presentation/ComponentPresentation";
@@ -44,7 +45,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
         );
         this.graph.addListener(
             InternalEvent.CELLS_RESIZED,
-            () => null // TODO
+            (s: EventSource, o: EventObject) => this.onCellsResized(s, o)
         );
     }
 
@@ -144,6 +145,27 @@ export default abstract class DiagramActions<G extends MCGraph> {
             this.modelUuid,
             [...updatedVertices, ...others]
         );
+    }
+
+    protected onCellsResized(_: EventSource, event: EventObject): void {
+        const cells: Cell[] = event.properties["cells"];
+        const allComponents = this.getCurrentComponents();
+        const updated: FirebaseRectangleComponent<any>[] = cells.map(c =>
+            (
+                this.getComponentWithId(
+                    c.getValue().getId(),
+                    allComponents
+                ) as FirebaseRectangleComponent<any>
+            ).withUpdatedSize(c.geometry!.width, c.geometry!.height)
+        );
+        const others = allComponents.filter(
+            c => !updated.find(v => v.getId() === c.getId())
+        );
+        this.fbData.setAllComponents(
+            this.modelUuid,
+            [...updated, ...others]
+        );
+
     }
 
     protected getComponentWithId(

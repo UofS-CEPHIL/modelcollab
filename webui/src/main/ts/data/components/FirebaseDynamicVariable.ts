@@ -6,6 +6,7 @@ import FirebaseTextComponent, {
 export default class FirebaseDynamicVariable
     extends FirebaseTextComponent<FirebaseNameValueData>
 {
+
     public getType(): ComponentType {
         return ComponentType.VARIABLE;
     }
@@ -19,5 +20,11 @@ export default class FirebaseDynamicVariable
             id,
             Object.assign({}, this.getData())
         );
+    }
+
+    public static toDynamicVariableComponentData(
+        d: any
+    ): FirebaseNameValueData {
+        return FirebaseTextComponent.toNameValueComponentData(d);
     }
 }

@@ -29,4 +29,13 @@ export default class FirebaseStaticModel
             Object.assign({}, this.getData())
         );
     }
+
+    public static toStaticModelComponentData(d: any): FirebaseStaticModelData {
+        return {
+            x: Number(d.x),
+            y: Number(d.y),
+            modelId: String(d.modelId),
+            color: String(d.color)
+        };
+    }
 }

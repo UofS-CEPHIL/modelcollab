@@ -33,8 +33,8 @@ export default class StockPresentation
             value: stock,
             x: stock.getData().x,
             y: stock.getData().y,
-            width: theme.custom.maxgraph.stock.defaultWidthPx,
-            height: theme.custom.maxgraph.stock.defaultHeightPx,
+            width: stock.getData().width,
+            height: stock.getData().height,
             style: {
                 shape: "rectangle",
                 fillColor: theme.palette.canvas.main,

@@ -89,7 +89,7 @@ export default class ModelValidator {
     public static getStockErrors(cpt: FirebaseStock): string[] {
         return [
             ...this.getComponentNameErrors(cpt.getData().text),
-            ...this.getStockInitValueErrors(cpt.getData().initvalue)
+            ...this.getStockInitValueErrors(cpt.getData().value)
         ];
     }
 

@@ -30,6 +30,8 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
                     {
                         x: pos.x,
                         y: pos.y,
+                        width: theme.custom.maxgraph.cldVertex.defaultWidthPx,
+                        height: theme.custom.maxgraph.cldVertex.defaultHeightPx,
                         text: ""
                     }
                 ));

@@ -32,8 +32,8 @@ export default class CausalLoopVertexPresentation
             value: component,
             x: component.getData().x,
             y: component.getData().y,
-            width: theme.custom.maxgraph.cldVertex.defaultWidthPx,
-            height: theme.custom.maxgraph.cldVertex.defaultHeightPx,
+            width: component.getData().width,
+            height: component.getData().height,
             style: {
                 shape: "rectangle",
                 fillColor: theme.palette.canvas.main,

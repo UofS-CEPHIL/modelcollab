@@ -32,8 +32,8 @@ export default class ParameterPresentation
             id: param.getId(),
             value: param,
             position: [param.getData().x, param.getData().y],
-            width: theme.custom.maxgraph.textComponent.defaultWidthPx,
-            height: theme.custom.maxgraph.textComponent.defaultHeightPx,
+            width: param.getData().width,
+            height: param.getData().height,
             style: {
                 shape: "text",
                 fillColor: theme.palette.canvas.main,

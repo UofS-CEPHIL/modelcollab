@@ -1,5 +1,6 @@
 import FirebaseParameter from "../../../data/components/FirebaseParameter";
 import IdGenerator from "../../../IdGenerator";
+import { theme } from "../../../Themes";
 import DefaultBehaviour from "./DefaultBehaviour";
 
 export class ParameterModeBehaviour extends DefaultBehaviour {
@@ -7,7 +8,14 @@ export class ParameterModeBehaviour extends DefaultBehaviour {
         const newId = IdGenerator.generateUniqueId(this.getFirebaseState());
         const newParam = new FirebaseParameter(
             newId,
-            { x, y, value: "", text: "" }
+            {
+                x,
+                y,
+                value: "",
+                text: "",
+                width: theme.custom.maxgraph.textComponent.defaultWidthPx,
+                height: theme.custom.maxgraph.textComponent.defaultHeightPx,
+            }
         );
         this.getActions().addComponent(newParam);
     }
