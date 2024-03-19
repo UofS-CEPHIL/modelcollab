@@ -193,8 +193,10 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
         switch (c.getType()) {
             case ComponentType.CONNECTION:
                 return "Connection " + c.getId();
+            case ComponentType.CLD_LINK:
+                return "Link " + c.getId();
             default:
-                throw new Error("Invalid type for error: " + c.getType());
+                throw new Error("Invalid type: " + c.getType());
         }
     }
 
