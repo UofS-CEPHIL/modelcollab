@@ -2,6 +2,7 @@ import { Cell, EventSource, InternalMouseEvent, MouseListenerSet } from "@maxgra
 import FirebaseCausalLoopLink, { Polarity } from "../../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../../data/components/FirebaseCausalLoopVertex";
 import { FirebaseComponentBase } from "../../../data/components/FirebaseComponent";
+import FirebaseStickyNote from "../../../data/components/FirebaseStickyNote";
 import FirebaseTextComponent from "../../../data/components/FirebaseTextComponent";
 import IdGenerator from "../../../IdGenerator";
 import { theme } from "../../../Themes";
@@ -91,6 +92,16 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
                 }
                 break;
             case "r":
+                this.getActions().addComponent(new FirebaseStickyNote(
+                    IdGenerator.generateUniqueId(this.getFirebaseState()),
+                    {
+                        x: pos.x,
+                        y: pos.y,
+                        width: theme.custom.maxgraph.stickynote.defaultWidthPx,
+                        height: theme.custom.maxgraph.stickynote.defaultHeightPx,
+                        text: ""
+                    }
+                ));
         }
     }
 

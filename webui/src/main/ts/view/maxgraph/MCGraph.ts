@@ -39,6 +39,7 @@ export default abstract class MCGraph extends Graph {
 
         this.setAutoSizeCells(true);
         this.setAllowDanglingEdges(false);
+        this.setHtmlLabels(true);
 
         const selHandler =
             this.getPlugin("SelectionHandler") as SelectionHandler;

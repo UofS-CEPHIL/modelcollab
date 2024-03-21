@@ -8,6 +8,7 @@ import CausalLoopLinkPresentation from "./CausalLoopLinkPresentation";
 import CausalLoopVertexPresentation from "./CausalLoopVertexPresentation";
 import ComponentPresentation from "./ComponentPresentation";
 import PresentationGetter from "./PresentationGetter";
+import StickyNotePresentation from "./StickyNotePresentation";
 
 export default class CausalLoopPresentationGetter
     extends PresentationGetter
@@ -17,6 +18,7 @@ export default class CausalLoopPresentationGetter
     private static readonly PRESENTATIONS = {
         vertex: new CausalLoopVertexPresentation(),
         link: new CausalLoopLinkPresentation(),
+        stickynote: new StickyNotePresentation(),
     }
 
     public addComponent(
@@ -67,6 +69,8 @@ export default class CausalLoopPresentationGetter
                 return CausalLoopPresentationGetter.PRESENTATIONS.vertex;
             case ComponentType.CLD_LINK:
                 return CausalLoopPresentationGetter.PRESENTATIONS.link;
+            case ComponentType.STICKY_NOTE:
+                return CausalLoopPresentationGetter.PRESENTATIONS.stickynote;
             default:
                 throw new Error(
                     "No available presentation for type: " + component.getType()

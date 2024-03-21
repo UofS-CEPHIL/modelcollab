@@ -7,8 +7,10 @@ import FirebaseDynamicVariable from "./FirebaseDynamicVariable";
 import FirebaseFlow from "./FirebaseFlow";
 import FirebaseParameter from "./FirebaseParameter";
 import FirebaseStaticModel from "./FirebaseStaticModel";
+import FirebaseStickyNote from "./FirebaseStickyNote";
 import FirebaseStock from "./FirebaseStock";
 import FirebaseSumVariable from "./FirebaseSumVariable";
+import FirebaseTextComponent from "./FirebaseTextComponent";
 
 export function createFirebaseDataComponent(
     id: string,
@@ -80,6 +82,12 @@ export function createFirebaseDataComponent(
             component = new FirebaseCausalLoopLink(
                 id,
                 FirebaseCausalLoopLink.toCausalLoopLinkData(dataVal)
+            );
+            break;
+        case ComponentType.STICKY_NOTE.toString():
+            component = new FirebaseStickyNote(
+                id,
+                FirebaseTextComponent.toTextComponentData(dataVal)
             );
             break;
         default:

@@ -57,6 +57,12 @@ declare module '@mui/material/styles' {
                     endArrow: string,
                     fontSize: number,
                 },
+                stickynote: {
+                    color: string,
+                    strokeWidth: number,
+                    defaultHeightPx: number,
+                    defaultWidthPx: number,
+                },
                 textComponent: {
                     defaultWidthPx: number,
                     defaultHeightPx: number,
@@ -122,6 +128,12 @@ declare module '@mui/material/styles' {
                     edgeStyle?: string,
                     endArrow?: string,
                     fontSize?: number,
+                },
+                stickynote: {
+                    color?: string,
+                    strokeWidth?: number,
+                    defaultHeightPx?: number,
+                    defaultWidthPx?: number,
                 },
                 textComponent?: {
                     defaultWidthPx?: number,
@@ -218,6 +230,12 @@ export const theme = createTheme({
                 edgeStyle: "orthogonalEdgeStyle",
                 endArrow: "classic",
                 fontSize: 20,
+            },
+            stickynote: {
+                color: "rgba(243, 245, 39, 0.57)",
+                strokeWidth: 1,
+                defaultHeightPx: 120,
+                defaultWidthPx: 120,
             },
             textComponent: {
                 defaultWidthPx: 80,
