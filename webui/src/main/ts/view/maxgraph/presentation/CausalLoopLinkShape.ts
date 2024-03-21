@@ -4,26 +4,26 @@ import { Bezier } from "bezier-js";
 export default class CausalLoopLinkShape extends ConnectorShape {
 
     public getLabelBounds(defaultBounds: Rectangle): Rectangle {
+        const bounds = super.getLabelBounds(defaultBounds);
         if (this.points.length < 3 || this.points.includes(null)) {
-            return super.getLabelBounds(defaultBounds);
+            return bounds;
         }
         else {
             const middle = this.getMiddlePoint();
-            const width = defaultBounds.width;
-            const height = defaultBounds.height;
-
-            const newBounds = defaultBounds.clone();
-            newBounds.x = middle.x - (width / 2);
-            newBounds.y = middle.y - (height / 2);
+            const newBounds = bounds.clone();
+            newBounds.x = middle.x - (bounds.width / 2);
+            newBounds.y = middle.y - (bounds.height / 2);
             return newBounds;
         }
     }
 
     private getMiddlePoint(): Point {
+        // TODO this is slightly inaccurate when >3 control points
         const curves: Bezier[] = [];
         // Sliding window looking at 3 items at a time
         // Make a curve for each
-        for (var i = 0; i < this.points.length - 2; i += 2) {
+        var i: number;
+        for (i = 0; i < this.points.length - 2; i += 2) {
             curves.push(new Bezier(
                 // @ts-ignore points doesn't contain null -- checked above
                 this.points.slice(i, i + 3)

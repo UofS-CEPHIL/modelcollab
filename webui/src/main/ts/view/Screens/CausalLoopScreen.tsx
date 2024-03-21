@@ -86,6 +86,8 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
     protected makeGraph(): CausalLoopGraph {
         return new CausalLoopGraph(
             this.graphRef.current!,
+            this.props.firebaseDataModel,
+            this.props.modelUuid!,
             CausalLoopScreen.presentation,
             () => this.state.components,
             () => this.state.errors

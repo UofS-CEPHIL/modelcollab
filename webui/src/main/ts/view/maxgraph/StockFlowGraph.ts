@@ -6,6 +6,7 @@ import { FirebaseSubstitution } from "../../data/components/FirebaseSubstitution
 import ComponentType from "../../data/components/ComponentType";
 import MCGraph from "./MCGraph";
 import ComponentPresentation from "./presentation/ComponentPresentation";
+import FirebaseDataModel from "../../data/FirebaseDataModel";
 
 
 export default class StockFlowGraph extends MCGraph {
@@ -14,12 +15,21 @@ export default class StockFlowGraph extends MCGraph {
 
     public constructor(
         container: HTMLElement,
+        firebaseDataModel: FirebaseDataModel,
+        modelUuid: string,
         presentation: ComponentPresentation<FirebaseComponent>,
         getFirebaseState: () => FirebaseComponent[],
         loadStaticModelComponents: (name: string) => void,
         getErrors: () => ComponentErrors
     ) {
-        super(container, presentation, getFirebaseState, getErrors);
+        super(
+            container,
+            firebaseDataModel,
+            modelUuid,
+            presentation,
+            getFirebaseState,
+            getErrors
+        );
         this.loadStaticModelComponents = loadStaticModelComponents;
     }
 

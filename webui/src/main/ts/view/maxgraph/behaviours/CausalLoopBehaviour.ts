@@ -1,6 +1,8 @@
 import { Cell, EventSource, InternalMouseEvent, MouseListenerSet } from "@maxgraph/core";
 import FirebaseCausalLoopLink, { Polarity } from "../../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../../data/components/FirebaseCausalLoopVertex";
+import { FirebaseComponentBase } from "../../../data/components/FirebaseComponent";
+import FirebaseTextComponent from "../../../data/components/FirebaseTextComponent";
 import IdGenerator from "../../../IdGenerator";
 import { theme } from "../../../Themes";
 import DefaultBehaviour from "./DefaultBehaviour";
@@ -80,6 +82,12 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
                     this.getActions().updateComponent(
                         cell.getValue().withNextPolarity()
                     );
+                }
+                else if (
+                    cell
+                    && cell.getValue() instanceof FirebaseTextComponent
+                ) {
+                    this.getGraph().startEditingAtCell(cell)
                 }
                 break;
             case "r":

@@ -1,6 +1,7 @@
-import { Cell, CellRenderer, Graph, InternalMouseEvent, SelectionHandler, TooltipHandler } from "@maxgraph/core";
+import { Cell, CellEditorHandler, CellRenderer, EventObject, Graph, InternalEvent, InternalMouseEvent, Rectangle, SelectionHandler, TooltipHandler } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
+import FirebaseDataModel from "../../data/FirebaseDataModel";
 import { theme } from "../../Themes";
 import { ComponentErrors } from "../../validation/ModelValitador";
 import CausalLoopLinkShape from "./presentation/CausalLoopLinkShape";
@@ -9,9 +10,11 @@ import ComponentPresentation from "./presentation/ComponentPresentation";
 // Parent class for graphs in ModelCollab
 export default abstract class MCGraph extends Graph {
 
-    protected getFirebaseState: () => FirebaseComponent[];
+    protected getCurrentComponents: () => FirebaseComponent[];
     protected getErrors: () => ComponentErrors;
     protected presentation: ComponentPresentation<FirebaseComponent>;
+    protected firebaseDataModel: FirebaseDataModel;
+    protected readonly modelUuid: string;
 
     public abstract addComponent(
         c: FirebaseComponent,
@@ -21,14 +24,18 @@ export default abstract class MCGraph extends Graph {
 
     public constructor(
         container: HTMLElement,
+        firebaseDataModel: FirebaseDataModel,
+        modelUuid: string,
         presentation: ComponentPresentation<FirebaseComponent>,
-        getFirebaseState: () => FirebaseComponent[],
+        getCurrentComponents: () => FirebaseComponent[],
         getErrors: () => ComponentErrors
     ) {
         super(container);
         this.presentation = presentation;
-        this.getFirebaseState = getFirebaseState;
+        this.getCurrentComponents = getCurrentComponents;
         this.getErrors = getErrors;
+        this.firebaseDataModel = firebaseDataModel;
+        this.modelUuid = modelUuid;
 
         this.setAutoSizeCells(true);
         this.setAllowDanglingEdges(false);
@@ -43,6 +50,18 @@ export default abstract class MCGraph extends Graph {
         }
 
         this.setupTooltips();
+
+        this.addListener(
+            InternalEvent.CELLS_RESIZED,
+            (sender: EventSource, event: EventObject) => {
+                // TODO update cells if necessary
+                // TODO changes width -- shouldn't get smaller
+                const cells = event.getProperty("cells") as Cell[];
+                const bounds = event.getProperty("bounds") as Rectangle[];
+                console.log(cells)
+                console.log(bounds)
+            }
+        );
 
         //@ts-ignore
         CellRenderer.registerShape("cldLink", CausalLoopLinkShape);
@@ -65,7 +84,7 @@ export default abstract class MCGraph extends Graph {
     public getTooltipForCell = (cell: Cell) => {
         if (!cell.getId()) return "";
         const errs = this.getErrors()[cell.getId()!];
-        if (!errs) return "No errors found!";
+        if (!errs) return "";
 
         return errs.join('\n');
     }
@@ -115,8 +134,24 @@ export default abstract class MCGraph extends Graph {
         newValue: string,
         resize: boolean = false
     ) => {
+        var component = cell.getValue();
+        if (component instanceof FirebaseComponentBase) {
+            if (component.getData().text == undefined) {
+                throw new Error(
+                    "Editing text for invalid component type: "
+                    + component.getType()
+                );
+            }
+            component = component.withData({
+                ...component.getData(),
+                text: newValue
+            });
+            this.firebaseDataModel.updateComponent(this.modelUuid, component);
+        }
         // TODO
-        throw new Error("Not implemented");
+        // if (resize) {
+        //     this.cellSizeUpdated(cell, false);
+        // }
     }
 
     // Override

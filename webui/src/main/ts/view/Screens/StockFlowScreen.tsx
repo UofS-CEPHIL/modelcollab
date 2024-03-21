@@ -85,6 +85,8 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
     protected makeGraph(): StockFlowGraph {
         return new StockFlowGraph(
             this.graphRef.current!,
+            this.props.firebaseDataModel,
+            this.props.modelUuid!,
             StockFlowScreen.presentation,
             () => this.state.components,
             name => this.loadStaticModelInnerComponents(name),
