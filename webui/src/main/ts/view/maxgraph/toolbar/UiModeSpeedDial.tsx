@@ -7,6 +7,7 @@ import MediationIcon from '@mui/icons-material/Mediation';
 import OpenWithIcon from '@mui/icons-material/OpenWith';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import EditIcon from '@mui/icons-material/Edit';
 import React, { ReactElement } from "react";
 
 import { UiMode } from "../../../UiMode";
@@ -27,7 +28,7 @@ export default class UiModeSpeedDial extends React.Component<Props, State> {
         super(props);
         this.state = {
             open: false
-        }
+        };
     }
 
     public componentDidUpdate(oldProps: Props, oldState: State): void {
@@ -94,6 +95,10 @@ export default class UiModeSpeedDial extends React.Component<Props, State> {
                 return (<FontDownloadIcon />);
             case UiMode.STOCK:
                 return (<CheckBoxOutlineBlankIcon />);
+            case UiMode.EDIT:
+                return (<EditIcon />);
+            default:
+                throw new Error("Invalid mode: " + mode);
         }
     }
 }

@@ -14,6 +14,7 @@ import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/
 import MCGraph from "./MCGraph";
 import MCKeyHandler from "./MCKeyHandler";
 
+// TODO just bind all the keys and either have a function or don't
 export const BINDABLE_KEYS = "QWERASDF";
 
 export default class UserControls {

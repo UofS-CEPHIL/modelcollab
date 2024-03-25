@@ -23,7 +23,6 @@ export default class CausalLoopGraph extends MCGraph {
         oldComponents: FirebaseComponent[],
         errors: ComponentErrors
     ): void {
-        debugger;
         const findComponent = (id: string) =>
             newComponents.find(c => c.getId() === id)!;
 

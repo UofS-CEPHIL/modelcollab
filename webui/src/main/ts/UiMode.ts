@@ -6,7 +6,11 @@ export enum UiMode {
     DYN_VARIABLE = "Dynamic Variable",
     SUM_VARIABLE = "Sum Variable",
     CONNECT = "Connect",
-    IDENTIFY = "Identify"
+    IDENTIFY = "Identify",
+    EDIT = "Edit",
+    STICKY_NOTE = "Sticky Note",
+    LOOP_ICON = "Loop Icon",
+    DELETE = "Delete"
 };
 
 export function modeFromString(s: string): UiMode | null {
@@ -29,6 +33,14 @@ export function modeFromString(s: string): UiMode | null {
             return UiMode.CONNECT;
         case "IDENTIFY":
             return UiMode.IDENTIFY;
+        case "EDIT":
+            return UiMode.EDIT;
+        case "STICKY NOTE":
+            return UiMode.STICKY_NOTE;
+        case "LOOP ICON":
+            return UiMode.LOOP_ICON;
+        case "DELETE":
+            return UiMode.DELETE;
         default:
             return null;
     }
