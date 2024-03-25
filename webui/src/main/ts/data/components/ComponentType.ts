@@ -9,7 +9,8 @@ enum ComponentType {
     SUBSTITUTION = "substitution",
     STICKY_NOTE = "sticky_note",
     CLD_VERTEX = "cld_vertex",
-    CLD_LINK = "cld_link,"
+    CLD_LINK = "cld_link",
+    LOOP_ICON = "loop_icon",
 };
 
 export default ComponentType;

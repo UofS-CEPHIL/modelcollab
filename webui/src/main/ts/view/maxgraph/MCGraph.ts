@@ -6,6 +6,7 @@ import { theme } from "../../Themes";
 import { ComponentErrors } from "../../validation/ModelValitador";
 import CausalLoopLinkShape from "./presentation/CausalLoopLinkShape";
 import ComponentPresentation from "./presentation/ComponentPresentation";
+import LoopIconShape from "./presentation/LoopIconShape";
 
 // Parent class for graphs in ModelCollab
 export default abstract class MCGraph extends Graph {
@@ -52,20 +53,11 @@ export default abstract class MCGraph extends Graph {
 
         this.setupTooltips();
 
-        this.addListener(
-            InternalEvent.CELLS_RESIZED,
-            (sender: EventSource, event: EventObject) => {
-                // TODO update cells if necessary
-                // TODO changes width -- shouldn't get smaller
-                const cells = event.getProperty("cells") as Cell[];
-                const bounds = event.getProperty("bounds") as Rectangle[];
-                console.log(cells)
-                console.log(bounds)
-            }
-        );
-
+        // TODO make constants for these
         //@ts-ignore
         CellRenderer.registerShape("cldLink", CausalLoopLinkShape);
+        //@ts-ignore
+        CellRenderer.registerShape("loopIcon", LoopIconShape);
     }
 
     private setupTooltips(): void {

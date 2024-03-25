@@ -1,7 +1,7 @@
 import { Cell } from "@maxgraph/core";
 import FirebasePointComponent from "../../../data/components/FirebasePointComponent";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
-import StockFlowGraph from "../StockFlowGraph";
+import MCGraph from "../MCGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
 export default abstract class PointComponentPresentation
@@ -10,7 +10,7 @@ export default abstract class PointComponentPresentation
 {
     public abstract addComponent(
         component: DataType,
-        graph: StockFlowGraph,
+        graph: MCGraph,
         parent?: Cell,
         loadStaticModelComponents?: (name: string) => void,
         movable?: boolean
@@ -19,9 +19,10 @@ export default abstract class PointComponentPresentation
     public updateCell(
         component: DataType,
         cell: Cell,
-        graph: StockFlowGraph,
+        graph: MCGraph,
         _: LoadedStaticModel[]
     ): void {
+        cell.setValue(component);
         const newGeo = cell.getGeometry()!.clone();
         newGeo.x = component.getData().x;
         newGeo.y = component.getData().y;
@@ -31,7 +32,7 @@ export default abstract class PointComponentPresentation
     public updateComponent(
         component: DataType,
         cell: Cell,
-        _: StockFlowGraph
+        _: MCGraph
     ): DataType {
         const geo = cell.getGeometry()!;
         return component.withData(

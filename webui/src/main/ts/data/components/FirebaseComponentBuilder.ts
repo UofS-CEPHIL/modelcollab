@@ -5,6 +5,7 @@ import FirebaseComponent from "./FirebaseComponent";
 import FirebaseConnection from "./FirebaseConnection";
 import FirebaseDynamicVariable from "./FirebaseDynamicVariable";
 import FirebaseFlow from "./FirebaseFlow";
+import FirebaseLoopIcon from "./FirebaseLoopIcon";
 import FirebaseParameter from "./FirebaseParameter";
 import FirebaseStaticModel from "./FirebaseStaticModel";
 import FirebaseStickyNote from "./FirebaseStickyNote";
@@ -34,14 +35,12 @@ export function createFirebaseDataComponent(
                 FirebaseStock.toStockComponentData(dataVal)
             );
             break;
-
         case ComponentType.FLOW.toString():
             component = new FirebaseFlow(
                 id,
                 FirebaseFlow.toFlowComponentData(dataVal)
             );
             break;
-
         case ComponentType.PARAMETER.toString():
             component = new FirebaseParameter(
                 id,
@@ -88,6 +87,12 @@ export function createFirebaseDataComponent(
             component = new FirebaseStickyNote(
                 id,
                 FirebaseTextComponent.toTextComponentData(dataVal)
+            );
+            break;
+        case ComponentType.LOOP_ICON.toString():
+            component = new FirebaseLoopIcon(
+                id,
+                FirebaseLoopIcon.toLoopIconData(dataVal)
             );
             break;
         default:

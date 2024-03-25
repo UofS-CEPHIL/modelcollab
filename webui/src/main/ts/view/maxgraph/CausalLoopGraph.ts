@@ -1,6 +1,7 @@
 import { Cell, CellState, EdgeHandler, Rectangle, RectangleShape } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../data/components/FirebaseCausalLoopLink";
 import FirebaseComponent from "../../data/components/FirebaseComponent";
+import FirebaseLoopIcon from "../../data/components/FirebaseLoopIcon";
 import { ComponentErrors } from "../../validation/ModelValitador";
 import MCGraph from "./MCGraph";
 
@@ -22,6 +23,7 @@ export default class CausalLoopGraph extends MCGraph {
         oldComponents: FirebaseComponent[],
         errors: ComponentErrors
     ): void {
+        debugger;
         const findComponent = (id: string) =>
             newComponents.find(c => c.getId() === id)!;
 
@@ -56,7 +58,8 @@ export default class CausalLoopGraph extends MCGraph {
     // Returns the string representation of a particular cell
     public convertValueToString(cell: Cell): string {
         const val = cell.getValue();
-        if (val instanceof FirebaseCausalLoopLink) {
+        // TODO do this with polymorphism
+        if (val instanceof FirebaseCausalLoopLink || val instanceof FirebaseLoopIcon) {
             return val.getData().polarity;
         }
         else {

@@ -1,4 +1,3 @@
-import TextComponentPresentation from "../../view/maxgraph/presentation/TextComponentPresentation";
 import ComponentType from "./ComponentType";
 import FirebaseTextComponent, { FirebaseTextData } from "./FirebaseTextComponent";
 

@@ -71,6 +71,12 @@ declare module '@mui/material/styles' {
                 canvas: {
                     borderWidthPx: number
                 },
+                loopIcon: {
+                    strokeWidth: number,
+                    fontSize: number,
+                    arrowHeadWidth: number,
+                    arrowHeadHeight: number,
+                },
             },
             modal: {
                 position: string,
@@ -142,6 +148,12 @@ declare module '@mui/material/styles' {
                 },
                 canvas?: {
                     borderWidthPx?: number
+                },
+                loopIcon?: {
+                    strokeWidth?: number,
+                    fontSize?: number,
+                    arrowHeadWidth?: number,
+                    arrowHeadHeight?: number,
                 },
             },
             modal?: {
@@ -244,6 +256,12 @@ export const theme = createTheme({
             },
             canvas: {
                 borderWidthPx: 1
+            },
+            loopIcon: {
+                strokeWidth: 2,
+                fontSize: 30,
+                arrowHeadWidth: 10,
+                arrowHeadHeight: 10,
             }
         },
         modal: {

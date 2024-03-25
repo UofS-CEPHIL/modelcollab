@@ -7,6 +7,7 @@ import StockFlowGraph from "../StockFlowGraph";
 import CausalLoopLinkPresentation from "./CausalLoopLinkPresentation";
 import CausalLoopVertexPresentation from "./CausalLoopVertexPresentation";
 import ComponentPresentation from "./ComponentPresentation";
+import LoopIconPresentation from "./LoopIconPresentation";
 import PresentationGetter from "./PresentationGetter";
 import StickyNotePresentation from "./StickyNotePresentation";
 
@@ -19,6 +20,7 @@ export default class CausalLoopPresentationGetter
         vertex: new CausalLoopVertexPresentation(),
         link: new CausalLoopLinkPresentation(),
         stickynote: new StickyNotePresentation(),
+        icon: new LoopIconPresentation()
     }
 
     public addComponent(
@@ -71,6 +73,8 @@ export default class CausalLoopPresentationGetter
                 return CausalLoopPresentationGetter.PRESENTATIONS.link;
             case ComponentType.STICKY_NOTE:
                 return CausalLoopPresentationGetter.PRESENTATIONS.stickynote;
+            case ComponentType.LOOP_ICON:
+                return CausalLoopPresentationGetter.PRESENTATIONS.icon;
             default:
                 throw new Error(
                     "No available presentation for type: " + component.getType()

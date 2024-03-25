@@ -1,29 +1,29 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
-import FirebaseCausalLoopVertex from "../../../data/components/FirebaseCausalLoopVertex";
+import FirebaseLoopIcon from "../../../data/components/FirebaseLoopIcon";
 import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
-import TextComponentPresentation from "./TextComponentPresentation";
+import RectangleComponentPresentation from "./RectangleComponentPresentation";
 
-export default class CausalLoopVertexPresentation
-    extends TextComponentPresentation<FirebaseCausalLoopVertex> {
-
+export default class LoopIconPresentation
+    extends RectangleComponentPresentation<FirebaseLoopIcon>
+{
     public addComponent(
-        component: FirebaseCausalLoopVertex,
+        component: FirebaseLoopIcon,
         graph: MCGraph,
         parent: Cell = graph.getDefaultParent(),
         loadStaticModelComponents?: ((name: string) => void),
         movable: boolean = true
     ): Cell | Cell[] {
-        return graph.insertVertex(this.getVertexArgs(
+        return graph.insertVertex(this.getIconArgs(
             parent,
             component,
             movable
         ));
     }
 
-    private getVertexArgs(
+    public getIconArgs(
         parent: Cell,
-        component: FirebaseCausalLoopVertex,
+        component: FirebaseLoopIcon,
         movable: boolean
     ): VertexParameters {
         return {
@@ -35,17 +35,16 @@ export default class CausalLoopVertexPresentation
             width: component.getData().width,
             height: component.getData().height,
             style: {
-                shape: "rectangle",
-                fillColor: theme.palette.canvas.main,
-                rounded: true,
-                strokeWidth: theme.custom.maxgraph.cldVertex.strokeWidth,
-                strokeColor: theme.palette.canvas.contrastText,
-                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
-                fontColor: theme.palette.canvas.contrastText,
+                shape: "loopIcon",
                 movable,
-                editable: true,
+                fillColor: theme.palette.canvas.main,
+                strokeWidth: theme.custom.maxgraph.loopIcon.strokeWidth,
+                strokeColor: theme.palette.canvas.contrastText,
+                fontColor: theme.palette.canvas.contrastText,
+                fontSize: theme.custom.maxgraph.loopIcon.fontSize,
+                resizable: true,
+                editable: false,
             }
         };
     }
-
 }

@@ -78,7 +78,6 @@ export default class CausalLoopLinkPresentation
                 fontStyle: 3,
                 labelBackgroundColor: theme.palette.background.default,
                 labelWidth: 20,
-                //                labelBorderColor: "black"
             }
         };
     }

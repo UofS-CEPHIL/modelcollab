@@ -2,7 +2,6 @@ import {
     Cell,
     EventObject,
     InternalEvent,
-    KeyHandler,
     Point,
     UndoManager
 } from "@maxgraph/core";
@@ -15,7 +14,7 @@ import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/
 import MCGraph from "./MCGraph";
 import MCKeyHandler from "./MCKeyHandler";
 
-export const BINDABLE_KEYS = "QWER";
+export const BINDABLE_KEYS = "QWERASDF";
 
 export default class UserControls {
 
