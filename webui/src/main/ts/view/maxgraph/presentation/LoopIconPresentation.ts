@@ -2,6 +2,7 @@ import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebaseLoopIcon from "../../../data/components/FirebaseLoopIcon";
 import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
+import LoopIconShape from "./LoopIconShape";
 import RectangleComponentPresentation from "./RectangleComponentPresentation";
 
 export default class LoopIconPresentation
@@ -35,7 +36,7 @@ export default class LoopIconPresentation
             width: component.getData().width,
             height: component.getData().height,
             style: {
-                shape: "loopIcon",
+                shape: LoopIconShape.LOOP_ICON_NAME,
                 movable,
                 fillColor: theme.palette.canvas.main,
                 strokeWidth: theme.custom.maxgraph.loopIcon.strokeWidth,

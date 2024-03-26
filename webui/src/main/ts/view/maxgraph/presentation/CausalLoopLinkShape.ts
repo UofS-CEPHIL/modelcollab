@@ -3,6 +3,8 @@ import { Bezier } from "bezier-js";
 
 export default class CausalLoopLinkShape extends ConnectorShape {
 
+    public static readonly CLD_LINK_NAME = "cldLink";
+
     public getLabelBounds(defaultBounds: Rectangle): Rectangle {
         const bounds = super.getLabelBounds(defaultBounds);
         if (this.points.length < 3 || this.points.includes(null)) {

@@ -3,6 +3,8 @@ import { theme } from "../../../Themes";
 
 export default class LoopIconShape extends Shape {
 
+    public static readonly LOOP_ICON_NAME = "loopIcon";
+
     public constructor(
         bounds: Rectangle,
         stroke: ColorValue,

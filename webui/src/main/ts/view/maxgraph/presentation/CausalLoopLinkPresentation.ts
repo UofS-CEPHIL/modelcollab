@@ -3,6 +3,7 @@ import FirebaseCausalLoopLink from "../../../data/components/FirebaseCausalLoopL
 import { theme } from "../../../Themes";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import MCGraph from "../MCGraph";
+import CausalLoopLinkShape from "./CausalLoopLinkShape";
 import ComponentPresentation from "./ComponentPresentation";
 
 export default class CausalLoopLinkPresentation
@@ -65,7 +66,7 @@ export default class CausalLoopLinkPresentation
             source,
             target,
             style: {
-                shape: 'cldLink',
+                shape: CausalLoopLinkShape.CLD_LINK_NAME,
                 endArrow: theme.custom.maxgraph.cldLink.endArrow,
                 strokeColor: theme.palette.primary.main,
                 strokeWidth: theme.custom.maxgraph.cldLink.strokeWidthPx,
@@ -81,5 +82,4 @@ export default class CausalLoopLinkPresentation
             }
         };
     }
-
 }

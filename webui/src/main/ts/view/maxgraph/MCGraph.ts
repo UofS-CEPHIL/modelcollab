@@ -53,11 +53,16 @@ export default abstract class MCGraph extends Graph {
 
         this.setupTooltips();
 
-        // TODO make constants for these
-        //@ts-ignore
-        CellRenderer.registerShape("cldLink", CausalLoopLinkShape);
-        //@ts-ignore
-        CellRenderer.registerShape("loopIcon", LoopIconShape);
+        CellRenderer.registerShape(
+            CausalLoopLinkShape.CLD_LINK_NAME,
+            //@ts-ignore
+            CausalLoopLinkShape
+        );
+        CellRenderer.registerShape(
+            LoopIconShape.LOOP_ICON_NAME,
+            //@ts-ignore
+            LoopIconShape
+        );
     }
 
     private setupTooltips(): void {
