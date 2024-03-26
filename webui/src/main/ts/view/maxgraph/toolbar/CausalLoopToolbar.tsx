@@ -21,23 +21,25 @@ export default class CausalLoopToolbar extends CanvasToolbar<Props, State> {
         return [
             <MenuItem
                 key={0}
-                onClick={() =>
-                    !this.isHotkeyUi() && this.props.changeMode(UiMode.NONE)
-                }
+                onClick={() => this.swapUiMode()}
                 selected={this.props.uiMode === UiMode.NONE}
             >
                 Hotkey UI
             </MenuItem>,
             <MenuItem
                 key={1}
-                onClick={() =>
-                    this.isHotkeyUi() && this.props.changeMode(UiMode.STOCK)
-                }
+                onClick={() => this.swapUiMode()}
                 selected={this.props.uiMode !== UiMode.NONE}
             >
                 Mode Based UI
             </ MenuItem>
         ];
+    }
+
+    private swapUiMode(): void {
+        const newMode = this.isHotkeyUi() ? UiMode.STOCK : UiMode.NONE;
+        this.props.changeMode(newMode);
+        this.resetFocus();
     }
 
     private isHotkeyUi(): boolean {

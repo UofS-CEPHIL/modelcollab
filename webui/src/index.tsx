@@ -5,6 +5,9 @@ import App from './main/ts/App';
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
 );
+
+document.body.setAttribute("tabindex", "0");
+
 root.render(
     <React.StrictMode>
         <App />

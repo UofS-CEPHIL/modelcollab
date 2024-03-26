@@ -56,7 +56,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
 
     public render(): ReactElement {
         return (
-            <AppBar position={"static"} >
+            <AppBar id={"app-bar"} position={"static"} >
                 <Toolbar>
                     <CatchingPokemonIcon
                         aria-label="mc-logo"
@@ -161,9 +161,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     MenuListProps={{
                         "aria-labelledby": CanvasToolbar.ERRORS_BUTTON_ID
                     }}
-                    onClose={() =>
-                        this.setState(this.withMenusClosed(this.state))
-                    }
+            onClose={() => this.closeAllMenus()}
                 >
                     {this.makeErrorEntries(errors)}
                 </Menu>
@@ -174,9 +172,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     MenuListProps={{
                         "aria-labelledby": CanvasToolbar.MODEL_ACTIONS_BUTTON_ID
                     }}
-                    onClose={() =>
-                        this.setState(this.withMenusClosed(this.state))
-                    }
+                    onClose={() => this.closeAllMenus()}
                 >
                     {this.makeModelActionsOptions()}
                 </Menu>
@@ -205,6 +201,19 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
             this.props.components
                 .map(c => [c.getId(), this.getComponentName(c)])
         );
+    }
+
+    /**
+     * Take the focus off of the current element (probably a drop-down menu)
+     * and set focus to the document body / graph
+     */
+    protected resetFocus(): void {
+        setTimeout(() => document.body.focus());
+    }
+
+    protected closeAllMenus(): void {
+        this.setState(this.withMenusClosed(this.state));
+        this.resetFocus();
     }
 
     private makeErrorEntries(errors: ComponentErrors): ReactElement[] {
