@@ -1,6 +1,7 @@
 import { Cell } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
+import FirebaseLoopIcon from "../../../../data/components/FirebaseLoopIcon";
 import FirebaseTextComponent from "../../../../data/components/FirebaseTextComponent";
 import ChangeModeOnButtonPressBehaviour from "./ChangeModeOnButtonPressBehaviour";
 
@@ -10,7 +11,10 @@ export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
         console.log("edit at click");
         const cell = this.getGraph().getCellAt(x, y);
         if (cell && cell.getValue() instanceof FirebaseComponentBase<any>) {
-            if (cell.getValue() instanceof FirebaseCausalLoopLink) {
+            if (
+                cell.getValue() instanceof FirebaseCausalLoopLink
+                || cell.getValue() instanceof FirebaseLoopIcon
+            ) {
                 this.getActions().updateComponent(
                     cell.getValue().withNextPolarity()
                 );
@@ -29,7 +33,10 @@ export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
         ) {
             // TODO doesn't work -- requires double-click
             const cell = selection[0];
-            if (cell.getValue() instanceof FirebaseCausalLoopLink) {
+            if (
+                cell.getValue() instanceof FirebaseCausalLoopLink
+                || cell.getValue() instanceof FirebaseLoopIcon
+            ) {
                 this.getActions().updateComponent(
                     cell.getValue().withNextPolarity()
                 );

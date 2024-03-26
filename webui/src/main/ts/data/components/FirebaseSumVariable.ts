@@ -1,3 +1,4 @@
+import { theme } from "../../Themes";
 import ComponentType from "./ComponentType";
 import FirebaseTextComponent, {
     FirebaseTextData
@@ -16,6 +17,23 @@ export default class FirebaseSumVariable
 
     public withId(id: string): FirebaseSumVariable {
         return new FirebaseSumVariable(id, Object.assign({}, this.getData()));
+    }
+
+    public static createNew(
+        id: string,
+        x: number,
+        y: number
+    ): FirebaseSumVariable {
+        return new FirebaseSumVariable(
+            id,
+            {
+                x,
+                y,
+                text: "",
+                width: theme.custom.maxgraph.stock.defaultWidthPx,
+                height: theme.custom.maxgraph.stock.defaultHeightPx,
+            }
+        );
     }
 
     public static toSumVariableComponentData(d: any): FirebaseTextData {

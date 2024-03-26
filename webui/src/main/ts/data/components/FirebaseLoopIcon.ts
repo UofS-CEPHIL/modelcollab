@@ -1,3 +1,4 @@
+import { theme } from "../../Themes";
 import ComponentType from "./ComponentType";
 import { Polarity } from "./FirebaseCausalLoopLink";
 import FirebaseRectangleComponent, { FirebaseRectangleData } from "./FirebaseRectangleComponent";
@@ -45,7 +46,24 @@ export default class FirebaseLoopIcon extends
         return this.withData({ ...this.getData(), polarity: newPolarity });
     }
 
-    static toLoopIconData(data: any): FirebaseLoopIconData {
+    public static createNew(
+        id: string,
+        x: number,
+        y: number
+    ): FirebaseLoopIcon {
+        return new FirebaseLoopIcon(
+            id,
+            {
+                x,
+                y,
+                width: theme.custom.maxgraph.loopIcon.defaultWidthPx,
+                height: theme.custom.maxgraph.loopIcon.defaultWidthPx,
+                polarity: Polarity.POSITIVE
+            }
+        );
+    }
+
+    public static toLoopIconData(data: any): FirebaseLoopIconData {
         return {
             x: data.x,
             y: data.y,

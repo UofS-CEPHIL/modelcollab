@@ -18,14 +18,15 @@ export default class CausalLoopLinkBehaviour
             const keydownCell = this.getKeydownCell();
             if (keydownCell) {
                 if (cell.getId() !== keydownCell.getId()) {
-                    this.getActions().addComponent(new FirebaseCausalLoopLink(
-                        IdGenerator.generateUniqueId(this.getFirebaseState()),
-                        {
-                            from: keydownCell.getId()!,
-                            to: cell.getId()!,
-                            polarity: Polarity.POSITIVE
-                        }
-                    ));
+                    this.getActions().addComponent(
+                        FirebaseCausalLoopLink.createNew(
+                            IdGenerator.generateUniqueId(
+                                this.getFirebaseState()
+                            ),
+                            keydownCell.getId()!,
+                            cell.getId()!
+                        )
+                    );
                     this.setKeydownCell(null);
                 }
             }
@@ -48,14 +49,15 @@ export default class CausalLoopLinkBehaviour
             const keydownCell = this.getKeydownCell();
             if (keydownCell) {
                 if (cell.getId() !== keydownCell.getId()) {
-                    this.getActions().addComponent(new FirebaseCausalLoopLink(
-                        IdGenerator.generateUniqueId(this.getFirebaseState()),
-                        {
-                            from: keydownCell.getId()!,
-                            to: cell.getId()!,
-                            polarity: Polarity.POSITIVE
-                        }
-                    ));
+                    this.getActions().addComponent(
+                        FirebaseCausalLoopLink.createNew(
+                            IdGenerator.generateUniqueId(
+                                this.getFirebaseState()
+                            ),
+                            keydownCell.getId()!,
+                            cell.getId()!
+                        )
+                    );
                     this.setKeydownCell(null);
                 }
             }

@@ -35,7 +35,7 @@ export default class FirebaseFlow
         return this.getData().text;
     }
 
-    static toFlowComponentData(data: any): FirebaseFlowData {
+    public static toFlowComponentData(data: any): FirebaseFlowData {
         const d: FirebaseFlowData = {
             from: String(data.from),
             to: String(data.to),
@@ -43,6 +43,22 @@ export default class FirebaseFlow
             equation: String(data.equation)
         };
         return d;
+    }
+
+    public static createNew(
+        id: string,
+        from: string,
+        to: string
+    ): FirebaseFlow {
+        return new FirebaseFlow(
+            id,
+            {
+                from,
+                to,
+                text: "",
+                equation: "",
+            }
+        );
     }
 
     public static makePoint(x: number, y: number): string {

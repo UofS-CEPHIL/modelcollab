@@ -1,3 +1,4 @@
+import { theme } from "../../Themes";
 import ComponentType from "./ComponentType";
 import FirebaseTextComponent, { FirebaseNameValueData } from "./FirebaseTextComponent";
 
@@ -18,6 +19,20 @@ export default class FirebaseStock
 
     public withId(id: string): FirebaseStock {
         return new FirebaseStock(id, Object.assign({}, this.getData()));
+    }
+
+    public static createNew(id: string, x: number, y: number): FirebaseStock {
+        return new FirebaseStock(
+            id,
+            {
+                x,
+                y,
+                width: theme.custom.maxgraph.stock.defaultWidthPx,
+                height: theme.custom.maxgraph.stock.defaultHeightPx,
+                value: "",
+                text: ""
+            }
+        );
     }
 
     public static toStockComponentData(d: any): FirebaseNameValueData {

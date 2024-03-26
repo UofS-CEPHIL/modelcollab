@@ -1,22 +1,15 @@
 import FirebaseParameter from "../../../data/components/FirebaseParameter";
 import IdGenerator from "../../../IdGenerator";
-import { theme } from "../../../Themes";
 import DefaultBehaviour from "./DefaultBehaviour";
 
 export class ParameterModeBehaviour extends DefaultBehaviour {
     public canvasClicked(x: number, y: number): void {
-        const newId = IdGenerator.generateUniqueId(this.getFirebaseState());
-        const newParam = new FirebaseParameter(
-            newId,
-            {
+        this.getActions().addComponent(
+            FirebaseParameter.createNew(
+                IdGenerator.generateUniqueId(this.getFirebaseState()),
                 x,
-                y,
-                value: "",
-                text: "",
-                width: theme.custom.maxgraph.textComponent.defaultWidthPx,
-                height: theme.custom.maxgraph.textComponent.defaultHeightPx,
-            }
+                y
+            )
         );
-        this.getActions().addComponent(newParam);
     }
 }

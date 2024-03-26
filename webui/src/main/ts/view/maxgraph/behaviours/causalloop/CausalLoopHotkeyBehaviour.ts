@@ -30,16 +30,13 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         var cell: Cell | null = null;
         switch (e.key) {
             case "q":
-                this.getActions().addComponent(new FirebaseCausalLoopVertex(
-                    IdGenerator.generateUniqueId(this.getFirebaseState()),
-                    {
-                        x: pos.x,
-                        y: pos.y,
-                        width: theme.custom.maxgraph.cldVertex.defaultWidthPx,
-                        height: theme.custom.maxgraph.cldVertex.defaultHeightPx,
-                        text: ""
-                    }
-                ));
+                this.getActions().addComponent(
+                    FirebaseCausalLoopVertex.createNew(
+                        IdGenerator.generateUniqueId(this.getFirebaseState()),
+                        pos.x,
+                        pos.y
+                    )
+                );
                 break;
             case "w":
                 const keydownCell = this.getGraph().getCellAt(pos.x, pos.y);
@@ -101,28 +98,19 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 }
                 break;
             case "r":
-                // TODO make "new component" in firebase classes for this
-                this.getActions().addComponent(new FirebaseStickyNote(
-                    IdGenerator.generateUniqueId(this.getFirebaseState()),
-                    {
-                        x: pos.x,
-                        y: pos.y,
-                        width: theme.custom.maxgraph.stickynote.defaultWidthPx,
-                        height: theme.custom.maxgraph.stickynote.defaultHeightPx,
-                        text: ""
-                    }
-                ));
+                this.getActions().addComponent(
+                    FirebaseStickyNote.createNew(
+                        IdGenerator.generateUniqueId(this.getFirebaseState()),
+                        pos.x,
+                        pos.y
+                    )
+                );
                 break;
             case "a":
-                this.getActions().addComponent(new FirebaseLoopIcon(
+                this.getActions().addComponent(FirebaseLoopIcon.createNew(
                     IdGenerator.generateUniqueId(this.getFirebaseState()),
-                    {
-                        x: pos.x,
-                        y: pos.y,
-                        width: 50,
-                        height: 50,
-                        polarity: Polarity.POSITIVE
-                    }
+                    pos.x,
+                    pos.y
                 ));
                 break;
             case "s":
@@ -140,7 +128,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         const pos = this.getCursorPosition();
         switch (e.key) {
             case "w":
-                // Clean up the listeners and temp cells
+                // TODO Clean up the listeners and temp cells
                 if (this.mouseListener) {
                     console.log("removing mouse listener");
                     this.getGraph().removeMouseListener(this.mouseListener);
@@ -160,14 +148,14 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 const cell1 = this.getKeydownCell();
                 const cell2 = this.getGraph().getCellAt(pos.x, pos.y);
                 if (cell1 && cell2 && cell1.getId() !== cell2.getId()) {
-                    this.getActions().addComponent(new FirebaseCausalLoopLink(
-                        IdGenerator.generateUniqueId(this.getFirebaseState()),
-                        {
-                            from: cell1.getId()!,
-                            to: cell2.getId()!,
-                            polarity: Polarity.POSITIVE
-                        }
-                    ));
+                    this.getActions().addComponent(
+                        FirebaseCausalLoopLink.createNew(
+                            IdGenerator.generateUniqueId(
+                                this.getFirebaseState()
+                            ),
+                            cell1.getId()!,
+                            cell2.getId()!,
+                        ));
                 }
                 break;
 

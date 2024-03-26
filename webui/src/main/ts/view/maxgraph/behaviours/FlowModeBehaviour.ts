@@ -46,11 +46,13 @@ export default class FlowModeBehaviour extends ArrowBehaviour {
         var fromId: string = getStringRepresentation(source);
         var toId: string = getStringRepresentation(target);
 
-        const newFlow = new FirebaseFlow(
-            IdGenerator.generateUniqueId(this.getFirebaseState()),
-            { from: fromId, to: toId, text: "Flow", equation: "" }
+        this.getActions().addComponent(
+            FirebaseFlow.createNew(
+                IdGenerator.generateUniqueId(this.getFirebaseState()),
+                fromId,
+                toId
+            )
         );
-        this.getActions().addComponent(newFlow);
     }
 
     private isCellStock(cell: Cell): boolean {

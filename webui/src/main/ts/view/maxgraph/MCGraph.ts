@@ -204,7 +204,6 @@ export default abstract class MCGraph extends Graph {
                         },
                         [cell]
                     );
-                    // TODO show tooltips
                 }
                 else if (!messages && isError) {
                     this.setCellStyle(

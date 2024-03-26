@@ -1,5 +1,4 @@
 import FirebaseDynamicVariable from "../../../data/components/FirebaseDynamicVariable";
-import { theme } from "../../../Themes";
 import IdGenerator from "../../../IdGenerator";
 import DefaultBehaviour from "./DefaultBehaviour";
 
@@ -12,19 +11,13 @@ export default class DynamicVariableModeBehaviour extends DefaultBehaviour {
     public static readonly DEFAULT_FONT_SIZE = 14;
 
     public canvasClicked(x: number, y: number): void {
-        const newId = IdGenerator.generateUniqueId(this.getFirebaseState());
-        const newVar = new FirebaseDynamicVariable(
-            newId,
-            {
+        this.getActions().addComponent(
+            FirebaseDynamicVariable.createNew(
+                IdGenerator.generateUniqueId(this.getFirebaseState()),
                 x,
-                y,
-                width: theme.custom.maxgraph.textComponent.defaultWidthPx,
-                height: theme.custom.maxgraph.textComponent.defaultHeightPx,
-                value: "",
-                text: ""
-            }
+                y
+            )
         );
-        this.getActions().addComponent(newVar);
     }
 
 

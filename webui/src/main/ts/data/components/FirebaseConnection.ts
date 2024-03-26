@@ -35,6 +35,22 @@ export default class FirebaseConnection
         return null;
     }
 
+    public static createNew(
+        id: string,
+        from: string,
+        to: string
+    ): FirebaseConnection {
+        return new FirebaseConnection(
+            id,
+            {
+                from,
+                to,
+                handleXOffset: 0,
+                handleYOffset: 0
+            }
+        );
+    }
+
     public static toConnectionComponentData(data: any): FirebaseConnectionData {
         const d: FirebaseConnectionData = {
             from: data.from.toString(),

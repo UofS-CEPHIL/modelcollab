@@ -1,3 +1,4 @@
+import IdGenerator from "../../IdGenerator";
 import ComponentType from "./ComponentType";
 import { FirebaseComponentBase, FirebasePointerData } from "./FirebaseComponent";
 
@@ -79,6 +80,21 @@ export default class FirebaseCausalLoopLink
             ...this.getData(),
             polarity: nextPolarity(this.getData().polarity)
         });
+    }
+
+    public static createNew(
+        id: string,
+        from: string,
+        to: string
+    ): FirebaseCausalLoopLink {
+        return new FirebaseCausalLoopLink(
+            id,
+            {
+                from,
+                to,
+                polarity: Polarity.POSITIVE
+            }
+        );
     }
 
     public static toCausalLoopLinkData(data: any): FirebaseCausalLoopLinkData {

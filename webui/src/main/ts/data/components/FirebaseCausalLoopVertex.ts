@@ -1,3 +1,4 @@
+import { theme } from "../../Themes";
 import ComponentType from "./ComponentType";
 import FirebaseTextComponent, { FirebaseTextData } from "./FirebaseTextComponent";
 
@@ -17,6 +18,23 @@ export default class FirebaseCausalLoopVertex
         return new FirebaseCausalLoopVertex(
             id,
             Object.assign({}, this.getData())
+        );
+    }
+
+    public static createNew(
+        id: string,
+        x: number,
+        y: number
+    ): FirebaseCausalLoopVertex {
+        return new FirebaseCausalLoopVertex(
+            id,
+            {
+                x,
+                y,
+                width: theme.custom.maxgraph.cldVertex.defaultWidthPx,
+                height: theme.custom.maxgraph.cldVertex.defaultHeightPx,
+                text: "",
+            }
         );
     }
 

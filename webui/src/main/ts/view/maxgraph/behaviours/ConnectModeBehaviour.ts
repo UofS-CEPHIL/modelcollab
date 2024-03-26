@@ -59,10 +59,12 @@ export class ConnectModeBehaviour extends ArrowBehaviour {
 
         var fromId: string = source.getId()!;
         var toId: string = target.getId()!;
-        const newConnection = new FirebaseConnection(
-            IdGenerator.generateUniqueId(this.getFirebaseState()),
-            { from: fromId, to: toId, handleXOffset: 0, handleYOffset: 0 }
+        this.getActions().addComponent(
+            FirebaseConnection.createNew(
+                IdGenerator.generateUniqueId(this.getFirebaseState()),
+                fromId,
+                toId
+            )
         );
-        this.getActions().addComponent(newConnection);
     }
 }

@@ -76,6 +76,7 @@ declare module '@mui/material/styles' {
                     fontSize: number,
                     arrowHeadWidth: number,
                     arrowHeadHeight: number,
+                    defaultWidthPx: number,
                 },
             },
             modal: {
@@ -154,6 +155,7 @@ declare module '@mui/material/styles' {
                     fontSize?: number,
                     arrowHeadWidth?: number,
                     arrowHeadHeight?: number,
+                    defaultWidthPx?: number,
                 },
             },
             modal?: {
@@ -262,6 +264,7 @@ export const theme = createTheme({
                 fontSize: 30,
                 arrowHeadWidth: 10,
                 arrowHeadHeight: 10,
+                defaultWidthPx: 50,
             }
         },
         modal: {
