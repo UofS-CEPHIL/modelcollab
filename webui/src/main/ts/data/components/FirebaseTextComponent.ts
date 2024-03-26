@@ -26,6 +26,14 @@ export default abstract class FirebaseTextComponent
         super(id, data);
     }
 
+    public getReadableComponentName(): string {
+        return `${this.getData().text} (#${this.getId()})`;
+    }
+
+    public getLabel(): string {
+        return this.getData().text;
+    }
+
     public abstract getType(): ComponentType;
 
     public abstract withData(

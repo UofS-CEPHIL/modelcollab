@@ -27,6 +27,14 @@ export default class FirebaseFlow
         return new FirebaseFlow(id, Object.assign({}, this.getData()));
     }
 
+    public getReadableComponentName(): string {
+        return `${this.getData().text} (#${this.getId()})`;
+    }
+
+    public getLabel(): string | null {
+        return this.getData().text;
+    }
+
     static toFlowComponentData(data: any): FirebaseFlowData {
         const d: FirebaseFlowData = {
             from: String(data.from),

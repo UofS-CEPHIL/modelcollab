@@ -157,10 +157,13 @@ export default abstract class MCGraph extends Graph {
     public convertValueToString(cell: Cell): string {
         const val = cell.getValue();
         if (val instanceof FirebaseComponentBase) {
-            return val.getData().text ?? "";
+            return val.getLabel() ?? "";
+        }
+        else if (val) {
+            return val.toString();
         }
         else {
-            return "";
+            return "<null>";
         }
     }
 

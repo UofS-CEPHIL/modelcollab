@@ -66,6 +66,14 @@ export default class FirebaseCausalLoopLink
         );
     }
 
+    public getReadableComponentName(): string {
+        return `Link (#${this.getId()})`;
+    }
+
+    public getLabel(): string {
+        return this.getData().polarity;
+    }
+
     public withNextPolarity(): FirebaseCausalLoopLink {
         return this.withData({
             ...this.getData(),

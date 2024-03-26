@@ -181,25 +181,10 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
         );
     }
 
-    protected getComponentName(c: FirebaseComponent): string {
-        if (c.getData().text !== undefined) return c.getData().text;
-        switch (c.getType()) {
-            // TODO do this with polymorphism
-            case ComponentType.CONNECTION:
-                return "Connection " + c.getId();
-            case ComponentType.CLD_LINK:
-                return "Link " + c.getId();
-            case ComponentType.LOOP_ICON:
-                return "Icon " + c.getId();
-            default:
-                throw new Error("Invalid type: " + c.getType());
-        }
-    }
-
     protected getComponentNames(): { [id: string]: string } {
         return Object.fromEntries(
             this.props.components
-                .map(c => [c.getId(), this.getComponentName(c)])
+                .map(c => [c.getId(), c.getReadableComponentName()])
         );
     }
 

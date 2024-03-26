@@ -77,6 +77,8 @@ export abstract class FirebaseComponentBase
     public abstract getType(): ComponentType;
     public abstract withId(id: string): FirebaseComponentBase<DataType>;
     public abstract withData(d: DataType): FirebaseComponentBase<DataType>;
+    public abstract getReadableComponentName(): string;
+    public abstract getLabel(): string | null;
 }
 
 type FirebaseComponent = FirebaseComponentBase<any>;

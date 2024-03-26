@@ -53,19 +53,6 @@ export default class CausalLoopGraph extends MCGraph {
         }
     }
 
-    // Override
-    // Returns the string representation of a particular cell
-    public convertValueToString(cell: Cell): string {
-        const val = cell.getValue();
-        // TODO do this with polymorphism
-        if (val instanceof FirebaseCausalLoopLink || val instanceof FirebaseLoopIcon) {
-            return val.getData().polarity;
-        }
-        else {
-            return super.convertValueToString(cell);
-        }
-    }
-
     // Update a component. Call this in the middle of a batch update.
     public updateComponent(c: FirebaseComponent): void {
         const cell = this.getCellWithId(c.getId())!;

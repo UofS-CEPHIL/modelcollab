@@ -25,6 +25,14 @@ export default class FirebaseLoopIcon extends
         return new FirebaseLoopIcon(id, Object.assign({}, this.getData()));
     }
 
+    public getReadableComponentName(): string {
+        return `Loop ${this.getData().polarity} (#${this.getId()})`;
+    }
+
+    public getLabel(): string {
+        return this.getData().polarity;
+    }
+
     public withUpdatedSize(width: number, height: number): FirebaseLoopIcon {
         const size = Math.max(width, height);
         return super.withUpdatedSize(size, size) as FirebaseLoopIcon;

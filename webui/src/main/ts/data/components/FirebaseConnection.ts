@@ -27,6 +27,14 @@ export default class FirebaseConnection
         return new FirebaseConnection(id, Object.assign({}, this.getData()));
     }
 
+    public getReadableComponentName(): string {
+        return `Connection (#${this.getId()})`;
+    }
+
+    public getLabel(): string | null {
+        return null;
+    }
+
     public static toConnectionComponentData(data: any): FirebaseConnectionData {
         const d: FirebaseConnectionData = {
             from: data.from.toString(),

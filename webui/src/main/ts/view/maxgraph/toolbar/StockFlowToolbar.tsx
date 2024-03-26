@@ -61,7 +61,7 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
         const innerNames = Object.fromEntries(
             this.props.loadedModels
                 .flatMap(m => m.components)
-                .map(c => [c.getId(), this.getComponentName(c)])
+                .map(c => [c.getId(), c.getReadableComponentName()])
         );
         return {
             ...innerNames,

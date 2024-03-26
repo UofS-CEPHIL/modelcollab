@@ -23,11 +23,19 @@ export default class FirebaseStaticModel
         return new FirebaseStaticModel(this.getId(), data);
     }
 
+    public getReadableComponentName(): string {
+        return `Static Model ${this.getData().color} (#{this.getId()})`;
+    }
+
     public withId(id: string): FirebaseStaticModel {
         return new FirebaseStaticModel(
             id,
             Object.assign({}, this.getData())
         );
+    }
+
+    public getLabel(): string | null {
+        return null;
     }
 
     public static toStaticModelComponentData(d: any): FirebaseStaticModelData {
