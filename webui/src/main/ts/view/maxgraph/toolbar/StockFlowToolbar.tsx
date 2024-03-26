@@ -10,10 +10,8 @@ import CanvasToolbar, { Props as CanvasToolbarProps, State as CanvasToolbarState
 import { AxiosResponse } from 'axios';
 import { CircularProgress, IconButton, Menu, MenuItem } from '@mui/material';
 import PlayArrow from '@mui/icons-material/PlayArrow';
-import UiModeSpeedDial from './UiModeSpeedDial';
 
 export interface Props extends CanvasToolbarProps {
-    onModeChanged: (mode: UiMode) => void;
     setOpenModalBox: (boxType: ModalBoxType) => void;
     modelName: string;
     sessionId: string;
@@ -141,16 +139,6 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
                 Import Model
             </MenuItem>,
         ];
-    }
-
-    protected makeModeSelector(): ReactElement {
-        return (
-            <UiModeSpeedDial
-                mode={this.state.uiMode}
-                changeMode={mode => this.changeMode(mode)}
-                sx={{ left: 30, top: 100 }}
-            />
-        );
     }
 
     private computeModel(): void {

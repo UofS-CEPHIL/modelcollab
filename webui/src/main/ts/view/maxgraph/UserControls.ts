@@ -29,6 +29,7 @@ export default class UserControls {
     private pasteCells: () => FirebaseComponent[];
     private getCurrentComponents: () => FirebaseComponent[];
     private getMode: () => UiMode;
+    private setMode: (mode: UiMode) => void;
     private setOpenModalBox: (m: ModalBoxType) => void;
     private onSelectionChanged: (s: FirebaseComponent | null) => void;
     private getCursorPosition: () => Point;
@@ -45,6 +46,7 @@ export default class UserControls {
         pasteCells: () => FirebaseComponent[],
         getCurrentComponents: () => FirebaseComponent[],
         getMode: () => UiMode,
+        setMode: (mode: UiMode) => void,
         setOpenModalBox: (m: ModalBoxType) => void,
         onSelectionChanged: (s: FirebaseComponent | null) => void,
         getCursorPosition: () => Point,
@@ -68,6 +70,7 @@ export default class UserControls {
         this.setKeydownPosition = setKeydownPosition;
         this.getKeydownCell = getKeydownCell;
         this.setKeydownCell = setKeydownCell;
+        this.setMode = setMode;
 
         this.undoManager = new UndoManager();
         this.setupUndoManager();
@@ -177,6 +180,7 @@ export default class UserControls {
     private getBehaviour(): ModeBehaviour {
         return this.behaviourGetter.getBehaviourForMode(
             this.getMode(),
+            m => this.setMode(m),
             this.graph,
             this.diagramActions,
             this.getCurrentComponents,
@@ -185,7 +189,7 @@ export default class UserControls {
             this.getKeydownPosition,
             this.setKeydownPosition,
             this.getKeydownCell,
-            this.setKeydownCell
+            this.setKeydownCell,
         );
     }
 

@@ -7,6 +7,7 @@ import MediationIcon from '@mui/icons-material/Mediation';
 import OpenWithIcon from '@mui/icons-material/OpenWith';
 import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import EditIcon from '@mui/icons-material/Edit';
 import React, { ReactElement } from "react";
 
@@ -98,7 +99,7 @@ export default class UiModeSpeedDial extends React.Component<Props, State> {
             case UiMode.EDIT:
                 return (<EditIcon />);
             default:
-                throw new Error("Invalid mode: " + mode);
+                return (<QuestionMarkIcon />);
         }
     }
 }

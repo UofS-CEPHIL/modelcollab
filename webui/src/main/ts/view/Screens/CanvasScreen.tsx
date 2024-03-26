@@ -24,6 +24,7 @@ export interface State {
     keydownCell: Cell | null;
 
     modelName: string | null;
+    mode: UiMode,
     components: FirebaseComponent[];
     clipboard: FirebaseComponent[];
     selectedComponent: FirebaseComponent | null;
@@ -59,6 +60,7 @@ export default abstract class CanvasScreen
     protected abstract makeToolbar(): ReactElement;
     protected abstract makeSidebar(): ReactElement;
     protected abstract makeModalBoxIfNecessary(): ReactElement | null;
+    protected abstract makeModeSelector(): ReactElement | null;
 
     public constructor(props: P) {
         super(props);
@@ -158,7 +160,9 @@ export default abstract class CanvasScreen
                                         + "px solid",
                                     height: "calc(100vh - 64px)"
                                 }}
-                            />
+                            >
+                                {this.makeModeSelector()}
+                            </div>
                         </Grid>
                         <Grid
                             item

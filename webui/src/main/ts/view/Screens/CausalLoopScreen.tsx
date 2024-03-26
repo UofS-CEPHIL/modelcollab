@@ -11,12 +11,13 @@ import UserControls from '../maxgraph/UserControls';
 import CausalLoopActions from '../maxgraph/CausalLoopActions';
 import CausalLoopPresentationGetter from '../maxgraph/presentation/CausalLoopPresentationGetter';
 import CanvasSidebar from '../maxgraph/toolbar/CanvasSidebar';
-import { CausalLoopBehaviourGetter } from '../maxgraph/behaviours/BehaviourGetter';
 import { UiMode } from '../../UiMode';
 import CausalLoopSidebar from '../maxgraph/toolbar/CausalLoopSidebar';
 import CausalLoopToolbar from '../maxgraph/toolbar/CausalLoopToolbar';
 import FirebaseSessionDataGetter from '../../data/FirebaseSessionDataGetter';
 import { Cell } from '@maxgraph/core';
+import CausalLoopModeSelectPanel from '../maxgraph/toolbar/CausalLoopModeSelectPanel';
+import CausalLoopBehaviourGetter from '../maxgraph/behaviours/causalloop/CausalLoopBehaviourGetter';
 
 interface Props extends CanvasScreenProps {
     firebaseDataModel: FirebaseDataModel;
@@ -79,7 +80,8 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             sidebarVisible: CanvasSidebar.DEFAULT_VISIBILITY,
             cursorPosition: CanvasScreen.INIT_CURSOR,
             keydownPosition: null,
-            keydownCell: null
+            keydownCell: null,
+            mode: UiMode.NONE,
         };
     }
 
@@ -91,6 +93,16 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             CausalLoopScreen.presentation,
             () => this.state.components,
             () => this.state.errors
+        );
+    }
+
+    protected makeModeSelector(): ReactElement | null {
+        return (
+            <CausalLoopModeSelectPanel
+                sx={{ left: 30, top: 30 }}
+                mode={this.state.mode}
+                changeMode={mode => this.setState({ mode })}
+            />
         );
     }
 
@@ -115,7 +127,8 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             c => this.setState({ clipboard: c }),
             () => this.pasteComponents(),
             () => this.state.components,
-            () => UiMode.MOVE,
+            () => this.state.mode,
+            (mode: UiMode) => this.setState({ mode }),
             m => this.setState({ displayedModalBox: m }),
             s => this.setState({ selectedComponent: s }),
             () => this.state.cursorPosition,
@@ -129,9 +142,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
     protected makeToolbar(): ReactElement {
         return (
             <CausalLoopToolbar
-                onModeChanged={m => console.error(
-                    "Mode changed to " + m + "; shouldn't be possible"
-                )}
+                changeMode={(mode: UiMode) => this.setState({ mode })}
                 setOpenModalBox={m => this.setState({ displayedModalBox: m })}
                 modelName={this.state.modelName ?? ""}
                 sessionId={this.props.modelUuid!}
@@ -141,6 +152,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
                 toggleSidebarOpen={() => this.toggleSidebarOpen()}
                 components={this.state.components}
                 errors={this.state.errors}
+                uiMode={this.state.mode}
             />
         );
     }
@@ -162,7 +174,6 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
         // TODO
         return null;
     }
-
 }
 
 export default function CausalLoopScreenWithParams(props: Props) {

@@ -1,15 +1,15 @@
 import { Cell, EventSource, InternalMouseEvent, MouseListenerSet } from "@maxgraph/core";
-import FirebaseCausalLoopLink, { Polarity } from "../../../data/components/FirebaseCausalLoopLink";
-import FirebaseCausalLoopVertex from "../../../data/components/FirebaseCausalLoopVertex";
-import { FirebaseComponentBase } from "../../../data/components/FirebaseComponent";
-import FirebaseLoopIcon from "../../../data/components/FirebaseLoopIcon";
-import FirebaseStickyNote from "../../../data/components/FirebaseStickyNote";
-import FirebaseTextComponent from "../../../data/components/FirebaseTextComponent";
-import IdGenerator from "../../../IdGenerator";
-import { theme } from "../../../Themes";
-import DefaultBehaviour from "./DefaultBehaviour";
+import FirebaseCausalLoopLink, { Polarity } from "../../../../data/components/FirebaseCausalLoopLink";
+import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
+import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
+import FirebaseLoopIcon from "../../../../data/components/FirebaseLoopIcon";
+import FirebaseStickyNote from "../../../../data/components/FirebaseStickyNote";
+import FirebaseTextComponent from "../../../../data/components/FirebaseTextComponent";
+import IdGenerator from "../../../../IdGenerator";
+import { theme } from "../../../../Themes";
+import DefaultBehaviour from "../DefaultBehaviour";
 
-export default class CausalLoopBehaviour extends DefaultBehaviour {
+export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
 
     private static readonly POINTER_CELL_ID = "pointercell";
     private static readonly TEMP_EDGE_ID = "tempedge";
@@ -27,6 +27,7 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
 
     public handleKeyDown(e: KeyboardEvent): void {
         const pos = this.getCursorPosition();
+        var cell: Cell | null = null;
         switch (e.key) {
             case "q":
                 this.getActions().addComponent(new FirebaseCausalLoopVertex(
@@ -48,17 +49,17 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
                     && keydownCell.getValue() instanceof FirebaseCausalLoopVertex
                 ) {
                     const pointerCell = this.getGraph().insertVertex({
-                        id: CausalLoopBehaviour.POINTER_CELL_ID,
+                        id: CausalLoopHotkeyBehaviour.POINTER_CELL_ID,
                         x: pos.x,
                         y: pos.y,
                         width: 0,
                         height: 0
                     });
                     this.getGraph().insertEdge({
-                        id: CausalLoopBehaviour.TEMP_EDGE_ID,
+                        id: CausalLoopHotkeyBehaviour.TEMP_EDGE_ID,
                         source: keydownCell,
                         target: pointerCell,
-                        style: CausalLoopBehaviour.TEMP_EDGE_STYLE
+                        style: CausalLoopHotkeyBehaviour.TEMP_EDGE_STYLE
                     });
                     this.mouseListener = {
                         mouseDown: () => { },
@@ -79,7 +80,7 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
                 }
                 break;
             case "e":
-                const cell = this.getGraph().getCellAt(pos.x, pos.y);
+                cell = this.getGraph().getCellAt(pos.x, pos.y);
                 if (
                     cell
                     && (
@@ -100,6 +101,7 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
                 }
                 break;
             case "r":
+                // TODO make "new component" in firebase classes for this
                 this.getActions().addComponent(new FirebaseStickyNote(
                     IdGenerator.generateUniqueId(this.getFirebaseState()),
                     {
@@ -118,11 +120,19 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
                         x: pos.x,
                         y: pos.y,
                         width: 50,
-                        height: 50, //TODO
+                        height: 50,
                         polarity: Polarity.POSITIVE
                     }
                 ));
                 break;
+            case "s":
+                cell = this.getGraph().getCellAt(pos.x, pos.y);
+                if (
+                    cell
+                    && cell.getValue() instanceof FirebaseComponentBase<any>
+                ) {
+                    this.getActions().deleteComponent(cell.getValue());
+                }
         }
     }
 
@@ -132,12 +142,13 @@ export default class CausalLoopBehaviour extends DefaultBehaviour {
             case "w":
                 // Clean up the listeners and temp cells
                 if (this.mouseListener) {
+                    console.log("removing mouse listener");
                     this.getGraph().removeMouseListener(this.mouseListener);
                 }
                 const pointerCell = this.getGraph()
-                    .getCellWithId(CausalLoopBehaviour.POINTER_CELL_ID);
+                    .getCellWithId(CausalLoopHotkeyBehaviour.POINTER_CELL_ID);
                 const arrowCell = this.getGraph()
-                    .getCellWithId(CausalLoopBehaviour.TEMP_EDGE_ID);
+                    .getCellWithId(CausalLoopHotkeyBehaviour.TEMP_EDGE_ID);
                 const existingCells: Cell[] = [pointerCell, arrowCell]
                     .filter(c => c !== undefined)
                     .map(c => c as Cell);

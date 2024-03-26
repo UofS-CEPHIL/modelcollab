@@ -15,7 +15,7 @@ import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import ComponentType from "../../../data/components/ComponentType";
 
 export interface Props {
-    onModeChanged: (mode: UiMode) => void;
+    uiMode: UiMode;
     setOpenModalBox: (boxType: ModalBoxType) => void;
     modelName: string;
     sessionId: string;
@@ -28,7 +28,6 @@ export interface Props {
 }
 
 export interface State {
-    uiMode: UiMode;
     modelActionsMenuAnchor: HTMLElement | null;
     errorsMenuAnchor: HTMLElement | null;
 }
@@ -46,7 +45,6 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
 
     protected abstract makeCustomMenus(): ReactElement | null;
     protected abstract makeDropdownsForCustomMenus(): ReactElement | null;
-    protected abstract makeModeSelector(): ReactElement | null;
     protected abstract makeModelActionsOptions(): ReactElement[];
     protected abstract makeInitialState(): S;
     protected abstract withMenusClosed(s: State): State;
@@ -75,7 +73,6 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     </Typography>
                     {this.makeAppBarButtons(this.props.errors)}
                     {this.makeAppBarDropdowns(this.props.errors)}
-                    {this.makeModeSelector()}
                 </Toolbar>
             </AppBar >
         );
@@ -241,11 +238,6 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     es[1].map(e => makeSingleErrorEntry(es[0], e))
                 )
         );
-    }
-
-    protected changeMode(mode: UiMode): void {
-        this.setState({ ...this.state, uiMode: mode });
-        this.props.onModeChanged(mode);
     }
 
     protected getCode(): void {

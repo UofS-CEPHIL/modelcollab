@@ -3,6 +3,7 @@ import DiagramActions from "../DiagramActions";
 import ModalBoxType from "../../ModalBox/ModalBoxType";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import MCGraph from "../MCGraph";
+import { UiMode } from "../../../UiMode";
 
 export default abstract class ModeBehaviour {
 
@@ -15,6 +16,7 @@ export default abstract class ModeBehaviour {
     protected setKeydownPosition: (p: Point | null) => void;
     protected getKeydownCell: () => (Cell | null);
     protected setKeydownCell: (c: Cell | null) => void;
+    protected setMode: (mode: UiMode) => void;
 
     public constructor(
         graph: MCGraph,
@@ -25,7 +27,8 @@ export default abstract class ModeBehaviour {
         getKeydownPosition: () => (Point | null),
         setKeydownPosition: (p: Point | null) => void,
         getKeydownCell: () => (Cell | null),
-        setKeydownCell: (c: Cell | null) => void
+        setKeydownCell: (c: Cell | null) => void,
+        setMode: (mode: UiMode) => void,
     ) {
         this.graph = graph;
         this.actions = actions;
@@ -36,6 +39,7 @@ export default abstract class ModeBehaviour {
         this.setKeydownPosition = setKeydownPosition;
         this.getKeydownCell = getKeydownCell;
         this.setKeydownCell = setKeydownCell;
+        this.setMode = setMode;
     }
 
     public getGraph(): MCGraph {

@@ -23,6 +23,7 @@ import StockFlowSidebar from '../maxgraph/toolbar/StockFlowSidebar';
 import StockFlowDiagramActions from '../maxgraph/StockFlowDiagramActions';
 import { StockFlowBehaviourGetter } from '../maxgraph/behaviours/BehaviourGetter';
 import StockFlowPresentationGetter from '../maxgraph/presentation/StockFlowPresentationGetter';
+import UiModeSpeedDial from '../maxgraph/toolbar/UiModeSpeedDial';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -117,6 +118,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             () => this.pasteComponents(),
             () => this.state.components,
             () => this.state.mode,
+            (mode: UiMode) => this.setState({ mode }),
             m => this.setState({ displayedModalBox: m }),
             sel => this.setState({ selectedComponent: sel }),
             () => this.state.cursorPosition,
@@ -170,7 +172,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
     protected makeToolbar(): ReactElement {
         return (
             <StockFlowToolbar
-                onModeChanged={mode => this.setState({ mode })}
+                uiMode={this.state.mode}
                 setOpenModalBox={boxType => this.setState(
                     { ...this.state, displayedModalBox: boxType }
                 )}
@@ -198,6 +200,16 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             m => this.setState({ loadedModels: m }),
             s => this.setState({ scenarios: s }),
             () => this.graph || this.setupGraph()
+        );
+    }
+
+    protected makeModeSelector(): ReactElement {
+        return (
+            <UiModeSpeedDial
+                mode={this.state.mode}
+                changeMode={mode => this.setState({ mode })}
+                sx={{ left: 30, top: 30 }}
+            />
         );
     }
 

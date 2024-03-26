@@ -1,4 +1,5 @@
 export enum UiMode {
+    NONE = "None",
     MOVE = "Move",
     STOCK = "Stock",
     FLOW = "Flow",
@@ -41,6 +42,8 @@ export function modeFromString(s: string): UiMode | null {
             return UiMode.LOOP_ICON;
         case "DELETE":
             return UiMode.DELETE;
+        case "NONE":
+            return UiMode.NONE;
         default:
             return null;
     }

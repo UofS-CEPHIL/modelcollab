@@ -1,44 +1,25 @@
-import { UiMode } from "../../../UiMode";
-import ModeBehaviour from "./ModeBehaviour";
-import { MoveModeBehaviour } from "./MoveModeBehaviour";
-import { StockModeBehaviour } from "./StockModeBehaviour";
-import { ParameterModeBehaviour } from "./ParameterModeBehaviour";
-import DynamicVariableModeBehaviour from "./DynamicVariableModeBehaviour";
-import SumVariableModeBehaviour from "./SumVariableModeBehaviour";
-import FlowModeBehaviour from "./FlowModeBehaviour";
-import DiagramActions from "../DiagramActions";
-import StockFlowGraph from "../StockFlowGraph";
-import { ConnectModeBehaviour } from "./ConnectModeBehaviour";
-import ModalBoxType from "../../ModalBox/ModalBoxType";
-import IdentifyModeBehaviour from "./IdentifyModeBehaviour";
-import FirebaseComponent from "../../../data/components/FirebaseComponent";
-import MCGraph from "../MCGraph";
 import { Cell, Point } from "@maxgraph/core";
+import FirebaseComponent from "../../../../data/components/FirebaseComponent";
+import { UiMode } from "../../../../UiMode";
+import ModalBoxType from "../../../ModalBox/ModalBoxType";
+import CausalLoopGraph from "../../CausalLoopGraph";
+import DiagramActions from "../../DiagramActions";
+import BehaviourGetter from "../BehaviourGetter";
+import DeleteBehaviour from "./DeleteBehaviour";
+import EditBehaviour from "./EditBehaviour";
+import ModeBehaviour from "../ModeBehaviour";
+import StickyNoteBehaviour from "./StickyNoteBehaviour";
+import CausalLoopHotkeyBehaviour from "./CausalLoopHotkeyBehaviour";
+import CausalLoopLinkBehaviour from "./CausalLoopLinkBehaviour";
+import CausalLoopVertexBehaviour from "./CausalLoopVertexBehaviour";
+import LoopIconBehaviour from "./LoopIconBehvaiour";
 
-// This class is basically just a map between UI modes and their associated
-// behaviour classes. This was originally a static method on ModeBehaviour but
-// that caused a circular dependency, so now it gets its own class.
-export default abstract class BehaviourGetter {
-    public abstract getBehaviourForMode(
-        mode: UiMode,
-        setMode: (mode: UiMode) => void,
-        graph: MCGraph,
-        actions: DiagramActions<any>,
-        getFirebaseState: () => FirebaseComponent[],
-        setOpenModalBox: (t: ModalBoxType) => void,
-        getCursorPosition: () => Point,
-        getKeydownPosition: () => (Point | null),
-        setKeydownPosition: (p: Point | null) => void,
-        getKeydownCell: () => (Cell | null),
-        setKeydownCell: (c: Cell | null) => void
-    ): ModeBehaviour;
-}
+export default class CausalLoopBehaviourGetter extends BehaviourGetter {
 
-export class StockFlowBehaviourGetter extends BehaviourGetter {
     public getBehaviourForMode(
         mode: UiMode,
         setMode: (mode: UiMode) => void,
-        graph: StockFlowGraph,
+        graph: CausalLoopGraph,
         actions: DiagramActions<any>,
         getFirebaseState: () => FirebaseComponent[],
         setOpenModalBox: (t: ModalBoxType) => void,
@@ -46,11 +27,11 @@ export class StockFlowBehaviourGetter extends BehaviourGetter {
         getKeydownPosition: () => (Point | null),
         setKeydownPosition: (p: Point | null) => void,
         getKeydownCell: () => (Cell | null),
-        setKeydownCell: (c: Cell | null) => void
+        setKeydownCell: (c: Cell | null) => void,
     ): ModeBehaviour {
         switch (mode) {
-            case UiMode.MOVE:
-                return new MoveModeBehaviour(
+            case UiMode.NONE:
+                return new CausalLoopHotkeyBehaviour(
                     graph,
                     actions,
                     getFirebaseState,
@@ -63,59 +44,7 @@ export class StockFlowBehaviourGetter extends BehaviourGetter {
                     setMode,
                 );
             case UiMode.STOCK:
-                return new StockModeBehaviour(
-                    graph,
-                    actions,
-                    getFirebaseState,
-                    setOpenModalBox,
-                    getCursorPosition,
-                    getKeydownPosition,
-                    setKeydownPosition,
-                    getKeydownCell,
-                    setKeydownCell,
-                    setMode,
-                );
-            case UiMode.PARAM:
-                return new ParameterModeBehaviour(
-                    graph,
-                    actions,
-                    getFirebaseState,
-                    setOpenModalBox,
-                    getCursorPosition,
-                    getKeydownPosition,
-                    setKeydownPosition,
-                    getKeydownCell,
-                    setKeydownCell,
-                    setMode,
-                );
-            case UiMode.DYN_VARIABLE:
-                return new DynamicVariableModeBehaviour(
-                    graph,
-                    actions,
-                    getFirebaseState,
-                    setOpenModalBox,
-                    getCursorPosition,
-                    getKeydownPosition,
-                    setKeydownPosition,
-                    getKeydownCell,
-                    setKeydownCell,
-                    setMode,
-                );
-            case UiMode.SUM_VARIABLE:
-                return new SumVariableModeBehaviour(
-                    graph,
-                    actions,
-                    getFirebaseState,
-                    setOpenModalBox,
-                    getCursorPosition,
-                    getKeydownPosition,
-                    setKeydownPosition,
-                    getKeydownCell,
-                    setKeydownCell,
-                    setMode,
-                );
-            case UiMode.FLOW:
-                return new FlowModeBehaviour(
+                return new CausalLoopVertexBehaviour(
                     graph,
                     actions,
                     getFirebaseState,
@@ -128,7 +57,7 @@ export class StockFlowBehaviourGetter extends BehaviourGetter {
                     setMode,
                 );
             case UiMode.CONNECT:
-                return new ConnectModeBehaviour(
+                return new CausalLoopLinkBehaviour(
                     graph,
                     actions,
                     getFirebaseState,
@@ -140,8 +69,47 @@ export class StockFlowBehaviourGetter extends BehaviourGetter {
                     setKeydownCell,
                     setMode,
                 );
-            case UiMode.IDENTIFY:
-                return new IdentifyModeBehaviour(
+            case UiMode.EDIT:
+                return new EditBehaviour(
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell,
+                    setMode,
+                );
+            case UiMode.STICKY_NOTE:
+                return new StickyNoteBehaviour(
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell,
+                    setMode,
+                );
+            case UiMode.LOOP_ICON:
+                return new LoopIconBehaviour(
+                    graph,
+                    actions,
+                    getFirebaseState,
+                    setOpenModalBox,
+                    getCursorPosition,
+                    getKeydownPosition,
+                    setKeydownPosition,
+                    getKeydownCell,
+                    setKeydownCell,
+                    setMode,
+                );
+            case UiMode.DELETE:
+                return new DeleteBehaviour(
                     graph,
                     actions,
                     getFirebaseState,
@@ -154,7 +122,7 @@ export class StockFlowBehaviourGetter extends BehaviourGetter {
                     setMode,
                 );
             default:
-                throw new Error("Unknown mode: " + mode);
+                throw new Error("Unrecognized mode: " + mode);
         }
     }
 }
