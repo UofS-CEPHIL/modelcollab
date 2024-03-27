@@ -1,22 +1,23 @@
 import { Cell, Point } from "@maxgraph/core";
-import FirebaseComponent from "../../../../data/components/FirebaseComponent";
-import { UiMode } from "../../../../UiMode";
-import ModalBoxType from "../../../ModalBox/ModalBoxType";
-import CausalLoopGraph from "../../CausalLoopGraph";
-import DiagramActions from "../../DiagramActions";
-import BehaviourGetter from "../BehaviourGetter";
-import DeleteBehaviour from "./DeleteBehaviour";
-import EditBehaviour from "./EditBehaviour";
-import StickyNoteBehaviour from "./StickyNoteBehaviour";
-import CausalLoopHotkeyBehaviour from "./CausalLoopHotkeyBehaviour";
-import CausalLoopLinkBehaviour from "./CausalLoopLinkBehaviour";
-import CausalLoopVertexBehaviour from "./CausalLoopVertexBehaviour";
-import LoopIconBehaviour from "./LoopIconBehvaiour";
+import FirebaseComponent from "../../../data/components/FirebaseComponent";
+import { UiMode } from "../../../UiMode";
+import ModalBoxType from "../../ModalBox/ModalBoxType";
+import DiagramActions from "../DiagramActions";
+import StockFlowGraph from "../StockFlowGraph";
+import BehaviourGetter from "./BehaviourGetter";
+import { ConnectModeBehaviour } from "./ConnectModeBehaviour";
+import DynamicVariableModeBehaviour from "./DynamicVariableModeBehaviour";
+import FlowModeBehaviour from "./FlowModeBehaviour";
+import IdentifyModeBehaviour from "./IdentifyModeBehaviour";
+import { MoveModeBehaviour } from "./MoveModeBehaviour";
+import { ParameterModeBehaviour } from "./ParameterModeBehaviour";
+import { StockModeBehaviour } from "./StockModeBehaviour";
+import SumVariableModeBehaviour from "./SumVariableModeBehaviour";
 
-export default class CausalLoopBehaviourGetter extends BehaviourGetter {
-    protected setBehaviours(
+export default class StockFlowBehaviourGetter extends BehaviourGetter {
+    public setBehaviours(
         setMode: (mode: UiMode) => void,
-        graph: CausalLoopGraph,
+        graph: StockFlowGraph,
         actions: DiagramActions<any>,
         getFirebaseState: () => FirebaseComponent[],
         setOpenModalBox: (t: ModalBoxType) => void,
@@ -24,9 +25,9 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         getKeydownPosition: () => (Point | null),
         setKeydownPosition: (p: Point | null) => void,
         getKeydownCell: () => (Cell | null),
-        setKeydownCell: (c: Cell | null) => void,
+        setKeydownCell: (c: Cell | null) => void
     ): void {
-        this.behaviours[UiMode.NONE] = new CausalLoopHotkeyBehaviour(
+        this.behaviours[UiMode.MOVE] = new MoveModeBehaviour(
             graph,
             actions,
             getFirebaseState,
@@ -38,7 +39,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownCell,
             setMode,
         );
-        this.behaviours[UiMode.STOCK] = new CausalLoopVertexBehaviour(
+        this.behaviours[UiMode.STOCK] = new StockModeBehaviour(
             graph,
             actions,
             getFirebaseState,
@@ -50,7 +51,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownCell,
             setMode,
         );
-        this.behaviours[UiMode.CONNECT] = new CausalLoopLinkBehaviour(
+        this.behaviours[UiMode.PARAM] = new ParameterModeBehaviour(
             graph,
             actions,
             getFirebaseState,
@@ -62,7 +63,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownCell,
             setMode,
         );
-        this.behaviours[UiMode.EDIT] = new EditBehaviour(
+        this.behaviours[UiMode.DYN_VARIABLE] = new DynamicVariableModeBehaviour(
             graph,
             actions,
             getFirebaseState,
@@ -74,7 +75,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownCell,
             setMode,
         );
-        this.behaviours[UiMode.STICKY_NOTE] = new StickyNoteBehaviour(
+        this.behaviours[UiMode.SUM_VARIABLE] = new SumVariableModeBehaviour(
             graph,
             actions,
             getFirebaseState,
@@ -86,7 +87,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownCell,
             setMode,
         );
-        this.behaviours[UiMode.LOOP_ICON] = new LoopIconBehaviour(
+        this.behaviours[UiMode.FLOW] = new FlowModeBehaviour(
             graph,
             actions,
             getFirebaseState,
@@ -98,7 +99,19 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownCell,
             setMode,
         );
-        this.behaviours[UiMode.DELETE] = new DeleteBehaviour(
+        this.behaviours[UiMode.CONNECT] = new ConnectModeBehaviour(
+            graph,
+            actions,
+            getFirebaseState,
+            setOpenModalBox,
+            getCursorPosition,
+            getKeydownPosition,
+            setKeydownPosition,
+            getKeydownCell,
+            setKeydownCell,
+            setMode,
+        );
+        this.behaviours[UiMode.IDENTIFY] = new IdentifyModeBehaviour(
             graph,
             actions,
             getFirebaseState,

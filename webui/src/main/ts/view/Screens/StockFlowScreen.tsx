@@ -21,9 +21,10 @@ import FirebaseScenario from '../../data/components/FirebaseScenario';
 import StockFlowToolbar from '../maxgraph/toolbar/StockFlowToolbar';
 import StockFlowSidebar from '../maxgraph/toolbar/StockFlowSidebar';
 import StockFlowDiagramActions from '../maxgraph/StockFlowDiagramActions';
-import { StockFlowBehaviourGetter } from '../maxgraph/behaviours/BehaviourGetter';
+
 import StockFlowPresentationGetter from '../maxgraph/presentation/StockFlowPresentationGetter';
 import UiModeSpeedDial from '../maxgraph/toolbar/UiModeSpeedDial';
+import StockFlowBehaviourGetter from '../maxgraph/behaviours/StockFlowBehaviourGetter';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -113,7 +114,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
         return new UserControls(
             this.graph,
             this.actions,
-            new StockFlowBehaviourGetter(),
+            this.makeBehaviourGetter(),
             c => this.setState({ clipboard: c }),
             () => this.pasteComponents(),
             () => this.state.components,
@@ -126,6 +127,22 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             p => this.setKeydownPosition(p),
             () => this.state.keydownCell,
             c => this.setKeydownCell(c)
+        );
+    }
+
+    private makeBehaviourGetter(): StockFlowBehaviourGetter {
+        if (!this.graph || !this.actions) throw new Error("Not initialized");
+        return new StockFlowBehaviourGetter(
+            mode => this.setState({ mode }),
+            this.graph,
+            this.actions,
+            () => this.state.components,
+            m => this.setState({ displayedModalBox: m }),
+            () => this.state.cursorPosition,
+            () => this.state.keydownPosition,
+            p => this.setState({ keydownPosition: p }),
+            () => this.state.keydownCell,
+            c => this.setState({ keydownCell: c })
         );
     }
 

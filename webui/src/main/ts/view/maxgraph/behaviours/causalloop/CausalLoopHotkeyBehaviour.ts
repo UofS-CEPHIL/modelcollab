@@ -128,9 +128,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         const pos = this.getCursorPosition();
         switch (e.key) {
             case "w":
-                // TODO Clean up the listeners and temp cells
                 if (this.mouseListener) {
-                    console.log("removing mouse listener");
                     this.getGraph().removeMouseListener(this.mouseListener);
                 }
                 const pointerCell = this.getGraph()
@@ -147,7 +145,16 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 // Add a connection if necessary
                 const cell1 = this.getKeydownCell();
                 const cell2 = this.getGraph().getCellAt(pos.x, pos.y);
-                if (cell1 && cell2 && cell1.getId() !== cell2.getId()) {
+                if (
+                    cell1
+                    && cell2
+                    && cell1.getId() !== cell2.getId()
+                    && !this.getFirebaseState()
+                        .find(c =>
+                            c.getData().from === cell1.getId()
+                            && c.getData().to === cell2.getId()
+                        )
+                ) {
                     this.getActions().addComponent(
                         FirebaseCausalLoopLink.createNew(
                             IdGenerator.generateUniqueId(

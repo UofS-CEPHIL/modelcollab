@@ -123,7 +123,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
         return new UserControls(
             this.graph,
             this.actions,
-            new CausalLoopBehaviourGetter(),
+            this.makeBehaviourGetter(),
             c => this.setState({ clipboard: c }),
             () => this.pasteComponents(),
             () => this.state.components,
@@ -136,6 +136,22 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             p => this.setKeydownPosition(p),
             () => this.state.keydownCell,
             (c: Cell | null) => this.setKeydownCell(c),
+        );
+    }
+
+    private makeBehaviourGetter(): CausalLoopBehaviourGetter {
+        if (!this.graph || !this.actions) throw new Error("Not initialized");
+        return new CausalLoopBehaviourGetter(
+            mode => this.setState({ mode }),
+            this.graph,
+            this.actions,
+            () => this.state.components,
+            m => this.setState({ displayedModalBox: m }),
+            () => this.state.cursorPosition,
+            () => this.state.keydownPosition,
+            p => this.setState({ keydownPosition: p }),
+            () => this.state.keydownCell,
+            c => this.setState({ keydownCell: c })
         );
     }
 

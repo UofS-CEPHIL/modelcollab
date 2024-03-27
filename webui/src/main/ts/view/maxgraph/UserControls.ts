@@ -106,26 +106,27 @@ export default class UserControls {
         const getCharCode = this.getCharCode;
 
         // Copy, cut, paste
-        const copySelection = () => this.copyCells(
-            this.getComponentsFromCells(
-                this.graph!.getSelectionCells()
-            )
-        );
-        this.keyHandler.bindControlKey(
-            getCharCode("C"),
-            () => copySelection()
-        );
-        this.keyHandler.bindControlKey(
-            getCharCode("X"),
-            () => {
-                copySelection();
-                this.diagramActions.deleteSelection();
-            }
-        );
-        this.keyHandler.bindControlKey(
-            getCharCode("V"),
-            () => console.error("Paste not implemented")
-        );
+        // TODO copy/cut/paste has bugs. Add these back once they are fixed
+        // const copySelection = () => this.copyCells(
+        //     this.getComponentsFromCells(
+        //         this.graph!.getSelectionCells()
+        //     )
+        // );
+        // this.keyHandler.bindControlKey(
+        //     getCharCode("C"),
+        //     () => copySelection()
+        // );
+        // this.keyHandler.bindControlKey(
+        //     getCharCode("X"),
+        //     () => {
+        //         copySelection();
+        //         this.diagramActions.deleteSelection();
+        //     }
+        // );
+        // this.keyHandler.bindControlKey(
+        //     getCharCode("V"),
+        //     () => console.error("Paste not implemented")
+        // );
 
         // Select all
         this.keyHandler.bindControlKey(
@@ -144,14 +145,15 @@ export default class UserControls {
         );
 
         // Undo, redo
-        this.keyHandler.bindControlKey(
-            getCharCode("Z"),
-            () => { this.undoManager.undo() }
-        );
-        this.keyHandler.bindControlShiftKey(
-            getCharCode("Z"),
-            () => { this.undoManager.redo() }
-        );
+        // TODO undo/redo has bugs -- add these back once they are fixed
+        // this.keyHandler.bindControlKey(
+        //     getCharCode("Z"),
+        //     () => { this.undoManager.undo() }
+        // );
+        // this.keyHandler.bindControlShiftKey(
+        //     getCharCode("Z"),
+        //     () => { this.undoManager.redo() }
+        // );
     }
 
     private getCharCode(c: String): number {
@@ -178,19 +180,7 @@ export default class UserControls {
     }
 
     private getBehaviour(): ModeBehaviour {
-        return this.behaviourGetter.getBehaviourForMode(
-            this.getMode(),
-            m => this.setMode(m),
-            this.graph,
-            this.diagramActions,
-            this.getCurrentComponents,
-            this.setOpenModalBox,
-            this.getCursorPosition,
-            this.getKeydownPosition,
-            this.setKeydownPosition,
-            this.getKeydownCell,
-            this.setKeydownCell,
-        );
+        return this.behaviourGetter.getBehaviourForMode(this.getMode());
     }
 
     private setupModeBehaviours(): void {
