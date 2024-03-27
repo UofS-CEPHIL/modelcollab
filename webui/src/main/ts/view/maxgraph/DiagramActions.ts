@@ -1,5 +1,5 @@
 import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, Rectangle, UndoableChange, ValueChange } from "@maxgraph/core";
-import ComponentType from "../../data/components/ComponentType";
+import { FirebasePointerData } from "../../data/components/FirebaseComponent";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointComponent from "../../data/components/FirebasePointComponent";
 import FirebaseRectangleComponent from "../../data/components/FirebaseRectangleComponent";
@@ -202,17 +202,13 @@ export default abstract class DiagramActions<G extends MCGraph> {
         deletedIds: string[],
         allComponents: FirebaseComponent[]
     ): string[] {
-        function isArrow(c: FirebaseComponent): boolean {
-            return [ComponentType.CONNECTION, ComponentType.FLOW]
-                .includes(c.getType());
-        }
         function isOrphaned(c: FirebaseComponent): boolean {
-            return deletedIds.includes(c.getData().from)
-                || deletedIds.includes(c.getData().to);
+
+            return (c.getData().from && deletedIds.includes(c.getData().from))
+                || (c.getData().to && deletedIds.includes(c.getData().to));
         }
 
         return allComponents
-            .filter(isArrow)
             .filter(isOrphaned)
             .map(c => c.getId());
     }
