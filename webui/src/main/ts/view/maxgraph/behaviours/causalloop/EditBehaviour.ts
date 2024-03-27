@@ -2,7 +2,6 @@ import { Cell } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
 import FirebaseLoopIcon from "../../../../data/components/FirebaseLoopIcon";
-import FirebaseTextComponent from "../../../../data/components/FirebaseTextComponent";
 import ChangeModeOnButtonPressBehaviour from "./ChangeModeOnButtonPressBehaviour";
 
 export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
@@ -19,9 +18,6 @@ export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
                     cell.getValue().withNextPolarity()
                 );
             }
-            else if (cell.getValue() instanceof FirebaseTextComponent) {
-                this.getGraph().startEditingAtCell(cell);
-            }
         }
     }
 
@@ -31,7 +27,6 @@ export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
             selection.length === 1
             && selection[0].getValue() instanceof FirebaseComponentBase<any>
         ) {
-            // TODO doesn't work -- requires double-click
             const cell = selection[0];
             if (
                 cell.getValue() instanceof FirebaseCausalLoopLink
@@ -41,9 +36,6 @@ export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
                     cell.getValue().withNextPolarity()
                 );
                 this.getGraph().setSelectionCell(null);
-            }
-            else if (cell.getValue() instanceof FirebaseTextComponent) {
-                this.getGraph().startEditingAtCell(cell);
             }
         }
     }

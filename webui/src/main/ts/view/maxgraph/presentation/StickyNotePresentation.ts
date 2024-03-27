@@ -46,7 +46,7 @@ export default class StickyNotePresentation
                 verticalAlign: "top",
                 editable: true,
                 whiteSpace: "wrap",
-                movable
+                movable,
             }
         }
     }

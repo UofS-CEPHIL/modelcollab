@@ -44,6 +44,7 @@ export default class CausalLoopVertexPresentation
                 fontColor: theme.palette.canvas.contrastText,
                 movable,
                 editable: true,
+                whiteSpace: "wrap",
             }
         };
     }
