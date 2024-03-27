@@ -1,4 +1,4 @@
-import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, Rectangle, UndoableChange, ValueChange } from "@maxgraph/core";
+import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, Point, Rectangle, UndoableChange, ValueChange } from "@maxgraph/core";
 import { FirebasePointerData } from "../../data/components/FirebaseComponent";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointComponent from "../../data/components/FirebasePointComponent";
@@ -6,6 +6,8 @@ import FirebaseRectangleComponent from "../../data/components/FirebaseRectangleC
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import MCGraph from "./MCGraph";
 import ComponentPresentation from "./presentation/ComponentPresentation";
+import { CausalLoopLinkEdgeHandler } from "./CausalLoopGraph";
+import FirebaseCausalLoopLink from "../../data/components/FirebaseCausalLoopLink";
 
 // This class contains the logic for making changes to the diagram, including
 // the positions of the components and their values.
@@ -46,6 +48,10 @@ export default abstract class DiagramActions<G extends MCGraph> {
         this.graph.addListener(
             InternalEvent.CELLS_RESIZED,
             (s: EventSource, o: EventObject) => this.onCellsResized(s, o)
+        );
+        this.graph.addListener(
+            CausalLoopLinkEdgeHandler.EDGE_POINTS,
+            (s: EventSource, o: EventObject) => this.onCellPointsEdited(s, o)
         );
     }
 
@@ -166,6 +172,26 @@ export default abstract class DiagramActions<G extends MCGraph> {
             [...updated, ...others]
         );
 
+    }
+
+    protected onCellPointsEdited(_: EventSource, event: EventObject): void {
+        const points: Point[] = event.getProperty("points") ?? [];
+        const cell: Cell = event.getProperty("cell");
+        const entryX: number = event.getProperty("entryX");
+        const entryY: number = event.getProperty("entryY");
+        const exitX: number = event.getProperty("exitX");
+        const exitY: number = event.getProperty("exitY");
+        if (
+            cell.getValue() instanceof FirebaseCausalLoopLink
+            && !cell.getValue()
+                .pointsEqual(points, entryX, entryY, exitX, exitY)
+        ) {
+            this.updateComponent(
+                cell
+                    .getValue()
+                    .withPoints(points, entryX, entryY, exitX, exitY)
+            );
+        }
     }
 
     protected getComponentWithId(

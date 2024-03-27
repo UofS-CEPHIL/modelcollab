@@ -1,4 +1,4 @@
-import { Cell, EdgeParameters, Point } from "@maxgraph/core";
+import { Cell, Dictionary, EdgeParameters, Point } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../../data/components/FirebaseCausalLoopLink";
 import { theme } from "../../../Themes";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
@@ -31,6 +31,26 @@ export default class CausalLoopLinkPresentation
             )
         );
 
+        graph.getDataModel().setStyle(
+            e,
+            {
+                ...e.getStyle() ?? {},
+                entryX: component.getData().entryX,
+                entryY: component.getData().entryY,
+                exitX: component.getData().exitX,
+                exitY: component.getData().exitY,
+            }
+        );
+
+        if (component.getData().points.length > 0) {
+            const geo = e.getGeometry()!.clone();
+            geo.points = component
+                .getData()
+                .points
+                .map(p => new Point(p.x, p.y));
+            graph.getDataModel().setGeometry(e, geo);
+        }
+
         return e;
     }
 
@@ -41,6 +61,22 @@ export default class CausalLoopLinkPresentation
         loadedModels?: LoadedStaticModel[]
     ): void {
         cell.setValue(component);
+        const geo = cell.getGeometry()!.clone();
+        geo.points = component
+            .getData()
+            .points
+            .map(p => new Point(p.x, p.y));
+        graph.getDataModel().setGeometry(cell, geo);
+        graph.getDataModel().setStyle(
+            cell,
+            {
+                ...cell.getStyle() ?? {},
+                entryX: component.getData().entryX,
+                entryY: component.getData().entryY,
+                exitX: component.getData().exitX,
+                exitY: component.getData().exitY,
+            }
+        );
     }
 
     public updateComponent(
@@ -48,7 +84,7 @@ export default class CausalLoopLinkPresentation
         cell: Cell,
         graph?: MCGraph
     ): FirebaseCausalLoopLink {
-        return component; // Nothing happens for now. TODO
+        return component;
     }
 
     private makeLinkArgs(

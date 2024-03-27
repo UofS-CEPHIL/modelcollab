@@ -1,4 +1,4 @@
-import IdGenerator from "../../IdGenerator";
+import { Point } from "@maxgraph/core";
 import ComponentType from "./ComponentType";
 import { FirebaseComponentBase, FirebasePointerData } from "./FirebaseComponent";
 
@@ -42,7 +42,12 @@ export function nextPolarity(p: Polarity): Polarity {
 export interface FirebaseCausalLoopLinkData extends FirebasePointerData {
     from: string,
     to: string,
-    polarity: Polarity
+    points: { x: number, y: number }[],
+    entryX?: number,
+    entryY?: number,
+    exitX?: number,
+    exitY?: number,
+    polarity: Polarity,
 }
 
 export default class FirebaseCausalLoopLink
@@ -82,6 +87,52 @@ export default class FirebaseCausalLoopLink
         });
     }
 
+    public withPoints(
+        points: Point[],
+        entryX?: number,
+        entryY?: number,
+        exitX?: number,
+        exitY?: number,
+    ): FirebaseCausalLoopLink {
+        const newData: FirebaseCausalLoopLinkData = {
+            ...this.getData(),
+            entryX,
+            entryY,
+            exitX,
+            exitY,
+            points: points.map(FirebaseCausalLoopLink.extractPoint)
+        };
+        if (!newData.entryX) delete newData.entryX;
+        if (!newData.entryY) delete newData.entryY;
+        if (!newData.exitX) delete newData.exitX;
+        if (!newData.exitY) delete newData.exitY;
+
+        return this.withData(newData);
+    }
+
+    public pointsEqual(
+        points: Point[],
+        entryX?: number,
+        entryY?: number,
+        exitX?: number,
+        exitY?: number,
+    ): boolean {
+        const myPoints = this.getData().points;
+        return myPoints.length === points.length
+            && entryX === this.getData().entryX
+            && entryY === this.getData().entryY
+            && exitX === this.getData().exitX
+            && exitY === this.getData().exitY
+            && myPoints.every((p, i) =>
+                p.x === points[i].x
+                && p.y === points[i].y
+            );
+    }
+
+    public static extractPoint(p: Point): { x: number, y: number } {
+        return { x: p.x, y: p.y };
+    }
+
     public static createNew(
         id: string,
         from: string,
@@ -92,6 +143,7 @@ export default class FirebaseCausalLoopLink
             {
                 from,
                 to,
+                points: [],
                 polarity: Polarity.POSITIVE
             }
         );
@@ -101,8 +153,13 @@ export default class FirebaseCausalLoopLink
         const d: FirebaseCausalLoopLinkData = {
             from: data.from.toString(),
             to: data.to.toString(),
+            points: data.points ?? [],
             polarity: toPolarity(data.polarity)
         };
+        if (data.entryX) d.entryX = data.entryX;
+        if (data.entryY) d.entryY = data.entryY;
+        if (data.exitX) d.exitX = data.exitX;
+        if (data.exitY) d.exitY = data.exitY;
         return d;
     }
 }
