@@ -143,7 +143,10 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                 <IconButton
                     color="inherit"
                     id="open-sidebar-button"
-                    onClick={() => this.props.toggleSidebarOpen()}
+                    onClick={() => {
+                        this.resetFocus();
+                        this.props.toggleSidebarOpen();
+                    }}
                 >
                     <ViewSidebarIcon />
                 </IconButton>
