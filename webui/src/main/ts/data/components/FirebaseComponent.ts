@@ -74,6 +74,11 @@ export abstract class FirebaseComponentBase
         ];
     }
 
+    public toString() {
+        return `${this.getType()}: id = ${this.getId()}, `
+            + `data = ${Object.entries(this.getData())}`;
+    }
+
     public abstract getType(): ComponentType;
     public abstract withId(id: string): FirebaseComponentBase<DataType>;
     public abstract withData(d: DataType): FirebaseComponentBase<DataType>;
