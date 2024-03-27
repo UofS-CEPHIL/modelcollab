@@ -126,6 +126,7 @@ export default class CausalLoopModeSelectPanel
                         this.props.mode !== UiMode.NONE
                         && this.props.changeMode(mode)
                     }
+                    disabled={mode === UiMode.MOVE}
                 >
                     {CausalLoopModeSelectPanel.getIconForMode(mode)}
                 </IconButton>
