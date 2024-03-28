@@ -1,4 +1,4 @@
-import { Avatar, Badge, Button, Collapse, Grid, IconButton, Paper } from "@mui/material";
+import { Avatar, Badge, Button, Collapse, Grid, IconButton, Paper, Tooltip } from "@mui/material";
 import NorthEastIcon from '@mui/icons-material/NorthEast';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import EditIcon from '@mui/icons-material/Edit';
@@ -69,17 +69,17 @@ export default class CausalLoopModeSelectPanel
                 <Grid container>
                     <Grid item xs={3} >
                         <Badge badgeContent={"Q"} color="primary">
-                            {this.makeButtonForMode(UiMode.STOCK)}
+                            {this.makeButtonForMode(UiMode.STOCK, "Vertex")}
                         </Badge>
                     </Grid>
                     <Grid item xs={3}>
                         <Badge badgeContent={"W"} color="primary">
-                            {this.makeButtonForMode(UiMode.CONNECT)}
+                            {this.makeButtonForMode(UiMode.CONNECT, "Arrow")}
                         </Badge>
                     </Grid>
-                    <Grid item xs={3}>
+                    <Grid item xs={3} >
                         <Badge badgeContent={"E"} color="primary">
-                            {this.makeButtonForMode(UiMode.EDIT)}
+                            {this.makeButtonForMode(UiMode.LOOP_ICON)}
                         </Badge>
                     </Grid>
                     <Grid item xs={3}>
@@ -89,9 +89,9 @@ export default class CausalLoopModeSelectPanel
                     </Grid>
                 </Grid>
                 <Grid container paddingTop={2}>
-                    <Grid item xs={3} >
+                    <Grid item xs={3}>
                         <Badge badgeContent={"A"} color="primary">
-                            {this.makeButtonForMode(UiMode.LOOP_ICON)}
+                            {this.makeButtonForMode(UiMode.EDIT)}
                         </Badge>
                     </Grid>
                     <Grid item xs={3}>
@@ -101,12 +101,12 @@ export default class CausalLoopModeSelectPanel
                     </Grid>
                     <Grid item xs={3}>
                         <Badge badgeContent={"D"} color="primary">
-                            {this.makeButtonForMode(UiMode.MOVE)}
+                            {this.makeButtonForMode(UiMode.MOVE, "")}
                         </Badge>
                     </Grid>
                     <Grid item xs={3}>
                         <Badge badgeContent={"F"} color="primary">
-                            {this.makeButtonForMode(UiMode.MOVE)}
+                            {this.makeButtonForMode(UiMode.MOVE, "")}
                         </Badge>
                     </Grid>
                 </Grid>
@@ -114,23 +114,25 @@ export default class CausalLoopModeSelectPanel
         );
     }
 
-    private makeButtonForMode(mode: UiMode): ReactElement {
+    private makeButtonForMode(mode: UiMode, tooltip?: string): ReactElement {
         const bgcolor = this.props.mode === mode
             ? theme.palette.secondary.main
             : undefined;
         return (
-            <Avatar sx={{ bgcolor }}>
-                <IconButton
-                    color="inherit"
-                    onClick={() =>
-                        this.props.mode !== UiMode.NONE
-                        && this.props.changeMode(mode)
-                    }
-                    disabled={mode === UiMode.MOVE}
-                >
-                    {CausalLoopModeSelectPanel.getIconForMode(mode)}
-                </IconButton>
-            </Avatar>
+            <Tooltip title={tooltip ?? mode}>
+                <Avatar sx={{ bgcolor }}>
+                    <IconButton
+                        color="inherit"
+                        onClick={() =>
+                            this.props.mode !== UiMode.NONE
+                            && this.props.changeMode(mode)
+                        }
+                        disabled={mode === UiMode.MOVE}
+                    >
+                        {CausalLoopModeSelectPanel.getIconForMode(mode)}
+                    </IconButton>
+                </Avatar>
+            </Tooltip>
         );
     }
 

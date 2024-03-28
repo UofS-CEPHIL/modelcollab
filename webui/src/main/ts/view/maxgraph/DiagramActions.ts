@@ -61,9 +61,12 @@ export default abstract class DiagramActions<G extends MCGraph> {
             InternalEvent.LABEL_CHANGED,
             (_: EventSource, o: EventObject) => {
                 if (this.actionLogger) {
+                    const name = o.getProperty("cell")
+                        .getValue()
+                        .getReadableComponentName();
                     this.actionLogger.logAction(
                         "Label Changed",
-                        `"${o.getProperty("value")}" (${o.getProperty("cell").getValue().getReadableComponentName()})`
+                        `"${o.getProperty("value")}" (${name})`
                     );
                 }
             }
@@ -152,12 +155,23 @@ export default abstract class DiagramActions<G extends MCGraph> {
         if (component instanceof FirebaseComponentBase<any>) {
             component = component.getId();
         }
-        this.fbData.removeComponent(this.modelUuid, component);
+        const allComponents = this.getCurrentComponents();
+        const orphans = this.findOrphanedArrowIds(
+            [component],
+            allComponents
+        );
+        this.fbData.removeComponents(
+            this.modelUuid,
+            [component, ...orphans],
+            allComponents
+        );
 
         if (this.actionLogger) {
             this.actionLogger.logAction(
                 "Delete component",
-                this.getCurrentComponents().find(c => c.getId() === component)?.getReadableComponentName()
+                this.getCurrentComponents()
+                    .find(c => c.getId() === component)
+                    ?.getReadableComponentName()
             );
         }
     }

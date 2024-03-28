@@ -76,7 +76,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                     this.getGraph().addMouseListener(this.mouseListener);
                 }
                 break;
-            case "e":
+            case "a":
                 cell = this.getGraph().getCellAt(pos.x, pos.y);
                 if (
                     cell
@@ -106,7 +106,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                     )
                 );
                 break;
-            case "a":
+            case "e":
                 this.getActions().addComponent(FirebaseLoopIcon.createNew(
                     IdGenerator.generateUniqueId(this.getFirebaseState()),
                     pos.x,
