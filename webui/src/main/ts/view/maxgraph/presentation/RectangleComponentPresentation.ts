@@ -20,4 +20,24 @@ export default abstract class RectangleComponentPresentation
         newGeo.height = component.getData().height;
         graph.getDataModel().setGeometry(cell, newGeo);
     }
+
+    public updateComponent(
+        component: DataType,
+        cell: Cell,
+        graph: MCGraph,
+    ): DataType {
+        if (!cell.getGeometry()) {
+            console.error(
+                "No geometry found for component " + component.getId()
+            );
+            return component;
+        }
+        const geo = cell.getGeometry()!;
+        const newComponent = super.updateComponent(component, cell, graph);
+        return newComponent.withData({
+            ...newComponent.getData(),
+            width: geo.width,
+            height: geo.height,
+        }) as DataType;
+    }
 }

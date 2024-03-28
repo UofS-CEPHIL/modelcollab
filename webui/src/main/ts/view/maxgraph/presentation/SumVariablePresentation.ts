@@ -1,28 +1,13 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebaseSumVariable from "../../../data/components/FirebaseSumVariable";
 import { theme } from "../../../Themes";
-import StockFlowGraph from "../StockFlowGraph";
 import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class SumVariablePresentation
     extends TextComponentPresentation<FirebaseSumVariable>
 {
 
-    public addComponent(
-        sumvar: FirebaseSumVariable,
-        graph: StockFlowGraph,
-        parent?: Cell,
-        _?: (__: string) => void,
-        movable: boolean = true
-    ): Cell {
-        return graph.insertVertex(this.getGraphArgs(
-            parent ?? graph.getDefaultParent(),
-            sumvar,
-            movable
-        ));
-    }
-
-    private getGraphArgs(
+    protected makeVertexParameters(
         parent: Cell,
         sumvar: FirebaseSumVariable,
         movable: boolean

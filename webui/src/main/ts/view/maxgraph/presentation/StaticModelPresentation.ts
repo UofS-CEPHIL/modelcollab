@@ -24,12 +24,14 @@ export default class StaticModelPresentation
         graph: StockFlowGraph,
         parent: Cell,
         loadStaticModelComponents: (name: string) => void
-    ): Cell {
+    ): Cell | Cell[] {
         loadStaticModelComponents(component.getData().modelId);
-        return graph.insertVertex(this.getOuterStaticModelArgs(
+        return super.addComponent(
+            component,
+            graph,
             parent,
-            component
-        ));
+            loadStaticModelComponents
+        );
     }
 
     public updateCell(
@@ -66,7 +68,7 @@ export default class StaticModelPresentation
         }
     }
 
-    private getOuterStaticModelArgs(
+    protected makeVertexParameters(
         parent: Cell,
         sm: FirebaseStaticModel
     ): VertexParameters {

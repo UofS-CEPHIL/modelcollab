@@ -28,5 +28,5 @@ export default interface ComponentPresentation<T extends FirebaseComponent> {
     ): void;
 
     // Return the given component with the data updated to match the given cell
-    updateComponent(component: T, cell: Cell, graph?: MCGraph): T;
+    updateComponent(component: T, cell: Cell, graph: MCGraph): T;
 }

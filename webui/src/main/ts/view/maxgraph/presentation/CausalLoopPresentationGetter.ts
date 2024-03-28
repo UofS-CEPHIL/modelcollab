@@ -56,7 +56,7 @@ export default class CausalLoopPresentationGetter
     public updateComponent(
         component: FirebaseComponent,
         cell: Cell,
-        graph?: MCGraph
+        graph: MCGraph
     ) {
         return this
             .getRelevantPresentation(component)

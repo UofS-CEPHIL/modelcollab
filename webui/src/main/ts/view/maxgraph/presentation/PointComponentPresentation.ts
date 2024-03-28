@@ -1,4 +1,4 @@
-import { Cell } from "@maxgraph/core";
+import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebasePointComponent from "../../../data/components/FirebasePointComponent";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import MCGraph from "../MCGraph";
@@ -8,13 +8,26 @@ export default abstract class PointComponentPresentation
     <DataType extends FirebasePointComponent<any>>
     implements ComponentPresentation<DataType>
 {
-    public abstract addComponent(
+
+    protected abstract makeVertexParameters(
+        parent: Cell,
+        component: DataType,
+        movable: boolean
+    ): VertexParameters;
+
+    public addComponent(
         component: DataType,
         graph: MCGraph,
         parent?: Cell,
-        loadStaticModelComponents?: (name: string) => void,
-        movable?: boolean
-    ): Cell | Cell[];
+        _?: (name: string) => void,
+        movable: boolean = true
+    ): Cell | Cell[] {
+        return graph.insertVertex(this.makeVertexParameters(
+            parent ?? graph.getDefaultParent(),
+            component,
+            movable
+        ));
+    }
 
     public updateCell(
         component: DataType,
@@ -32,11 +45,19 @@ export default abstract class PointComponentPresentation
     public updateComponent(
         component: DataType,
         cell: Cell,
-        _: MCGraph
+        _: MCGraph,
     ): DataType {
+        if (!cell.getGeometry()) {
+            console.error(
+                "No geometry found for component " + component.getId()
+            );
+            return component;
+        }
         const geo = cell.getGeometry()!;
-        return component.withData(
-            { ...component.getData(), x: geo.x, y: geo.y }
-        ) as DataType;
+        return component.withData({
+            ...component.getData(),
+            x: geo.x,
+            y: geo.y,
+        }) as DataType;
     }
 }

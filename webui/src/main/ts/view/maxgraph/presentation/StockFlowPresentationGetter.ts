@@ -62,7 +62,7 @@ export default class StockFlowPresentationGetter
     public updateComponent(
         component: FirebaseComponent,
         cell: Cell,
-        graph?: MCGraph
+        graph: MCGraph
     ) {
         return this
             .getRelevantPresentation(component)

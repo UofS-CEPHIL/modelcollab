@@ -1,5 +1,4 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
-import StockFlowGraph from "../StockFlowGraph";
 import TextComponentPresentation from "./TextComponentPresentation";
 import { theme } from "../../../Themes";
 import FirebaseParameter from "../../../data/components/FirebaseParameter";
@@ -7,22 +6,7 @@ import FirebaseParameter from "../../../data/components/FirebaseParameter";
 export default class ParameterPresentation
     extends TextComponentPresentation<FirebaseParameter>
 {
-
-    public addComponent(
-        param: FirebaseParameter,
-        graph: StockFlowGraph,
-        parent?: Cell,
-        _?: (__: string) => void,
-        movable: boolean = true
-    ): Cell {
-        return graph.insertVertex(this.getGraphArgs(
-            parent ?? graph.getDefaultParent(),
-            param,
-            movable
-        ));
-    }
-
-    private getGraphArgs(
+    protected makeVertexParameters(
         parent: Cell,
         param: FirebaseParameter,
         movable: boolean

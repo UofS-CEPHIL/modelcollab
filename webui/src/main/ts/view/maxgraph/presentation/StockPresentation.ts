@@ -1,28 +1,12 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebaseStock from "../../../data/components/FirebaseStock";
 import { theme } from "../../../Themes";
-import StockFlowGraph from "../StockFlowGraph";
 import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class StockPresentation
     extends TextComponentPresentation<FirebaseStock>
 {
-
-    public addComponent(
-        stock: FirebaseStock,
-        graph: StockFlowGraph,
-        parent?: Cell,
-        _?: (__: string) => void,
-        movable: boolean = true
-    ): Cell {
-        return graph.insertVertex(this.getStockArgs(
-            parent ?? graph.getDefaultParent(),
-            stock,
-            movable
-        ));
-    }
-
-    private getStockArgs(
+    protected makeVertexParameters(
         parent: Cell,
         stock: FirebaseStock,
         movable: boolean

@@ -1,11 +1,11 @@
 import { Cell, EdgeParameters, Point } from "@maxgraph/core";
-import FirebasePointerComponent from "../../../data/components/FirebasePointerComponent";
+import FirebasePointerComponent, { FirebasePointerData } from "../../../data/components/FirebasePointerComponent";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import MCGraph from "../MCGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
 export default abstract class PointerComponentPresentation
-    <DataType extends FirebasePointerComponent<any>>
+    <DataType extends FirebasePointerComponent<FirebasePointerData>>
     implements ComponentPresentation<DataType>
 {
 
@@ -21,7 +21,7 @@ export default abstract class PointerComponentPresentation
         component: DataType,
         graph: MCGraph,
         parent: Cell = graph.getDefaultParent(),
-        loadStaticModelComponents?: ((name: string) => void),
+        _?: ((name: string) => void),
         movable: boolean = true,
         source?: Cell,
         target?: Cell,
@@ -68,7 +68,7 @@ export default abstract class PointerComponentPresentation
         component: DataType,
         cell: Cell,
         graph: MCGraph,
-        loadedModels?: LoadedStaticModel[]
+        _?: LoadedStaticModel[]
     ): void {
         cell.setValue(component);
         const geo = cell.getGeometry()!.clone();
@@ -92,10 +92,17 @@ export default abstract class PointerComponentPresentation
     public updateComponent(
         component: DataType,
         cell: Cell,
-        graph?: MCGraph
+        _: MCGraph
     ): DataType {
-        throw new Error("Method not implemented.");
+        const geo = cell.getGeometry();
+        const points = geo ? (geo.points ?? []) : [];
+        return component.withData({
+            ...component.getData(),
+            points: points.map(FirebasePointerComponent.extractPoint),
+            entryX: cell.style.entryX,
+            entryY: cell.style.entryY,
+            exitX: cell.style.exitX,
+            exitY: cell.style.exitY,
+        }) as DataType;
     }
-
-
 }

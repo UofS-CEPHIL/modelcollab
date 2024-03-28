@@ -1,28 +1,14 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebaseLoopIcon from "../../../data/components/FirebaseLoopIcon";
 import { theme } from "../../../Themes";
-import MCGraph from "../MCGraph";
 import LoopIconShape from "./LoopIconShape";
 import RectangleComponentPresentation from "./RectangleComponentPresentation";
 
 export default class LoopIconPresentation
     extends RectangleComponentPresentation<FirebaseLoopIcon>
 {
-    public addComponent(
-        component: FirebaseLoopIcon,
-        graph: MCGraph,
-        parent: Cell = graph.getDefaultParent(),
-        loadStaticModelComponents?: ((name: string) => void),
-        movable: boolean = true
-    ): Cell | Cell[] {
-        return graph.insertVertex(this.getIconArgs(
-            parent,
-            component,
-            movable
-        ));
-    }
 
-    public getIconArgs(
+    protected makeVertexParameters(
         parent: Cell,
         component: FirebaseLoopIcon,
         movable: boolean

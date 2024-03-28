@@ -108,13 +108,6 @@ export default class FlowPresentation
         }
     }
 
-    public updateComponent(
-        component: FirebaseFlow,
-        cell: Cell
-    ): FirebaseFlow {
-        throw new Error("Not Implemented");
-    }
-
     private updateCloud(
         point: { x: number, y: number },
         cloud: Cell,

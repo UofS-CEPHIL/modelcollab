@@ -18,6 +18,7 @@ export default abstract class FirebasePointerComponent
 {
 
     public abstract isLabelMovable(): boolean;
+    public abstract withData(d: DataType): FirebasePointerComponent<DataType>;
 
     public withPoints(
         points: Point[],
