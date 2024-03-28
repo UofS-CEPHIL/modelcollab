@@ -226,13 +226,12 @@ export default abstract class DiagramActions<G extends MCGraph> {
     protected onCellsResized(_: EventSource, event: EventObject): void {
         const cells: Cell[] = event.properties["cells"];
         const allComponents = this.getCurrentComponents();
-        const updated: FirebaseRectangleComponent<any>[] = cells.map(c =>
-            (
-                this.getComponentWithId(
-                    c.getValue().getId(),
-                    allComponents
-                ) as FirebaseRectangleComponent<any>
-            ).withUpdatedSize(c.geometry!.width, c.geometry!.height)
+        const updated = cells.map(c =>
+            this.presentation.updateComponent(
+                c.getValue() as FirebaseComponent,
+                c,
+                this.graph
+            )
         );
         const others = allComponents.filter(
             c => !updated.find(v => v.getId() === c.getId())
