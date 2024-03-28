@@ -125,7 +125,7 @@ export default class StaticModelPresentation
     ): FirebaseFlow {
         const pad = StaticModelPresentation.COMPONENT_PADDING_PX;
         const updatePoint = (p: string) => {
-            const oldpoint = FirebaseFlow.extractPoint(p);
+            const oldpoint = FirebaseFlow.extractPointFromId(p);
             return FirebaseFlow.makePoint(
                 oldpoint.x - dx + pad,
                 oldpoint.y - dy + pad

@@ -31,6 +31,7 @@ export default class StockFlowGraph extends MCGraph {
             getErrors
         );
         this.loadStaticModelComponents = loadStaticModelComponents;
+        this.setConnectableEdges(true);
     }
 
     public refreshComponents(

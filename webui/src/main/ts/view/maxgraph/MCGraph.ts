@@ -1,9 +1,11 @@
-import { Cell, CellEditorHandler, CellRenderer, EventObject, Graph, InternalEvent, InternalMouseEvent, Rectangle, SelectionHandler, TooltipHandler } from "@maxgraph/core";
+import { Cell, CellRenderer, CellState, EdgeHandler, Graph, InternalMouseEvent, SelectionHandler, TooltipHandler } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
+import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 import { theme } from "../../Themes";
 import { ComponentErrors } from "../../validation/ModelValitador";
+import MCEdgeHandler from "./MCEdgeHandler";
 import CausalLoopLinkShape from "./presentation/CausalLoopLinkShape";
 import ComponentPresentation from "./presentation/ComponentPresentation";
 import LoopIconShape from "./presentation/LoopIconShape";
@@ -40,6 +42,7 @@ export default abstract class MCGraph extends Graph {
 
         this.setAutoSizeCells(true);
         this.setAllowDanglingEdges(false);
+        this.setAllowLoops(true);
         this.setHtmlLabels(true);
 
         const selHandler =
@@ -216,6 +219,18 @@ export default abstract class MCGraph extends Graph {
                     );
                 }
             }
+        }
+    }
+
+    public createEdgeHandler(state: CellState, edgeStyle: any): EdgeHandler {
+        if (
+            state.cell.getValue()
+            && state.cell.getValue() instanceof FirebasePointerComponent
+        ) {
+            return new MCEdgeHandler(state);
+        }
+        else {
+            return super.createEdgeHandler(state, edgeStyle);
         }
     }
 

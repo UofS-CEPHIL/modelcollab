@@ -1,18 +1,20 @@
 import ComponentType from "./ComponentType";
-import { FirebaseComponentBase, FirebasePointerData } from "./FirebaseComponent";
+import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
 
 export interface FirebaseFlowData extends FirebasePointerData {
-    from: string;            // ID of the source of this flow
-    to: string;              // ID of the sink of this flow
-    equation: string;        // The equation for the flow rate
-    text: string;            // The text on screen
+    equation: string;
+    text: string;
 }
 
 export default class FirebaseFlow
-    extends FirebaseComponentBase<FirebaseFlowData>
+    extends FirebasePointerComponent<FirebaseFlowData>
 {
     constructor(id: string, data: FirebaseFlowData) {
         super(id, data);
+    }
+
+    public isLabelMovable(): boolean {
+        return true;
     }
 
     public getType(): ComponentType {
@@ -39,9 +41,14 @@ export default class FirebaseFlow
         const d: FirebaseFlowData = {
             from: String(data.from),
             to: String(data.to),
+            points: data.points ?? [],
             text: String(data.text),
             equation: String(data.equation)
         };
+        if (data.entryX) d.entryX = data.entryX;
+        if (data.entryY) d.entryY = data.entryY;
+        if (data.exitX) d.exitX = data.exitX;
+        if (data.exitY) d.exitY = data.exitY;
         return d;
     }
 
@@ -57,6 +64,7 @@ export default class FirebaseFlow
                 to,
                 text: "",
                 equation: "",
+                points: [],
             }
         );
     }
@@ -69,7 +77,7 @@ export default class FirebaseFlow
         return id.startsWith('p');
     }
 
-    public static extractPoint(id: string): { x: number, y: number } {
+    public static extractPointFromId(id: string): { x: number, y: number } {
         const regex = /p(?<x>\d+),(?<y>\d+)/;
         const match = id.match(regex);
         if (!match)

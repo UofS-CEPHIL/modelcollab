@@ -1,25 +1,22 @@
 import ComponentType from "./ComponentType";
-import { FirebaseComponentBase, FirebasePointerData } from "./FirebaseComponent";
-
-export interface FirebaseConnectionData extends FirebasePointerData {
-    from: string, // The component from which the connection starts
-    to: string    // The component to which the connection goes
-    handleXOffset: number;   // The X offset of the handle from the centre of the line
-    handleYOffset: number;   // The Y offset of the handle from the centre of the line
-}
+import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
 
 export default class FirebaseConnection
-    extends FirebaseComponentBase<FirebaseConnectionData>
+    extends FirebasePointerComponent<FirebasePointerData>
 {
-    public constructor(id: string, data: FirebaseConnectionData) {
+    public constructor(id: string, data: FirebasePointerData) {
         super(id, data);
+    }
+
+    public isLabelMovable(): boolean {
+        return false;
     }
 
     public getType(): ComponentType {
         return ComponentType.CONNECTION;
     }
 
-    public withData(d: FirebaseConnectionData): FirebaseConnection {
+    public withData(d: FirebasePointerData): FirebaseConnection {
         return new FirebaseConnection(this.getId(), d);
     }
 
@@ -45,19 +42,21 @@ export default class FirebaseConnection
             {
                 from,
                 to,
-                handleXOffset: 0,
-                handleYOffset: 0
+                points: []
             }
         );
     }
 
-    public static toConnectionComponentData(data: any): FirebaseConnectionData {
-        const d: FirebaseConnectionData = {
+    public static toConnectionComponentData(data: any): FirebasePointerData {
+        const d: FirebasePointerData = {
             from: data.from.toString(),
             to: data.to.toString(),
-            handleXOffset: Number(data.handleXOffset),
-            handleYOffset: Number(data.handleYOffset)
+            points: data.points ?? [],
         };
+        if (data.entryX) d.entryX = data.entryX;
+        if (data.entryY) d.entryY = data.entryY;
+        if (data.exitX) d.exitX = data.exitX;
+        if (data.exitY) d.exitY = data.exitY;
         return d;
     }
 }

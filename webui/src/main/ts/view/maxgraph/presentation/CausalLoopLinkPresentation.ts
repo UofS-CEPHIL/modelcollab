@@ -1,83 +1,12 @@
-import { Cell, Dictionary, EdgeParameters, Point } from "@maxgraph/core";
+import { Cell, EdgeParameters } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../../data/components/FirebaseCausalLoopLink";
 import { theme } from "../../../Themes";
-import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import MCGraph from "../MCGraph";
 import CausalLoopLinkShape from "./CausalLoopLinkShape";
-import ComponentPresentation from "./ComponentPresentation";
+import PointerComponentPresentation from "./PointerComponentPresentation";
 
 export default class CausalLoopLinkPresentation
-    implements ComponentPresentation<FirebaseCausalLoopLink> {
-
-    public addComponent(
-        component: FirebaseCausalLoopLink,
-        graph: MCGraph,
-        parent?: Cell | undefined,
-        loadStaticModelComponents?: ((name: string) => void) | undefined,
-        movable: boolean = true
-    ): Cell | Cell[] {
-        const source = graph.getCellWithIdOrThrow(component.getData().from);
-        const target = graph.getCellWithIdOrThrow(component.getData().to);
-
-
-        const e = graph.insertEdge(
-            this.makeLinkArgs(
-                component,
-                parent ?? graph.getDefaultParent(),
-                source,
-                target,
-                component.getId(),
-                movable
-            )
-        );
-
-        graph.getDataModel().setStyle(
-            e,
-            {
-                ...e.getStyle() ?? {},
-                entryX: component.getData().entryX,
-                entryY: component.getData().entryY,
-                exitX: component.getData().exitX,
-                exitY: component.getData().exitY,
-            }
-        );
-
-        if (component.getData().points.length > 0) {
-            const geo = e.getGeometry()!.clone();
-            geo.points = component
-                .getData()
-                .points
-                .map(p => new Point(p.x, p.y));
-            graph.getDataModel().setGeometry(e, geo);
-        }
-
-        return e;
-    }
-
-    public updateCell(
-        component: FirebaseCausalLoopLink,
-        cell: Cell,
-        graph: MCGraph,
-        loadedModels?: LoadedStaticModel[]
-    ): void {
-        cell.setValue(component);
-        const geo = cell.getGeometry()!.clone();
-        geo.points = component
-            .getData()
-            .points
-            .map(p => new Point(p.x, p.y));
-        graph.getDataModel().setGeometry(cell, geo);
-        graph.getDataModel().setStyle(
-            cell,
-            {
-                ...cell.getStyle() ?? {},
-                entryX: component.getData().entryX,
-                entryY: component.getData().entryY,
-                exitX: component.getData().exitX,
-                exitY: component.getData().exitY,
-            }
-        );
-    }
+    extends PointerComponentPresentation<FirebaseCausalLoopLink> {
 
     public updateComponent(
         component: FirebaseCausalLoopLink,
@@ -87,17 +16,16 @@ export default class CausalLoopLinkPresentation
         return component;
     }
 
-    private makeLinkArgs(
+    protected makeEdgeParameters(
         link: FirebaseCausalLoopLink,
         parent: Cell,
         source: Cell,
         target: Cell,
-        id: string,
         movable: boolean
     ): EdgeParameters {
         return {
             parent,
-            id,
+            id: link.getId(),
             value: link,
             source,
             target,
@@ -106,6 +34,7 @@ export default class CausalLoopLinkPresentation
                 endArrow: theme.custom.maxgraph.cldLink.endArrow,
                 strokeColor: theme.palette.primary.main,
                 strokeWidth: theme.custom.maxgraph.cldLink.strokeWidthPx,
+                endSize: theme.custom.maxgraph.cldLink.endSizePx,
                 curved: true,
                 bendable: true,
                 edgeStyle: theme.custom.maxgraph.cldLink.edgeStyle,

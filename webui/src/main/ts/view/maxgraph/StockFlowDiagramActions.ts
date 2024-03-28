@@ -105,7 +105,7 @@ export default class StockFlowDiagramActions
         const updates = clouds.map(makeCloudUpdate);
         const updatedFlows = allComponents
             .filter(c => c instanceof FirebaseFlow)
-            .map(c => c.clone());
+            .map(c => c.clone() as FirebaseFlow);
         for (const update of updates) {
             const idx = updatedFlows.findIndex(f => f.getId() === update.flowId);
             if (idx < 0) throw new Error("Couldn't find flow " + update.flowId);

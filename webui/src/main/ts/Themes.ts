@@ -29,11 +29,13 @@ declare module '@mui/material/styles' {
             maxgraph: {
                 connection: {
                     strokeWidthPx: number,
+                    endSizePx: number,
                     edgeStyle: string,
-                    endArrow: string
+                    endArrow: string,
                 },
                 flow: {
                     strokeWidthPx: number,
+                    endSizePx: number,
                     shape: string,
                     edgeStyle: string,
                 },
@@ -53,6 +55,7 @@ declare module '@mui/material/styles' {
                 },
                 cldLink: {
                     strokeWidthPx: number,
+                    endSizePx: number,
                     edgeStyle: string,
                     endArrow: string,
                     fontSize: number,
@@ -108,11 +111,13 @@ declare module '@mui/material/styles' {
             maxgraph?: {
                 connection?: {
                     strokeWidthPx?: number,
+                    endSizePx?: number,
                     edgeStyle?: string,
                     endArrow?: string
                 },
                 flow?: {
                     strokeWidthPx?: number,
+                    endSizePx?: number,
                     shape?: string,
                     edgeStyle?: string,
                 },
@@ -132,6 +137,7 @@ declare module '@mui/material/styles' {
                 },
                 cldLink?: {
                     strokeWidthPx?: number,
+                    endSizePx?: number,
                     edgeStyle?: string,
                     endArrow?: string,
                     fontSize?: number,
@@ -217,11 +223,13 @@ export const theme = createTheme({
         maxgraph: {
             connection: {
                 strokeWidthPx: 2,
+                endSizePx: 5,
                 edgeStyle: "orthogonalEdgeStyle",
                 endArrow: "classic",
             },
             flow: {
                 strokeWidthPx: 2,
+                endSizePx: 10,
                 shape: "arrowConnector",
                 edgeStyle: "elbowEdgeStyle",
             },
@@ -241,6 +249,7 @@ export const theme = createTheme({
             },
             cldLink: {
                 strokeWidthPx: 3,
+                endSizePx: 5,
                 edgeStyle: "orthogonalEdgeStyle",
                 endArrow: "classic",
                 fontSize: 20,

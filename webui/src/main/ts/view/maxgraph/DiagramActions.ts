@@ -5,9 +5,9 @@ import FirebaseRectangleComponent from "../../data/components/FirebaseRectangleC
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import MCGraph from "./MCGraph";
 import ComponentPresentation from "./presentation/ComponentPresentation";
-import { CausalLoopLinkEdgeHandler } from "./CausalLoopGraph";
-import FirebaseCausalLoopLink from "../../data/components/FirebaseCausalLoopLink";
 import UserActionLogger from "../../logging/UserActionLogger";
+import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";
+import MCEdgeHandler from "./MCEdgeHandler";
 
 // This class contains the logic for making changes to the diagram, including
 // the positions of the components and their values.
@@ -53,7 +53,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
             (s: EventSource, o: EventObject) => this.onCellsResized(s, o)
         );
         this.graph.addListener(
-            CausalLoopLinkEdgeHandler.EDGE_POINTS,
+            MCEdgeHandler.EDGE_POINTS,
             (s: EventSource, o: EventObject) => this.onCellPointsEdited(s, o)
         );
 
@@ -248,8 +248,9 @@ export default abstract class DiagramActions<G extends MCGraph> {
         const entryY: number = event.getProperty("entryY");
         const exitX: number = event.getProperty("exitX");
         const exitY: number = event.getProperty("exitY");
+
         if (
-            cell.getValue() instanceof FirebaseCausalLoopLink
+            cell.getValue() instanceof FirebasePointerComponent
             && !cell.getValue()
                 .pointsEqual(points, entryX, entryY, exitX, exitY)
         ) {

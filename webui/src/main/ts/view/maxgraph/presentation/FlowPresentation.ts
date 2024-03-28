@@ -2,14 +2,13 @@ import { Cell, EdgeParameters, VertexParameters } from "@maxgraph/core";
 import FirebaseFlow from "../../../data/components/FirebaseFlow";
 import { theme } from "../../../Themes";
 import StockFlowGraph from "../StockFlowGraph";
-import ComponentPresentation from "./ComponentPresentation";
+import PointerComponentPresentation from "./PointerComponentPresentation";
 
 export default class FlowPresentation
-    implements ComponentPresentation<FirebaseFlow>
+    extends PointerComponentPresentation<FirebaseFlow>
 {
 
     public static readonly CLOUD_VALUE = "cloud";
-
 
     public addComponent(
         component: FirebaseFlow,
@@ -43,7 +42,7 @@ export default class FlowPresentation
 
         // Create clouds if necessary
         if (!source) {
-            const point = FirebaseFlow.extractPoint(component.getData().from);
+            const point = FirebaseFlow.extractPointFromId(component.getData().from);
             source = graph.insertVertex(
                 this.makeCloudArgs(
                     parent ?? graph.getDefaultParent(),
@@ -56,7 +55,7 @@ export default class FlowPresentation
             newComponents.push(source);
         }
         if (!target) {
-            const point = FirebaseFlow.extractPoint(component.getData().to);
+            const point = FirebaseFlow.extractPointFromId(component.getData().to);
             target = graph.insertVertex(
                 this.makeCloudArgs(
                     parent ?? graph.getDefaultParent(),
@@ -69,18 +68,19 @@ export default class FlowPresentation
             newComponents.push(target);
         }
 
-        newComponents.push(
-            graph.insertEdge(
-                this.makeFlowArgs(
-                    component,
-                    parent ?? graph.getDefaultParent(),
-                    source,
-                    target,
-                    component.getId(),
-                    movable
-                )
-            )
+        var newCell = super.addComponent(
+            component,
+            graph,
+            parent,
+            _,
+            movable,
+            source,
+            target
         );
+        if (newCell instanceof Cell) {
+            newCell = [newCell];
+        }
+        newComponents.push(...newCell);
         return newComponents;
     }
 
@@ -89,23 +89,23 @@ export default class FlowPresentation
         cell: Cell,
         graph: StockFlowGraph
     ): void {
+        super.updateCell(flow, cell, graph);
         const flowFrom = flow.getData().from;
         const flowTo = flow.getData().to;
         if (FirebaseFlow.isPoint(flowFrom)) {
             this.updateCloud(
-                FirebaseFlow.extractPoint(flowFrom),
+                FirebaseFlow.extractPointFromId(flowFrom),
                 cell.getTerminal(true)!,
                 graph
             );
         }
         if (FirebaseFlow.isPoint(flowTo)) {
             this.updateCloud(
-                FirebaseFlow.extractPoint(flowTo),
+                FirebaseFlow.extractPointFromId(flowTo),
                 cell.getTerminal(false)!,
                 graph
             );
         }
-        cell.setValue(flow);
     }
 
     public updateComponent(
@@ -126,17 +126,16 @@ export default class FlowPresentation
         graph.getDataModel().setGeometry(cloud, newGeo);
     }
 
-    private makeFlowArgs(
+    protected makeEdgeParameters(
         flow: FirebaseFlow,
         parent: Cell,
         fr: Cell,
         to: Cell,
-        id: string,
         movable: boolean
     ): EdgeParameters {
         return {
             parent,
-            id,
+            id: flow.getId(),
             value: flow,
             source: fr,
             target: to,
@@ -144,6 +143,7 @@ export default class FlowPresentation
                 shape: theme.custom.maxgraph.flow.shape,
                 strokeColor: theme.palette.canvas.contrastText,
                 strokeWidth: theme.custom.maxgraph.flow.strokeWidthPx,
+                endSize: theme.custom.maxgraph.flow.endSizePx,
                 fillColor: theme.palette.canvas.main,
                 fontColor: theme.palette.canvas.contrastText,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
@@ -152,6 +152,8 @@ export default class FlowPresentation
                 bendable: true,
                 edgeStyle: theme.custom.maxgraph.flow.edgeStyle,
                 movable,
+                editable: true,
+                labelBackgroundColor: theme.palette.canvas.main,
             }
         };
     }
@@ -166,7 +168,6 @@ export default class FlowPresentation
         return {
             parent,
             id,
-            value: FlowPresentation.CLOUD_VALUE,
             x,
             y,
             width: theme.custom.maxgraph.cloud.defaultWidthPx,

@@ -1,6 +1,5 @@
-import { Point } from "@maxgraph/core";
 import ComponentType from "./ComponentType";
-import { FirebaseComponentBase, FirebasePointerData } from "./FirebaseComponent";
+import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
 
 export enum Polarity {
     POSITIVE = "+",
@@ -51,10 +50,14 @@ export interface FirebaseCausalLoopLinkData extends FirebasePointerData {
 }
 
 export default class FirebaseCausalLoopLink
-    extends FirebaseComponentBase<FirebaseCausalLoopLinkData>
+    extends FirebasePointerComponent<FirebaseCausalLoopLinkData>
 {
     public constructor(id: string, data: FirebaseCausalLoopLinkData) {
         super(id, data);
+    }
+
+    public isLabelMovable(): boolean {
+        return false;
     }
 
     public getType(): ComponentType {
@@ -86,52 +89,6 @@ export default class FirebaseCausalLoopLink
             ...this.getData(),
             polarity: nextPolarity(this.getData().polarity)
         });
-    }
-
-    public withPoints(
-        points: Point[],
-        entryX?: number,
-        entryY?: number,
-        exitX?: number,
-        exitY?: number,
-    ): FirebaseCausalLoopLink {
-        const newData: FirebaseCausalLoopLinkData = {
-            ...this.getData(),
-            entryX,
-            entryY,
-            exitX,
-            exitY,
-            points: points.map(FirebaseCausalLoopLink.extractPoint)
-        };
-        if (!newData.entryX) delete newData.entryX;
-        if (!newData.entryY) delete newData.entryY;
-        if (!newData.exitX) delete newData.exitX;
-        if (!newData.exitY) delete newData.exitY;
-
-        return this.withData(newData);
-    }
-
-    public pointsEqual(
-        points: Point[],
-        entryX?: number,
-        entryY?: number,
-        exitX?: number,
-        exitY?: number,
-    ): boolean {
-        const myPoints = this.getData().points;
-        return myPoints.length === points.length
-            && entryX === this.getData().entryX
-            && entryY === this.getData().entryY
-            && exitX === this.getData().exitX
-            && exitY === this.getData().exitY
-            && myPoints.every((p, i) =>
-                p.x === points[i].x
-                && p.y === points[i].y
-            );
-    }
-
-    public static extractPoint(p: Point): { x: number, y: number } {
-        return { x: p.x, y: p.y };
     }
 
     public static createNew(
