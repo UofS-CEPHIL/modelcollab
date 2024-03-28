@@ -42,7 +42,8 @@ export default class FlowPresentation
 
         // Create clouds if necessary
         if (!source) {
-            const point = FirebaseFlow.extractPointFromId(component.getData().from);
+            const point = FirebaseFlow
+                .extractPointFromId(component.getData().from);
             source = graph.insertVertex(
                 this.makeCloudArgs(
                     parent ?? graph.getDefaultParent(),
@@ -55,7 +56,8 @@ export default class FlowPresentation
             newComponents.push(source);
         }
         if (!target) {
-            const point = FirebaseFlow.extractPointFromId(component.getData().to);
+            const point = FirebaseFlow
+                .extractPointFromId(component.getData().to);
             target = graph.insertVertex(
                 this.makeCloudArgs(
                     parent ?? graph.getDefaultParent(),
@@ -170,6 +172,8 @@ export default class FlowPresentation
                 fillColor: theme.palette.canvas.main,
                 strokeColor: theme.palette.canvas.contrastText,
                 movable,
+                editable: false,
+                resizable: false,
             }
         };
     }

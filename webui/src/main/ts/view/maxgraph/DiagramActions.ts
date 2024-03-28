@@ -8,6 +8,7 @@ import ComponentPresentation from "./presentation/ComponentPresentation";
 import UserActionLogger from "../../logging/UserActionLogger";
 import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";
 import MCEdgeHandler from "./MCEdgeHandler";
+import FirebaseFlow from "../../data/components/FirebaseFlow";
 
 // This class contains the logic for making changes to the diagram, including
 // the positions of the components and their values.
@@ -126,9 +127,15 @@ export default abstract class DiagramActions<G extends MCGraph> {
     }
 
     public deleteSelection(): void {
-        const selectedComponents = this.graph!.getSelectionCells();
-        if (selectedComponents.length > 0) {
-            const selectedIds = selectedComponents.map(c => c.getId()!);
+        var selectedCells = this.graph!.getSelectionCells();
+        if (selectedCells.length > 0) {
+            const selectedIds = selectedCells
+                .map(c => c.getId()!)
+                .map(id =>
+                    FirebaseFlow.isCloudId(id)
+                        ? FirebaseFlow.getFlowIdFromCloudId(id)
+                        : id
+                );
             const allComponents = this.getCurrentComponents();
             const orphans = this.findOrphanedArrowIds(
                 selectedIds,
@@ -143,7 +150,9 @@ export default abstract class DiagramActions<G extends MCGraph> {
             if (this.actionLogger) {
                 this.actionLogger.logAction(
                     "Delete selection",
-                    selectedComponents.map(c => c.getValue().getReadableComponentName()).join(',')
+                    selectedCells.map(c =>
+                        c.getValue().getReadableComponentName()
+                    ).join(',')
                 );
             }
         }
@@ -206,8 +215,10 @@ export default abstract class DiagramActions<G extends MCGraph> {
             this.actionLogger.logAction(
                 "Move cells",
                 updatedVertices
-                    .map(u => `${u.getReadableComponentName()}: ${u.getData().x} ${u.getData().y}`)
-                    .join(',')
+                    .map(u =>
+                        `${u.getReadableComponentName()}: `
+                        + `${u.getData().x} ${u.getData().y}`
+                    ).join(',')
             );
         }
     }
@@ -235,8 +246,10 @@ export default abstract class DiagramActions<G extends MCGraph> {
             this.actionLogger.logAction(
                 "Resize cells",
                 updated
-                    .map(u => `${u.getReadableComponentName()}: ${u.getData().width}w ${u.getData().height}h`)
-                    .join(',')
+                    .map(u =>
+                        `${u.getReadableComponentName()}: `
+                        + `${u.getData().width}w ${u.getData().height}h`
+                    ).join(',')
             );
         }
     }

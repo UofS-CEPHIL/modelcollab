@@ -89,4 +89,15 @@ export default class FirebaseFlow
         const suffix = isSource ? "from" : "to";
         return `${flowId}.${suffix}`;
     }
+
+    public static isCloudId(id: string): boolean {
+        const regex = /^\d+\.(from|to)$/;
+        return regex.test(id);
+    }
+
+    public static getFlowIdFromCloudId(cloudId: string): string {
+        if (!FirebaseFlow.isCloudId(cloudId))
+            throw new Error("Invalid cloud id: " + cloudId);
+        return cloudId.split('.')[0];
+    }
 }
