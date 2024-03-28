@@ -73,7 +73,8 @@ export default class FirebaseCausalLoopLink
     }
 
     public getReadableComponentName(): string {
-        return `Link (#${this.getId()})`;
+        return `Link ${this.getData().from} -> `
+            + `${this.getData().to} (#${this.getId()})`;
     }
 
     public getLabel(): string {

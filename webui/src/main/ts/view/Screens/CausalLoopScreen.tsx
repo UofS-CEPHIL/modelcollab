@@ -18,6 +18,7 @@ import FirebaseSessionDataGetter from '../../data/FirebaseSessionDataGetter';
 import { Cell } from '@maxgraph/core';
 import CausalLoopModeSelectPanel from '../maxgraph/toolbar/CausalLoopModeSelectPanel';
 import CausalLoopBehaviourGetter from '../maxgraph/behaviours/causalloop/CausalLoopBehaviourGetter';
+import UserActionLogger from '../../logging/UserActionLogger';
 
 interface Props extends CanvasScreenProps {
     firebaseDataModel: FirebaseDataModel;
@@ -40,6 +41,8 @@ interface State extends CanvasScreenState {
 class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
 
     private static readonly presentation = new CausalLoopPresentationGetter();
+
+    private readonly actionLogger = new UserActionLogger();
 
     protected subscribeToFirebase(): () => void {
         return new FirebaseSessionDataGetter(
@@ -114,7 +117,8 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             new CausalLoopPresentationGetter(),
             this.graph,
             this.props.modelUuid,
-            () => this.state.components
+            () => this.state.components,
+            this.actionLogger,
         );
     }
 
@@ -136,6 +140,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             p => this.setKeydownPosition(p),
             () => this.state.keydownCell,
             (c: Cell | null) => this.setKeydownCell(c),
+            this.actionLogger,
         );
     }
 
@@ -169,6 +174,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
                 components={this.state.components}
                 errors={this.state.errors}
                 uiMode={this.state.mode}
+                actionLogger={this.actionLogger}
             />
         );
     }

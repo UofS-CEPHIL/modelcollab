@@ -13,6 +13,7 @@ import ModalBoxType from "../ModalBox/ModalBoxType";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import MCGraph from "./MCGraph";
 import MCKeyHandler from "./MCKeyHandler";
+import UserActionLogger from "../../logging/UserActionLogger";
 
 // TODO just bind all the keys and either have a function or don't
 export const BINDABLE_KEYS = "QWERASDF";
@@ -24,6 +25,7 @@ export default class UserControls {
     private undoManager: UndoManager;
     private diagramActions: DiagramActions<any>;
     private behaviourGetter: BehaviourGetter;
+    private actionLogger?: UserActionLogger;
 
     private copyCells: (c: FirebaseComponent[]) => void;
     private pasteCells: () => FirebaseComponent[];
@@ -53,12 +55,15 @@ export default class UserControls {
         getKeydownPosition: () => (Point | null),
         setKeydownPosition: (p: Point | null) => void,
         getKeydownCell: () => (Cell | null),
-        setKeydownCell: (c: Cell | null) => void
+        setKeydownCell: (c: Cell | null) => void,
+        actionLogger?: UserActionLogger,
     ) {
         this.graph = graph;
         this.diagramActions = actions;
         this.behaviourGetter = behaviourGetter;
         this.keyHandler = new MCKeyHandler(graph);
+        this.actionLogger = actionLogger;
+
         this.setOpenModalBox = setOpenModalBox;
         this.getMode = getMode;
         this.copyCells = copyCells;
@@ -131,13 +136,29 @@ export default class UserControls {
         // Select all
         this.keyHandler.bindControlKey(
             getCharCode("A"),
-            () => this.graph.selectAll()
+            () => {
+                if (this.actionLogger) {
+                    this.actionLogger.logAction("Ctrl A");
+                }
+                this.graph.selectAll();
+            }
         );
 
         // Delete selection
         this.keyHandler.bindKey(
             getCharCode("\b"),
-            () => this.diagramActions.deleteSelection()
+            () => {
+                if (this.actionLogger) {
+                    this.actionLogger.logAction(
+                        "Backspace",
+                        this.graph
+                            .getSelectionCells()
+                            .map(c => c.getValue().getReadableComponentName())
+                            .join(", ")
+                    );
+                }
+                this.diagramActions.deleteSelection();
+            }
         );
         this.keyHandler.bindKey(
             127 /*DEL*/,
@@ -190,6 +211,11 @@ export default class UserControls {
             (_: EventTarget, event: EventObject) => {
                 const pos = this.getClickLocation(event);
                 if (this.isRightClick(event)) {
+                    if (this.actionLogger) {
+                        this.actionLogger.logAction(
+                            `RightClick (${pos.x}, ${pos.y})`
+                        );
+                    }
                     this.getBehaviour().canvasRightClicked(pos.x, pos.y);
                 }
                 else {
@@ -197,6 +223,18 @@ export default class UserControls {
                     // clicks are handled by selectionChanged listeners
                     if (!event.getProperty("cell")) {
                         this.getBehaviour().canvasClicked(pos.x, pos.y);
+                    }
+                    if (this.actionLogger) {
+                        const cell = event.getProperty("cell");
+                        const clickTarget = cell ?
+                            cell
+                                .getValue()
+                                .getReadableComponentName()
+                            : "canvas";
+                        this.actionLogger.logAction(
+                            `LeftClick (${pos.x}, ${pos.y})`,
+                            clickTarget
+                        );
                     }
                 }
             }
@@ -229,6 +267,10 @@ export default class UserControls {
                         // If user is already holding down a key then wait for
                         // them to lift it before doing anything
                         if (this.getKeydownPosition() != null) return;
+
+                        if (this.actionLogger) {
+                            this.actionLogger.logAction(`Keydown ${e.key}`);
+                        }
                         this.getBehaviour().handleKeyDown(e);
                         this.setKeydownPosition(this.getCursorPosition());
                     },
@@ -240,6 +282,10 @@ export default class UserControls {
                                 "Lifting key without keydown position"
                             );
                             return;
+                        }
+
+                        if (this.actionLogger) {
+                            this.actionLogger.logAction(`Keyup ${e.key}`);
                         }
                         this.getBehaviour().handleKeyUp(e);
                         this.setKeydownPosition(null);

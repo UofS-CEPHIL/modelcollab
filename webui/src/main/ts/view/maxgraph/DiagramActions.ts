@@ -1,5 +1,4 @@
-import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, Point, Rectangle, UndoableChange, ValueChange } from "@maxgraph/core";
-import { FirebasePointerData } from "../../data/components/FirebaseComponent";
+import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, Point, UndoableChange, ValueChange } from "@maxgraph/core";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointComponent from "../../data/components/FirebasePointComponent";
 import FirebaseRectangleComponent from "../../data/components/FirebaseRectangleComponent";
@@ -8,6 +7,7 @@ import MCGraph from "./MCGraph";
 import ComponentPresentation from "./presentation/ComponentPresentation";
 import { CausalLoopLinkEdgeHandler } from "./CausalLoopGraph";
 import FirebaseCausalLoopLink from "../../data/components/FirebaseCausalLoopLink";
+import UserActionLogger from "../../logging/UserActionLogger";
 
 // This class contains the logic for making changes to the diagram, including
 // the positions of the components and their values.
@@ -23,6 +23,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
     protected graph: G;
     protected modelUuid: string;
     protected getCurrentComponents: () => FirebaseComponent[];
+    protected actionLogger?: UserActionLogger;
     protected presentation: ComponentPresentation<FirebaseComponent>;
 
     public constructor(
@@ -31,12 +32,14 @@ export default abstract class DiagramActions<G extends MCGraph> {
         graph: G,
         modelUuid: string,
         getCurrentComponents: () => FirebaseComponent[],
+        actionLogger?: UserActionLogger,
     ) {
         this.fbData = fbData;
         this.presentation = presentation;
         this.graph = graph;
         this.modelUuid = modelUuid;
         this.getCurrentComponents = getCurrentComponents;
+        this.actionLogger = actionLogger;
 
         // Listen for graph actions and update Firebase when they happen. This
         // is only for actions that don't originate from "UserControls" and
@@ -53,11 +56,30 @@ export default abstract class DiagramActions<G extends MCGraph> {
             CausalLoopLinkEdgeHandler.EDGE_POINTS,
             (s: EventSource, o: EventObject) => this.onCellPointsEdited(s, o)
         );
+
+        this.graph.addListener(
+            InternalEvent.LABEL_CHANGED,
+            (_: EventSource, o: EventObject) => {
+                if (this.actionLogger) {
+                    this.actionLogger.logAction(
+                        "Label Changed",
+                        `"${o.getProperty("value")}" (${o.getProperty("cell").getValue().getReadableComponentName()})`
+                    );
+                }
+            }
+        );
     }
 
     public addComponent(component: FirebaseComponent): void {
         // "update" and "add" are the same thing in Firebase
         this.updateComponent(component);
+
+        if (this.actionLogger) {
+            this.actionLogger.logAction(
+                "Component added",
+                component.getReadableComponentName()
+            );
+        }
     }
 
     public updateComponent(component: FirebaseComponent): void {
@@ -114,6 +136,13 @@ export default abstract class DiagramActions<G extends MCGraph> {
                 [...selectedIds, ...orphans],
                 allComponents
             );
+
+            if (this.actionLogger) {
+                this.actionLogger.logAction(
+                    "Delete selection",
+                    selectedComponents.map(c => c.getValue().getReadableComponentName()).join(',')
+                );
+            }
         }
     }
 
@@ -124,6 +153,13 @@ export default abstract class DiagramActions<G extends MCGraph> {
             component = component.getId();
         }
         this.fbData.removeComponent(this.modelUuid, component);
+
+        if (this.actionLogger) {
+            this.actionLogger.logAction(
+                "Delete component",
+                this.getCurrentComponents().find(c => c.getId() === component)?.getReadableComponentName()
+            );
+        }
     }
 
     protected onCellsMoved(_: EventSource, event: EventObject): void {
@@ -151,6 +187,15 @@ export default abstract class DiagramActions<G extends MCGraph> {
             this.modelUuid,
             [...updatedVertices, ...others]
         );
+
+        if (this.actionLogger) {
+            this.actionLogger.logAction(
+                "Move cells",
+                updatedVertices
+                    .map(u => `${u.getReadableComponentName()}: ${u.getData().x} ${u.getData().y}`)
+                    .join(',')
+            );
+        }
     }
 
     protected onCellsResized(_: EventSource, event: EventObject): void {
@@ -172,6 +217,14 @@ export default abstract class DiagramActions<G extends MCGraph> {
             [...updated, ...others]
         );
 
+        if (this.actionLogger) {
+            this.actionLogger.logAction(
+                "Resize cells",
+                updated
+                    .map(u => `${u.getReadableComponentName()}: ${u.getData().width}w ${u.getData().height}h`)
+                    .join(',')
+            );
+        }
     }
 
     protected onCellPointsEdited(_: EventSource, event: EventObject): void {
@@ -191,6 +244,13 @@ export default abstract class DiagramActions<G extends MCGraph> {
                     .getValue()
                     .withPoints(points, entryX, entryY, exitX, exitY)
             );
+
+            if (this.actionLogger) {
+                this.actionLogger.logAction(
+                    "Bend arrow",
+                    cell.getValue().getReadableComponentName()
+                );
+            }
         }
     }
 
