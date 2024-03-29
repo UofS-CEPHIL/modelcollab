@@ -1,9 +1,7 @@
 import { Cell, Point } from "@maxgraph/core";
-import ComponentType from "../../../data/components/ComponentType";
-import { FirebaseComponentBase } from "../../../data/components/FirebaseComponent";
-import { FirebaseSubstitution } from "../../../data/components/FirebaseSubstitution";
-import IdGenerator from "../../../IdGenerator";
-import FlowPresentation from "../presentation/FlowPresentation";
+import ComponentType from "../../../../data/components/ComponentType";
+import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
+import FlowPresentation from "../../presentation/FlowPresentation";
 import ArrowBehaviour from "./ArrowBehaviour";
 
 // This mode acts as an "arrow mode" in the sense that it creates a pairing

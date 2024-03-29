@@ -1,6 +1,6 @@
 import { Cell } from "@maxgraph/core";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
-import ChangeModeOnButtonPressBehaviour from "./ChangeModeOnButtonPressBehaviour";
+import ChangeModeOnButtonPressBehaviour from "../ChangeModeOnButtonPressBehaviour";
 
 export default class DeleteBehaviour extends ChangeModeOnButtonPressBehaviour {
 

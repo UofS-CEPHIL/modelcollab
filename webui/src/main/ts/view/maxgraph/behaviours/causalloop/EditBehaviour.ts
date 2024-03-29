@@ -2,7 +2,7 @@ import { Cell } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
 import FirebaseLoopIcon from "../../../../data/components/FirebaseLoopIcon";
-import ChangeModeOnButtonPressBehaviour from "./ChangeModeOnButtonPressBehaviour";
+import ChangeModeOnButtonPressBehaviour from "../ChangeModeOnButtonPressBehaviour";
 
 export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
 

@@ -1,7 +1,7 @@
 import { Cell, Point } from "@maxgraph/core";
-import ComponentType from "../../../data/components/ComponentType";
-import FirebaseFlow from "../../../data/components/FirebaseFlow";
-import IdGenerator from "../../../IdGenerator";
+import ComponentType from "../../../../data/components/ComponentType";
+import FirebaseFlow from "../../../../data/components/FirebaseFlow";
+import IdGenerator from "../../../../IdGenerator";
 import ArrowBehaviour from "./ArrowBehaviour";
 
 export default class FlowModeBehaviour extends ArrowBehaviour {

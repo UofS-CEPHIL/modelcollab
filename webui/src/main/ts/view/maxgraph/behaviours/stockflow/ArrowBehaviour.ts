@@ -1,7 +1,8 @@
 import { Cell, Point } from "@maxgraph/core";
-import DefaultBehaviour from "./DefaultBehaviour";
+import ChangeModeOnButtonPressBehaviour from "../ChangeModeOnButtonPressBehaviour";
 
-export default abstract class ArrowBehaviour extends DefaultBehaviour {
+export default abstract class ArrowBehaviour
+    extends ChangeModeOnButtonPressBehaviour {
 
     protected abstract canConnect(
         source: Cell | Point,

@@ -9,6 +9,7 @@ export default abstract class ModeBehaviour {
 
     private graph: MCGraph;
     private actions: DiagramActions<any>;
+    protected modeKeyMappings: { [key: string]: UiMode };
     protected getFirebaseState: () => FirebaseComponent[]
     protected setOpenModalBox: (t: ModalBoxType) => void;
     protected getCursorPosition: () => Point;
@@ -21,6 +22,7 @@ export default abstract class ModeBehaviour {
     public constructor(
         graph: MCGraph,
         actions: DiagramActions<any>,
+        modeKeyMappings: { [key: string]: UiMode },
         getFirebaseState: () => FirebaseComponent[],
         setOpenModalBox: (t: ModalBoxType) => void,
         getCursorPosition: () => Point,
@@ -32,6 +34,7 @@ export default abstract class ModeBehaviour {
     ) {
         this.graph = graph;
         this.actions = actions;
+        this.modeKeyMappings = modeKeyMappings;
         this.getFirebaseState = getFirebaseState;
         this.setOpenModalBox = setOpenModalBox;
         this.getCursorPosition = getCursorPosition;

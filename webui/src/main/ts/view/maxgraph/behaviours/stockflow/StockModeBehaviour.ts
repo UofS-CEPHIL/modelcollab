@@ -1,14 +1,14 @@
-import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
+import FirebaseStock from "../../../../data/components/FirebaseStock";
 import AddVertexOnClickAndChangeModeOnButtonBehaviour from "../AddVertexOnClickAndChangeModeOnButtonBehaviour";
 
-export default class CausalLoopVertexBehaviour
+export class StockModeBehaviour
     extends AddVertexOnClickAndChangeModeOnButtonBehaviour {
 
     protected createComponent(
         x: number,
         y: number,
         id: string
-    ): FirebaseCausalLoopVertex {
-        return FirebaseCausalLoopVertex.createNew(id, x, y);
+    ): FirebaseStock {
+        return FirebaseStock.createNew(id, x, y);
     }
 }

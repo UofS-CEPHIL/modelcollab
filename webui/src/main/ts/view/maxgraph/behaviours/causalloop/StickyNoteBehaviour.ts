@@ -1,5 +1,5 @@
 import FirebaseStickyNote from "../../../../data/components/FirebaseStickyNote";
-import AddVertexOnClickAndChangeModeOnButtonBehaviour from "./AddVertexOnClickAndChangeModeOnButtonBehaviour";
+import AddVertexOnClickAndChangeModeOnButtonBehaviour from "../AddVertexOnClickAndChangeModeOnButtonBehaviour";
 
 export default class StickyNoteBehaviour extends AddVertexOnClickAndChangeModeOnButtonBehaviour {
     protected createComponent(

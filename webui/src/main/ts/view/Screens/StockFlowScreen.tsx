@@ -23,8 +23,8 @@ import StockFlowSidebar from '../maxgraph/toolbar/StockFlowSidebar';
 import StockFlowDiagramActions from '../maxgraph/StockFlowDiagramActions';
 
 import StockFlowPresentationGetter from '../maxgraph/presentation/StockFlowPresentationGetter';
-import UiModeSpeedDial from '../maxgraph/toolbar/UiModeSpeedDial';
-import StockFlowBehaviourGetter from '../maxgraph/behaviours/StockFlowBehaviourGetter';
+import StockFlowBehaviourGetter from '../maxgraph/behaviours/stockflow/StockFlowBehaviourGetter';
+import StockFlowModeSelectPanel from '../maxgraph/toolbar/StockFlowModeSelectPanel';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -222,10 +222,10 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
 
     protected makeModeSelector(): ReactElement {
         return (
-            <UiModeSpeedDial
-                mode={this.state.mode}
-                changeMode={mode => this.setState({ mode })}
+            <StockFlowModeSelectPanel
                 sx={{ left: 30, top: 30 }}
+                mode={this.state.mode}
+                changeMode={m => this.setState({ mode: m })}
             />
         );
     }

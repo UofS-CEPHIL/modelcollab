@@ -1,10 +1,10 @@
 import { Cell, Point } from "@maxgraph/core";
-import FirebaseComponent from "../../../data/components/FirebaseComponent";
-import { UiMode } from "../../../UiMode";
-import ModalBoxType from "../../ModalBox/ModalBoxType";
-import DiagramActions from "../DiagramActions";
-import StockFlowGraph from "../StockFlowGraph";
-import BehaviourGetter from "./BehaviourGetter";
+import FirebaseComponent from "../../../../data/components/FirebaseComponent";
+import { UiMode } from "../../../../UiMode";
+import ModalBoxType from "../../../ModalBox/ModalBoxType";
+import DiagramActions from "../../DiagramActions";
+import StockFlowGraph from "../../StockFlowGraph";
+import BehaviourGetter from "../BehaviourGetter";
 import { ConnectModeBehaviour } from "./ConnectModeBehaviour";
 import DynamicVariableModeBehaviour from "./DynamicVariableModeBehaviour";
 import FlowModeBehaviour from "./FlowModeBehaviour";
@@ -15,6 +15,18 @@ import { StockModeBehaviour } from "./StockModeBehaviour";
 import SumVariableModeBehaviour from "./SumVariableModeBehaviour";
 
 export default class StockFlowBehaviourGetter extends BehaviourGetter {
+
+    public static readonly MODE_KEY_MAPPINGS = {
+        "q": UiMode.STOCK,
+        "w": UiMode.PARAM,
+        "e": UiMode.DYN_VARIABLE,
+        "r": UiMode.SUM_VARIABLE,
+        "a": UiMode.MOVE,
+        "s": UiMode.FLOW,
+        "d": UiMode.CONNECT,
+        "f": UiMode.IDENTIFY,
+    };
+
     public setBehaviours(
         setMode: (mode: UiMode) => void,
         graph: StockFlowGraph,
@@ -30,6 +42,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.MOVE] = new MoveModeBehaviour(
             graph,
             actions,
+            StockFlowBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -42,6 +55,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.STOCK] = new StockModeBehaviour(
             graph,
             actions,
+            StockFlowBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -54,6 +68,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.PARAM] = new ParameterModeBehaviour(
             graph,
             actions,
+            StockFlowBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -66,6 +81,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.DYN_VARIABLE] = new DynamicVariableModeBehaviour(
             graph,
             actions,
+            StockFlowBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -78,6 +94,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.SUM_VARIABLE] = new SumVariableModeBehaviour(
             graph,
             actions,
+            StockFlowBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -90,6 +107,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.FLOW] = new FlowModeBehaviour(
             graph,
             actions,
+            StockFlowBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -102,6 +120,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.CONNECT] = new ConnectModeBehaviour(
             graph,
             actions,
+            StockFlowBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -114,6 +133,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.IDENTIFY] = new IdentifyModeBehaviour(
             graph,
             actions,
+            StockFlowBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,

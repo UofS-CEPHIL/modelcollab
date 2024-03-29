@@ -14,6 +14,16 @@ import CausalLoopVertexBehaviour from "./CausalLoopVertexBehaviour";
 import LoopIconBehaviour from "./LoopIconBehvaiour";
 
 export default class CausalLoopBehaviourGetter extends BehaviourGetter {
+
+    public static readonly MODE_KEY_MAPPINGS = {
+        "q": UiMode.STOCK,
+        "w": UiMode.CONNECT,
+        "e": UiMode.LOOP_ICON,
+        "r": UiMode.STICKY_NOTE,
+        "a": UiMode.EDIT,
+        "s": UiMode.DELETE
+    };
+
     protected setBehaviours(
         setMode: (mode: UiMode) => void,
         graph: CausalLoopGraph,
@@ -29,6 +39,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.NONE] = new CausalLoopHotkeyBehaviour(
             graph,
             actions,
+            CausalLoopBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -41,6 +52,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.STOCK] = new CausalLoopVertexBehaviour(
             graph,
             actions,
+            CausalLoopBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -53,6 +65,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.CONNECT] = new CausalLoopLinkBehaviour(
             graph,
             actions,
+            CausalLoopBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -65,6 +78,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.EDIT] = new EditBehaviour(
             graph,
             actions,
+            CausalLoopBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -77,6 +91,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.STICKY_NOTE] = new StickyNoteBehaviour(
             graph,
             actions,
+            CausalLoopBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -89,6 +104,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.LOOP_ICON] = new LoopIconBehaviour(
             graph,
             actions,
+            CausalLoopBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,
@@ -101,6 +117,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         this.behaviours[UiMode.DELETE] = new DeleteBehaviour(
             graph,
             actions,
+            CausalLoopBehaviourGetter.MODE_KEY_MAPPINGS,
             getFirebaseState,
             setOpenModalBox,
             getCursorPosition,

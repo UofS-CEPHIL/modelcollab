@@ -3,7 +3,7 @@ import FirebaseCausalLoopLink, { Polarity } from "../../../../data/components/Fi
 import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
 import IdGenerator from "../../../../IdGenerator";
-import ChangeModeOnButtonPressBehaviour from "./ChangeModeOnButtonPressBehaviour";
+import ChangeModeOnButtonPressBehaviour from "../ChangeModeOnButtonPressBehaviour";
 
 export default class CausalLoopLinkBehaviour
     extends ChangeModeOnButtonPressBehaviour {

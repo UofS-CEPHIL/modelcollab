@@ -1,6 +1,6 @@
 import FirebaseLoopIcon from "../../../../data/components/FirebaseLoopIcon";
 import FirebasePointComponent from "../../../../data/components/FirebasePointComponent";
-import AddVertexOnClickAndChangeModeOnButtonBehaviour from "./AddVertexOnClickAndChangeModeOnButtonBehaviour";
+import AddVertexOnClickAndChangeModeOnButtonBehaviour from "../AddVertexOnClickAndChangeModeOnButtonBehaviour";
 
 export default class LoopIconBehaviour
     extends AddVertexOnClickAndChangeModeOnButtonBehaviour {

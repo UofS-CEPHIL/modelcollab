@@ -1,14 +1,14 @@
-import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
+import FirebaseDynamicVariable from "../../../../data/components/FirebaseDynamicVariable";
 import AddVertexOnClickAndChangeModeOnButtonBehaviour from "../AddVertexOnClickAndChangeModeOnButtonBehaviour";
 
-export default class CausalLoopVertexBehaviour
+export default class DynamicVariableModeBehaviour
     extends AddVertexOnClickAndChangeModeOnButtonBehaviour {
 
     protected createComponent(
         x: number,
         y: number,
         id: string
-    ): FirebaseCausalLoopVertex {
-        return FirebaseCausalLoopVertex.createNew(id, x, y);
+    ): FirebaseDynamicVariable {
+        return FirebaseDynamicVariable.createNew(id, x, y);
     }
 }

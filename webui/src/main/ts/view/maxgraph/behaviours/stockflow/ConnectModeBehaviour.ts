@@ -1,8 +1,8 @@
 import { Cell, Point } from "@maxgraph/core";
-import ComponentType from "../../../data/components/ComponentType";
-import { FirebaseComponentBase } from "../../../data/components/FirebaseComponent";
-import FirebaseConnection from "../../../data/components/FirebaseConnection";
-import IdGenerator from "../../../IdGenerator";
+import ComponentType from "../../../../data/components/ComponentType";
+import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
+import FirebaseConnection from "../../../../data/components/FirebaseConnection";
+import IdGenerator from "../../../../IdGenerator";
 import ArrowBehaviour from "./ArrowBehaviour";
 
 export class ConnectModeBehaviour extends ArrowBehaviour {
