@@ -1,7 +1,8 @@
-import { List, ListItem, TextField } from '@mui/material';
+import { Button, Divider, List, ListItem, ListItemButton, TextField, Typography } from '@mui/material';
 import React, { ReactElement } from 'react';
 import ComponentType from '../../../data/components/ComponentType';
 import FirebaseComponent from '../../../data/components/FirebaseComponent';
+import FirebaseStaticModel from '../../../data/components/FirebaseStaticModel';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
 import RefreshAndSaveListItem from './RefreshAndSaveListItem';
 import TypographyListItem from './TypographyListItem';
@@ -53,39 +54,57 @@ export default class EditComponentsSidebarContent
                 {
                     this.props.component?.getType() &&
                     <TypographyListItem
-                        text={"Edit " + this.props.component.getType()}
+                        text={
+                            "Edit " +
+                            this.props.component.getType().replaceAll("_", " ")
+                        }
                         italic
                         bold
                         key={-2}
                     />
                 }
+                <Divider />
                 {this.makeListItems()}
             </List>
         );
     }
 
-    private makeListItems(): ReactElement[] {
+    private makeListItems(): (ReactElement | null)[] {
         if (this.state.currentComponent) {
+            const isInner = FirebaseStaticModel
+                .isStaticModelChildId(this.state.currentComponent.getId());
             switch (this.state.currentComponent.getType()) {
                 case ComponentType.STOCK:
                     return [
-                        this.makeTextBoxListItem("text", "Name"),
-                        this.makeTextBoxListItem("value", "Initial Value"),
+                        this.makeUnapplySubstitutionsButton(),
+                        this.makeTextBoxListItem("text", isInner, "Name"),
+                        this.makeTextBoxListItem(
+                            "value",
+                            isInner,
+                            "Initial Value"
+                        ),
                     ];
                 case ComponentType.PARAMETER:
                 case ComponentType.VARIABLE:
                     return [
-                        this.makeTextBoxListItem("text", "Name"),
-                        this.makeTextBoxListItem("value", "Value"),
+                        this.makeUnapplySubstitutionsButton(),
+                        this.makeTextBoxListItem("text", isInner, "Name"),
+                        this.makeTextBoxListItem("value", isInner, "Value"),
                     ];
                 case ComponentType.SUM_VARIABLE:
                     return [
-                        this.makeTextBoxListItem("text", "Name")
+                        this.makeUnapplySubstitutionsButton(),
+                        this.makeTextBoxListItem("text", isInner, "Name")
                     ];
                 case ComponentType.FLOW:
                     return [
-                        this.makeTextBoxListItem("text", "Name"),
-                        this.makeTextBoxListItem("equation", "Equation"),
+                        this.makeUnapplySubstitutionsButton(),
+                        this.makeTextBoxListItem("text", isInner, "Name"),
+                        this.makeTextBoxListItem(
+                            "equation",
+                            isInner,
+                            "Equation"
+                        ),
                     ];
                 default:
                     return [
@@ -110,6 +129,7 @@ export default class EditComponentsSidebarContent
 
     private makeTextBoxListItem(
         fieldName: string,
+        disabled: boolean,
         text: string = fieldName
     ): ReactElement {
         return (
@@ -128,7 +148,28 @@ export default class EditComponentsSidebarContent
                     inputProps={{
                         id: `${fieldName}-editbox`,
                     }}
+                    disabled={disabled}
                 />
+            </ListItem>
+        );
+    }
+
+    private makeUnapplySubstitutionsButton(): ReactElement | null {
+        if (!this.state.currentComponent) return null;
+        return (
+            <ListItem key={-4}>
+                <Button
+                    variant={"contained"}
+                    onClick={() =>
+                        this.props.firebaseDataModel
+                            .unidentifyAllComponents(
+                                this.props.sessionId,
+                                this.state.currentComponent!.getId()
+                            )
+                    }
+                >
+                    Undo Identifications
+                </Button>
             </ListItem>
         );
     }

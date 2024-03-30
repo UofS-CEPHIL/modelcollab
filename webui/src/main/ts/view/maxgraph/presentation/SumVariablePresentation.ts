@@ -1,6 +1,7 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebaseSumVariable from "../../../data/components/FirebaseSumVariable";
 import { theme } from "../../../Themes";
+import MCGraph from "../MCGraph";
 import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class SumVariablePresentation
@@ -10,8 +11,9 @@ export default class SumVariablePresentation
     protected makeVertexParameters(
         parent: Cell,
         sumvar: FirebaseSumVariable,
-        movable: boolean
+        graph: MCGraph,
     ): VertexParameters {
+        const isInner = parent !== graph.getDefaultParent();
         return {
             parent,
             id: sumvar.getId(),
@@ -27,7 +29,10 @@ export default class SumVariablePresentation
                 fontColor: theme.palette.canvas.contrastText,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 fontStyle: 1,
-                movable,
+                whiteSpace: "wrap",
+                movable: !isInner,
+                editable: !isInner,
+                resizable: !isInner,
             }
         };
     }

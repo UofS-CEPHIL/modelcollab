@@ -13,8 +13,6 @@ export default interface ComponentPresentation<T extends FirebaseComponent> {
         component: T,
         graph: MCGraph,
         parent?: Cell,
-        loadStaticModelComponents?: (name: string) => void,
-        movable?: boolean
     ): Cell | Cell[];
 
     // Update an existing cell in the graph to match the given component. This
@@ -24,7 +22,7 @@ export default interface ComponentPresentation<T extends FirebaseComponent> {
         component: T,
         cell: Cell,
         graph: MCGraph,
-        loadedModels?: LoadedStaticModel[]
+        loadedModel?: LoadedStaticModel // If the component is a static model
     ): void;
 
     // Return the given component with the data updated to match the given cell

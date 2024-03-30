@@ -2,29 +2,12 @@ import { Cell, EventObject } from "@maxgraph/core";
 import FirebaseComponent from "../../data/components/FirebaseComponent";
 import FirebaseFlow from "../../data/components/FirebaseFlow";
 import FirebasePointComponent from "../../data/components/FirebasePointComponent";
-import FirebaseDataModel from "../../data/FirebaseDataModel";
-import { LoadedStaticModel } from "../Screens/StockFlowScreen";
 import DiagramActions from "./DiagramActions";
-import ComponentPresentation from "./presentation/ComponentPresentation";
 import StockFlowGraph from "./StockFlowGraph";
 
 export default class StockFlowDiagramActions
     extends DiagramActions<StockFlowGraph>
 {
-
-    private getLoadedStaticModels: () => LoadedStaticModel[];
-
-    public constructor(
-        fbData: FirebaseDataModel,
-        presentation: ComponentPresentation<FirebaseComponent>,
-        graph: StockFlowGraph,
-        modelUuid: string,
-        getCurrentComponents: () => FirebaseComponent[],
-        getLoadedStaticModels: () => LoadedStaticModel[]
-    ) {
-        super(fbData, presentation, graph, modelUuid, getCurrentComponents);
-        this.getLoadedStaticModels = getLoadedStaticModels;
-    }
 
     // Override to handle clouds
     protected onCellsMoved(_: EventSource, event: EventObject): void {
@@ -67,7 +50,7 @@ export default class StockFlowDiagramActions
             (v as FirebasePointComponent<any>)
                 .withUpdatedLocation(dx, dy)
         );
-        this.fbData.setAllComponents(
+        this.firebaseDataModel.setAllComponents(
             this.modelUuid,
             [...updatedVertices, ...updatedFlows, ...others]
         );

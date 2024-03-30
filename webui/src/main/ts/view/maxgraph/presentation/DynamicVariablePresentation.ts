@@ -1,6 +1,7 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebaseDynamicVariable from "../../../data/components/FirebaseDynamicVariable";
 import { theme } from "../../../Themes";
+import MCGraph from "../MCGraph";
 import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class DynamicVariablePresentation
@@ -10,8 +11,9 @@ export default class DynamicVariablePresentation
     protected makeVertexParameters(
         parent: Cell,
         dynvar: FirebaseDynamicVariable,
-        movable: boolean
+        graph: MCGraph,
     ): VertexParameters {
+        const isInner = parent !== graph.getDefaultParent();
         return {
             parent,
             value: dynvar,
@@ -27,7 +29,10 @@ export default class DynamicVariablePresentation
                 fontColor: theme.palette.canvas.contrastText,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 fontStyle: 3,
-                movable
+                whiteSpace: "wrap",
+                movable: !isInner,
+                editable: !isInner,
+                resizable: !isInner,
             }
         };
     }

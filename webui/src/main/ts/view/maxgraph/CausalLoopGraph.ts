@@ -10,6 +10,7 @@ export default class CausalLoopGraph extends MCGraph {
         oldComponents: FirebaseComponent[],
         errors: ComponentErrors
     ): void {
+        // TODO duplicate code
         const findComponent = (id: string) =>
             newComponents.find(c => c.getId() === id)!;
 
@@ -20,7 +21,8 @@ export default class CausalLoopGraph extends MCGraph {
         this.batchUpdate(() => {
             this.addComponentsInCorrectOrder(toAdd);
             toUpdate.forEach(c => this.updateComponent(c));
-            updates.deletedIds.forEach(id => this.deleteComponent(id));
+            updates.deletedIds
+                .forEach(id => this.deleteComponent(id, newComponents));
             this.refreshLabels(
                 updates.updatedIds.map(id => this.getCellWithIdOrThrow(id))
             );

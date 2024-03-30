@@ -1,4 +1,5 @@
 import ComponentType from "./ComponentType";
+import FirebaseStaticModel from "./FirebaseStaticModel";
 
 // Represents any object that acts as the "data" field for any FirebaseDataComponent
 export interface FirebaseDataObject { };
@@ -35,10 +36,14 @@ export abstract class FirebaseComponentBase
     <DataType extends FirebaseDataObject>
     extends FirebaseEntityBase<DataType> {
 
+    public static readonly ID_DELIMITER = "-";
+
     public getContainingModelId(): string | undefined {
-        const idSplit = this.getId().split('/');
+        const idSplit = this.getId().split(FirebaseComponentBase.ID_DELIMITER);
         if (idSplit.length === 1) return undefined;
-        else return idSplit.slice(0, idSplit.length - 1).join('/');
+        else return idSplit
+            .slice(0, idSplit.length - 1)
+            .join(FirebaseComponentBase.ID_DELIMITER);
     }
 
     public clone(): FirebaseComponentBase<DataType> {

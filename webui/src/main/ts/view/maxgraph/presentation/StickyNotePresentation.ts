@@ -2,6 +2,7 @@ import FirebaseStickyNote from "../../../data/components/FirebaseStickyNote";
 import { Cell, VertexParameters } from "@maxgraph/core";
 import TextComponentPresentation from "./TextComponentPresentation";
 import { theme } from "../../../Themes";
+import MCGraph from "../MCGraph";
 
 export default class StickyNotePresentation
     extends TextComponentPresentation<FirebaseStickyNote>
@@ -10,8 +11,9 @@ export default class StickyNotePresentation
     protected makeVertexParameters(
         parent: Cell,
         component: FirebaseStickyNote,
-        movable: boolean
+        graph: MCGraph,
     ): VertexParameters {
+        const isInner = parent !== graph.getDefaultParent();
         return {
             parent,
             id: component.getId(),
@@ -30,9 +32,10 @@ export default class StickyNotePresentation
                 fontColor: theme.palette.canvas.contrastText,
                 align: "left",
                 verticalAlign: "top",
-                editable: true,
                 whiteSpace: "wrap",
-                movable,
+                editable: !isInner,
+                movable: !isInner,
+                resizable: !isInner,
             }
         }
     }

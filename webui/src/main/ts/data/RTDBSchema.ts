@@ -1,11 +1,10 @@
 export default class RTDBSchema {
-
-    static makeSessionPath(modelUuid: string): string {
-        return `/sessions/${modelUuid}/`;
+    static makeModelPath(modelUuid: string): string {
+        return `/models/${modelUuid}/`;
     }
 
     static makeComponentsPath(modelUuid: string): string {
-        return this.makeSessionPath(modelUuid) + "/components"
+        return this.makeModelPath(modelUuid) + "/components"
     }
 
     static makeComponentPath(modelUuid: string, componentId: string): string {
@@ -13,26 +12,45 @@ export default class RTDBSchema {
     }
 
     static makeModelNamePath(modelUuid: string): string {
-        return this.makeSessionPath(modelUuid) + "/name";
+        return this.makeModelPath(modelUuid) + "/name";
     }
 
     static makeScenariosPath(modelUuid: string): string {
-        return this.makeSessionPath(modelUuid) + "/scenarios";
+        return this.makeModelPath(modelUuid) + "/scenarios";
     }
 
     static makeScenarioPath(modelUuid: string, scenarioId: string): string {
         return this.makeScenariosPath(modelUuid) + "/" + scenarioId;
     }
 
+    static makeSubstitutionsPath(modelUuid: string): string {
+        return this.makeModelPath(modelUuid) + "/substitutions";
+    }
+
+    static makeSubstitutionPath(modelUuid: string, replacedId: string): string {
+        return this.makeSubstitutionsPath(modelUuid) + "/" + replacedId;
+    }
+
     static makeSavedModelsPath(modelUuid: string): string {
-        return this.makeSessionPath(modelUuid) + "/loadedModels";
+        return this.makeModelPath(modelUuid) + "/loadedModels";
     }
 
-    static getNumUsingName(): string {
-        return "numUsing";
+    static makeSavedModelPath(
+        modelUuid: string,
+        loadedModelUuid: string
+    ): string {
+        return this.makeSavedModelsPath(modelUuid) + "/" + loadedModelUuid;
     }
 
-    static makeNumUsingPath(modelUuid: string): string {
-        return this.makeSessionPath(modelUuid) + "/" + this.getNumUsingName();
+    static makeUserOwnedModelPath(uid: string, modelUuid: string): string {
+        return `${this.makeUserOwnedModelsPath(uid)}/${modelUuid}`
+    }
+
+    static makeUserOwnedModelsPath(uid: string): string {
+        return `${this.makeUserPath(uid)}/ownedModels`;
+    }
+
+    static makeUserPath(uid: string): string {
+        return `/users/${uid}`;
     }
 }

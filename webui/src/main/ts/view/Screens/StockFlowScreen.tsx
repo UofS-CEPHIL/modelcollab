@@ -5,7 +5,6 @@ import CanvasScreen, { Props as CanvasScreenProps, State as CanvasScreenState } 
 import StockFlowGraph from "../maxgraph/StockFlowGraph";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 import ModalBoxType from "../ModalBox/ModalBoxType";
-import HelpBox from "../ModalBox/HelpBox";
 import RestClient from "../../rest/RestClient";
 import ImportModelBox from "../ModalBox/ImportModelBox";
 import IdGenerator from "../../IdGenerator";
@@ -21,10 +20,11 @@ import FirebaseScenario from '../../data/components/FirebaseScenario';
 import StockFlowToolbar from '../maxgraph/toolbar/StockFlowToolbar';
 import StockFlowSidebar from '../maxgraph/toolbar/StockFlowSidebar';
 import StockFlowDiagramActions from '../maxgraph/StockFlowDiagramActions';
-
 import StockFlowPresentationGetter from '../maxgraph/presentation/StockFlowPresentationGetter';
 import StockFlowBehaviourGetter from '../maxgraph/behaviours/stockflow/StockFlowBehaviourGetter';
 import StockFlowModeSelectPanel from '../maxgraph/toolbar/StockFlowModeSelectPanel';
+import FirebaseSubstitution from '../../data/components/FirebaseSubstitution';
+import { EventObject, InternalEvent } from '@maxgraph/core';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -43,12 +43,13 @@ interface State extends CanvasScreenState {
     modelName: string | null;
     components: FirebaseComponent[];
     scenarios: FirebaseScenario[];
+    loadedModels: LoadedStaticModel[];
+    substitutions: FirebaseSubstitution[];
     clipboard: FirebaseComponent[];
     selectedComponent: FirebaseComponent | null;
     errors: ComponentErrors;
     displayedModalBox: ModalBoxType | null;
     selectedScenarioId: string;
-    loadedModels: LoadedStaticModel[];
     sidebarWidth: number;
     sidebarVisible: boolean;
 
@@ -69,6 +70,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             clipboard: [],
             components: [],
             scenarios: [],
+            substitutions: [],
             selectedComponent: null,
             errors: {},
             displayedModalBox: null,
@@ -91,8 +93,14 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             this.props.modelUuid!,
             StockFlowScreen.presentation,
             () => this.state.components,
-            name => this.loadStaticModelInnerComponents(name),
+            () => this.state.substitutions,
             () => this.state.errors,
+            () => this.setState({
+                errors: ModelValidator.findErrors(
+                    this.state.components,
+                    this.state.loadedModels
+                )
+            })
         );
     }
 
@@ -105,7 +113,6 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             this.graph,
             this.props.modelUuid,
             () => this.state.components,
-            () => this.state.loadedModels
         );
     }
 
@@ -152,7 +159,6 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
                 ? this.graph.refreshComponents(
                     components,
                     oldComponents,
-                    this.state.loadedModels
                 )
                 : setTimeout(tryUpdateGraph, 200);
         }
@@ -214,9 +220,9 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             this.props.modelUuid!,
             n => this.setState({ modelName: n }),
             c => this.onComponentsUpdated(c),
-            m => this.setState({ loadedModels: m }),
+            m => this.onLoadedModelsUpdated(m),
             s => this.setState({ scenarios: s }),
-            () => this.graph || this.setupGraph()
+            s => this.onSubstitutionsUpdated(s),
         );
     }
 
@@ -233,13 +239,6 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
     protected makeModalBoxIfNecessary(): ReactElement | null {
         if (!this.graph || this.state.displayedModalBox == null) {
             return null;
-        }
-        else if (this.state.displayedModalBox === ModalBoxType.HELP) {
-            return (
-                <HelpBox
-                    onClose={() => this.closeModalBox()}
-                />
-            );
         }
         else if (this.state.displayedModalBox === ModalBoxType.IMPORT_MODEL) {
             return (
@@ -287,47 +286,60 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
         return null;
     }
 
-    private importStaticModel(modelName: string): void {
-        this.actions?.addComponent(
+    private onSubstitutionsUpdated(substitutions: FirebaseSubstitution[]): void {
+        const tryUpdateSubstitutions = () => {
+            this.graph
+                ? this.setState(
+                    { substitutions },
+                    () => this.graph!.refreshSubstitutions(substitutions)
+                ) : setTimeout(tryUpdateSubstitutions, 200);
+        };
+        tryUpdateSubstitutions();
+    }
+
+    private importStaticModel(importedModelUuid: string): void {
+        const id = IdGenerator.generateUniqueId(this.state.components);
+        const addComponent = () => this.actions!.addComponent(
             new FirebaseStaticModel(
-                IdGenerator.generateUniqueId(this.state.components),
+                id,
                 {
                     x: 100,
                     y: 100,
                     color: this.getRandomStaticModelColor(),
-                    modelId: modelName
+                    modelId: importedModelUuid
                 }
             )
         );
+
+        // Only load the static model data if it doesn't already exist
+        if (!this.state.components.find(c =>
+            c.getType() === ComponentType.STATIC_MODEL
+            && c.getData().modelId === importedModelUuid
+        )) {
+            this.props.firebaseDataModel.importStaticModel(
+                this.props.modelUuid!,
+                importedModelUuid
+            )
+                .then(addComponent)
+                .catch(() => {
+                    alert("Unable to load model");
+                });
+        }
+        else {
+            addComponent();
+            this.graph!.refreshLoadedModels(this.state.loadedModels);
+        }
     }
 
-    private loadStaticModelInnerComponents(modelName: string): void {
-        this.props.firebaseDataModel.getComponentsForSavedModel(
-            modelName,
-            modelComponents => {
-                if (!this.isStaticModelLoaded(modelName)) {
-                    const loadedModels = [
-                        ...this.state.loadedModels,
-                        {
-                            modelId: modelName,
-                            components: modelComponents
-                        }
-                    ];
-                    const errors = ModelValidator.findErrors(
-                        this.state.components,
-                        loadedModels
-                    );
-                    this.setState(
-                        { loadedModels, errors },
-                        () => this.graph!.refreshComponents(
-                            this.state.components,
-                            this.state.components,
-                            this.state.loadedModels
-                        )
-                    );
-                }
-            }
-        );
+    private onLoadedModelsUpdated(models: LoadedStaticModel[]): void {
+        const tryUpdateModels = () => {
+            this.graph
+                ? this.setState(
+                    { loadedModels: models },
+                    () => this.graph!.refreshLoadedModels(models)
+                ) : setTimeout(tryUpdateModels, 200);
+        };
+        tryUpdateModels();
     }
 
     private getRandomStaticModelColor(): string {
@@ -349,11 +361,6 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             throw new Error("Too many static models");
         }
         return firstUnused;
-    }
-
-    private isStaticModelLoaded(name: string): boolean {
-        return this.state.loadedModels
-            .find(m => m.modelId === name) !== undefined;
     }
 }
 

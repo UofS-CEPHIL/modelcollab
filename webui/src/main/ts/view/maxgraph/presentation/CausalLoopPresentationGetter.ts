@@ -27,8 +27,6 @@ export default class CausalLoopPresentationGetter
         component: FirebaseComponent,
         graph: StockFlowGraph,
         parent?: Cell,
-        loadStaticModelComponents?: ((name: string) => void),
-        movable?: boolean
     ): Cell | Cell[] {
         return this
             .getRelevantPresentation(component)
@@ -36,8 +34,6 @@ export default class CausalLoopPresentationGetter
                 component,
                 graph,
                 parent,
-                loadStaticModelComponents,
-                movable
             );
     }
 
@@ -45,7 +41,7 @@ export default class CausalLoopPresentationGetter
         component: FirebaseComponent,
         cell: Cell,
         graph: StockFlowGraph,
-        loadedModels?: LoadedStaticModel[]
+        loadedModels: LoadedStaticModel
     ): void {
         return this
             .getRelevantPresentation(component)

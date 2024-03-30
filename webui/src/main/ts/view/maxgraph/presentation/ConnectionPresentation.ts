@@ -1,6 +1,7 @@
 import { Cell, EdgeParameters } from "@maxgraph/core";
 import FirebaseConnection from "../../../data/components/FirebaseConnection";
 import { theme } from "../../../Themes";
+import MCGraph from "../MCGraph";
 import PointerComponentPresentation from "./PointerComponentPresentation";
 
 export default class ConnectionPresentation
@@ -11,8 +12,9 @@ export default class ConnectionPresentation
         parent: Cell,
         fr: Cell,
         to: Cell,
-        movable: boolean
+        graph: MCGraph,
     ): EdgeParameters {
+        const isInner = parent !== graph.getDefaultParent();
         return {
             parent,
             id: conn.getId(),
@@ -26,8 +28,10 @@ export default class ConnectionPresentation
                 endSize: theme.custom.maxgraph.connection.endSizePx,
                 edgeStyle: theme.custom.maxgraph.connection.edgeStyle,
                 curved: true,
-                bendable: true,
-                movable,
+                editable: false,
+                bendable: !isInner,
+                movable: !isInner,
+                resizable: !isInner,
             }
         }
     }

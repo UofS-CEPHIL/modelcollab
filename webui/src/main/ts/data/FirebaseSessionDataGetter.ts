@@ -1,6 +1,7 @@
 import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
 import FirebaseComponent from "./components/FirebaseComponent";
 import FirebaseScenario from "./components/FirebaseScenario";
+import FirebaseSubstitution from "./components/FirebaseSubstitution";
 import FirebaseDataModel from "./FirebaseDataModel";
 
 export default class FirebaseSessionDataGetter {
@@ -15,26 +16,7 @@ export default class FirebaseSessionDataGetter {
         modelUuid: string,
         onNameUpdated: (name: string) => void,
         onComponentsUpdated: (cpts: FirebaseComponent[]) => void,
-        onModelLoaded?: () => void
     ): () => void {
-        // Check if model UUID exists in RTDB. Load it if not.
-        this.firebaseDataModel.getDataForSession(
-            modelUuid,
-            data => {
-                if (!data.exists)
-                    this.firebaseDataModel
-                        .loadModelIntoRTDB(modelUuid)
-                        .then(_ => this.firebaseDataModel
-                            .declareIsUsingSession(modelUuid)
-                        )
-                        .then(onModelLoaded);
-                else {
-                    this.firebaseDataModel.declareIsUsingSession(modelUuid);
-                    if (onModelLoaded) onModelLoaded();
-                }
-            }
-        );
-
         // setup callbacks
         const unsubCpts = this.firebaseDataModel.subscribeToSessionComponents(
             modelUuid,
@@ -48,7 +30,6 @@ export default class FirebaseSessionDataGetter {
         return () => {
             unsubCpts();
             unsubName();
-            this.firebaseDataModel.declareStoppedUsingSession(modelUuid);
         };
     }
 
@@ -58,7 +39,7 @@ export default class FirebaseSessionDataGetter {
         onComponentsUpdated: (cpts: FirebaseComponent[]) => void,
         onLoadedModelsUpdated: (models: LoadedStaticModel[]) => void,
         onScenariosUpdated: (scenarios: FirebaseScenario[]) => void,
-        onModelLoaded?: () => void
+        onSubstitutionsUpdated: (subs: FirebaseSubstitution[]) => void,
     ): () => void {
         // A stock flow model is treated the same in the DB as
         // a CLD but with sub-models and scenarios
@@ -66,7 +47,6 @@ export default class FirebaseSessionDataGetter {
             modelUuid,
             onNameUpdated,
             onComponentsUpdated,
-            onModelLoaded
         );
         const unsubLoadedModels = this.firebaseDataModel
             .subscribeToSessionModels(
@@ -78,11 +58,17 @@ export default class FirebaseSessionDataGetter {
                 modelUuid,
                 onScenariosUpdated
             );
+        const unsubSubstitutions = this.firebaseDataModel
+            .subscribeToSessionSubstitutions(
+                modelUuid,
+                onSubstitutionsUpdated
+            );
 
         return () => {
             unsubLoadedModels();
             unsubScenarios();
             unsubOtherComponents();
+            unsubSubstitutions();
         };
     }
 }

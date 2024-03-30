@@ -1,4 +1,5 @@
 import ComponentType from "./ComponentType";
+import { FirebaseComponentBase } from "./FirebaseComponent";
 import FirebasePointComponent, {
     FirebasePointData
 } from "./FirebasePointComponent";
@@ -13,6 +14,7 @@ export interface FirebaseStaticModelData extends FirebasePointData {
 export default class FirebaseStaticModel
     extends FirebasePointComponent<FirebaseStaticModelData>
 {
+
     public getType(): ComponentType {
         return ComponentType.STATIC_MODEL;
     }
@@ -36,6 +38,28 @@ export default class FirebaseStaticModel
 
     public getLabel(): string | null {
         return null;
+    }
+
+    public makeChildId(id: string): string {
+        return this.getId() + FirebaseComponentBase.ID_DELIMITER + id;
+    }
+
+    public isChildId(id: string): boolean {
+        return FirebaseStaticModel.isChildIdFor(this.getId(), id);
+    }
+
+    public static getParentModelId(id: string): string {
+        return id.split(FirebaseComponentBase.ID_DELIMITER)[0];
+    }
+
+    public static isStaticModelChildId(id: string): boolean {
+        return id.includes(FirebaseComponentBase.ID_DELIMITER);
+    }
+
+    public static isChildIdFor(staticModelId: string, childId: string): boolean {
+        return childId.startsWith(
+            staticModelId + FirebaseComponentBase.ID_DELIMITER
+        );
     }
 
     public static toStaticModelComponentData(d: any): FirebaseStaticModelData {

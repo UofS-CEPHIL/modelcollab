@@ -1,4 +1,4 @@
-import { Fragment, ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { UiMode } from '../../../UiMode';
 import RestClient from "../../../rest/RestClient";
 import ModalBoxType from '../../ModalBox/ModalBoxType';
@@ -133,9 +133,12 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
             <MenuItem key={"getjson"} onClick={() => this.getModelAsJson()} >
                 Get JSON
             </MenuItem>,
-            <MenuItem key={"importmodel"} onClick={() =>
-                this.props.setOpenModalBox(ModalBoxType.IMPORT_MODEL)
-            } >
+            <MenuItem
+                key={"importmodel"}
+                onClick={() =>
+                    this.props.setOpenModalBox(ModalBoxType.IMPORT_MODEL)
+                }
+            >
                 Import Model
             </MenuItem>,
         ];

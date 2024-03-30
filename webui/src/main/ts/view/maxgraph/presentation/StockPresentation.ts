@@ -1,6 +1,7 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebaseStock from "../../../data/components/FirebaseStock";
 import { theme } from "../../../Themes";
+import MCGraph from "../MCGraph";
 import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class StockPresentation
@@ -9,8 +10,9 @@ export default class StockPresentation
     protected makeVertexParameters(
         parent: Cell,
         stock: FirebaseStock,
-        movable: boolean
+        graph: MCGraph,
     ): VertexParameters {
+        const isInner = parent !== graph.getDefaultParent();
         return {
             parent,
             id: stock.getId(),
@@ -27,7 +29,10 @@ export default class StockPresentation
                 strokeColor: theme.palette.canvas.contrastText,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 fontColor: theme.palette.canvas.contrastText,
-                movable,
+                whiteSpace: "wrap",
+                movable: !isInner,
+                resizable: !isInner,
+                editable: !isInner,
             }
         };
     }

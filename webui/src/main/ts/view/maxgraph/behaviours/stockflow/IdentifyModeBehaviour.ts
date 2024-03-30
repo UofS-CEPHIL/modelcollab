@@ -1,6 +1,7 @@
 import { Cell, Point } from "@maxgraph/core";
 import ComponentType from "../../../../data/components/ComponentType";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
+import FirebaseStaticModel from "../../../../data/components/FirebaseStaticModel";
 import FlowPresentation from "../../presentation/FlowPresentation";
 import ArrowBehaviour from "./ArrowBehaviour";
 
@@ -50,9 +51,10 @@ export default class IdentifyModeBehaviour extends ArrowBehaviour {
         }
 
         // Can only identify components in different models
-        const getParentId = (id: string) => id.includes('/')
-            ? id.split('/')[0]
-            : "";
+        const getParentId = (id: string) =>
+            FirebaseStaticModel.isStaticModelChildId(id)
+                ? FirebaseStaticModel.getParentModelId(id)
+                : "";
         const sourceModel = getParentId(source.getId()!);
         const targetModel = getParentId(target.getId()!);
         if (sourceModel == targetModel) {
@@ -77,16 +79,9 @@ export default class IdentifyModeBehaviour extends ArrowBehaviour {
             return;
         }
 
-        throw new Error("Not implemented");
-
-        // this.getActions().addComponent(
-        //     new FirebaseSubstitution(
-        //         IdGenerator.generateUniqueId(this.getFirebaseState()),
-        //         {
-        //             replacedId: source.getValue().getId(),
-        //             replacementId: target.getValue().getId()
-        //         }
-        //     )
-        // );
+        this.getActions().identifyComponents(
+            source.getValue(),
+            target.getValue()
+        );
     }
 }

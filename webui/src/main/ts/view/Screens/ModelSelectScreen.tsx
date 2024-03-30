@@ -1,5 +1,4 @@
 import { Button, Divider, FormControl, FormControlLabel, FormLabel, List, ListItem, ListItemButton, ListItemText, ListSubheader, Radio, RadioGroup, TextField } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import React, { ReactElement } from 'react';
 import FirebaseDataModel, { ModelType, modelTypeFromString } from '../../data/FirebaseDataModel';
 import { Link } from 'react-router-dom';

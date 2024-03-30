@@ -1,7 +1,6 @@
 import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, Point, UndoableChange, ValueChange } from "@maxgraph/core";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointComponent from "../../data/components/FirebasePointComponent";
-import FirebaseRectangleComponent from "../../data/components/FirebaseRectangleComponent";
 import FirebaseDataModel from '../../data/FirebaseDataModel';
 import MCGraph from "./MCGraph";
 import ComponentPresentation from "./presentation/ComponentPresentation";
@@ -20,7 +19,7 @@ import FirebaseFlow from "../../data/components/FirebaseFlow";
 // listeners for the event and update Firebase within them.
 export default abstract class DiagramActions<G extends MCGraph> {
 
-    protected fbData: FirebaseDataModel;
+    protected firebaseDataModel: FirebaseDataModel;
     protected graph: G;
     protected modelUuid: string;
     protected getCurrentComponents: () => FirebaseComponent[];
@@ -35,7 +34,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
         getCurrentComponents: () => FirebaseComponent[],
         actionLogger?: UserActionLogger,
     ) {
-        this.fbData = fbData;
+        this.firebaseDataModel = fbData;
         this.presentation = presentation;
         this.graph = graph;
         this.modelUuid = modelUuid;
@@ -77,7 +76,6 @@ export default abstract class DiagramActions<G extends MCGraph> {
     public addComponent(component: FirebaseComponent): void {
         // "update" and "add" are the same thing in Firebase
         this.updateComponent(component);
-
         if (this.actionLogger) {
             this.actionLogger.logAction(
                 "Component added",
@@ -87,7 +85,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
     }
 
     public updateComponent(component: FirebaseComponent): void {
-        this.fbData.updateComponent(this.modelUuid, component);
+        this.firebaseDataModel.updateComponent(this.modelUuid, component);
     }
 
     public handleChanges(changes: UndoableChange[]): void {
@@ -123,7 +121,10 @@ export default abstract class DiagramActions<G extends MCGraph> {
                 console.error("Unknown change type occurred: " + change);
             }
         }
-        this.fbData.setAllComponents(this.modelUuid, updatedComponents);
+        this.firebaseDataModel.setAllComponents(
+            this.modelUuid,
+            updatedComponents
+        );
     }
 
     public deleteSelection(): void {
@@ -141,7 +142,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
                 selectedIds,
                 allComponents
             );
-            this.fbData.removeComponents(
+            this.firebaseDataModel.removeComponents(
                 this.modelUuid,
                 [...selectedIds, ...orphans],
                 allComponents
@@ -169,7 +170,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
             [component],
             allComponents
         );
-        this.fbData.removeComponents(
+        this.firebaseDataModel.removeComponents(
             this.modelUuid,
             [component, ...orphans],
             allComponents
@@ -206,7 +207,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
             (v as FirebasePointComponent<any>)
                 .withUpdatedLocation(dx, dy)
         );
-        this.fbData.setAllComponents(
+        this.firebaseDataModel.setAllComponents(
             this.modelUuid,
             [...updatedVertices, ...others]
         );
@@ -236,7 +237,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
         const others = allComponents.filter(
             c => !updated.find(v => v.getId() === c.getId())
         );
-        this.fbData.setAllComponents(
+        this.firebaseDataModel.setAllComponents(
             this.modelUuid,
             [...updated, ...others]
         );
@@ -324,5 +325,21 @@ export default abstract class DiagramActions<G extends MCGraph> {
         return allComponents
             .filter(isOrphaned)
             .map(c => c.getId());
+    }
+
+    /**
+     * @param replacedComponent: The component that will be removed and replaced
+     * @param replacementComponent: The component that will remain on screen and
+     * have the other component's arrows redirected toward it.
+     */
+    public identifyComponents(
+        replacedComponent: FirebaseComponent,
+        replacementComponent: FirebaseComponent
+    ): void {
+        this.firebaseDataModel.identifyComponents(
+            this.modelUuid,
+            replacedComponent.getId(),
+            replacementComponent.getId(),
+        );
     }
 }

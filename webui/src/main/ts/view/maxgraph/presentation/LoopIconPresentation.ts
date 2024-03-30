@@ -1,6 +1,7 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebaseLoopIcon from "../../../data/components/FirebaseLoopIcon";
 import { theme } from "../../../Themes";
+import MCGraph from "../MCGraph";
 import LoopIconShape from "./LoopIconShape";
 import RectangleComponentPresentation from "./RectangleComponentPresentation";
 
@@ -11,8 +12,9 @@ export default class LoopIconPresentation
     protected makeVertexParameters(
         parent: Cell,
         component: FirebaseLoopIcon,
-        movable: boolean
+        graph: MCGraph,
     ): VertexParameters {
+        const isInner = parent !== graph.getDefaultParent();
         return {
             parent,
             id: component.getId(),
@@ -23,13 +25,13 @@ export default class LoopIconPresentation
             height: component.getData().height,
             style: {
                 shape: LoopIconShape.LOOP_ICON_NAME,
-                movable,
                 fillColor: theme.palette.canvas.main,
                 strokeWidth: theme.custom.maxgraph.loopIcon.strokeWidth,
                 strokeColor: theme.palette.canvas.contrastText,
                 fontColor: theme.palette.canvas.contrastText,
                 fontSize: theme.custom.maxgraph.loopIcon.fontSize,
-                resizable: true,
+                resizable: !isInner,
+                movable: !isInner,
                 editable: false,
             }
         };

@@ -2,6 +2,7 @@ import { Cell, VertexParameters } from "@maxgraph/core";
 import TextComponentPresentation from "./TextComponentPresentation";
 import { theme } from "../../../Themes";
 import FirebaseParameter from "../../../data/components/FirebaseParameter";
+import MCGraph from "../MCGraph";
 
 export default class ParameterPresentation
     extends TextComponentPresentation<FirebaseParameter>
@@ -9,8 +10,9 @@ export default class ParameterPresentation
     protected makeVertexParameters(
         parent: Cell,
         param: FirebaseParameter,
-        movable: boolean
+        graph: MCGraph,
     ): VertexParameters {
+        const isInner = parent !== graph.getDefaultParent();
         return {
             parent,
             id: param.getId(),
@@ -25,7 +27,10 @@ export default class ParameterPresentation
                 fontColor: theme.palette.canvas.contrastText,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 fontStyle: 2,
-                movable,
+                whiteSpace: "wrap",
+                movable: !isInner,
+                resizable: !isInner,
+                editable: !isInner,
             }
         };
     }

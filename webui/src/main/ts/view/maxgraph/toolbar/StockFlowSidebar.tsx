@@ -30,7 +30,7 @@ export interface Props extends CanvasSidebarProps {
 export default class StockFlowSidebar
     extends CanvasSidebar<Props, CanvasSidebarState> {
 
-    public static readonly DEFAULT_MODE = StockFlowSidebarMode.EDIT_SCENARIOS;
+    public static readonly DEFAULT_MODE = StockFlowSidebarMode.EDIT_COMPONENTS;
 
     protected makeInitialState(): CanvasSidebarState {
         return { mode: StockFlowSidebar.DEFAULT_MODE };

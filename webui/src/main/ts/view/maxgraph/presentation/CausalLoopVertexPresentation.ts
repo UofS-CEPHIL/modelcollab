@@ -1,6 +1,7 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebaseCausalLoopVertex from "../../../data/components/FirebaseCausalLoopVertex";
 import { theme } from "../../../Themes";
+import MCGraph from "../MCGraph";
 import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class CausalLoopVertexPresentation
@@ -9,8 +10,9 @@ export default class CausalLoopVertexPresentation
     protected makeVertexParameters(
         parent: Cell,
         component: FirebaseCausalLoopVertex,
-        movable: boolean
+        graph: MCGraph,
     ): VertexParameters {
+        const isInner = parent !== graph.getDefaultParent();
         return {
             parent,
             id: component.getId(),
@@ -27,8 +29,9 @@ export default class CausalLoopVertexPresentation
                 strokeColor: theme.palette.canvas.contrastText,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 fontColor: theme.palette.canvas.contrastText,
-                movable,
-                editable: true,
+                movable: !isInner,
+                editable: !isInner,
+                resizable: !isInner,
                 whiteSpace: "wrap",
             }
         };

@@ -4,7 +4,7 @@ import FirebaseDataModel from '../../data/FirebaseDataModel';
 import CanvasScreen, { Props as CanvasScreenProps, State as CanvasScreenState } from './CanvasScreen';
 import RestClient from "../../rest/RestClient";
 import FirebaseComponent from '../../data/components/FirebaseComponent';
-import { ComponentErrors } from '../../validation/ModelValitador';
+import ModelValidator, { ComponentErrors } from '../../validation/ModelValitador';
 import ModalBoxType from '../ModalBox/ModalBoxType';
 import CausalLoopGraph from '../maxgraph/CausalLoopGraph';
 import UserControls from '../maxgraph/UserControls';
@@ -51,7 +51,6 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             this.props.modelUuid!,
             n => this.setState({ modelName: n }),
             c => this.onComponentsUpdated(c),
-            () => this.graph || this.setupGraph()
         );
     }
 
@@ -95,7 +94,14 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             this.props.modelUuid!,
             CausalLoopScreen.presentation,
             () => this.state.components,
-            () => this.state.errors
+            () => [], // TODO add substitutions once they are added
+            () => this.state.errors,
+            () => this.setState({
+                errors: ModelValidator.findErrors(
+                    this.state.components,
+                    [], // TODO add loaded models once they are added
+                )
+            })
         );
     }
 

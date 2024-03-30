@@ -12,9 +12,8 @@ export default abstract class RectangleComponentPresentation
         component: DataType,
         cell: Cell,
         graph: MCGraph,
-        _: LoadedStaticModel[]
     ): void {
-        super.updateCell(component, cell, graph, _);
+        super.updateCell(component, cell, graph);
         const newGeo = cell.getGeometry()!.clone();
         newGeo.width = component.getData().width;
         newGeo.height = component.getData().height;

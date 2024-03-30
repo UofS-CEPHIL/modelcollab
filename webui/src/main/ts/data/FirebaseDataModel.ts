@@ -1,4 +1,4 @@
-import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, increment } from "firebase/database";
+import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update } from "firebase/database";
 // @ts-ignore can't find types
 import { v4 as createUuid } from "uuid";
 import FirebaseComponent from "./components/FirebaseComponent";
@@ -6,13 +6,13 @@ import { createFirebaseDataComponent } from "./components/FirebaseComponentBuild
 import FirebaseManager from "./FirebaseManager";
 import RTDBSchema from "./RTDBSchema";
 import FirebaseStockFlowModel from "./FirebaseStockFlowModel";
-import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
-import FirestoreSchema from "./FirestoreSchema";
 import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
 import FirebaseScenario from "./components/FirebaseScenario";
-import { FirebaseSubstitution } from "./components/FirebaseSubstitution";
 import FirebaseModel from "./components/FirebaseModel";
 import FirebaseCausalLoopModel from "./FirebaseCausalLoopModel";
+import { ModelSchema } from "./components/FirebaseModel";
+import ComponentType from "./components/ComponentType";
+import FirebaseSubstitution from "./components/FirebaseSubstitution";
 
 export enum ModelType {
     CausalLoop = "CL",
@@ -77,7 +77,7 @@ export default class FirebaseDataModel {
         onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeSessionPath(sessionId)
+                RTDBSchema.makeModelPath(sessionId)
             ),
             callback,
             { onlyOnce: true }
@@ -99,88 +99,17 @@ export default class FirebaseDataModel {
 
     public async getOwnedModels():
         Promise<{ [uuid: string]: { name: string, modelType: string } }> {
-
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in");
-        const result = await getDocs(
-            collection(
-                this.firebaseManager.getFirestore(),
-                FirestoreSchema.makeUserOwnedModelsPath(user.uid)
-            )
-        );
-        return Object.fromEntries(
-            result.docs.map(d => [
-                d.id,
-                { name: d.data().name, modelType: d.data().modelType }
-            ])
-        );
-    }
-
-    public async loadModelIntoRTDB(modelUuid: string): Promise<void> {
-        const user = this.firebaseManager.getUser()
-        if (!user) throw new Error("Not logged in");
-
-        const savedModel = await getDoc(
-            doc(
-                this.firebaseManager.getFirestore(),
-                FirestoreSchema.makeModelPath(modelUuid)
-            )
-        );
-        if (!savedModel.exists) {
-            throw new Error("Unable to find model: " + modelUuid);
-        }
-
-        set(
+        const result = await get(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeSessionPath(modelUuid)
-            ),
-            {
-                ...savedModel.data(),
-                [RTDBSchema.getNumUsingName()]: 0
-            }
-        );
-    }
-
-    public async saveStockFlowModelToFirestore(
-        modelUuid: string,
-        components: FirebaseComponent[],
-        scenarios: FirebaseScenario[],
-        substitutions: FirebaseSubstitution[],
-        loadedModels: LoadedStaticModel[]
-    ): Promise<void> {
-        return setDoc(
-            doc(
-                this.firebaseManager.getFirestore(),
-                FirestoreSchema.makeModelPath(modelUuid)
-            ),
-            FirebaseStockFlowModel.arrangeModelData(
-                components,
-                scenarios,
-                substitutions,
-                loadedModels
+                RTDBSchema.makeUserOwnedModelsPath(user.uid)
             )
         );
-    }
 
-    public declareIsUsingSession(modelUuid: string): Promise<void> {
-        return set(
-            ref(
-                this.firebaseManager.getDb(),
-                RTDBSchema.makeNumUsingPath(modelUuid)
-            ),
-            increment(1)
-        );
-    }
-
-    public declareStoppedUsingSession(modelUuid: string): Promise<void> {
-        return set(
-            ref(
-                this.firebaseManager.getDb(),
-                RTDBSchema.makeNumUsingPath(modelUuid)
-            ),
-            increment(-1)
-        );
+        if (!result.exists()) return {};
+        else return result.val();
     }
 
     public subscribeToSessionModelName(
@@ -303,16 +232,16 @@ export default class FirebaseDataModel {
         this.addModel(model)
     }
 
-    private async addModel(newModel: FirebaseModel<any>): Promise<void> {
+    private async addModel(newModel: FirebaseModel<ModelSchema>): Promise<void> {
         // Add the model to the user's list
-        const userDocRef = doc(
-            this.firebaseManager.getFirestore(),
-            FirestoreSchema.makeUserOwnedModelPath(
+        const userDocRef = ref(
+            this.firebaseManager.getDb(),
+            RTDBSchema.makeUserOwnedModelPath(
                 newModel.getData().ownerUid,
                 newModel.getUuid()
             )
         );
-        await setDoc(
+        await set(
             userDocRef,
             {
                 name: newModel.getData().name,
@@ -321,11 +250,11 @@ export default class FirebaseDataModel {
         );
 
         // Add the model to the global list of models
-        const modelsRef = doc(
-            this.firebaseManager.getFirestore(),
+        const modelsRef = ref(
+            this.firebaseManager.getDb(),
             `/models/${newModel.getUuid()}`
         );
-        setDoc(modelsRef, newModel.getData());
+        await set(modelsRef, newModel.getData());
     }
 
     public removeComponent(
@@ -371,11 +300,127 @@ export default class FirebaseDataModel {
         );
     }
 
-    public getComponentsForSavedModel(
-        modelId: string,
-        onData: (components: FirebaseComponent[]) => void
+    public async importStaticModel(
+        modelUuid: string,
+        importedModelUuid: string,
     ): Promise<void> {
-        // TODO update for firestore
-        return new Promise<void>(() => console.error("TODO"));
+        const staticComponents = await get(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeComponentsPath(importedModelUuid)
+            )
+        );
+        if (!staticComponents.exists()) {
+            throw new Error("Model not found: " + importedModelUuid);
+        }
+        else if (
+            Object.entries(staticComponents.val())
+                .find(([_, v]) => (v as any).type === ComponentType.STATIC_MODEL)
+        ) {
+            throw new Error("Can't import model with its own static models");
+        }
+
+        return set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeSavedModelPath(modelUuid, importedModelUuid),
+            ),
+            staticComponents.val()
+        );
+    }
+
+    public async removeStaticModel(
+        modelUuid: string,
+        importedModelUuid: string
+    ): Promise<void> {
+        await remove(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeSavedModelPath(modelUuid, importedModelUuid)
+            )
+        );
+    }
+
+    public async identifyComponents(
+        modelUuid: string,
+        replacedId: string,
+        replacementId: string,
+    ): Promise<void> {
+        await set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeSubstitutionPath(modelUuid, replacedId),
+            ),
+            replacementId
+        );
+    }
+
+    public async unidentifyComponents(
+        modelUuid: string,
+        replaced: string | string[]
+    ): Promise<void> {
+        if (!(replaced instanceof Array<string>)) replaced = [replaced];
+        else if (replaced.length === 0) return;
+
+        const updates = Object.fromEntries(
+            replaced.map(id => [id, null])
+        );
+        await update(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeSubstitutionsPath(modelUuid),
+            ),
+            updates
+        );
+    }
+
+    public async unidentifyAllComponents(
+        modelUuid: string,
+        replacementId: string,
+    ): Promise<void> {
+        const subsRef = ref(
+            this.firebaseManager.getDb(),
+            RTDBSchema.makeSubstitutionsPath(modelUuid),
+        );
+        const subs = await get(subsRef);
+        if (subs.exists()) {
+            await update(
+                subsRef,
+                Object.fromEntries(
+                    Object.entries(subs.val()).map(([_, id]) =>
+                        [_, id === replacementId ? null : id]
+                    )
+                )
+            );
+        }
+    }
+
+    public subscribeToSessionSubstitutions(
+        modelUuid: string,
+        callback: (s: FirebaseSubstitution[]) => void
+    ): Unsubscribe {
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeSubstitutionsPath(modelUuid)
+            ),
+            snapshot => {
+                let components: FirebaseSubstitution[] = [];
+                if (snapshot.exists() && snapshot.key) {
+                    components =
+                        Object
+                            .entries(snapshot.val())
+                            .map(
+                                ([k, v]) => {
+                                    return {
+                                        replacedId: k,
+                                        replacementId: v as string
+                                    };
+                                }
+                            );
+                }
+                callback(components);
+            }
+        );
     }
 }

@@ -2,7 +2,7 @@ import { LoadedStaticModel } from "../view/Screens/StockFlowScreen"
 import FirebaseComponent from "./components/FirebaseComponent"
 import FirebaseModel, { ComponentSchema, ModelSchema, SharedUsersSchema } from "./components/FirebaseModel"
 import FirebaseScenario from "./components/FirebaseScenario"
-import { FirebaseSubstitution } from "./components/FirebaseSubstitution"
+import FirebaseSubstitution from "./components/FirebaseSubstitution"
 import { ModelType } from "./FirebaseDataModel"
 
 
@@ -45,8 +45,6 @@ export interface StockFlowSchema extends ModelSchema {
     data: StockFlowComponentSchema
 }
 
-type ComponentEntry = [string, { type: string, data: any }];
-
 export default class FirebaseStockFlowModel
     extends FirebaseModel<StockFlowSchema>
 {
@@ -59,19 +57,23 @@ export default class FirebaseStockFlowModel
     ): StockFlowComponentSchema {
         return {
             components: Object.fromEntries(
-                components.map(c =>
-                    c.toFirebaseEntry() as ComponentEntry
-                )
+                components.map(c => c.toFirebaseEntry())
             ),
             scenarios: Object.fromEntries(
                 scenarios.map(c => c.toFirebaseEntry())
             ),
             substitutions: Object.fromEntries(
-                substitutions.map(c => c.toFirebaseEntry())
+                substitutions.map(c => [c.replacedId, c.replacementId])
             ),
-            loadedModels: {} // TODO
+            loadedModels: Object.fromEntries(
+                loadedModels.map(m => [
+                    m.modelId,
+                    Object.fromEntries(
+                        m.components.map(c => c.toFirebaseEntry())
+                    ),
+                ])
+            ),
         }
-
     }
 
     public empty(uuid: string, name: string, ownerUid: string) {

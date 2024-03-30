@@ -33,8 +33,6 @@ export default class StockFlowPresentationGetter
         component: FirebaseComponent,
         graph: StockFlowGraph,
         parent?: Cell,
-        loadStaticModelComponents?: ((name: string) => void),
-        movable?: boolean
     ): Cell | Cell[] {
         return this
             .getRelevantPresentation(component)
@@ -42,8 +40,6 @@ export default class StockFlowPresentationGetter
                 component,
                 graph,
                 parent,
-                loadStaticModelComponents,
-                movable
             );
     }
 
@@ -51,11 +47,11 @@ export default class StockFlowPresentationGetter
         component: FirebaseComponent,
         cell: Cell,
         graph: StockFlowGraph,
-        loadedModels?: LoadedStaticModel[]
+        loadedModel?: LoadedStaticModel
     ): void {
         return this
             .getRelevantPresentation(component)
-            .updateCell(component, cell, graph, loadedModels);
+            .updateCell(component, cell, graph, loadedModel);
     }
 
 

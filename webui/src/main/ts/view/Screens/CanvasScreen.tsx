@@ -78,6 +78,7 @@ export default abstract class CanvasScreen
                 _ => this.componentWillUnmount(),
                 { once: true }
             );
+            if (!this.graph) this.setupGraph();
         }
     }
 

@@ -22,15 +22,12 @@ export default class StaticModelPresentation
     public addComponent(
         component: FirebaseStaticModel,
         graph: StockFlowGraph,
-        parent: Cell,
-        loadStaticModelComponents: (name: string) => void
+        parent: Cell
     ): Cell | Cell[] {
-        loadStaticModelComponents(component.getData().modelId);
         return super.addComponent(
             component,
             graph,
             parent,
-            loadStaticModelComponents
         );
     }
 
@@ -38,11 +35,9 @@ export default class StaticModelPresentation
         component: FirebaseStaticModel,
         cell: Cell,
         graph: StockFlowGraph,
-        loadedModels: LoadedStaticModel[]
+        loadedModel?: LoadedStaticModel
     ): void {
-        super.updateCell(component, cell, graph, loadedModels);
-        const loadedModel =
-            loadedModels.find(m => m.modelId === component.getData().modelId);
+        super.updateCell(component, cell, graph);
         // Load the inner components only if they haven't been loaded yet
         if (cell.getChildCount() === 0 && loadedModel) {
             const translated = this.translateComponentPositions(
@@ -51,7 +46,6 @@ export default class StaticModelPresentation
             const newCells = graph.addComponentsInCorrectOrder(
                 translated,
                 cell,
-                false
             );
             const bbox = graph.getBoundingBoxFromGeometry(newCells, true);
             if (!bbox) {
@@ -86,6 +80,8 @@ export default class StaticModelPresentation
                 strokeColor: StaticModelPresentation.STROKE_COLOR,
                 strokeOpacity: StaticModelPresentation.STROKE_OPACITY,
                 rounded: true,
+                editable: false,
+                resizable: false,
                 strokeWidth: StaticModelPresentation.STROKE_WIDTH_PX,
                 fillOpacity: StaticModelPresentation.FILL_OPACITY
             }
@@ -147,19 +143,17 @@ export default class StaticModelPresentation
         c: FirebaseComponent,
         sm: FirebaseStaticModel
     ): FirebaseComponent {
-        const addPrefix = (id: string) => sm.getId() + "/" + id;
-
-        c = c.withId(addPrefix(c.getId()));
+        c = c.withId(sm.makeChildId(c.getId()));
         if (c.getData().from !== undefined) {
             const oldData = c.getData();
             c = c.withData({
                 ...oldData,
                 from: FirebaseFlow.isPoint(oldData.from)
                     ? oldData.from
-                    : addPrefix(oldData.from),
+                    : sm.makeChildId(oldData.from),
                 to: FirebaseFlow.isPoint(oldData.to)
                     ? oldData.to
-                    : addPrefix(oldData.to)
+                    : sm.makeChildId(oldData.to)
             });
         }
         return c;

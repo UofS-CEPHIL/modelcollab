@@ -1,6 +1,5 @@
 import { Cell, EdgeParameters, Point } from "@maxgraph/core";
 import FirebasePointerComponent, { FirebasePointerData } from "../../../data/components/FirebasePointerComponent";
-import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import MCGraph from "../MCGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
@@ -14,15 +13,13 @@ export default abstract class PointerComponentPresentation
         parent: Cell,
         source: Cell,
         target: Cell,
-        movable: boolean
+        graph: MCGraph
     ): EdgeParameters;
 
     public addComponent(
         component: DataType,
         graph: MCGraph,
         parent: Cell = graph.getDefaultParent(),
-        _?: ((name: string) => void),
-        movable: boolean = true,
         source?: Cell,
         target?: Cell,
     ): Cell | Cell[] {
@@ -37,7 +34,7 @@ export default abstract class PointerComponentPresentation
                 parent ?? graph.getDefaultParent(),
                 source,
                 target,
-                movable
+                graph,
             )
         );
 
@@ -68,7 +65,6 @@ export default abstract class PointerComponentPresentation
         component: DataType,
         cell: Cell,
         graph: MCGraph,
-        _?: LoadedStaticModel[]
     ): void {
         cell.setValue(component);
         const geo = cell.getGeometry()!.clone();

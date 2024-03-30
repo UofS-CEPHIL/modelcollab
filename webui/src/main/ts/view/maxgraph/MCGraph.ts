@@ -2,9 +2,12 @@ import { Cell, CellRenderer, CellState, EdgeHandler, Graph, InternalMouseEvent, 
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";
+import FirebaseStaticModel from "../../data/components/FirebaseStaticModel";
+import FirebaseSubstitution from "../../data/components/FirebaseSubstitution";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 import { theme } from "../../Themes";
 import { ComponentErrors } from "../../validation/ModelValitador";
+import { LoadedStaticModel } from "../Screens/StockFlowScreen";
 import MCEdgeHandler from "./MCEdgeHandler";
 import CausalLoopLinkShape from "./presentation/CausalLoopLinkShape";
 import ComponentPresentation from "./presentation/ComponentPresentation";
@@ -13,8 +16,15 @@ import LoopIconShape from "./presentation/LoopIconShape";
 // Parent class for graphs in ModelCollab
 export default abstract class MCGraph extends Graph {
 
+    private static readonly MAX_COMPONENT_LOAD_ATTEMPTS = 5;
+    private static readonly COMPONENT_LOAD_POLL_MS = 500;
+
+    protected haveStaticModelsLoaded: boolean;
+
     protected getCurrentComponents: () => FirebaseComponent[];
+    protected getSubstitutions: () => FirebaseSubstitution[];
     protected getErrors: () => ComponentErrors;
+    protected revalidate: () => void;
     protected presentation: ComponentPresentation<FirebaseComponent>;
     protected firebaseDataModel: FirebaseDataModel;
     protected readonly modelUuid: string;
@@ -22,7 +32,6 @@ export default abstract class MCGraph extends Graph {
     public abstract addComponent(
         c: FirebaseComponent,
         parent: Cell,
-        movable: boolean
     ): Cell | Cell[];
 
     public constructor(
@@ -31,14 +40,19 @@ export default abstract class MCGraph extends Graph {
         modelUuid: string,
         presentation: ComponentPresentation<FirebaseComponent>,
         getCurrentComponents: () => FirebaseComponent[],
-        getErrors: () => ComponentErrors
+        getSubstitutions: () => FirebaseSubstitution[],
+        getErrors: () => ComponentErrors,
+        revalidate: () => void,
     ) {
         super(container);
         this.presentation = presentation;
         this.getCurrentComponents = getCurrentComponents;
+        this.getSubstitutions = getSubstitutions;
+        this.revalidate = revalidate;
         this.getErrors = getErrors;
         this.firebaseDataModel = firebaseDataModel;
         this.modelUuid = modelUuid;
+        this.haveStaticModelsLoaded = false;
 
         this.setAutoSizeCells(true);
         this.setAllowDanglingEdges(false);
@@ -93,22 +107,27 @@ export default abstract class MCGraph extends Graph {
     public addComponentsInCorrectOrder(
         toAdd: FirebaseComponent[],
         parent: Cell = this.getDefaultParent(),
-        movable: boolean = true
     ): Cell[] {
         const isEdge = (cpt: FirebaseComponent) =>
             [
                 ComponentType.CONNECTION,
-                ComponentType.FLOW,
                 ComponentType.CLD_LINK
             ].includes(cpt.getType());
+        const isFlow = (cpt: FirebaseComponent) =>
+            cpt.getType() === ComponentType.FLOW;
+        const isVertex = (cpt: FirebaseComponent) =>
+            !isEdge(cpt) && !isFlow(cpt);
 
         return [
             ...toAdd
-                .filter(c => !isEdge(c))
-                .flatMap(vtx => this.addComponent(vtx, parent, movable)),
+                .filter(c => isVertex(c))
+                .flatMap(vtx => this.addComponent(vtx, parent)),
+            ...toAdd
+                .filter(c => isFlow(c))
+                .flatMap(flow => this.addComponent(flow, parent)),
             ...toAdd
                 .filter(isEdge)
-                .flatMap(edge => this.addComponent(edge, parent, movable))
+                .flatMap(edge => this.addComponent(edge, parent)),
         ];
     }
 
@@ -118,9 +137,24 @@ export default abstract class MCGraph extends Graph {
     }
 
     // Delete a component. Call this in the middle of a batch update.
-    public deleteComponent(id: string): void {
+    public deleteComponent(
+        id: string,
+        allComponents: FirebaseComponent[]
+    ): void {
         const cell = this.getCellWithId(id);
         if (cell) {
+            if (cell.getValue().getType() === ComponentType.STATIC_MODEL) {
+                this.deleteStaticModel(cell.getValue(), allComponents);
+                this.revalidate();
+            }
+            else if (this.cellHasSubstitution(cell)) {
+                const subs = this.makeSubstitutionsForAllChildren(cell);
+                subs.forEach(sub => this.unapplySubstitution(sub));
+                this.firebaseDataModel.unidentifyAllComponents(
+                    this.modelUuid,
+                    cell.getId()!
+                );
+            }
             this.removeCells([cell]);
         }
         else {
@@ -271,4 +305,260 @@ export default abstract class MCGraph extends Graph {
         return { newIds, updatedIds, deletedIds };
     }
 
+    private isAlreadyReplaced(replacementId: string, replaced: Cell) {
+        return replaced.getParent()!.getId() === replacementId;
+    }
+
+    private findCellSubstitutedIds(cell: Cell): string[] {
+        return cell.getChildCells().filter(child =>
+            !FirebaseStaticModel.isChildIdFor(cell.getId()!, child.getId()!)
+        ).map(child =>
+            child.getId()!
+        );
+    }
+
+    private cellHasSubstitution(cell: Cell): boolean {
+        return this.findCellSubstitutedIds(cell).length > 0;
+    }
+
+    public refreshSubstitutions(substitutions: FirebaseSubstitution[]): void {
+        const tryRefreshSubstitutions = (n: number = 0) => {
+            // Make sure components have been loaded
+            if (
+                this.getCurrentComponents().length === 0
+                || !this.haveStaticModelsLoaded
+            ) {
+                if (n < MCGraph.MAX_COMPONENT_LOAD_ATTEMPTS) {
+                    setTimeout(
+                        () => tryRefreshSubstitutions(n + 1),
+                        MCGraph.COMPONENT_LOAD_POLL_MS
+                    );
+                }
+                else {
+                    throw new Error("Substitutions loaded but empty components");
+                }
+            }
+
+            const allCells = this.getAllCells();
+
+            // Add any new substitutions
+            for (const sub of substitutions) {
+                const replacedCell =
+                    allCells.find(c => c.getId() === sub.replacedId);
+                if (!replacedCell) {
+                    console.error(
+                        "Cannot find replaced cell with id " + sub.replacedId
+                    );
+                    return;
+                }
+
+                if (!this.isAlreadyReplaced(sub.replacementId, replacedCell)) {
+                    const replacementCell =
+                        allCells.find(c => c.getId() === sub.replacementId);
+                    if (!replacementCell) {
+                        console.error(
+                            "Cannot find replacement cell with id "
+                            + sub.replacementId
+                        );
+                        return;
+                    }
+                    replacedCell.setVisible(false);
+                    const geo = replacedCell.getGeometry()!.clone();
+                    geo.x = 0;
+                    geo.y = 0;
+                    geo.height = 0;
+                    geo.width = 0;
+                    replacedCell.setGeometry(geo);
+                    this.addCell(replacedCell, replacementCell);
+                }
+            }
+
+            // Remove any deleted substitutions
+            const cellsWithDeletedSubs = allCells.filter(c =>
+                this.cellHasSubstitution(c)
+                && !substitutions.find(sub => sub.replacementId === c.getId())
+            );
+            const subsToUnapply = this
+                .makeSubstitutionsForAllChildren(cellsWithDeletedSubs);
+            subsToUnapply.forEach(s => this.unapplySubstitution(s));
+        }
+
+        tryRefreshSubstitutions();
+    }
+
+    private makeSubstitutionsForAllChildren(
+        c: Cell | Cell[]
+    ): FirebaseSubstitution[] {
+        if (c instanceof Cell) c = [c];
+        return c.flatMap(c =>
+            this.findCellSubstitutedIds(c)
+                .map(replacedId => {
+                    return {
+                        replacementId: c.getId()! as string,
+                        replacedId
+                    };
+                })
+        );
+
+    }
+
+    public refreshLoadedModels(models: LoadedStaticModel[]): void {
+        const tryRefreshLoadedModels = (n: number = 0) => {
+            // Make sure components have been loaded
+            if (this.getCurrentComponents().length === 0) {
+                if (n < MCGraph.MAX_COMPONENT_LOAD_ATTEMPTS) {
+                    setTimeout(
+                        () => tryRefreshLoadedModels(n + 1),
+                        MCGraph.COMPONENT_LOAD_POLL_MS
+                    );
+                }
+                else {
+                    throw new Error("Models loaded but empty components");
+                }
+            }
+
+            const staticModels: FirebaseStaticModel[] =
+                this.getCurrentComponents()
+                    .filter(c => c.getType() === ComponentType.STATIC_MODEL)
+                    .map(m => m as FirebaseStaticModel);
+
+            if (
+                models.find(m =>
+                    !staticModels.find(sm => sm.getData().modelId === m.modelId)
+                ) && n < MCGraph.MAX_COMPONENT_LOAD_ATTEMPTS
+            ) {
+
+                setTimeout(
+                    () => tryRefreshLoadedModels(n + 1),
+                    MCGraph.COMPONENT_LOAD_POLL_MS
+                );
+                return;
+            }
+
+            this.batchUpdate(() =>
+                models.forEach(model => {
+                    const components = staticModels
+                        .filter(c => c.getData().modelId === model.modelId);
+                    if (components.length === 0) throw new Error(
+                        "Unable to find static model component for model "
+                        + model.modelId
+                    );
+                    components.forEach(c => {
+                        const cell = this.getCellWithIdOrThrow(c.getId());
+                        this.presentation.updateCell(
+                            c,
+                            cell,
+                            this,
+                            model
+                        );
+                    });
+                })
+            );
+            this.haveStaticModelsLoaded = true;
+        }
+
+        if (models.length == 0) return;
+        else tryRefreshLoadedModels();
+    }
+
+    private unapplySubstitution(sub: FirebaseSubstitution): void {
+        const allCells = this.getAllCells();
+        const substitutedCell =
+            allCells.find(c => c.getId() === sub.replacedId);
+
+        if (!substitutedCell) {
+            console.error(
+                "Can't delete substitution: can't find substituted "
+                + "cell with id " + sub.replacedId
+            );
+            return;
+        }
+        const substitutedComponent = substitutedCell.getValue();
+
+        if (
+            substitutedCell.getParent()!.getId() !== sub.replacementId
+        ) {
+            console.error(
+                "Can't delete substitution: component was not substituted. "
+                + "Found parent with id "
+                + substitutedCell.getParent()!.getId()
+                + " but expected "
+                + sub.replacementId
+            );
+            return;
+        }
+
+        // Make a new version of the substituted component and redirect all
+        // arrows to the new version
+        this.batchUpdate(() => {
+            const newCell = this.presentation
+                .addComponent(
+                    substitutedComponent,
+                    this,
+                    this.getDefaultParentForCell(substitutedCell),
+                );
+            if (newCell instanceof Array) {
+                throw new Error(
+                    "Un-substituted a component with multiple parts: "
+                    + "should be impossible"
+                );
+            }
+            substitutedCell
+                .getIncomingEdges()
+                .forEach(e =>
+                    this.getDataModel().setTerminal(e, newCell, false)
+                );
+            substitutedCell
+                .getOutgoingEdges()
+                .forEach(e =>
+                    this.getDataModel().setTerminal(e, newCell, true)
+                );
+            this.removeCells([substitutedCell]);
+            newCell.setId(substitutedCell.getId()!);
+        });
+    }
+
+    private getDefaultParentForCell(cell: Cell): Cell {
+        if (FirebaseStaticModel.isStaticModelChildId(cell.getId()!)) {
+            const parentId = FirebaseStaticModel.getParentModelId(cell.getId()!);
+            const parent = this.getCellWithId(parentId);
+            if (!parent) {
+                throw new Error(
+                    "Unable to find static model for component. "
+                    + `Full path: ${cell.getId()}. Static model id: ${parentId}`
+                );
+            }
+            return parent;
+        }
+        else {
+            return this.getDefaultParent();
+        }
+    }
+
+    private deleteStaticModel(
+        model: FirebaseStaticModel,
+        allComponents: FirebaseComponent[]
+    ): void {
+        // Only delete from db if no remaining models are still using the data
+        if (!allComponents.find(c =>
+            c.getType() === ComponentType.STATIC_MODEL
+            && c.getData().modelId === model.getData().modelId
+        )) {
+            this.firebaseDataModel.removeStaticModel(
+                this.modelUuid,
+                model.getData().modelId
+            );
+        }
+
+        // Delete any substitutions involving the removed static model
+        const relevantSubs = this.getSubstitutions().filter(sub =>
+            model.isChildId(sub.replacedId)
+            || model.isChildId(sub.replacementId)
+        );
+        relevantSubs.forEach(s => this.unapplySubstitution(s));
+        this.firebaseDataModel.unidentifyComponents(
+            this.modelUuid,
+            relevantSubs.map(s => s.replacedId)
+        );
+    }
 }

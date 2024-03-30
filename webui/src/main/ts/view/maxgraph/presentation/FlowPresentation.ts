@@ -1,6 +1,7 @@
 import { Cell, EdgeParameters, VertexParameters } from "@maxgraph/core";
 import FirebaseFlow from "../../../data/components/FirebaseFlow";
 import { theme } from "../../../Themes";
+import MCGraph from "../MCGraph";
 import StockFlowGraph from "../StockFlowGraph";
 import PointerComponentPresentation from "./PointerComponentPresentation";
 
@@ -14,8 +15,6 @@ export default class FlowPresentation
         component: FirebaseFlow,
         graph: StockFlowGraph,
         parent?: Cell,
-        _?: (__: string) => void,
-        movable: boolean = true
     ): Cell[] {
 
         var source: Cell | undefined = undefined;
@@ -50,7 +49,7 @@ export default class FlowPresentation
                     point.x,
                     point.y,
                     FirebaseFlow.makeCloudId(component.getId(), true),
-                    movable
+                    graph
                 )
             );
             newComponents.push(source);
@@ -64,7 +63,7 @@ export default class FlowPresentation
                     point.x,
                     point.y,
                     FirebaseFlow.makeCloudId(component.getId(), false),
-                    movable
+                    graph
                 )
             );
             newComponents.push(target);
@@ -74,8 +73,6 @@ export default class FlowPresentation
             component,
             graph,
             parent,
-            _,
-            movable,
             source,
             target
         );
@@ -126,8 +123,9 @@ export default class FlowPresentation
         parent: Cell,
         fr: Cell,
         to: Cell,
-        movable: boolean
+        graph: MCGraph,
     ): EdgeParameters {
+        const isInner = parent !== graph.getDefaultParent();
         return {
             parent,
             id: flow.getId(),
@@ -144,11 +142,13 @@ export default class FlowPresentation
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 fontStyle: 1,
                 curved: false,
-                bendable: true,
                 edgeStyle: theme.custom.maxgraph.flow.edgeStyle,
-                movable,
-                editable: true,
+                bendable: !isInner,
+                movable: !isInner,
+                editable: !isInner,
+                resizable: !isInner,
                 labelBackgroundColor: theme.palette.canvas.main,
+                labelBorderColor: theme.palette.canvas.contrastText
             }
         };
     }
@@ -158,8 +158,9 @@ export default class FlowPresentation
         x: number,
         y: number,
         id: string,
-        movable: boolean
+        graph: MCGraph,
     ): VertexParameters {
+        const isInner = parent !== graph.getDefaultParent();
         return {
             parent,
             id,
@@ -171,7 +172,7 @@ export default class FlowPresentation
                 shape: "cloud",
                 fillColor: theme.palette.canvas.main,
                 strokeColor: theme.palette.canvas.contrastText,
-                movable,
+                movable: !isInner,
                 editable: false,
                 resizable: false,
             }
