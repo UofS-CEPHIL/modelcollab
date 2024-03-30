@@ -30,12 +30,6 @@ export default class CausalLoopGraph extends MCGraph {
         });
     }
 
-    // Update a component. Call this in the middle of a batch update.
-    public updateComponent(c: FirebaseComponent): void {
-        const cell = this.getCellWithId(c.getId())!;
-        this.presentation.updateCell(c, cell, this);
-    }
-
     public addComponent(
         c: FirebaseComponent,
         _: Cell = this.getDefaultParent(),

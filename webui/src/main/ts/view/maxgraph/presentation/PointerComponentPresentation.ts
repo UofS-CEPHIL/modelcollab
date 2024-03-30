@@ -49,14 +49,13 @@ export default abstract class PointerComponentPresentation
             }
         );
 
-        if (component.getData().points.length > 0) {
-            const geo = e.getGeometry()!.clone();
-            geo.points = component
-                .getData()
-                .points
-                .map((p: { x: number, y: number }) => new Point(p.x, p.y));
-            graph.getDataModel().setGeometry(e, geo);
-        }
+        const geo = e.getGeometry()!.clone();
+        geo.points = component
+            .getData()
+            .points
+            .map((p: { x: number, y: number }) => new Point(p.x, p.y));
+        graph.getDataModel().setGeometry(e, geo);
+
 
         return e;
     }
@@ -66,6 +65,7 @@ export default abstract class PointerComponentPresentation
         cell: Cell,
         graph: MCGraph,
     ): void {
+        console.log(cell)
         cell.setValue(component);
         const geo = cell.getGeometry()!.clone();
         geo.points = component
@@ -81,6 +81,10 @@ export default abstract class PointerComponentPresentation
                 entryY: component.getData().entryY,
                 exitX: component.getData().exitX,
                 exitY: component.getData().exitY,
+                entryDx: undefined,
+                entryDy: undefined,
+                entryPerimeter: undefined,
+                exitPerimeter: undefined,
             }
         );
     }

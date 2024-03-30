@@ -131,6 +131,12 @@ export default abstract class MCGraph extends Graph {
         ];
     }
 
+    // Update a component. Call this in the middle of a batch update.
+    public updateComponent(c: FirebaseComponent): void {
+        const cell = this.getCellWithId(c.getId())!;
+        this.presentation.updateCell(c, cell, this);
+    }
+
     public isCellType(cell: Cell, cptType: ComponentType): boolean {
         return cell.getValue() instanceof FirebaseComponentBase
             && cell.getValue().getType() === cptType;
@@ -334,7 +340,7 @@ export default abstract class MCGraph extends Graph {
                         MCGraph.COMPONENT_LOAD_POLL_MS
                     );
                 }
-                else {
+                else if (substitutions.length > 0) {
                     throw new Error("Substitutions loaded but empty components");
                 }
             }

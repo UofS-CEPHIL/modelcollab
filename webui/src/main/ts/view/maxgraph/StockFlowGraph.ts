@@ -1,13 +1,10 @@
 import { Cell } from "@maxgraph/core";
-import { LoadedStaticModel } from "../Screens/StockFlowScreen";
 import ModelValidator, { ComponentErrors } from "../../validation/ModelValitador";
 import FirebaseComponent from "../../data/components/FirebaseComponent";
 import FirebaseSubstitution from "../../data/components/FirebaseSubstitution";
-import ComponentType from "../../data/components/ComponentType";
 import MCGraph from "./MCGraph";
 import ComponentPresentation from "./presentation/ComponentPresentation";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
-import FirebaseStaticModel from "../../data/components/FirebaseStaticModel";
 
 
 export default class StockFlowGraph extends MCGraph {
@@ -65,12 +62,6 @@ export default class StockFlowGraph extends MCGraph {
             );
             this.showErrors(errors);
         });
-    }
-
-    // Update a component. Call this in the middle of a batch update.
-    public updateComponent(c: FirebaseComponent): void {
-        const cell = this.getCellWithIdOrThrow(c.getId());
-        this.presentation.updateCell(c, cell, this);
     }
 
     // Add a new component. Call this in the middle of a batch update.

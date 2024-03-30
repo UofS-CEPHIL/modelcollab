@@ -24,7 +24,6 @@ import StockFlowPresentationGetter from '../maxgraph/presentation/StockFlowPrese
 import StockFlowBehaviourGetter from '../maxgraph/behaviours/stockflow/StockFlowBehaviourGetter';
 import StockFlowModeSelectPanel from '../maxgraph/toolbar/StockFlowModeSelectPanel';
 import FirebaseSubstitution from '../../data/components/FirebaseSubstitution';
-import { EventObject, InternalEvent } from '@maxgraph/core';
 
 export interface LoadedStaticModel {
     modelId: string;
