@@ -82,6 +82,7 @@ export default class App extends React.Component<Props, State> {
                             element={
                                 <ModelSelectScreen
                                     firebaseDataModel={this.firebaseDataModel}
+                                    logOut={() => this.firebaseManager.logOut()}
                                 />
                             }
                         />
@@ -91,7 +92,6 @@ export default class App extends React.Component<Props, State> {
                                 <StockFlowScreen
                                     firebaseDataModel={this.firebaseDataModel}
                                     restClient={this.restClient}
-                                    logOut={() => this.firebaseManager.logOut()}
                                 />
                             }
                         />
@@ -101,7 +101,6 @@ export default class App extends React.Component<Props, State> {
                                 <CausalLoopScreen
                                     firebaseDataModel={this.firebaseDataModel}
                                     restClient={this.restClient}
-                                    logOut={() => this.firebaseManager.logOut()}
                                 />
                             }
                         />

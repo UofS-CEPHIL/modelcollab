@@ -33,7 +33,6 @@ export interface LoadedStaticModel {
 interface Props extends CanvasScreenProps {
     firebaseDataModel: FirebaseDataModel;
     restClient: RestClient;
-    logOut: () => void;
     modelUuid?: string;
 }
 
@@ -93,13 +92,8 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             StockFlowScreen.presentation,
             () => this.state.components,
             () => this.state.substitutions,
-            () => this.state.errors,
-            () => this.setState({
-                errors: ModelValidator.findErrors(
-                    this.state.components,
-                    this.state.loadedModels
-                )
-            })
+            () => { return {}; }, // TODO error checking temporarily deleted
+            () => { }
         );
     }
 
@@ -161,10 +155,12 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
                 )
                 : setTimeout(tryUpdateGraph, 200);
         }
-        const errors = ModelValidator
-            .findErrors(components, this.state.loadedModels);
+
+        // TODO errors temporarily deleted
+        // const errors = ModelValidator
+        //     .findErrors(components, this.state.loadedModels);
         const oldComponents = this.state.components;
-        this.setState({ components, errors });
+        this.setState({ components });
         tryUpdateGraph();
     }
 
@@ -203,7 +199,6 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
                 scenario={this.state.selectedScenarioId}
                 restClient={this.props.restClient}
                 firebaseDataModel={this.props.firebaseDataModel}
-                logOut={this.props.logOut}
                 toggleSidebarOpen={() => this.toggleSidebarOpen()}
                 components={this.state.components}
                 loadedModels={this.state.loadedModels}

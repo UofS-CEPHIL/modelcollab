@@ -50,7 +50,11 @@ export default class RTDBSchema {
         return `${this.makeUserPath(uid)}/ownedModels`;
     }
 
+    static makeUsersPath(): string {
+        return "/users";
+    }
+
     static makeUserPath(uid: string): string {
-        return `/users/${uid}`;
+        return `${this.makeUsersPath()}/${uid}`;
     }
 }

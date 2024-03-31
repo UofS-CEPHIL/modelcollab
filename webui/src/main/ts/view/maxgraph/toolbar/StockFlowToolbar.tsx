@@ -18,7 +18,6 @@ export interface Props extends CanvasToolbarProps {
     scenario: string;
     restClient: RestClient;
     firebaseDataModel: FirebaseDataModel;
-    logOut: () => void;
     toggleSidebarOpen: () => void;
     components: FirebaseComponent[];
     loadedModels: LoadedStaticModel[];

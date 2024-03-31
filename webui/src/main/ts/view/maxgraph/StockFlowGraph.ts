@@ -40,11 +40,6 @@ export default class StockFlowGraph extends MCGraph {
         const findComponent = (id: string) =>
             newComponents.find(c => c.getId() === id)!;
 
-        const errors = ModelValidator.findErrors(
-            newComponents,
-            [] // TODO pass loaded models
-        );
-
         const updates = this.findComponentUpdates(newComponents, oldComponents);
         const toAdd = updates.newIds.map(findComponent);
         const toUpdate = updates.updatedIds.map(findComponent);
@@ -60,7 +55,6 @@ export default class StockFlowGraph extends MCGraph {
             this.refreshLabels(
                 toUpdate.map(c => this.getCellWithId(c.getId())!)
             );
-            this.showErrors(errors);
         });
     }
 

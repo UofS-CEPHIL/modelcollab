@@ -21,7 +21,6 @@ export interface Props {
     sessionId: string;
     restClient: RestClient;
     firebaseDataModel: FirebaseDataModel;
-    logOut: () => void;
     toggleSidebarOpen: () => void;
     components: FirebaseComponent[];
     errors: ComponentErrors;
@@ -86,12 +85,13 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                 <IconButton
                     color="inherit"
                     id="back-button"
-                    onClick={_ => this.props.logOut()}
+                    href="/"
                 >
                     <LogoutIcon />
                 </IconButton>
 
-                {/*Errors*/}
+                {/*
+                   Errors TODO errors temporarily disabled
                 <IconButton
                     color="inherit"
                     id={CanvasToolbar.ERRORS_BUTTON_ID}
@@ -112,7 +112,9 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                                 : (<ErrorIcon color="inherit" />)
                         }
                     </Badge>
-                </IconButton>
+                    </IconButton>
+                    */
+                }
 
                 {/*Model actions*/}
                 <IconButton
@@ -164,7 +166,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     MenuListProps={{
                         "aria-labelledby": CanvasToolbar.ERRORS_BUTTON_ID
                     }}
-            onClose={() => this.closeAllMenus()}
+                    onClose={() => this.closeAllMenus()}
                 >
                     {this.makeErrorEntries(errors)}
                 </Menu>

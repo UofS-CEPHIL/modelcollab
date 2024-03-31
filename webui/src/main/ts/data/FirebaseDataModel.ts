@@ -30,6 +30,8 @@ export function modelTypeFromString(s: string): ModelType {
     }
 }
 
+export type ModelsList = { [uuid: string]: { name: string, modelType: string } };
+
 export default class FirebaseDataModel {
 
     private firebaseManager: FirebaseManager;
@@ -97,8 +99,7 @@ export default class FirebaseDataModel {
         );
     }
 
-    public async getOwnedModels():
-        Promise<{ [uuid: string]: { name: string, modelType: string } }> {
+    public async getOwnedModels(): Promise<ModelsList> {
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in");
         const result = await get(
@@ -110,6 +111,42 @@ export default class FirebaseDataModel {
 
         if (!result.exists()) return {};
         else return result.val();
+    }
+
+    public subscribeToOwnedModels(
+        callback: (m: ModelsList) => void
+    ): Unsubscribe {
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in");
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeUserOwnedModelsPath(user.uid)
+            ),
+            s => callback(s.val() ?? {})
+        );
+    }
+
+    public subscribeToSharedModels(
+        callback: (m: ModelsList) => void
+    ): Unsubscribe {
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in");
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeUsersPath(),
+            ),
+            s => callback(
+                Object.fromEntries(
+                    Object.entries(s.val())
+                        .filter(([uid, _]) => uid !== user.uid)
+                        .flatMap(([_, data]) =>
+                            Object.entries((data as any).ownedModels)
+                        )
+                )
+            )
+        );
     }
 
     public subscribeToSessionModelName(

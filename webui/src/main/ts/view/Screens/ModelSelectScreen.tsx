@@ -1,17 +1,21 @@
-import { Button, Divider, FormControl, FormControlLabel, FormLabel, List, ListItem, ListItemButton, ListItemText, ListSubheader, Radio, RadioGroup, TextField } from '@mui/material';
+import { Button, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, List, ListItem, ListItemButton, ListItemText, ListSubheader, Radio, RadioGroup, TextField, Typography } from '@mui/material';
+import LogoutIcon from '@mui/icons-material/Logout';
 import React, { ReactElement } from 'react';
-import FirebaseDataModel, { ModelType, modelTypeFromString } from '../../data/FirebaseDataModel';
+import FirebaseDataModel, { ModelsList, ModelType, modelTypeFromString } from '../../data/FirebaseDataModel';
 import { Link } from 'react-router-dom';
 import { theme } from '../../Themes';
 
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
+    logOut: () => void;
 }
 
 export interface State {
-    models: { [uuid: string]: { name: string, modelType: string } };
+    myModels: ModelsList;
+    sharedModels: ModelsList;
     newModelText: string;
     newModelType: ModelType;
+    unsubscribe?: () => void;
 }
 
 export default class ModelSelectScreen extends React.Component<Props, State> {
@@ -19,50 +23,80 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     public constructor(props: Props) {
         super(props);
         this.state = {
-            models: {},
+            myModels: {},
+            sharedModels: {},
             newModelText: "",
             newModelType: ModelType.StockFlow
         };
     }
 
     public componentDidMount() {
-        this.refreshModelList();
+        this.subscribeToModels();
+    }
+
+    public componentWillUnmount() {
+        if (this.state.unsubscribe) {
+            this.state.unsubscribe();
+            this.setState({ unsubscribe: undefined });
+        }
     }
 
     public render(): ReactElement {
         return (
             <List>
-                <ListSubheader key={-1}>
+                <ListItem key={"welcome-listitem"}>
+                    <Grid container direction="row">
+                        <Grid item xs={11}>
+                            <Typography
+                                variant="h3"
+                                fontWeight={"bold"}
+                            >
+                                Model Selection
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={1}>
+                            <Button
+                                variant="contained"
+                                onClick={() => this.props.logOut()}
+                            >
+                                <LogoutIcon sx={{ paddingRight: 2 }} />
+                                Sign Out
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </ListItem>
+                <ListSubheader key={"new-model-header"}>
                     Add New Model
                 </ListSubheader>
                 {this.makeNewModelFormListItem()}
                 <Divider />
-                <ListSubheader key={-2}>
+                <ListSubheader key={"your-models-header"}>
                     Your Models
                 </ListSubheader>
-                {this.makeYourModelsListItems()}
+                {this.makeModelsListItems(this.state.myModels)}
                 <Divider />
-                <ListSubheader key={-3}>
+                <ListSubheader key={"shared-models-header"}>
                     Shared With You
                 </ListSubheader>
+                {this.makeModelsListItems(this.state.sharedModels)}
             </List >
         );
     }
 
-    private makeYourModelsListItems(): ReactElement[] {
-        return Object.entries(this.state.models).map(
-            (e, i) => (
+    private makeModelsListItems(models: ModelsList): ReactElement[] {
+        return Object.entries(models).map(
+            ([uuid, nametype]) => (
                 <ListItem
                     component={Link}
-                    to={`${e[1].modelType}/${e[0]}`}
+                    to={`${nametype.modelType}/${uuid}`}
                     style={{ color: theme.palette.text.primary }}
-                    key={i}
+                    key={uuid}
                 >
                     <ListItemButton>
                         <ListItemText
-                            primary={e[1].name}
+                            primary={nametype.name}
                             secondary={this.getModelTypeDisplayText(
-                                e[1].modelType
+                                nametype.modelType
                             )}
                         />
                     </ListItemButton>
@@ -151,7 +185,7 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     }
 
     private isModelNameUsed(): boolean {
-        return Object.values(this.state.models).find(
+        return Object.values(this.state.myModels).find(
             m => m.name == this.state.newModelText
         ) !== undefined;
     }
@@ -160,10 +194,27 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
         return this.state.newModelText == "" || this.isModelNameUsed();
     }
 
+    private subscribeToModels(): void {
+        const unsubMine = this.props.firebaseDataModel.subscribeToOwnedModels(
+            m => this.setState({ myModels: m })
+        );
+        const unsubOthers = this.props.firebaseDataModel.subscribeToSharedModels(
+            m => {
+                this.setState({ sharedModels: m })
+            }
+        );
+        this.setState({
+            unsubscribe: () => {
+                unsubMine();
+                unsubOthers();
+            }
+        });
+    }
+
     private refreshModelList(): void {
         this.props.firebaseDataModel.getOwnedModels().then(
             m => this.setState({
-                models: m
+                myModels: m
             })
         ).catch(e =>
             console.error("Error getting models: " + e)

@@ -23,7 +23,6 @@ import UserActionLogger from '../../logging/UserActionLogger';
 interface Props extends CanvasScreenProps {
     firebaseDataModel: FirebaseDataModel;
     restClient: RestClient;
-    logOut: () => void;
     modelUuid?: string;
 }
 
@@ -96,12 +95,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             () => this.state.components,
             () => [], // TODO add substitutions once they are added
             () => this.state.errors,
-            () => this.setState({
-                errors: ModelValidator.findErrors(
-                    this.state.components,
-                    [], // TODO add loaded models once they are added
-                )
-            })
+            () => { return {}; }
         );
     }
 
@@ -175,7 +169,6 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
                 sessionId={this.props.modelUuid!}
                 restClient={this.props.restClient}
                 firebaseDataModel={this.props.firebaseDataModel}
-                logOut={() => this.props.logOut()}
                 toggleSidebarOpen={() => this.toggleSidebarOpen()}
                 components={this.state.components}
                 errors={this.state.errors}
