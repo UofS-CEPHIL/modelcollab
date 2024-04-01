@@ -1,8 +1,12 @@
 module CodeGenerator
 
+using ..ModelBuilder
 using ..FootBuilder
 using ..ModelComponents
+using ..FirebaseComponents
 using ..ModelValidator
+using ..SymbolReplacer
+using ..Types
 
 const IMPORT_LIST = [
     "StockFlow",
@@ -23,6 +27,7 @@ const IMPORT_LIST = [
 function generate_code(
     models::Vector{StockFlowModel},
     feet::Vector{Foot},
+    scenario::FirebaseScenario = FirebaseComponents.DEFAULT_SCENARIO,
     path::String="/your/path"
 )::String
 
@@ -41,7 +46,7 @@ function generate_code(
         make_import_lines();
         make_stockflow_line.(models);
         make_feet_and_apex_lines(feet, models);
-        make_params_line(models);
+        make_params_line(models, scenario);
         make_initial_stocks_line(models);
         make_solution_lines(models);
         make_save_fig_lines(path)
@@ -67,14 +72,6 @@ function make_var_list(names::Vector{String}, addcolon::Bool=false)
     else
         commasep_names = join(map(n -> "$(prefix)$(n)", names), ",")
         return "($commasep_names)"
-    end
-end
-
-function enforce_floating_point(numstring::AbstractString)::String
-    if (occursin(r"^\d+$", numstring)) # If it's only digits and no decimal
-        return numstring * ".0"
-    else
-        return numstring
     end
 end
 
@@ -218,7 +215,7 @@ function make_feet_and_apex_lines(
         function make_single_foot_line(foot::Foot)::String
             relevant_model_names = join(make_model_name.(foot.model_ids), ", ")
             arrowlist = make_foot_arrow_list(foot)
-            return "\t$relevant_model_names ^ $arrowlist"
+            return "\t($relevant_model_names) ^ $arrowlist"
         end
 
         modelnames_commasep = join(
@@ -232,7 +229,7 @@ function make_feet_and_apex_lines(
         footlines = join(make_single_foot_line.(feet), "\n")
         return (
             "$COMPOSED_MODEL_NAME = @compose $modelnames_spacesep begin\n"
-            * "\t($modelnames_commasep)\n"
+            * "\t($(modelnames_commasep),)\n"
             * "$footlines\n"
             * "end"
         )
@@ -269,7 +266,10 @@ function make_feet_and_apex_lines(
 end
 
 
-function make_params_line(models::Vector{StockFlowModel})::String
+function make_params_line(
+    models::Vector{StockFlowModel},
+    scenario::FirebaseScenario
+)::String
 
     function make_single_param_entry(param::Parameter)::String
         name = param.name
@@ -279,6 +279,17 @@ function make_params_line(models::Vector{StockFlowModel})::String
 
     all_params::Vector{Parameter} = reduce(vcat, map(m -> m.parameters, models))
     all_params = remove_duplicate_ids(all_params)
+
+    for param=all_params
+        if (length(filter(p -> p.name == param.name, all_params)) > 1)
+            throw(InvalidModelException(
+                "Found duplicate parameter name: " * param.name
+            ))
+        end
+    end
+
+    push!(all_params, Parameter("start_time", "00", scenario.starttime))
+    push!(all_params, Parameter("stop_time", "00", scenario.stoptime))
     paramnames_commasep = join(make_single_param_entry.(all_params), ",")
     return "params = LVector($paramnames_commasep)"
 end
@@ -300,6 +311,15 @@ function make_initial_stocks_line(models::Vector{StockFlowModel})::String
 
     all_stocks::Vector{Stock} = reduce(vcat, map(m -> m.stocks, models))
     all_stocks = remove_duplicate_ids(all_stocks)
+
+    for stock=all_stocks
+        if (length(filter(s -> s.name == stock.name, all_stocks)) > 1)
+            throw(InvalidModelException(
+                "Found duplicate stock name: " * stock.name
+            ))
+        end
+    end
+
     stocknames_commasep = join(make_single_stock_entry.(all_stocks), ",")
 
     return "u0 = LVector($stocknames_commasep)"
@@ -308,7 +328,7 @@ end
 
 function make_solution_lines(models::Vector{StockFlowModel})::Vector{String}
     odeline = ("odeprob = ODEProblem(vectorfield(modelapex), u0, "
-             * "(params.startTime, params.stopTime), params)")
+             * "(params.start_time, params.stop_time), params)")
     solline = "solution = solve(odeprob, Tsit5(), abstol=1e-8)"
     return [odeline, solline]
 end
@@ -320,68 +340,5 @@ function make_save_fig_lines(filename::String)::Vector{String}
         "savefig(\"$filename\")"
     ]
 end
-
-# Replace all symbols in the equation that are words not numbers according to
-# symbol_replacement_func, and ones that are just numbers with
-# const_replacement_func. Funcs should be (AbstractString) -> String
-function replace_symbols(
-    value::String,
-    symbol_replacement_func::Function,
-    const_replacement_func::Function = (s::AbstractString) -> s
-)::String
-
-    function is_simple_number(s::AbstractString)::Bool
-        return occursin(r"^\d+(\.\d+)?$", s)
-    end
-
-    function replace_one_symbol(s::AbstractString, func::Function)::String
-        # Get the actual symbol ignoring any whitespace
-        re = r"(?<pre>[^\w\d.]+|^)(?<grp>[\w\d.]+)(?<post>[^\w\d.]+|$)"
-        m = match(re, s)
-        if (m === nothing)
-            throw(InvalidModelException("Unable to parse symbol: $s"))
-        end
-
-        replstr = func(m["grp"])
-        return replace(
-            s,
-            re => SubstitutionString("\\g<pre>$(replstr)\\g<post>")
-        )
-    end
-
-    if (value == "")
-        throw(InvalidModelException("Cannot find any symbols in value: $value"))
-    end
-
-    # Split along any space, paren, or operator
-    split_regex = r"[-\/*+\(\)\s]"
-    split_items = split(value, split_regex)
-
-    out::String = value
-    for value in split_items
-        if (value != "")
-            # For every item that we found that isn't a number,
-            # use a regex to find it and replace it with the
-            # value as specified by the replacement function
-            regex = Regex("(?<pre>[^\\w\\d.]+|^)$value(?<post>[^\\w\\d.]+|\$)")
-            if (is_simple_number(value))
-                out = replace(
-                    out,
-                    regex => m -> replace_one_symbol(
-                        enforce_floating_point(m),
-                        const_replacement_func
-                    )
-                )
-            else
-                out = replace(
-                    out,
-                    regex => m -> replace_one_symbol(m, symbol_replacement_func)
-                )
-            end
-        end
-    end
-    return out
-end
-export replace_symbols
 
 end # CodeGenerator Namespace

@@ -14,7 +14,8 @@
     },
     "ui": {
       "enabled": true
-    }
+    },
+    "singleprojectmode": true
   },
   "database": {
     "rules": "database.rules.json"

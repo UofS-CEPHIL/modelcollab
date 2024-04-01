@@ -5,14 +5,20 @@ using ..RTDB
 
 # TODO make a config file
 CONFIG_FILE_PATH = "../../../../firebase-config.json"
-BASE_URL = "https://modelcollab-default-rtdb.firebaseio.com"
-COMPONENTS_PATH_PREFIX = "/components"
-SAVED_MODELS_PATH_PREFIX = "/saved-models"
+#BASE_URL = "https://modelcollab-default-rtdb.firebaseio.com"
+BASE_URL = "http://127.0.0.1:9000"
+# 'nothing' if we aren't using the emulator
+EMULATOR_PROJECT_ID = "modelcollab-default-rtdb"
+MODELS_PATH_PREFIX = "models"
+INNER_MODELS_PATH_SUFFIX = "loadedModels"
+COMPONENTS_PATH_SUFFIX = "components"
+SUBSTITUTIONS_PATH_SUFFIX = "substitutions"
+SCENARIOS_PATH_SUFFIX = "scenarios"
 
 ##################################### Init #####################################
 
 function initialize()::Nothing
-    RTDB.realdb_init(BASE_URL)
+    RTDB.realdb_init(BASE_URL, EMULATOR_PROJECT_ID)
 end
 export initialize
 
@@ -29,27 +35,34 @@ function make_firebase_objects(
 end
 
 
-function get_outer_components(sessionid::String)::Vector{FirebaseDataObject}
-    result = RTDB.realdb_get("$COMPONENTS_PATH_PREFIX/$sessionid")
-    return make_firebase_objects(result)
-end
-
-function get_saved_model_components(modelid::String)::Vector{FirebaseDataObject}
-    result = RTDB.realdb_get("$SAVED_MODELS_PATH_PREFIX/$modelid")
+function get_outer_components(model_id::String)::Vector{FirebaseDataObject}
+    result = RTDB.realdb_get(
+        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(COMPONENTS_PATH_SUFFIX)"
+    )
+    if (result == nothing) return [] end
     return make_firebase_objects(result)
 end
 
 function get_inner_models(
+    model_id::String,
     outers::Vector{FirebaseDataObject}
 )::Dict{String, Vector{FirebaseDataObject}}
-    # Get the inner components
+    # Get saved models from database
+    saved_components = RTDB.realdb_get(
+        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(INNER_MODELS_PATH_SUFFIX)"
+    )
+    if (saved_components == nothing)
+        return Dict()
+    end
+
+    # Get static model components from inners
     models = filter(
         c -> firebase_gettype(c) == FirebaseComponents.STATIC_MODEL,
         outers
     )
     inners = Dict{String, Vector{FirebaseDataObject}}()
     for model in models
-        inners[model.id] = get_saved_model_components(model.modelid)
+        inners[model.id] = make_firebase_objects(saved_components[model.modelid])
     end
 
     # Prefix the inner components' ids with their model ID
@@ -64,6 +77,7 @@ function qualify_component_ids!(
     modelid::String,
     components::Vector{FirebaseDataObject}
 )::Nothing
+    # TODO use the same delimiter as webui
     qualify_component_id(id::String) = "$(modelid)/$(id)"
     for i in 1:length(components)
         old = components[i]
@@ -76,16 +90,90 @@ function qualify_component_ids!(
     end
 end
 
+function get_substitutions(model_id::String)::Vector{FirebaseSubstitution}
+    result = RTDB.realdb_get(
+        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(SUBSTITUTIONS_PATH_SUFFIX)"
+    )
+    if (result == nothing)
+        return []
+    end
+
+    # TODO use the same delimiter as webui
+    return [
+        FirebaseSubstitution(
+            replace(key, "-" => "/"),
+            replace(result[key], "-" => "/")
+        )
+        for key=keys(result)
+    ]
+end
+
+function get_scenarios(model_id::String)::Vector{FirebaseScenario}
+
+    function makeScenario(key::String, val::Dict{String, Any})::FirebaseScenario
+        valkeys = keys(val)
+        name = nothing
+        overrides = nothing
+        start_time = nothing
+        stop_time = nothing
+
+        if ("name" in valkeys)
+            name = val["name"]
+        else
+            name = ""
+        end
+
+        if ("startTime" in valkeys)
+            start_time = val["startTime"]
+        else
+            start_time = "0.0"
+        end
+
+        if ("stopTime" in valkeys)
+            stop_time = val["stopTime"]
+        else
+            stop_time = "0.0"
+        end
+
+        if ("paramOverrides" in valkeys)
+            overrides = val["paramOverrides"]
+        else
+            overrides = Dict{String, String}()
+        end
+
+        FirebaseScenario(
+            key,
+            name,
+            overrides,
+            start_time,
+            stop_time
+        )
+    end
+
+    result = RTDB.realdb_get(
+        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(SCENARIOS_PATH_SUFFIX)"
+    )
+    if (result == nothing)
+        return []
+    end
+
+    return [makeScenario(key, result[key]) for key=keys(result)]
+end
+
 struct InitialFirebaseResult
     outers::Vector{FirebaseDataObject}
     inners::Dict{String, Vector{FirebaseDataObject}}
+    substitutions::Vector{FirebaseSubstitution}
+    scenarios::Vector{FirebaseScenario}
 end
 export InitialFirebaseResult
 
-function get_components(sessionid::String)::InitialFirebaseResult
-    outers = get_outer_components(sessionid)
-    inners = get_inner_models(outers)
-    return InitialFirebaseResult(outers, inners)
+function get_components(model_id::String)::InitialFirebaseResult
+    outers = get_outer_components(model_id)
+    inners = get_inner_models(model_id, outers)
+    subs = get_substitutions(model_id)
+    scenarios = get_scenarios(model_id)
+    return InitialFirebaseResult(outers, inners, subs, scenarios)
 end
 export get_components
 

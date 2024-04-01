@@ -24,13 +24,7 @@ function validate_models(
         push!(errors, "No stocks found")
     end
 
-    allparams = reduce(vcat, map(m -> m.parameters, models); init=[])
-    if (findfirst(p -> p.name == "startTime", allparams) === nothing)
-        push!(errors, "no start time parameter found")
-    end
-    if (findfirst(p -> p.name == "stopTime", allparams) === nothing)
-        push!(errors, "no stop time parameter found")
-    end
+    # TODO there are definitely more checks we could do here
 
     return errors
 end

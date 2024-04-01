@@ -9,6 +9,7 @@ using HTTP
 using JSON
 
 BASE_URL = nothing
+EMULATOR_PROJECT_ID = nothing
 
 """
 In the examples on this page,
@@ -26,9 +27,13 @@ Initialize the realtimedb with baseurl to make things easier
 realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
 ```
 """
-function realdb_init(base_url)
+function realdb_init(base_url, emulator_project_id = nothing)
     global BASE_URL = base_url
     println("BASE_URL set:", BASE_URL)
+    if (emulator_project_id != nothing)
+        global EMULATOR_PROJECT_ID = emulator_project_id
+        println("Using emulator with project id:", EMULATOR_PROJECT_ID)
+    end
 end
 
 """
@@ -44,12 +49,12 @@ realdb_get("/users/jack/name")
 
 """
 function realdb_get(url, authheader = "")
-    pagesize = 300
-    pagetoken = ""
-    final_url = "$BASE_URL$url.json"
+    final_url = "$(BASE_URL)$(url).json"
+    if (EMULATOR_PROJECT_ID != nothing)
+        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
+    end
     println("FINAL URL:", final_url)
-    query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
-    res = HTTP.get(final_url, authheader; query = query)
+    res = HTTP.get(final_url)
     if res.status == 200
         println("GET successful")
     else

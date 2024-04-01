@@ -4,44 +4,23 @@ using ..FirebaseComponents
 using ..ModelComponents
 using ..ComponentBuilder
 using ..StringGraph
-using ..CodeGenerator
-
-struct InvalidModelException <: Exception
-    reason::String
-end
-export InvalidModelException
-Base.showerror(io::IO, e::InvalidModelException) = print(
-    io,
-    "InvalidModelException: $(e.reason)"
-)
+using ..SymbolReplacer
+using ..Types
 
 OUTER_MODEL_NAME = "_outer"
 
 function make_stockflow_models(
     outers::Vector{FirebaseDataObject},
     inners::Dict{String, Vector{FirebaseDataObject}},
-    scenario_name::Union{String, Nothing}=nothing
+    substitutions::Vector{FirebaseSubstitution},
+    scenario::FirebaseScenario
 )::Vector{StockFlowModel}
 
-    apply_substitutions!(outers, inners)
-    filter_irrelevant_params!(outers, inners)
-    scenarios = filter(c -> firebase_isscenario(c), outers)
-
+    apply_substitutions!(outers, inners, substitutions)
     add_outers_to_models_dict!(outers, inners)
     all_models = inners # rename the var to reflect the change
 
-    #convert_constants_to_parameters!(all_models)
-
-    if (scenario_name !== nothing)
-        scenario = findfirst(s -> s.name == scenario_name, scenarios)
-        if (scenario === nothing)
-            scenario_names = map(s -> s.name, scenarios)
-            throw(ArgumentError(
-                "Unable to find scenario $scenario_name in list $scenario_names"
-            ))
-        end
-        apply_scenario!(scenario, all_models)
-    end
+    apply_scenario!(scenario, all_models)
 
     return map(
         pair -> make_julia_components(pair.first, pair.second),
@@ -186,7 +165,7 @@ function add_outers_to_models_dict!(
                 )
             )
         end
-        outers = filter(c -> !(firebase_gettype(c) == FirebaseComponents.STATIC_MODEL), outers)
+        outers = filter(c -> firebase_gettype(c) != FirebaseComponents.STATIC_MODEL, outers)
         key = collect(keys(dict))[1]
         dict[key] = vcat(dict[key], outers)
     end
@@ -195,20 +174,15 @@ end
 
 function apply_substitutions!(
     outers::Vector{FirebaseDataObject},
-    inners::Dict{String, Vector{FirebaseDataObject}}
+    inners::Dict{String, Vector{FirebaseDataObject}},
+    substitutions::Vector{FirebaseSubstitution}
 )::Nothing
-    if (length(inners) > 0)
-        all_components = [outers; reduce(vcat, values(inners))]
-    else
-        all_components = outers
+    if (length(inners) == 0)
+        return
     end
+    all_components = [outers; reduce(vcat, values(inners))]
 
-    subs = filter(FirebaseComponents.firebase_issubstitution, all_components)
-    if (length(subs) > 0 && length(inners) == 0)
-        throw(ErrorException("Found substitutions but no inner models"))
-    end
-
-    for sub in subs
+    for sub in substitutions
         lists = collect(values(inners))
         push!(lists, outers)
         for list in lists
@@ -260,7 +234,7 @@ function convert_constants_to_parameters!(
             cpt = cptlist[i]
             if (firebase_isflow(cpt) || firebase_isdynvar(cpt))
                 cptlist[i] = newvalue(
-                    FirebaseValue(CodeGenerator.replace_symbols(
+                    FirebaseValue(SymbolReplacer.replace_symbols(
                         cpt.value.value,
                         (s::AbstractString) -> s,
                         replace_const
@@ -278,7 +252,7 @@ function apply_scenario!(
     model::Vector{FirebaseDataObject}
 )::Nothing
     override_names = keys(scenario.param_overrides)
-    for i in range(length(model))
+    for i in 1:length(model)
         c = model[i]
         if (firebase_isparam(c))
             text = c.text.text
@@ -293,7 +267,7 @@ function apply_scenario!(
     scenario::FirebaseScenario,
     models::Dict{String, Vector{FirebaseDataObject}}
 )::Nothing
-    for model in models
+    for model=values(models)
         apply_scenario!(scenario, model)
     end
 end

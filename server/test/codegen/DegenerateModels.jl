@@ -4,6 +4,7 @@
 using .CodeGenerator
 using .ModelComponents
 using .ModelBuilder
+using .Types
 
 S1Name = "s1"
 S1Id = "1"

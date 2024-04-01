@@ -199,25 +199,22 @@ end
 struct FirebaseConnection <: FirebaseDataObject
     id::String
     pointer::FirebasePointer
-    handleoffset::FirebasePoint
 end
 export FirebaseConnection
 function newid(id::String, o::FirebaseConnection)::FirebaseConnection
-    return FirebaseConnection(id, o.pointer, o.handleoffset)
+    return FirebaseConnection(id, o.pointer)
 end
 function newsource(sourceid::String, o::FirebaseConnection)::FirebaseConnection
     return FirebaseConnection(
         o.id,
-        FirebasePointer(sourceid, o.pointer.to),
-        o.handleoffset
+        FirebasePointer(sourceid, o.pointer.to)
     )
 end
 export newsource
 function newdest(destid::String, o::FirebaseConnection)::FirebaseConnection
     return FirebaseConnection(
         o.id,
-        FirebasePointer(o.pointer.from, destid),
-        o.handleoffset
+        FirebasePointer(o.pointer.from, destid)
     )
 end
 export newdest
@@ -298,24 +295,27 @@ end
 ############################# Invisible Components #############################
 
 struct FirebaseSubstitution <: FirebaseDataObject
-    id::String
     replacedid::String
     replacementid::String
 end
 export FirebaseSubstitution
-function newid(id::String, o::FirebaseSubstitution)::FirebaseSubstitution
-    return FirebaseSubstitution(id, o.replacedid, o.replacementid)
-end
 
 struct FirebaseScenario <: FirebaseDataObject
     id::String
     name::String
     param_overrides::Dict{String, String}
+    starttime::String
+    stoptime::String
 end
 export FirebaseScenario
-function newid(id::String, o::FirebaseScenario)::FirebaseScenario
-    return FirebaseScenario(id, o.name, o.param_overrides)
-end
+
+const DEFAULT_SCENARIO = FirebaseScenario(
+    "baseline",
+    "baseline",
+    Dict(),
+    "0.0",
+    "0.0"
+)
 
 
 ################################### Creation ###################################
@@ -333,7 +333,7 @@ function firebase_create_object(
             id,
             FirebasePoint(data["x"], data["y"]),
             FirebaseText(data["text"]),
-            FirebaseValue(data["initvalue"])
+            FirebaseValue(data["value"])
         )
     elseif (type == FLOW)
         return FirebaseFlow(
@@ -366,7 +366,6 @@ function firebase_create_object(
         return FirebaseConnection(
             id,
             FirebasePointer(data["from"], data["to"]),
-            FirebasePoint(data["handleXOffset"], data["handleYOffset"])
         )
     elseif (type == CLOUD)
         return FirebaseCloud(
