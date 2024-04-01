@@ -41,7 +41,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
 
     private static readonly presentation = new CausalLoopPresentationGetter();
 
-    private readonly actionLogger = new UserActionLogger();
+    // private readonly actionLogger = new UserActionLogger();
 
     protected subscribeToFirebase(): () => void {
         return new FirebaseSessionDataGetter(
@@ -118,7 +118,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             this.graph,
             this.props.modelUuid,
             () => this.state.components,
-            this.actionLogger,
+            //this.actionLogger,
         );
     }
 
@@ -140,7 +140,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             p => this.setKeydownPosition(p),
             () => this.state.keydownCell,
             (c: Cell | null) => this.setKeydownCell(c),
-            this.actionLogger,
+            //this.actionLogger,
         );
     }
 
@@ -173,7 +173,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
                 components={this.state.components}
                 errors={this.state.errors}
                 uiMode={this.state.mode}
-                actionLogger={this.actionLogger}
+            //actionLogger={this.actionLogger}
             />
         );
     }

@@ -78,6 +78,11 @@ export default abstract class CanvasScreen
                 { once: true }
             );
             if (!this.graph) this.setupGraph();
+            alert(
+                "Notice: The backend server is undergoing maintenance. "
+                + "The 'get code' and 'compute model' features are "
+                + "temporarily unavailable. "
+            );
         }
     }
 
