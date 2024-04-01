@@ -7,7 +7,6 @@ import ChangeModeOnButtonPressBehaviour from "../ChangeModeOnButtonPressBehaviou
 export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
 
     public canvasClicked(x: number, y: number): void {
-        console.log("edit at click");
         const cell = this.getGraph().getCellAt(x, y);
         if (cell && cell.getValue() instanceof FirebaseComponentBase<any>) {
             if (
@@ -22,7 +21,6 @@ export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
     }
 
     public selectionChanged(selection: Cell[]) {
-        console.log("edit selection");
         if (
             selection.length === 1
             && selection[0].getValue() instanceof FirebaseComponentBase<any>

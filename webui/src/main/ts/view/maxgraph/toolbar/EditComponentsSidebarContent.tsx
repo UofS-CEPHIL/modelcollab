@@ -35,6 +35,9 @@ export default class EditComponentsSidebarContent
     }
 
     public render(): ReactElement {
+        const hasChanges = this.props.component !== null
+            && this.state.currentComponent !== null
+            && !this.state.currentComponent.equals(this.props.component);
         return (
             <List>
                 <RefreshAndSaveListItem
@@ -49,6 +52,7 @@ export default class EditComponentsSidebarContent
                         )
                     }
                     disabled={this.props.component === null}
+                    hasChanges={hasChanges}
                     key={-1}
                 />
                 {
