@@ -25,7 +25,7 @@ export default abstract class CanvasSidebar
     public static readonly MIN_WIDTH_PX = 50;
     public static readonly MAX_WIDTH_PX = 800;
     public static readonly DEFAULT_WIDTH_PX = 300;
-    public static readonly DEFAULT_VISIBILITY = false;
+    public static readonly DEFAULT_VISIBILITY = true;
 
     private static readonly MODE_SELECT_LABEL_ID = "mode-select-label"
     private static readonly MODE_SELECT_PICKER_ID = "mode-selection"

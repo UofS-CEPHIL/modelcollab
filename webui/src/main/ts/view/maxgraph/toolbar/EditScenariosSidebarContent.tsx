@@ -21,6 +21,7 @@ export interface Props {
 
 export interface State {
     scenarioEditing: FirebaseScenario | null;
+    originalScenario: FirebaseScenario | null;
     newScenarioName: string;
     newScenarioNameIsError: boolean;
 }
@@ -36,6 +37,7 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         super(props);
         this.state = {
             scenarioEditing: null,
+            originalScenario: null,
             newScenarioName: "",
             newScenarioNameIsError: false
         };
@@ -46,6 +48,10 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
     }
 
     public render(): ReactElement {
+        const hasChanges = this.state.originalScenario !== null
+            && this.state.scenarioEditing !== null
+            && !this.state.originalScenario.equals(this.state.scenarioEditing);
+
         return (
             <List>
                 {this.makeAddScenarioListItem()}
@@ -54,8 +60,10 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                     onSave={() => this.updateScenario()}
                     onRefresh={() => this.refresh()}
                     disabled={!this.state.scenarioEditing}
+                    hasChanges={hasChanges}
                     key={'refreshandsave'}
                 />
+                {this.makeStartStopTimeListItems()}
                 {this.makeParameterListItems()}
                 {this.makeDeleteScenarioListItem()}
             </List>
@@ -157,7 +165,7 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         key: number
     ): ReactElement {
         return this.makeOneParameterListItem(
-            param,
+            param.getData().text,
             param.getData().value,
             true,
             true,
@@ -170,7 +178,6 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         key: number
     ): ReactElement {
         if (!this.state.scenarioEditing) throw new Error("No scenario selected");
-
         const scenario = this.state.scenarioEditing;
         const paramName = param.getData().text;
         const value =
@@ -184,17 +191,18 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                 ...oldOverrides,
                 [`${paramName}`]: e.target.value
             };
-            if (e.target.value == "") delete newOverrides[`${paramName}`];
+            if (e.target.value === param.getData().value)
+                delete newOverrides[`${paramName}`];
             const newData = {
                 ...this.state.scenarioEditing!.getData(),
-                paramOverrides: newOverrides
+                overrides: newOverrides
             };
             const newScenario = this.state.scenarioEditing!.withData(newData);
             this.setState({ scenarioEditing: newScenario });
         }
 
         return this.makeOneParameterListItem(
-            param,
+            param.getData().text,
             value,
             isGrayed,
             false,
@@ -203,15 +211,45 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         );
     }
 
+    private makeStartStopTimeListItems(): ReactElement[] {
+        const handleChange = (e: ReactChangeEvent, startTime: boolean) => {
+            const newData = { ...scenario!.getData() };
+            if (startTime) newData.startTime = e.target.value;
+            else newData.stopTime = e.target.value;
+            this.setState({
+                scenarioEditing: scenario!.withData(newData)
+            });
+        }
+        const scenario = this.state.scenarioEditing;
+        const isDisabled = scenario === null;
+        return [
+            this.makeOneParameterListItem(
+                "Start Time",
+                scenario ? scenario.getData().startTime : "0.0",
+                isDisabled,
+                isDisabled,
+                -1,
+                e => handleChange(e, true)
+            ),
+            this.makeOneParameterListItem(
+                "Stop Time",
+                scenario ? scenario.getData().stopTime : "0.0",
+                isDisabled,
+                isDisabled,
+                -2,
+                e => handleChange(e, false)
+            ),
+        ];
+    }
+
     private makeOneParameterListItem(
-        param: FirebaseParameter,
+        name: string,
         value: string,
         isGrayed: boolean,
         isDisabled: boolean,
         key: number,
         handleChange?: (e: ReactChangeEvent) => void
     ): ReactElement {
-        const paramName = param.getData().text;
         const isError = !ModelValidator.isValidNumber(value);
         const color = isGrayed
             ? theme.palette.grayed.main
@@ -222,11 +260,11 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                 <TextField
                     value={value}
                     onChange={handleChange}
-                    name={paramName}
-                    label={paramName}
+                    name={name}
+                    label={name}
                     error={isError}
                     inputProps={{
-                        id: `${paramName}-editbox`,
+                        id: `${name}-editbox`,
                     }}
                     sx={{ input: { color: color } }}
                     disabled={isDisabled}
@@ -257,14 +295,13 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
 
     private refresh(): void {
         if (this.state.scenarioEditing) {
-            const revertedScenario = this.props.scenarios.find(
-                s => s.getId() === this.state.scenarioEditing!.getId()
+            const original = this.props.scenarios.find(s =>
+                s.getId() === this.state.scenarioEditing!.getId()
             );
-            if (!revertedScenario)
-                throw new Error(
-                    "Can't find scenario " + this.state.scenarioEditing
-                );
-            this.setState({ scenarioEditing: revertedScenario });
+            if (!original) throw new Error(
+                "Can't find scenario: " + this.state.scenarioEditing!.getId()
+            );
+            this.setState({ scenarioEditing: original });
         }
     }
 
@@ -273,7 +310,10 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
             .find(s => s.getData().name === event.target.value);
         if (!scenario)
             throw new Error("Selected unknown scenario " + event.target.value);
-        this.setState({ scenarioEditing: scenario });
+        this.setState({
+            scenarioEditing: scenario,
+            originalScenario: scenario
+        });
     }
 
     private onNewScenarioTextChanged(e: ReactChangeEvent): void {
@@ -308,10 +348,14 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
 
     private deleteScenario(): void {
         if (this.state.scenarioEditing) {
-            this.props.deleteScenario(
-                this.state.scenarioEditing,
+            const scenario = this.state.scenarioEditing;
+            this.setState({
+                scenarioEditing: null,
+                originalScenario: null
+            }, () => this.props.deleteScenario(
+                scenario,
                 () => this.refresh()
-            );
+            ));
         }
     }
 

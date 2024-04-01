@@ -27,15 +27,28 @@ export class ConnectModeBehaviour extends ArrowBehaviour {
             return false;
         }
 
-        // Can't connect to a parameter
+        // Can't connect to a parameter or connection
         if (
             this.getGraph().isCellType(target, ComponentType.PARAMETER)
+            || this.getGraph().isCellType(target, ComponentType.CONNECTION)
         ) {
             return false;
         }
 
-        // Can't connect from a flow
-        if (source.getValue().getType() === ComponentType.FLOW) {
+        // Can't connect from a flow or connection
+        if (
+            this.getGraph().isCellType(source, ComponentType.FLOW)
+            || this.getGraph().isCellType(source, ComponentType.CONNECTION)
+        ) {
+            return false;
+        }
+
+        // Can't create duplicate connections
+        if (this.getFirebaseState().find(c =>
+            c.getType() === ComponentType.CONNECTION
+            && c.getData().from === source.getId()
+            && c.getData().to === target.getId())
+        ) {
             return false;
         }
 

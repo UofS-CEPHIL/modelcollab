@@ -202,6 +202,9 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
                 toggleSidebarOpen={() => this.toggleSidebarOpen()}
                 components={this.state.components}
                 loadedModels={this.state.loadedModels}
+                selectedScenario={this.state.scenarios.find(
+                    s => s.getId() === this.state.selectedScenarioId
+                )}
                 errors={this.state.errors}
             />
         );

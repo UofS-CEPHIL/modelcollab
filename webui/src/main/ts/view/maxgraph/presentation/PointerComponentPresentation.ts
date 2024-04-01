@@ -65,7 +65,6 @@ export default abstract class PointerComponentPresentation
         cell: Cell,
         graph: MCGraph,
     ): void {
-        console.log(cell)
         cell.setValue(component);
         const geo = cell.getGeometry()!.clone();
         geo.points = component

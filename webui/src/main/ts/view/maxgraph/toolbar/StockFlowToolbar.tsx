@@ -10,6 +10,7 @@ import CanvasToolbar, { Props as CanvasToolbarProps, State as CanvasToolbarState
 import { AxiosResponse } from 'axios';
 import { CircularProgress, IconButton, Menu, MenuItem } from '@mui/material';
 import PlayArrow from '@mui/icons-material/PlayArrow';
+import FirebaseScenario from '../../../data/components/FirebaseScenario';
 
 export interface Props extends CanvasToolbarProps {
     setOpenModalBox: (boxType: ModalBoxType) => void;
@@ -21,6 +22,7 @@ export interface Props extends CanvasToolbarProps {
     toggleSidebarOpen: () => void;
     components: FirebaseComponent[];
     loadedModels: LoadedStaticModel[];
+    selectedScenario: FirebaseScenario | undefined;
     errors: ComponentErrors;
 }
 
@@ -143,34 +145,50 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
         ];
     }
 
+    protected getCode(): void {
+        this.props.restClient.getCode(
+            this.props.sessionId,
+            (result: string, success: boolean) => {
+                if (success) {
+                    this.downloadData(new Blob([result]), "Model.jl");
+                }
+                else {
+                    alert("Can't get code: " + result);
+                }
+            }
+        ).catch(e => alert("Can't get code: " + e.message));
+    }
+
     private computeModel(): void {
         console.log("Computing model. Scenario = " + this.props.scenario);
         const pollOnce = (id: string) => {
             this.props.restClient.getResults(
                 id,
-                res => {
-                    if (res.status === 200) {
+                (success, result) => {
+                    if (success && result instanceof Blob) {
                         try {
-                            const blob = new Blob(
-                                [res.data],
-                                { type: res.headers['content-type'] }
-                            );
-                            this.downloadData(blob, "ModelResults.png");
+                            this.downloadData(result, "ModelResults.png");
                         }
                         finally {
                             this.setState({ waitingForResults: false });
                         }
                     }
-                    else if (res.status === 204) {
+                    else if (success && !result) {
                         startPolling(id);
                     }
                     else {
                         console.error("Received bad response from server");
-                        console.error(res);
+                        console.error(result);
                         this.setState({ waitingForResults: false });
+                        alert("Error computing model: " + result);
                     }
                 }
-            );
+            ).catch(e => {
+                console.error("Received bad response from server");
+                console.error(e.message);
+                alert("Error computing model: " + e.message);
+                this.setState({ waitingForResults: false });
+            });
         }
 
         const startPolling = (id: string) => setTimeout(
@@ -182,16 +200,17 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
             this.props.restClient.computeModel(
                 this.props.sessionId,
                 this.props.scenario,
-                (res: AxiosResponse) => {
-                    if (res.status === 200) {
+                (res, success) => {
+                    if (success) {
                         this.setState({ waitingForResults: true });
-                        startPolling(res.data);
+                        startPolling(res);
                     }
                     else {
                         console.error("Received bad response from server");
                         console.error(res);
+                        alert("Can't compute model: " + res);
                     }
-                });
+                }).catch(e => alert("Can't compute model: " + e.message));
         }
     }
 }

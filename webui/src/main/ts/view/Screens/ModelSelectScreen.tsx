@@ -46,7 +46,7 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
             <List>
                 <ListItem key={"welcome-listitem"}>
                     <Grid container direction="row">
-                        <Grid item xs={11}>
+                        <Grid item xs={10}>
                             <Typography
                                 variant="h3"
                                 fontWeight={"bold"}
@@ -54,7 +54,7 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
                                 Model Selection
                             </Typography>
                         </Grid>
-                        <Grid item xs={1}>
+                        <Grid item xs={2}>
                             <Button
                                 variant="contained"
                                 onClick={() => this.props.logOut()}

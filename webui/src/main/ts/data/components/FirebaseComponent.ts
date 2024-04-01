@@ -24,6 +24,18 @@ export abstract class FirebaseEntityBase<DataType extends FirebaseDataObject> {
         return this.data;
     }
 
+    public equals(other: FirebaseEntityBase<any>): boolean {
+        // https://stackoverflow.com/questions/201183/how-can-i-determine-equality-for-two-javascript-objects
+        function deepEquals(x: any, y: any): boolean {
+            const ok = Object.keys, tx = typeof x, ty = typeof y;
+            return x && y && tx === 'object' && tx === ty ? (
+                ok(x).length === ok(y).length &&
+                ok(x).every(key => deepEquals(x[key], y[key]))
+            ) : (x === y);
+        }
+        return deepEquals(this.getData(), other.getData())
+    }
+
     public toString() {
         return `FirebaseEntity: id = ${this.getId()}, `
             + `data = ${Object.entries(this.getData())}`;
@@ -51,17 +63,7 @@ export abstract class FirebaseComponentBase
     }
 
     public equals(other: FirebaseComponent): boolean {
-        // https://stackoverflow.com/questions/201183/how-can-i-determine-equality-for-two-javascript-objects
-        function deepEquals(x: any, y: any): boolean {
-            const ok = Object.keys, tx = typeof x, ty = typeof y;
-            return x && y && tx === 'object' && tx === ty ? (
-                ok(x).length === ok(y).length &&
-                ok(x).every(key => deepEquals(x[key], y[key]))
-            ) : (x === y);
-        }
-
-        return other.getType() === this.getType()
-            && deepEquals(this.getData(), other.getData());
+        return other.getType() === this.getType() && super.equals(other);
     }
 
     public toFirebaseEntry(): [string, { type: string, data: any }] {

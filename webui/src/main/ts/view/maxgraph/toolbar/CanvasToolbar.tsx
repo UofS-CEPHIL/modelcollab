@@ -13,6 +13,8 @@ import FirebaseDataModel from "../../../data/FirebaseDataModel";
 import { ComponentErrors } from "../../../validation/ModelValitador";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import ComponentType from "../../../data/components/ComponentType";
+import FirebaseScenario from "../../../data/components/FirebaseScenario";
+import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 
 export interface Props {
     uiMode: UiMode;
@@ -236,13 +238,6 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                 .flatMap((es) =>
                     es[1].map(e => makeSingleErrorEntry(es[0], e))
                 )
-        );
-    }
-
-    protected getCode(): void {
-        this.props.restClient.getCode(
-            this.props.sessionId,
-            (code: string) => this.downloadData(new Blob([code]), "Model.jl")
         );
     }
 

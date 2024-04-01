@@ -139,7 +139,7 @@ export default class FirebaseDataModel {
             ),
             s => callback(
                 Object.fromEntries(
-                    Object.entries(s.val())
+                    Object.entries(s.val() ?? {})
                         .filter(([uid, _]) => uid !== user.uid)
                         .flatMap(([_, data]) =>
                             Object.entries((data as any).ownedModels)

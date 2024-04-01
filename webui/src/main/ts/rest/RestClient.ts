@@ -3,26 +3,33 @@ import applicationConfig from '../config/applicationConfig';
 
 export default class RestClientImpl {
 
-    public getCode(sessionId: string, onCodeReceived: (code: string) => void): void {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", `${applicationConfig.serverAddress}/getCode/${sessionId}`);
-        xhr.setRequestHeader("Content-Type", "application/x-www-urlencoded");
-        xhr.responseType = "blob";
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                onCodeReceived(xhr.response);
+    public async getCode(
+        modelId: string,
+        onCodeReceived: (result: string, success: boolean) => void,
+    ): Promise<void> {
+        return Axios.get(
+            `${applicationConfig.serverAddress}/getCode/${modelId}`,
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
             }
-        }
-        xhr.send();
+        ).then(res => onCodeReceived(res.data, !this.isError(res)));
     }
 
-    public computeModel(
+    private isError(r: AxiosResponse): boolean {
+        return r.status >= 300 || (
+            String(r.data).startsWith("Error")
+        );
+    }
+
+    public async computeModel(
         sessionId: string,
         scenarioName: string | null,
-        onResponseReceived: ((res: AxiosResponse) => void)
-    ): void {
+        onResponseReceived: (response: string, wasSuccess: boolean) => void
+    ): Promise<void> {
         if (!scenarioName) scenarioName = 'baseline';
-        Axios.post(
+        return Axios.post(
             `${applicationConfig.serverAddress}/computeModel/${sessionId}/${scenarioName}`,
             {
                 method: 'post',
@@ -30,11 +37,14 @@ export default class RestClientImpl {
                     "Content-Type": "application/x-www-urlencoded"
                 }
             }
-        ).then(res => onResponseReceived(res));
+        ).then(res => onResponseReceived(res.data, !this.isError(res)));
     }
 
-    public getResults(resultId: string, onResultsReceived: ((res: AxiosResponse) => void)): void {
-        Axios.get(
+    public async getResults(
+        resultId: string,
+        onResultsReceived: (success: boolean, result?: Blob | string) => void
+    ): Promise<void> {
+        return Axios.get(
             `${applicationConfig.serverAddress}/getModelResults/${resultId}`,
             {
                 method: 'get',
@@ -43,6 +53,13 @@ export default class RestClientImpl {
                 },
                 responseType: "arraybuffer"
             }
-        ).then(res => onResultsReceived(res));
+        ).then(res => {
+            if (res.status === 204) onResultsReceived(true, undefined);
+            else if (res.status === 200) onResultsReceived(
+                true,
+                new Blob([res.data], { type: res.headers["content-type"] })
+            );
+            else onResultsReceived(false, res.data);
+        });
     }
 }

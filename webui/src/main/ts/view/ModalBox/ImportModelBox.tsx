@@ -1,44 +1,57 @@
 import { ListItem, ListItemText, ListItemButton } from '@mui/material';
 import { ReactElement } from 'react';
-import { ModelType } from '../../data/FirebaseDataModel';
+import { ModelsList, ModelType } from '../../data/FirebaseDataModel';
 
 import ButtonListBox, { Props, State as BaseState } from './ButtonListBox';
 
 
 interface State extends BaseState {
-    availableModels: { [uuid: string]: string };
+    myModels: ModelsList;
+    sharedModels: ModelsList;
+    unsubscribe?: () => void;
 }
 
 export default class ImportModelBox extends ButtonListBox<Props, State> {
 
     public constructor(props: Props) {
         super(props);
-        this.state = { availableModels: {} };
+        this.state = { myModels: {}, sharedModels: {} };
+    }
+
+    public componentWillUnmount(): void {
+        if (this.state.unsubscribe) {
+            this.state.unsubscribe();
+            this.setState({ unsubscribe: undefined });
+        }
     }
 
     public componentDidMount(): void {
-        this.props.firebaseDataModel
-            .getOwnedModels()
-            .then(models => this.setState({
-                availableModels: Object.fromEntries(
-                    Object.entries(models)
-                        .filter(([_, nametype]) =>
-                            nametype.modelType === ModelType.StockFlow
-                        ).map(([uuid, nametype]) =>
-                            [uuid, nametype.name]
-                        )
-                )
-            }));
+        const unsubMine = this.props.firebaseDataModel.subscribeToOwnedModels(
+            m => this.setState({ myModels: m })
+        );
+        const unsubOthers = this.props.firebaseDataModel.subscribeToSharedModels(
+            m => {
+                this.setState({ sharedModels: m })
+            }
+        );
+        this.setState({
+            unsubscribe: () => {
+                unsubMine();
+                unsubOthers();
+            }
+        });
     }
 
     protected makeListItems(): ReactElement[] {
-        return Object.entries(this.state.availableModels)
-            .map(([uuid, name]) => (
+        const allModels = { ...this.state.myModels, ...this.state.sharedModels }
+        return Object.entries(allModels)
+            .filter(([_, t]) => t.modelType === ModelType.StockFlow)
+            .map(([uuid, nametype]) => (
                 <ListItem disablePadding key={uuid}>
                     <ListItemButton
                         onClick={() => this.props.handleSubmit(uuid)}
                     >
-                        <ListItemText primary={name} />
+                        <ListItemText primary={nametype.name} />
                     </ListItemButton>
                 </ListItem>
             ));

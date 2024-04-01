@@ -8,10 +8,12 @@ export interface Props {
     onSave: () => void;
     disabled: boolean;
     key: any;
+    hasChanges?: boolean;
 }
 
 export default class RefreshAndSaveListItem extends React.Component<Props> {
     public render(): ReactElement {
+        const color = this.props.hasChanges ? "primary" : "inherit";
         return (
             <ListItem>
                 <ListItemButton
@@ -20,7 +22,7 @@ export default class RefreshAndSaveListItem extends React.Component<Props> {
                     disabled={this.props.disabled}
                 >
                     <ListItemIcon sx={{ justifyContent: "center" }}>
-                        <SaveIcon />
+                        <SaveIcon color={color} />
                     </ListItemIcon>
                 </ListItemButton>
                 <ListItemButton

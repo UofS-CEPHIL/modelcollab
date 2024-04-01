@@ -82,7 +82,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             cursorPosition: CanvasScreen.INIT_CURSOR,
             keydownPosition: null,
             keydownCell: null,
-            mode: UiMode.NONE,
+            mode: UiMode.EDIT,
         };
     }
 

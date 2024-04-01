@@ -24,8 +24,13 @@ export default class LoginScreen extends React.Component<Props> {
                     <a href="https://github.com/UofS-CEPHIL/modelcollab">
                         Github page
                     </a>.
+
+                    If your model has been deleted, or if you somehow put your
+                    model into a state where it is unusable, contact Eric at
+                    eric.redekopp@usask.ca to recover it.
                     All authentication is handled through Google:
                     click the button below to log in!
+
                 </Typography>
 
                 <Button

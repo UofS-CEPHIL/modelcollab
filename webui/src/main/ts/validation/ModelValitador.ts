@@ -144,9 +144,6 @@ export default class ModelValidator {
         if (!matches || matches.length !== 1 || matches[0] !== val) {
             return false;
         }
-        else if (val[0] === '0' || val.includes("E0") || val.includes("e0")) {
-            return false;
-        }
         return true;
     }
 
