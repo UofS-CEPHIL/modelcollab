@@ -144,26 +144,27 @@ export default class UserControls {
             }
         );
 
+        // TODO add this back after experiments
         // Delete selection
-        this.keyHandler.bindKey(
-            getCharCode("\b"),
-            () => {
-                if (this.actionLogger) {
-                    this.actionLogger.logAction(
-                        "Backspace",
-                        this.graph
-                            .getSelectionCells()
-                            .map(c => c.getValue().getReadableComponentName())
-                            .join(", ")
-                    );
-                }
-                this.diagramActions.deleteSelection();
-            }
-        );
-        this.keyHandler.bindKey(
-            127 /*DEL*/,
-            () => this.diagramActions.deleteSelection()
-        );
+        // this.keyHandler.bindKey(
+        //     getCharCode("\b"),
+        //     () => {
+        //         if (this.actionLogger) {
+        //             this.actionLogger.logAction(
+        //                 "Backspace",
+        //                 this.graph
+        //                     .getSelectionCells()
+        //                     .map(c => c.getValue().getReadableComponentName())
+        //                     .join(", ")
+        //             );
+        //         }
+        //         this.diagramActions.deleteSelection();
+        //     }
+        // );
+        // this.keyHandler.bindKey(
+        //     127 /*DEL*/,
+        //     () => this.diagramActions.deleteSelection()
+        // );
 
         // Undo, redo
         // TODO undo/redo has bugs -- add these back once they are fixed
