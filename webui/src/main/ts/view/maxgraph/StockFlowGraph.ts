@@ -5,6 +5,7 @@ import FirebaseSubstitution from "../../data/components/FirebaseSubstitution";
 import MCGraph from "./MCGraph";
 import ComponentPresentation from "./presentation/ComponentPresentation";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
+import { UiMode } from "../../UiMode";
 
 
 export default class StockFlowGraph extends MCGraph {
@@ -17,6 +18,7 @@ export default class StockFlowGraph extends MCGraph {
         getFirebaseState: () => FirebaseComponent[],
         getSubstitutions: () => FirebaseSubstitution[],
         getErrors: () => ComponentErrors,
+        getMode: () => UiMode,
         revalidate: () => void,
     ) {
         super(
@@ -28,6 +30,7 @@ export default class StockFlowGraph extends MCGraph {
             getSubstitutions,
             getErrors,
             revalidate,
+            getMode,
         );
         this.setConnectableEdges(true);
     }
@@ -56,20 +59,6 @@ export default class StockFlowGraph extends MCGraph {
                 toUpdate.map(c => this.getCellWithId(c.getId())!)
             );
         });
-    }
-
-    // Add a new component. Call this in the middle of a batch update.
-    public addComponent(
-        c: FirebaseComponent,
-        parent: Cell = this.getDefaultParent(),
-    ): Cell | Cell[] {
-        const result: Cell | Cell[] = this.presentation
-            .addComponent(
-                c,
-                this,
-                parent,
-            );
-        return result;
     }
 
     private isCloudId(id: string): boolean {

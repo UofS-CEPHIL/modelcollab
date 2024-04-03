@@ -4,6 +4,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import NoteIcon from '@mui/icons-material/Note';
 import ReplayIcon from '@mui/icons-material/Replay';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+import OpenWithIcon from '@mui/icons-material/OpenWith';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { UiMode } from "../../../UiMode";
 import ModeSelectPanel from './ModeSelectPanel';
@@ -43,6 +44,8 @@ export default class CausalLoopModeSelectPanel extends ModeSelectPanel {
                 return (<ReplayIcon />);
             case UiMode.DELETE:
                 return (<DeleteIcon />);
+            case UiMode.MOVE:
+                return (<OpenWithIcon />);
             default:
                 return (<QuestionMarkIcon />);
         }

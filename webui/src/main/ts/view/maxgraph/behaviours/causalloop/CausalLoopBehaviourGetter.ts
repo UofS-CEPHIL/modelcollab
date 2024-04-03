@@ -12,6 +12,7 @@ import CausalLoopHotkeyBehaviour from "./CausalLoopHotkeyBehaviour";
 import CausalLoopLinkBehaviour from "./CausalLoopLinkBehaviour";
 import CausalLoopVertexBehaviour from "./CausalLoopVertexBehaviour";
 import LoopIconBehaviour from "./LoopIconBehvaiour";
+import ChangeModeOnButtonPressBehaviour from "../ChangeModeOnButtonPressBehaviour";
 
 export default class CausalLoopBehaviourGetter extends BehaviourGetter {
 
@@ -21,7 +22,8 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         "e": UiMode.LOOP_ICON,
         "r": UiMode.STICKY_NOTE,
         "a": UiMode.EDIT,
-        "s": UiMode.DELETE
+        "s": UiMode.DELETE,
+        "d": UiMode.MOVE,
     };
 
     protected setBehaviours(
@@ -115,6 +117,19 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setMode,
         );
         this.behaviours[UiMode.DELETE] = new DeleteBehaviour(
+            graph,
+            actions,
+            CausalLoopBehaviourGetter.MODE_KEY_MAPPINGS,
+            getFirebaseState,
+            setOpenModalBox,
+            getCursorPosition,
+            getKeydownPosition,
+            setKeydownPosition,
+            getKeydownCell,
+            setKeydownCell,
+            setMode,
+        );
+        this.behaviours[UiMode.MOVE] = new ChangeModeOnButtonPressBehaviour(
             graph,
             actions,
             CausalLoopBehaviourGetter.MODE_KEY_MAPPINGS,

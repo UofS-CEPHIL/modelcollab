@@ -6,6 +6,8 @@ export default class FirebaseCausalLoopVertex
     extends FirebaseTextComponent<FirebaseTextData>
 {
 
+    public static readonly EMPTY_VERTEX_TEXT = "Vertex";
+
     public getType(): ComponentType {
         return ComponentType.CLD_VERTEX;
     }
@@ -33,7 +35,7 @@ export default class FirebaseCausalLoopVertex
                 y,
                 width: theme.custom.maxgraph.cldVertex.defaultWidthPx,
                 height: theme.custom.maxgraph.cldVertex.defaultHeightPx,
-                text: "",
+                text: FirebaseCausalLoopVertex.EMPTY_VERTEX_TEXT,
             }
         );
     }
