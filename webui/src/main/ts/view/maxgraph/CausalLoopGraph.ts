@@ -1,4 +1,3 @@
-import { Cell } from "@maxgraph/core";
 import FirebaseComponent from "../../data/components/FirebaseComponent";
 import { ComponentErrors } from "../../validation/ModelValitador";
 import MCGraph from "./MCGraph";
@@ -28,13 +27,5 @@ export default class CausalLoopGraph extends MCGraph {
             );
             this.showErrors(errors);
         });
-    }
-
-    public addComponent(
-        c: FirebaseComponent,
-        _: Cell = this.getDefaultParent(),
-        __: boolean = true
-    ): Cell | Cell[] {
-        return this.presentation.addComponent(c, this);
     }
 }

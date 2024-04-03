@@ -95,7 +95,8 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             () => this.state.components,
             () => [], // TODO add substitutions once they are added
             () => this.state.errors,
-            () => { return {}; }
+            () => { return {}; },
+            () => this.state.mode,
         );
     }
 

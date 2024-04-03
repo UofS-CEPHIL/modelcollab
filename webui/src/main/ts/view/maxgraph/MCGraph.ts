@@ -1,11 +1,13 @@
 import { Cell, CellRenderer, CellState, EdgeHandler, Graph, InternalMouseEvent, SelectionHandler, TooltipHandler } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
+import FirebaseCausalLoopVertex from "../../data/components/FirebaseCausalLoopVertex";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";
 import FirebaseStaticModel from "../../data/components/FirebaseStaticModel";
 import FirebaseSubstitution from "../../data/components/FirebaseSubstitution";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 import { theme } from "../../Themes";
+import { UiMode } from "../../UiMode";
 import { ComponentErrors } from "../../validation/ModelValitador";
 import { LoadedStaticModel } from "../Screens/StockFlowScreen";
 import MCEdgeHandler from "./MCEdgeHandler";
@@ -24,15 +26,11 @@ export default abstract class MCGraph extends Graph {
     protected getCurrentComponents: () => FirebaseComponent[];
     protected getSubstitutions: () => FirebaseSubstitution[];
     protected getErrors: () => ComponentErrors;
+    protected getMode: () => UiMode;
     protected revalidate: () => void;
     protected presentation: ComponentPresentation<FirebaseComponent>;
     protected firebaseDataModel: FirebaseDataModel;
     protected readonly modelUuid: string;
-
-    public abstract addComponent(
-        c: FirebaseComponent,
-        parent: Cell,
-    ): Cell | Cell[];
 
     public constructor(
         container: HTMLElement,
@@ -43,6 +41,7 @@ export default abstract class MCGraph extends Graph {
         getSubstitutions: () => FirebaseSubstitution[],
         getErrors: () => ComponentErrors,
         revalidate: () => void,
+        getMode: () => UiMode,
     ) {
         super(container);
         this.presentation = presentation;
@@ -50,6 +49,7 @@ export default abstract class MCGraph extends Graph {
         this.getSubstitutions = getSubstitutions;
         this.revalidate = revalidate;
         this.getErrors = getErrors;
+        this.getMode = getMode;
         this.firebaseDataModel = firebaseDataModel;
         this.modelUuid = modelUuid;
         this.haveStaticModelsLoaded = false;
@@ -102,6 +102,13 @@ export default abstract class MCGraph extends Graph {
         if (!errs) return "";
 
         return errs.join('\n');
+    }
+
+    public addComponent(
+        c: FirebaseComponent,
+        parent: Cell = this.getDefaultParent(),
+    ): Cell | Cell[] {
+        return this.presentation.addComponent(c, this, parent);
     }
 
     public addComponentsInCorrectOrder(
@@ -175,8 +182,20 @@ export default abstract class MCGraph extends Graph {
         newValue: string,
         resize: boolean = false
     ) => {
+        function isSpace(s: string): boolean {
+            return !/[^\s]/.test(s);
+        }
+
         var component = cell.getValue();
+
         if (component instanceof FirebaseComponentBase) {
+            if (
+                component.getType() === ComponentType.CLD_VERTEX
+                && isSpace(newValue)
+            ) {
+                newValue = FirebaseCausalLoopVertex.EMPTY_VERTEX_TEXT;
+            }
+
             if (component.getData().text == undefined) {
                 throw new Error(
                     "Editing text for invalid component type: "
@@ -264,7 +283,8 @@ export default abstract class MCGraph extends Graph {
 
     public createEdgeHandler(state: CellState, edgeStyle: any): EdgeHandler {
         if (
-            state.cell.getValue()
+            this.shouldUseCustomEdgeHandler()
+            && state.cell.getValue()
             && state.cell.getValue() instanceof FirebasePointerComponent
         ) {
             return new MCEdgeHandler(state);
@@ -272,6 +292,10 @@ export default abstract class MCGraph extends Graph {
         else {
             return super.createEdgeHandler(state, edgeStyle);
         }
+    }
+
+    public shouldUseCustomEdgeHandler(): boolean {
+        return true;
     }
 
     protected refreshLabels(cells: Cell[]): void {

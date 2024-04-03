@@ -93,7 +93,8 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             () => this.state.components,
             () => this.state.substitutions,
             () => { return {}; }, // TODO error checking temporarily deleted
-            () => { }
+            () => this.state.mode,
+            () => { },
         );
     }
 

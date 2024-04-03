@@ -263,7 +263,7 @@ export const theme = createTheme({
             textComponent: {
                 defaultWidthPx: 80,
                 defaultHeightPx: 25,
-                defaultFontSize: 14,
+                defaultFontSize: 18,
             },
             canvas: {
                 borderWidthPx: 1

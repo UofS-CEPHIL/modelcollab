@@ -53,6 +53,13 @@ export default abstract class ModeBehaviour {
         return this.actions;
     }
 
+    public getKeyForMode(mode: UiMode): string | undefined {
+        const pair = Object
+            .entries(this.modeKeyMappings)
+            .find(([_, m]) => m === mode);
+        return pair ? pair[0] : undefined;
+    }
+
     public abstract canvasClicked(x: number, y: number): void;
     public abstract canvasRightClicked(x: number, y: number): void;
     public abstract selectionChanged(selection: Cell[]): void;
