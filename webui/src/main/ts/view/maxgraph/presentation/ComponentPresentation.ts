@@ -27,4 +27,12 @@ export default interface ComponentPresentation<T extends FirebaseComponent> {
 
     // Return the given component with the data updated to match the given cell
     updateComponent(component: T, cell: Cell, graph: MCGraph): T;
+
+    // Return the color for the component during normal circmstances
+    getNormalStrokeColorForComponent(component: T): string;
+    getNormalTextColorForComponent(component: T): string;
+
+    // Return the color for the component to indicate an error
+    getErrorStrokeColorForComponent(component: T): string;
+    getErrorTextColorForComponent(component: T): string;
 }

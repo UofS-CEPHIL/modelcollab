@@ -11,6 +11,14 @@ export default class FlowPresentation
 
     public static readonly CLOUD_VALUE = "cloud";
 
+    public getNormalTextColorForComponent(_: FirebaseFlow): string {
+        return theme.palette.canvas.contrastText;
+    }
+
+    public getNormalStrokeColorForComponent(_: FirebaseFlow): string {
+        return theme.palette.canvas.contrastText;
+    }
+
     public addComponent(
         component: FirebaseFlow,
         graph: StockFlowGraph,

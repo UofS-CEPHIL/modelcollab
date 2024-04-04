@@ -1,5 +1,6 @@
 import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebasePointComponent from "../../../data/components/FirebasePointComponent";
+import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
@@ -13,6 +14,22 @@ export default abstract class PointComponentPresentation
         component: DataType,
         graph: MCGraph,
     ): VertexParameters;
+
+    public getNormalStrokeColorForComponent(_: DataType): string {
+        return theme.palette.canvas.contrastText;
+    }
+
+    public getNormalTextColorForComponent(_: DataType): string {
+        return theme.palette.canvas.contrastText;
+    }
+
+    public getErrorStrokeColorForComponent(_: DataType): string {
+        return theme.palette.error.main;
+    }
+
+    public getErrorTextColorForComponent(_: DataType): string {
+        return theme.palette.error.main;
+    }
 
     public addComponent(
         component: DataType,

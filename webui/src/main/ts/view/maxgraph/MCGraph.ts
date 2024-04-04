@@ -258,27 +258,38 @@ export default abstract class MCGraph extends Graph {
                 const messages = errors[cell.getId()!];
                 const isError = isCellError(cell);
                 if (messages && !isError) {
-                    this.setCellStyle(
-                        {
-                            ...cell.getStyle(),
-                            strokeColor: theme.palette.error.light,
-                            fontColor: theme.palette.error.light,
-                        },
-                        [cell]
-                    );
+                    this.displayCellError(cell, true);
                 }
                 else if (!messages && isError) {
-                    this.setCellStyle(
-                        {
-                            ...cell.getStyle(),
-                            strokeColor: theme.palette.canvas.contrastText,
-                            fontColor: theme.palette.canvas.contrastText,
-                        },
-                        [cell]
-                    );
+                    this.displayCellError(cell, false);
                 }
             }
         }
+    }
+
+    public displayCellError(cell: Cell, error: boolean) {
+        if (!(cell.getValue() instanceof FirebaseComponentBase<any>)) return;
+        this.batchUpdate(() => {
+            const strokeColor = error
+                ? this.presentation
+                    .getErrorStrokeColorForComponent(cell.getValue())
+                : this.presentation
+                    .getNormalStrokeColorForComponent(cell.getValue());
+            const fontColor = error
+                ? this.presentation
+                    .getErrorTextColorForComponent(cell.getValue())
+                : this.presentation
+                    .getNormalTextColorForComponent(cell.getValue());
+
+            this.setCellStyle(
+                {
+                    ...cell.getStyle(),
+                    strokeColor,
+                    fontColor,
+                },
+                [cell]
+            );
+        });
     }
 
     public createEdgeHandler(state: CellState, edgeStyle: any): EdgeHandler {
