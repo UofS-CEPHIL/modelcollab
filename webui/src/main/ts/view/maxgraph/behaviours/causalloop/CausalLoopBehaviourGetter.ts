@@ -24,6 +24,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         "a": UiMode.EDIT,
         "s": UiMode.DELETE,
         "d": UiMode.MOVE,
+        "f": UiMode.RESIZE,
     };
 
     protected setBehaviours(

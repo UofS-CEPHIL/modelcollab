@@ -6,6 +6,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import OpenWithIcon from '@mui/icons-material/OpenWith';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { UiMode } from "../../../UiMode";
 import ModeSelectPanel from './ModeSelectPanel';
 import { ReactElement } from 'react';
@@ -46,6 +47,8 @@ export default class CausalLoopModeSelectPanel extends ModeSelectPanel {
                 return (<DeleteIcon />);
             case UiMode.MOVE:
                 return (<OpenWithIcon />);
+            case UiMode.RESIZE:
+                return (<ZoomOutMapIcon />);
             default:
                 return (<QuestionMarkIcon />);
         }

@@ -1,4 +1,4 @@
-import { Cell, CellStyle, EventSource, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
+import { Cell, CellStyle, EventSource, InternalEvent, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
@@ -58,6 +58,10 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 break;
 
             case this.getKeyForMode(UiMode.MOVE):
+                this.doSelectAndMoveKeydownAction();
+                break;
+
+            case this.getKeyForMode(UiMode.RESIZE):
                 this.doSelectAndResizeKeydownAction();
                 break;
         }
@@ -85,13 +89,12 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 this.doDeleteKeyupAction();
                 break;
 
-            case this.getKeyForMode(UiMode.MOVE):
+            case this.getKeyForMode(UiMode.RESIZE):
                 this.doSelectAndResizeKeyupAction();
                 break;
         }
         this.setKeydownCell(null);
         this.deleteTempComponents();
-
     }
 
     private doVertexKeydownAction(): void {
@@ -306,8 +309,8 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     private doSelectAndResizeKeydownAction(): void {
         const pos = this.getCursorPosition();
         const cell = this.getHoverCell();
+        this.getGraph().setSelectionCell(cell);
         if (cell) {
-            this.getGraph().setSelectionCell(cell);
             if (cell.getValue() instanceof FirebaseRectangleComponent) {
                 this.setKeydownCell(cell);
                 const oldWidth = cell.getGeometry()!.width;
@@ -339,19 +342,15 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 );
             }
         }
-        else {
-            this.getGraph().setSelectionCell(null);
-        }
     }
 
-    // Normally, to bend an arrow you have to click and drag with the
-    // mouse. We do a similar behaviour, except we initialize the
-    // event with a key press instead of a mouse button press. To do
-    // that, we create a fake mouse event and trigger it on a key
-    // press to simulate the same behaviour.
+    // The hotkey UI mode involves treating button presses the same as we would
+    // notmally treat clicks. To do this without substantial refactoring or
+    // duplicate code, we create a fake mouse event and trigger it on a key
+    // press to simulate the same behaviour as a mouse action.
     private createMockMouseEvent(
         pos: Point,
-        target: Cell,
+        target: Cell | null,
         mouseDown: boolean
     ): InternalMouseEvent {
         const e = new InternalMouseEvent(
@@ -364,7 +363,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                     clientY: pos.y
                 }
             ),
-            this.getGraph().getView().getState(target)
+            target ? this.getGraph().getView().getState(target) : null
         );
         e.graphX = pos.x;
         e.graphY = pos.y;
@@ -395,6 +394,34 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                     )
                 );
             }
+        }
+    }
+
+    private doSelectAndMoveKeydownAction(): void {
+        const pos = this.getCursorPosition();
+        const cell = this.getHoverCell();
+        this.getGraph().setSelectionCell(cell);
+        if (cell) {
+            const oldX = cell.getGeometry()!.x;
+            const oldY = cell.getGeometry()!.y;
+            this.mouseListener = {
+                mouseDown: () => { },
+                mouseUp: () => { },
+                mouseMove: (_: EventSource, e: InternalMouseEvent) =>
+                    this.getGraph().batchUpdate(() => {
+                        const dx = e.getGraphX() - pos.x;
+                        const dy = e.getGraphY() - pos.y;
+                        const newGeo = cell.getGeometry()!.clone();
+                        newGeo.x = Math.max(0, oldX + dx);
+                        newGeo.y = Math.max(0, oldY + dy);
+                        this.getGraph().batchUpdate(() =>
+                            this.getGraph()
+                                .getDataModel()
+                                .setGeometry(cell, newGeo)
+                        );
+                    }),
+            };
+            this.getGraph().addMouseListener(this.mouseListener);
         }
     }
 }
