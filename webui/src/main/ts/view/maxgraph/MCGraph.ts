@@ -22,6 +22,7 @@ export default abstract class MCGraph extends Graph {
     private static readonly COMPONENT_LOAD_POLL_MS = 500;
 
     protected haveStaticModelsLoaded: boolean;
+    protected lastEdgeHandler: EdgeHandler | null = null;
 
     protected getCurrentComponents: () => FirebaseComponent[];
     protected getSubstitutions: () => FirebaseSubstitution[];
@@ -246,6 +247,10 @@ export default abstract class MCGraph extends Graph {
             .concat(parent.getChildren());
     }
 
+    public getLastEdgeHandler(): EdgeHandler | null {
+        return this.lastEdgeHandler;
+    }
+
     protected showErrors(errors: ComponentErrors) {
         const isCellError = (c: Cell) =>
             c.getStyle().strokeColor === theme.palette.error.light;
@@ -294,19 +299,15 @@ export default abstract class MCGraph extends Graph {
 
     public createEdgeHandler(state: CellState, edgeStyle: any): EdgeHandler {
         if (
-            this.shouldUseCustomEdgeHandler()
-            && state.cell.getValue()
+            state.cell.getValue()
             && state.cell.getValue() instanceof FirebasePointerComponent
         ) {
-            return new MCEdgeHandler(state);
+            this.lastEdgeHandler = new MCEdgeHandler(state);
         }
         else {
-            return super.createEdgeHandler(state, edgeStyle);
+            this.lastEdgeHandler = super.createEdgeHandler(state, edgeStyle);
         }
-    }
-
-    public shouldUseCustomEdgeHandler(): boolean {
-        return true;
+        return this.lastEdgeHandler;
     }
 
     protected refreshLabels(cells: Cell[]): void {
