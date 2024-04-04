@@ -11,10 +11,12 @@ export enum UiMode {
     EDIT = "Edit",
     STICKY_NOTE = "Sticky Note",
     LOOP_ICON = "Loop Icon",
-    DELETE = "Delete"
+    DELETE = "Delete",
+    RESIZE = "Resize",
 };
 
 export function modeFromString(s: string): UiMode | null {
+    // TODO Can't we just do this with Object.entries()?
     switch (s.toUpperCase()) {
         case "MOVE":
             return UiMode.MOVE;
@@ -44,6 +46,8 @@ export function modeFromString(s: string): UiMode | null {
             return UiMode.DELETE;
         case "NONE":
             return UiMode.NONE;
+        case "RESIZE":
+            return UiMode.RESIZE;
         default:
             return null;
     }
