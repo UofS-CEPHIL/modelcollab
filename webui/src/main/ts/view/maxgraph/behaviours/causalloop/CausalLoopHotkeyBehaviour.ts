@@ -1,8 +1,10 @@
-import { Cell, CellStyle, EventSource, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
+import { Cell, CellStyle, EventSource, InternalEvent, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
 import FirebaseCausalLoopLink, { Polarity } from "../../../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
 import FirebaseLoopIcon from "../../../../data/components/FirebaseLoopIcon";
+import FirebasePointerComponent from "../../../../data/components/FirebasePointerComponent";
+import FirebaseRectangleComponent from "../../../../data/components/FirebaseRectangleComponent";
 import FirebaseStickyNote from "../../../../data/components/FirebaseStickyNote";
 import FirebaseTextComponent from "../../../../data/components/FirebaseTextComponent";
 import IdGenerator from "../../../../IdGenerator";
@@ -54,6 +56,10 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
             case this.getKeyForMode(UiMode.DELETE):
                 this.doDeleteKeydownAction();
                 break;
+
+            case this.getKeyForMode(UiMode.MOVE):
+                this.doSelectAndResizeKeydownAction();
+                break;
         }
     }
 
@@ -78,7 +84,14 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
             case this.getKeyForMode(UiMode.DELETE):
                 this.doDeleteKeyupAction();
                 break;
+
+            case this.getKeyForMode(UiMode.MOVE):
+                this.doSelectAndResizeKeyupAction();
+                break;
         }
+        this.setKeydownCell(null);
+        this.deleteTempComponents();
+
     }
 
     private doVertexKeydownAction(): void {
@@ -109,17 +122,18 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         this.mouseListener = {
             mouseDown: () => { },
             mouseUp: () => { },
-            mouseMove: (_: EventSource, e: InternalMouseEvent) => {
+            mouseMove: (_: EventSource, e: InternalMouseEvent) =>
                 this.getGraph().batchUpdate(() => {
                     const newGeo = preview
                         .getGeometry()!.clone();
                     newGeo.x = e.getGraphX();
                     newGeo.y = e.getGraphY();
-                    this.getGraph()
-                        .getDataModel()
-                        .setGeometry(preview, newGeo);
-                });
-            }
+                    this.getGraph().batchUpdate(() =>
+                        this.getGraph()
+                            .getDataModel()
+                            .setGeometry(preview, newGeo)
+                    );
+                }),
         };
         this.getGraph().addMouseListener(this.mouseListener);
         return preview;
@@ -161,7 +175,9 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         if (
             keydownCell !== null
             && keydownCell.getValue() instanceof FirebaseCausalLoopVertex
-        ) this.addTempArrow(keydownCell);
+        ) {
+            this.addTempArrow(keydownCell);
+        }
     }
 
     private addTempArrow(source: Cell): void {
@@ -172,22 +188,6 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
             target: pointerCell,
             style: CausalLoopHotkeyBehaviour.TEMP_EDGE_STYLE
         });
-        this.mouseListener = {
-            mouseDown: () => { },
-            mouseUp: () => { },
-            mouseMove: (_: EventSource, e: InternalMouseEvent) => {
-                this.getGraph().batchUpdate(() => {
-                    const newGeo = pointerCell
-                        .getGeometry()!.clone();
-                    newGeo.x = e.getGraphX();
-                    newGeo.y = e.getGraphY();
-                    this.getGraph()
-                        .getDataModel()
-                        .setGeometry(pointerCell, newGeo);
-                });
-            }
-        };
-        this.getGraph().addMouseListener(this.mouseListener);
     }
 
     private doLinkKeyupAction(): void {
@@ -269,7 +269,6 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 pos.y
             )
         );
-        this.deleteTempComponents();
     }
 
     private doLoopIconKeydownAction(): void {
@@ -288,7 +287,6 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
             pos.x,
             pos.y
         ));
-        this.deleteTempComponents();
     }
 
     private doDeleteKeydownAction(): void {
@@ -310,6 +308,95 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         else if (keydownCell) {
             this.getGraph().displayCellError(keydownCell, false);
         }
-        this.setKeydownCell(null);
+    }
+
+    private doSelectAndResizeKeydownAction(): void {
+        const pos = this.getCursorPosition();
+        const cell = this.getGraph().getCellAt(pos.x, pos.y);
+        if (cell) {
+            this.getGraph().setSelectionCell(cell);
+            if (cell.getValue() instanceof FirebaseRectangleComponent) {
+                this.setKeydownCell(cell);
+                const oldWidth = cell.getGeometry()!.width;
+                const oldHeight = cell.getGeometry()!.height;
+                this.mouseListener = {
+                    mouseDown: () => { },
+                    mouseUp: () => { },
+                    mouseMove: (_: EventSource, e: InternalMouseEvent) =>
+                        this.getGraph().batchUpdate(() => {
+                            const dx = e.getGraphX() - pos.x;
+                            const dy = e.getGraphY() - pos.y;
+                            const newGeo = cell.getGeometry()!.clone();
+                            newGeo.width = Math.max(10, oldWidth + dx);
+                            newGeo.height = Math.max(10, oldHeight + dy);
+                            this.getGraph().batchUpdate(() =>
+                                this.getGraph()
+                                    .getDataModel()
+                                    .setGeometry(cell, newGeo)
+                            );
+                        }),
+                };
+                this.getGraph().addMouseListener(this.mouseListener);
+            }
+            else if (cell.getValue() instanceof FirebasePointerComponent) {
+                this.setKeydownCell(cell);
+                this.getGraph().getLastEdgeHandler()?.mouseDown(
+                    this.getGraph(),
+                    this.createMockMouseEvent(pos, cell, true)
+                );
+            }
+        }
+        else {
+            this.getGraph().setSelectionCell(null);
+        }
+    }
+
+    private createMockMouseEvent(
+        pos: Point,
+        target: Cell,
+        mouseDown: boolean
+    ): InternalMouseEvent {
+        const e = new InternalMouseEvent(
+            new MouseEvent(
+                mouseDown ? "mousedown" : "mouseup",
+                {
+                    screenX: pos.x,
+                    screenY: pos.y,
+                    clientX: pos.x,
+                    clientY: pos.y
+                }
+            ),
+            this.getGraph().getView().getState(target)
+        );
+        e.graphX = pos.x;
+        e.graphY = pos.y;
+        return e;
+    }
+
+    private doSelectAndResizeKeyupAction(): void {
+        const keydownCell = this.getKeydownCell();
+        if (keydownCell) {
+            if (keydownCell.getValue() instanceof FirebaseRectangleComponent) {
+                const width = keydownCell.getGeometry()!.width;
+                const height = keydownCell.getGeometry()!.height;
+                this.getActions().updateComponent(
+                    keydownCell.getValue().withData({
+                        ...keydownCell.getValue().getData(),
+                        width,
+                        height
+                    })
+                );
+            }
+            else if (keydownCell.getValue() instanceof FirebasePointerComponent) {
+                this.getGraph().getLastEdgeHandler()?.mouseUp(
+                    this.getGraph(),
+                    this.createMockMouseEvent(
+                        this.getCursorPosition(),
+                        keydownCell,
+                        false
+                    )
+                );
+            }
+        }
     }
 }

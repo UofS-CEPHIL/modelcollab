@@ -67,12 +67,8 @@ export default abstract class PointerComponentPresentation
         );
 
         const geo = e.getGeometry()!.clone();
-        geo.points = component
-            .getData()
-            .points
-            .map((p: { x: number, y: number }) => new Point(p.x, p.y));
+        geo.points = this.getPoints(component);
         graph.getDataModel().setGeometry(e, geo);
-
 
         return e;
     }
@@ -84,10 +80,7 @@ export default abstract class PointerComponentPresentation
     ): void {
         cell.setValue(component);
         const geo = cell.getGeometry()!.clone();
-        geo.points = component
-            .getData()
-            .points
-            .map((p: { x: number, y: number }) => new Point(p.x, p.y));
+        geo.points = this.getPoints(component);
         graph.getDataModel().setGeometry(cell, geo);
         graph.getDataModel().setStyle(
             cell,
@@ -103,6 +96,15 @@ export default abstract class PointerComponentPresentation
                 exitPerimeter: undefined,
             }
         );
+    }
+
+    private getPoints(component: DataType): Point[] {
+        return component.getData().points
+            ? component
+                .getData()
+                .points
+                .map((p: { x: number, y: number }) => new Point(p.x, p.y))
+            : [];
     }
 
     public updateComponent(
