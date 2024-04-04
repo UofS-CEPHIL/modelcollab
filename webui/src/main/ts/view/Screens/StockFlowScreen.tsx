@@ -81,7 +81,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             cursorPosition: CanvasScreen.INIT_CURSOR,
             keydownPosition: null,
             keydownCell: null,
-            cursorCell: null,
+            hoverCell: null,
         };
     }
 
@@ -95,6 +95,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             () => this.state.substitutions,
             () => { return {}; }, // TODO error checking temporarily deleted
             () => this.state.mode,
+            () => this.state.keydownCell !== null,
             () => { },
         );
     }
@@ -123,7 +124,6 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             () => this.state.mode,
             (mode: UiMode) => this.setState({ mode }),
             m => this.setState({ displayedModalBox: m }),
-            sel => this.setState({ selectedComponent: sel }),
             () => this.state.cursorPosition,
             () => this.state.keydownPosition,
             p => this.setKeydownPosition(p),
@@ -145,7 +145,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             p => this.setState({ keydownPosition: p }),
             () => this.state.keydownCell,
             c => this.setState({ keydownCell: c }),
-            () => this.state.cursorCell,
+            () => this.state.hoverCell,
         );
     }
 

@@ -1,5 +1,5 @@
 import React, { createRef, Fragment, ReactElement, RefObject } from 'react';
-import { Cell, EventSource, Graph, InternalEvent, InternalMouseEvent, Point, RubberBandHandler } from '@maxgraph/core';
+import { Cell, EventSource, Graph, InternalEvent, InternalMouseEvent, Point, RubberBandHandler, SelectionHandler } from '@maxgraph/core';
 import UserControls from '../maxgraph/UserControls';
 import { UiMode } from '../../UiMode';
 import DiagramActions from "../maxgraph/DiagramActions";
@@ -20,7 +20,7 @@ export interface Props {
 
 export interface State {
     cursorPosition: Point;
-    cursorCell: Cell | null;
+    hoverCell: Cell | null;
     keydownPosition: Point | null;
     keydownCell: Cell | null;
 
@@ -28,7 +28,6 @@ export interface State {
     mode: UiMode,
     components: FirebaseComponent[];
     clipboard: FirebaseComponent[];
-    selectedComponent: FirebaseComponent | null;
     errors: ComponentErrors;
     displayedModalBox: ModalBoxType | null;
     sidebarWidth: number;
@@ -107,14 +106,14 @@ export default abstract class CanvasScreen
                         e.getGraphX(),
                         e.getGraphY()
                     ),
-                    cursorCell: cell,
+                    hoverCell: cell,
                 });
-                if (cell !== this.state.cursorCell) {
+                if (cell !== this.state.hoverCell) {
                     if (cell) {
                         this.graph!.setCellDisplayHovered(cell);
                     }
-                    if (this.state.cursorCell) {
-                        this.graph!.setCellDisplayNormal(this.state.cursorCell);
+                    if (this.state.hoverCell) {
+                        this.graph!.setCellDisplayNormal(this.state.hoverCell);
                     }
                 }
                 else if (!cell) {

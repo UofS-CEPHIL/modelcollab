@@ -20,6 +20,13 @@ export default abstract class FirebasePointerComponent
     public abstract isLabelMovable(): boolean;
     public abstract withData(d: DataType): FirebasePointerComponent<DataType>;
 
+    public static sanitizePointerData(d: any): void {
+        if (!d.entryX) delete d.entryX;
+        if (!d.entryY) delete d.entryY;
+        if (!d.exitX) delete d.exitX;
+        if (!d.exitY) delete d.exitY;
+    }
+
     public withPoints(
         points: Point[],
         entryX?: number,
@@ -35,10 +42,7 @@ export default abstract class FirebasePointerComponent
             exitY,
             points: points.map(FirebasePointerComponent.extractPoint)
         };
-        if (!newData.entryX) delete newData.entryX;
-        if (!newData.entryY) delete newData.entryY;
-        if (!newData.exitX) delete newData.exitX;
-        if (!newData.exitY) delete newData.exitY;
+        FirebasePointerComponent.sanitizePointerData(newData);
 
         return this.withData(newData);
     }

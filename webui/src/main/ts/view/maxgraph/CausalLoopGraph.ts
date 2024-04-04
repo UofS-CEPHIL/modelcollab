@@ -19,7 +19,7 @@ export default class CausalLoopGraph extends MCGraph {
 
         this.batchUpdate(() => {
             this.addComponentsInCorrectOrder(toAdd);
-            toUpdate.forEach(c => this.updateComponent(c));
+            toUpdate.forEach(c => this.updateCell(c));
             updates.deletedIds
                 .forEach(id => this.deleteComponent(id, newComponents));
             this.refreshLabels(

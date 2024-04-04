@@ -1,4 +1,4 @@
-import { Cell, CellStyle, EventSource, InternalEvent, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
+import { Cell, CellStyle, EventSource, Geometry, GeometryChange, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
@@ -30,8 +30,11 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     };
 
     private mouseListener: MouseListenerSet | null = null;
+    private initialGeo: Geometry | null = null;
 
     public handleKeyDown(e: KeyboardEvent): void {
+        this.setKeydownPosition(this.getCursorPosition());
+        this.setKeydownCell(this.getHoverCell());
         switch (e.key) {
             case this.getKeyForMode(UiMode.STOCK):
                 this.doVertexKeydownAction();
@@ -89,12 +92,18 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 this.doDeleteKeyupAction();
                 break;
 
+            case this.getKeyForMode(UiMode.MOVE):
+                this.doSelectAndMoveKeyupAction();
+                break
+
             case this.getKeyForMode(UiMode.RESIZE):
                 this.doSelectAndResizeKeyupAction();
                 break;
         }
         this.setKeydownCell(null);
+        this.setKeydownPosition(null);
         this.deleteTempComponents();
+        this.initialGeo = null;
     }
 
     private doVertexKeydownAction(): void {
@@ -173,7 +182,6 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
 
     private doLinkKeydownAction(): void {
         const keydownCell = this.getHoverCell();
-        this.setKeydownCell(keydownCell);
         if (
             keydownCell !== null
             && keydownCell.getValue() instanceof FirebaseCausalLoopVertex
@@ -290,7 +298,6 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     private doDeleteKeydownAction(): void {
         const cell = this.getHoverCell();
         if (cell && cell.getValue() instanceof FirebaseComponentBase<any>) {
-            this.setKeydownCell(cell);
             this.getGraph().setCellDisplayError(cell);
         }
     }
@@ -311,8 +318,8 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         const cell = this.getHoverCell();
         this.getGraph().setSelectionCell(cell);
         if (cell) {
+            this.initialGeo = cell.getGeometry();
             if (cell.getValue() instanceof FirebaseRectangleComponent) {
-                this.setKeydownCell(cell);
                 const oldWidth = cell.getGeometry()!.width;
                 const oldHeight = cell.getGeometry()!.height;
                 this.mouseListener = {
@@ -335,7 +342,6 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 this.getGraph().addMouseListener(this.mouseListener);
             }
             else if (cell.getValue() instanceof FirebasePointerComponent) {
-                this.setKeydownCell(cell);
                 this.getGraph().getLastEdgeHandler()?.mouseDown(
                     this.getGraph(),
                     this.createMockMouseEvent(pos, cell, true)
@@ -374,17 +380,11 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         const keydownCell = this.getKeydownCell();
         if (keydownCell) {
             if (keydownCell.getValue() instanceof FirebaseRectangleComponent) {
-                const width = keydownCell.getGeometry()!.width;
-                const height = keydownCell.getGeometry()!.height;
-                this.getActions().updateComponent(
-                    keydownCell.getValue().withData({
-                        ...keydownCell.getValue().getData(),
-                        width,
-                        height
-                    })
-                );
+                this.getGraph().updateComponent(keydownCell);
             }
-            else if (keydownCell.getValue() instanceof FirebasePointerComponent) {
+            else if (
+                keydownCell.getValue() instanceof FirebasePointerComponent
+            ) {
                 this.getGraph().getLastEdgeHandler()?.mouseUp(
                     this.getGraph(),
                     this.createMockMouseEvent(
@@ -393,6 +393,10 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                         false
                     )
                 );
+            }
+
+            if (this.initialGeo) {
+                this.fireGeometryChangeEvent(keydownCell);
             }
         }
     }
@@ -404,6 +408,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         if (cell) {
             const oldX = cell.getGeometry()!.x;
             const oldY = cell.getGeometry()!.y;
+            this.initialGeo = cell.getGeometry()!;
             this.mouseListener = {
                 mouseDown: () => { },
                 mouseUp: () => { },
@@ -423,5 +428,32 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
             };
             this.getGraph().addMouseListener(this.mouseListener);
         }
+    }
+
+    private doSelectAndMoveKeyupAction(): void {
+        const cell = this.getKeydownCell();
+        if (cell) {
+            this.getGraph().updateComponent(cell);
+            if (this.initialGeo) {
+                this.fireGeometryChangeEvent(cell);
+            }
+        }
+    }
+
+    // Since the UndoHandler is configured to ignore any events that occur while
+    // a key is being pressed (e.g. during a move or resize event), we need to
+    // manually fire the event representing the whole change that occurred while
+    // the key was down.
+    private fireGeometryChangeEvent(cell: Cell) {
+        const updated = cell.getGeometry();
+        cell.setGeometry(this.initialGeo);
+        const change = new GeometryChange(
+            this.getGraph().getDataModel(),
+            cell,
+            updated
+        );
+        // setTimeout so that the event gets fired after the CanvasScreen has
+        // registered the keyup action and changed state accordingly
+        setTimeout(() => this.getGraph().getDataModel().execute(change));
     }
 }

@@ -65,7 +65,7 @@ export default abstract class ModeBehaviour {
 
     public abstract canvasClicked(x: number, y: number): void;
     public abstract canvasRightClicked(x: number, y: number): void;
-    public abstract selectionChanged(selection: Cell[]): void;
+    public abstract cellClicked(c: Cell): void;
     public abstract handleKeyDown(e: KeyboardEvent): void;
     public abstract handleKeyUp(e: KeyboardEvent): void;
 }

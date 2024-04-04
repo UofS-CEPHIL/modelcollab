@@ -19,6 +19,7 @@ export default class StockFlowGraph extends MCGraph {
         getSubstitutions: () => FirebaseSubstitution[],
         getErrors: () => ComponentErrors,
         getMode: () => UiMode,
+        keydownCellExists: () => boolean,
         revalidate: () => void,
     ) {
         super(
@@ -31,6 +32,7 @@ export default class StockFlowGraph extends MCGraph {
             getErrors,
             revalidate,
             getMode,
+            keydownCellExists,
         );
         this.setConnectableEdges(true);
     }
@@ -51,7 +53,7 @@ export default class StockFlowGraph extends MCGraph {
             // Add vertices first so that we don't end up in a situation where
             // and edge can't find its source or target
             this.addComponentsInCorrectOrder(toAdd);
-            toUpdate.forEach(c => this.updateComponent(c));
+            toUpdate.forEach(c => this.updateCell(c));
             updates.deletedIds
                 .forEach(id => this.deleteComponent(id, newComponents));
             this.deleteOrphanedClouds(newComponents);

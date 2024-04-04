@@ -1,4 +1,4 @@
-import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, Point, UndoableChange, ValueChange } from "@maxgraph/core";
+import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, Point, StyleChange, UndoableChange, ValueChange } from "@maxgraph/core";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointComponent from "../../data/components/FirebasePointComponent";
 import FirebaseDataModel from '../../data/FirebaseDataModel';
@@ -86,45 +86,6 @@ export default abstract class DiagramActions<G extends MCGraph> {
 
     public updateComponent(component: FirebaseComponent): void {
         this.firebaseDataModel.updateComponent(this.modelUuid, component);
-    }
-
-    public handleChanges(changes: UndoableChange[]): void {
-        const updatedComponents = this.getCurrentComponents();
-        for (const change of changes) {
-            if (
-                change instanceof GeometryChange
-                || change instanceof ValueChange
-            ) {
-                const idx = this.getIdxWithIdOrThrow(
-                    change.cell.getId()!,
-                    updatedComponents
-                );
-                const oldComponent = updatedComponents[idx];
-                updatedComponents[idx] = this.presentation
-                    .updateComponent(oldComponent, change.cell, this.graph);
-            }
-            else if (change instanceof ChildChange) {
-                const isDeletion: boolean = !change.parent;
-                const updated = change.child;
-                if (isDeletion) {
-                    const idx = this.getIdxWithIdOrThrow(
-                        updated.getId()!,
-                        updatedComponents
-                    );
-                    updatedComponents.splice(idx, 1);
-                }
-                else {
-                    updatedComponents.push(updated.getValue());
-                }
-            }
-            else {
-                console.error("Unknown change type occurred: " + change);
-            }
-        }
-        this.firebaseDataModel.setAllComponents(
-            this.modelUuid,
-            updatedComponents
-        );
     }
 
     public deleteSelection(): void {
@@ -297,19 +258,6 @@ export default abstract class DiagramActions<G extends MCGraph> {
         const ret = this.getComponentWithId(id, currentComponents);
         if (!ret) throw new Error("Can't find component with id " + id);
         return ret;
-    }
-
-    protected getIdxWithIdOrThrow(
-        id: string,
-        components: FirebaseComponent[]
-    ): number {
-        const componentIdx = components.findIndex(c => c.getId() === id);
-        if (componentIdx < 0) {
-            throw new Error(
-                "Can't find component with id " + id
-            );
-        }
-        return componentIdx;
     }
 
     protected findOrphanedArrowIds(

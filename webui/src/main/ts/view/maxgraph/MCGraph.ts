@@ -1,4 +1,4 @@
-import { Cell, CellRenderer, CellState, EdgeHandler, Graph, InternalMouseEvent, SelectionHandler, TooltipHandler } from "@maxgraph/core";
+import { Cell, CellRenderer, CellState, ChildChange, EdgeHandler, EventObject, Geometry, GeometryChange, Graph, InternalEvent, InternalMouseEvent, SelectionHandler, StyleChange, TooltipHandler, UndoableChange, UndoableEdit, UndoManager, ValueChange } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseCausalLoopVertex from "../../data/components/FirebaseCausalLoopVertex";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
@@ -14,6 +14,7 @@ import MCEdgeHandler from "./MCEdgeHandler";
 import CausalLoopLinkShape from "./presentation/CausalLoopLinkShape";
 import ComponentPresentation from "./presentation/ComponentPresentation";
 import LoopIconShape from "./presentation/LoopIconShape";
+import UndoHandler from "./UndoHandler";
 
 // Parent class for graphs in ModelCollab
 export default abstract class MCGraph extends Graph {
@@ -23,6 +24,8 @@ export default abstract class MCGraph extends Graph {
 
     protected haveStaticModelsLoaded: boolean;
     protected lastEdgeHandler: EdgeHandler | null = null;
+    protected undoManager: UndoManager;
+    protected undoHandler: UndoHandler;
 
     protected getCurrentComponents: () => FirebaseComponent[];
     protected getSubstitutions: () => FirebaseSubstitution[];
@@ -43,6 +46,7 @@ export default abstract class MCGraph extends Graph {
         getErrors: () => ComponentErrors,
         revalidate: () => void,
         getMode: () => UiMode,
+        keydownCellExists: () => boolean,
     ) {
         super(container);
         this.presentation = presentation;
@@ -69,6 +73,36 @@ export default abstract class MCGraph extends Graph {
             return null;
         }
 
+        this.undoManager = new UndoManager();
+        this.undoHandler = new UndoHandler(
+            this,
+            firebaseDataModel,
+            this.undoManager,
+            presentation,
+            modelUuid,
+            getCurrentComponents,
+            keydownCellExists,
+        );
+        this.setupUndoManager();
+
+        // When we undo changes to labels, this listener makes sure that they
+        // get propagated to Firebase
+        this.getDataModel().addListener(
+            InternalEvent.EXECUTE,
+            (_: EventTarget, e: EventObject) => {
+                const change = e.getProperty("change");
+                if (
+                    change instanceof ValueChange
+                    && change.value instanceof FirebaseComponentBase
+                ) {
+                    this.firebaseDataModel.updateComponent(
+                        this.modelUuid,
+                        change.value
+                    );
+                }
+            }
+        );
+
         this.setupTooltips();
 
         CellRenderer.registerShape(
@@ -81,6 +115,42 @@ export default abstract class MCGraph extends Graph {
             //@ts-ignore
             LoopIconShape
         );
+    }
+
+    private setupUndoManager(): void {
+        this.getDataModel().addListener(
+            InternalEvent.UNDO,
+            (t: EventTarget, e: EventObject) =>
+                this.undoHandler.onUndoableEvent(t, e)
+        );
+        this.getView().addListener(
+            InternalEvent.UNDO,
+            (t: EventTarget, e: EventObject) =>
+                this.undoHandler.onUndoableEvent(t, e)
+        );
+        this.addListener(
+            InternalEvent.UNDO,
+            (t: EventTarget, e: EventObject) =>
+                this.undoHandler.onUndoableEvent(t, e)
+        );
+        this.undoManager.addListener(
+            InternalEvent.UNDO,
+            (t: EventTarget, e: EventObject) =>
+                this.undoHandler.onUndoOrRedo(t, e)
+        );
+        this.undoManager.addListener(
+            InternalEvent.REDO,
+            (t: EventTarget, e: EventObject) =>
+                this.undoHandler.onUndoOrRedo(t, e)
+        );
+    }
+
+    public undo(): void {
+        this.undoManager.undo();
+    }
+
+    public redo(): void {
+        this.undoManager.redo();
     }
 
     private setupTooltips(): void {
@@ -139,10 +209,23 @@ export default abstract class MCGraph extends Graph {
         ];
     }
 
-    // Update a component. Call this in the middle of a batch update.
-    public updateComponent(c: FirebaseComponent): void {
+    // Update a cell to match the given component.
+    // Call this in the middle of a batch update.
+    public updateCell(c: FirebaseComponent): void {
         const cell = this.getCellWithId(c.getId())!;
         this.presentation.updateCell(c, cell, this);
+    }
+
+    // Update a component to match the given cell
+    public updateComponent(c: Cell): void {
+        if (c.getValue() instanceof FirebaseComponentBase<any>) {
+            const updated = this.presentation.updateComponent(
+                c.getValue(),
+                c,
+                this
+            );
+            this.firebaseDataModel.updateComponent(this.modelUuid, updated);
+        }
     }
 
     public isCellType(cell: Cell, cptType: ComponentType): boolean {
@@ -203,11 +286,15 @@ export default abstract class MCGraph extends Graph {
                     + component.getType()
                 );
             }
-            component = component.withData({
+
+            const newComponent = component.withData({
                 ...component.getData(),
                 text: newValue
             });
-            this.firebaseDataModel.updateComponent(this.modelUuid, component);
+            // this.firebaseDataModel
+            //     .updateComponent(this.modelUuid, newComponent);
+
+            this.getDataModel().setValue(cell, newComponent);
         }
         // TODO
         // if (resize) {
@@ -304,7 +391,7 @@ export default abstract class MCGraph extends Graph {
 
         const isAbnormalTextColor = (c: Cell) =>
             c.getValue() instanceof FirebaseComponentBase<any>
-            && c.getStyle().strokeColor
+            && c.getStyle().fontColor
             !== this.presentation.getNormalTextColorForComponent(c.getValue());
 
         const isAbnormalColor = (c: Cell) =>
