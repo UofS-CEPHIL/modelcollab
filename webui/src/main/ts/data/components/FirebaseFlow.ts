@@ -22,6 +22,7 @@ export default class FirebaseFlow
     }
 
     public withData(d: FirebaseFlowData) {
+        FirebasePointerComponent.sanitizePointerData(d);
         return new FirebaseFlow(this.getId(), d);
     }
 
@@ -45,10 +46,7 @@ export default class FirebaseFlow
             text: String(data.text),
             equation: String(data.equation)
         };
-        if (data.entryX) d.entryX = data.entryX;
-        if (data.entryY) d.entryY = data.entryY;
-        if (data.exitX) d.exitX = data.exitX;
-        if (data.exitY) d.exitY = data.exitY;
+        FirebasePointerComponent.sanitizePointerData(d);
         return d;
     }
 

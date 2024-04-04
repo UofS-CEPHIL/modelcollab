@@ -30,7 +30,6 @@ interface State extends CanvasScreenState {
     modelName: string | null;
     components: FirebaseComponent[];
     clipboard: FirebaseComponent[];
-    selectedComponent: FirebaseComponent | null;
     errors: ComponentErrors;
     displayedModalBox: ModalBoxType | null;
     sidebarWidth: number;
@@ -74,7 +73,6 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             modelName: null,
             components: [],
             clipboard: [],
-            selectedComponent: null,
             errors: {},
             displayedModalBox: null,
             sidebarWidth: CanvasSidebar.DEFAULT_WIDTH_PX,
@@ -83,7 +81,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             keydownPosition: null,
             keydownCell: null,
             mode: UiMode.EDIT,
-            cursorCell: null,
+            hoverCell: null,
         };
     }
 
@@ -98,6 +96,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             () => this.state.errors,
             () => { return {}; },
             () => this.state.mode,
+            () => this.state.keydownCell !== null,
         );
     }
 
@@ -136,7 +135,6 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             () => this.state.mode,
             (mode: UiMode) => this.setState({ mode }),
             m => this.setState({ displayedModalBox: m }),
-            s => this.setState({ selectedComponent: s }),
             () => this.state.cursorPosition,
             () => this.state.keydownPosition,
             p => this.setKeydownPosition(p),
@@ -159,7 +157,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             p => this.setState({ keydownPosition: p }),
             () => this.state.keydownCell,
             c => this.setState({ keydownCell: c }),
-            () => this.state.cursorCell,
+            () => this.state.hoverCell,
         );
     }
 
@@ -189,13 +187,11 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
                 firebaseDataModel={this.props.firebaseDataModel}
                 modelUuid={this.props.modelUuid!}
                 components={this.state.components}
-                selectedComponent={this.state.selectedComponent}
             />
         );
     }
 
     protected makeModalBoxIfNecessary(): ReactElement | null {
-        // TODO
         return null;
     }
 }

@@ -17,6 +17,7 @@ export default class FirebaseConnection
     }
 
     public withData(d: FirebasePointerData): FirebaseConnection {
+        FirebasePointerComponent.sanitizePointerData(d);
         return new FirebaseConnection(this.getId(), d);
     }
 
@@ -53,10 +54,7 @@ export default class FirebaseConnection
             to: data.to.toString(),
             points: data.points ?? [],
         };
-        if (data.entryX) d.entryX = data.entryX;
-        if (data.entryY) d.entryY = data.entryY;
-        if (data.exitX) d.exitX = data.exitX;
-        if (data.exitY) d.exitY = data.exitY;
+        FirebasePointerComponent.sanitizePointerData(d);
         return d;
     }
 }

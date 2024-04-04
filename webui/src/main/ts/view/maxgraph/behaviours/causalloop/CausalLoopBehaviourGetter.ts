@@ -152,5 +152,19 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             getHoverCell,
             setMode,
         );
+        this.behaviours[UiMode.RESIZE] = new ChangeModeOnButtonPressBehaviour(
+            graph,
+            actions,
+            CausalLoopBehaviourGetter.MODE_KEY_MAPPINGS,
+            getFirebaseState,
+            setOpenModalBox,
+            getCursorPosition,
+            getKeydownPosition,
+            setKeydownPosition,
+            getKeydownCell,
+            setKeydownCell,
+            getHoverCell,
+            setMode,
+        );
     }
 }

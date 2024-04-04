@@ -10,7 +10,6 @@ export interface Props {
     firebaseDataModel: FirebaseDataModel;
     modelUuid: string;
     components: FirebaseComponent[],
-    selectedComponent: FirebaseComponent | null;
 }
 
 export interface State {

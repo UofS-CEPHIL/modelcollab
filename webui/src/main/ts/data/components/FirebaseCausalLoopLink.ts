@@ -65,6 +65,7 @@ export default class FirebaseCausalLoopLink
     }
 
     public withData(d: FirebaseCausalLoopLinkData): FirebaseCausalLoopLink {
+        FirebasePointerComponent.sanitizePointerData(d);
         return new FirebaseCausalLoopLink(this.getId(), d);
     }
 
@@ -114,10 +115,7 @@ export default class FirebaseCausalLoopLink
             points: data.points ?? [],
             polarity: toPolarity(data.polarity)
         };
-        if (data.entryX) d.entryX = data.entryX;
-        if (data.entryY) d.entryY = data.entryY;
-        if (data.exitX) d.exitX = data.exitX;
-        if (data.exitY) d.exitY = data.exitY;
+        FirebasePointerComponent.sanitizePointerData(d);
         return d;
     }
 }

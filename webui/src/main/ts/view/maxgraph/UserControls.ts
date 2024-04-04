@@ -22,7 +22,6 @@ export default class UserControls {
 
     private graph: MCGraph;
     private keyHandler: MCKeyHandler;
-    private undoManager: UndoManager;
     private diagramActions: DiagramActions<any>;
     private behaviourGetter: BehaviourGetter;
     private actionLogger?: UserActionLogger;
@@ -33,7 +32,6 @@ export default class UserControls {
     private getMode: () => UiMode;
     private setMode: (mode: UiMode) => void;
     private setOpenModalBox: (m: ModalBoxType) => void;
-    private onSelectionChanged: (s: FirebaseComponent | null) => void;
     private getCursorPosition: () => Point;
     private getKeydownPosition: () => (Point | null);
     private setKeydownPosition: (p: Point | null) => void;
@@ -50,7 +48,6 @@ export default class UserControls {
         getMode: () => UiMode,
         setMode: (mode: UiMode) => void,
         setOpenModalBox: (m: ModalBoxType) => void,
-        onSelectionChanged: (s: FirebaseComponent | null) => void,
         getCursorPosition: () => Point,
         getKeydownPosition: () => (Point | null),
         setKeydownPosition: (p: Point | null) => void,
@@ -69,7 +66,6 @@ export default class UserControls {
         this.copyCells = copyCells;
         this.pasteCells = pasteCells;
         this.getCurrentComponents = getCurrentComponents;
-        this.onSelectionChanged = onSelectionChanged;
         this.getCursorPosition = getCursorPosition;
         this.getKeydownPosition = getKeydownPosition;
         this.setKeydownPosition = setKeydownPosition;
@@ -77,34 +73,8 @@ export default class UserControls {
         this.setKeydownCell = setKeydownCell;
         this.setMode = setMode;
 
-        this.undoManager = new UndoManager();
-        this.setupUndoManager();
         this.setupUniversalKeyboardShortcuts();
         this.setupModeBehaviours();
-    }
-
-    private setupUndoManager(): void {
-        // Setup undo manager to notice undoable changes
-        var isFirst = true;
-        const onUndoableEvent = (_: EventTarget, event: EventObject) => {
-            this.undoManager.undoableEditHappened(event.getProperty("edit"));
-            if (isFirst) {
-                isFirst = false;
-                this.undoManager.clear();
-            }
-        }
-        this.graph.getDataModel()
-            .addListener(InternalEvent.UNDO, onUndoableEvent);
-        this.graph.getView()
-            .addListener(InternalEvent.UNDO, onUndoableEvent);
-
-        // Setup actions when undo/redo happens
-        const onUndoOrRedo = (_: EventTarget, event: EventObject) => {
-            const edit = event.getProperty("edit");
-            this.diagramActions.handleChanges(edit.changes);
-        }
-        this.undoManager.addListener(InternalEvent.UNDO, onUndoOrRedo);
-        this.undoManager.addListener(InternalEvent.REDO, onUndoOrRedo);
     }
 
     private setupUniversalKeyboardShortcuts(): void {
@@ -167,15 +137,14 @@ export default class UserControls {
         // );
 
         // Undo, redo
-        // TODO undo/redo has bugs -- add these back once they are fixed
-        // this.keyHandler.bindControlKey(
-        //     getCharCode("Z"),
-        //     () => { this.undoManager.undo() }
-        // );
-        // this.keyHandler.bindControlShiftKey(
-        //     getCharCode("Z"),
-        //     () => { this.undoManager.redo() }
-        // );
+        this.keyHandler.bindControlKey(
+            getCharCode("Z"),
+            () => { this.graph.undo() }
+        );
+        this.keyHandler.bindControlShiftKey(
+            getCharCode("Z"),
+            () => { this.graph.redo() }
+        );
     }
 
     private getCharCode(c: String): number {
@@ -220,9 +189,12 @@ export default class UserControls {
                     this.getBehaviour().canvasRightClicked(pos.x, pos.y);
                 }
                 else {
-                    // Only handle clicks on canvas. Component
-                    // clicks are handled by selectionChanged listeners
-                    if (!event.getProperty("cell")) {
+                    const cell = event.getProperty("cell");
+                    if (cell) {
+                        this.getBehaviour()
+                            .cellClicked(cell);
+                    }
+                    else {
                         this.getBehaviour().canvasClicked(pos.x, pos.y);
                     }
                     if (this.actionLogger) {
@@ -238,24 +210,6 @@ export default class UserControls {
                         );
                     }
                 }
-            }
-        );
-
-        // Selection changed
-        this.graph.getSelectionModel().addListener(
-            InternalEvent.CHANGE,
-            (_: EventTarget, __: EventObject) => {
-                const selectionCells = this.graph.getSelectionCells();
-                this.getBehaviour().selectionChanged(selectionCells);
-
-                let selectedComponent = null;
-                if (selectionCells.length == 1) {
-                    const val = selectionCells[0].getValue();
-                    if (val instanceof FirebaseComponentBase) {
-                        selectedComponent = selectionCells[0].getValue();
-                    }
-                }
-                this.onSelectionChanged(selectedComponent);
             }
         );
 
