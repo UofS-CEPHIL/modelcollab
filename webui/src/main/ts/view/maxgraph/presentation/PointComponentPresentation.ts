@@ -31,6 +31,14 @@ export default abstract class PointComponentPresentation
         return theme.palette.error.main;
     }
 
+    public getHoveredStrokeColorForComponent(_: DataType): string {
+        return theme.palette.secondary.main;
+    }
+
+    public getHoveredTextColorForComponent(_: DataType): string {
+        return theme.palette.secondary.main;
+    }
+
     public addComponent(
         component: DataType,
         graph: MCGraph,

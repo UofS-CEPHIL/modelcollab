@@ -83,6 +83,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             keydownPosition: null,
             keydownCell: null,
             mode: UiMode.EDIT,
+            cursorCell: null,
         };
     }
 
@@ -157,7 +158,8 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             () => this.state.keydownPosition,
             p => this.setState({ keydownPosition: p }),
             () => this.state.keydownCell,
-            c => this.setState({ keydownCell: c })
+            c => this.setState({ keydownCell: c }),
+            () => this.state.cursorCell,
         );
     }
 

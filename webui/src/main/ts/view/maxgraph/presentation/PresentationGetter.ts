@@ -29,4 +29,16 @@ export default abstract class PresentationGetter {
             .getRelevantPresentation(c)
             .getErrorTextColorForComponent(c);
     }
+
+    public getHoveredStrokeColorForComponent(c: FirebaseComponent): string {
+        return this
+            .getRelevantPresentation(c)
+            .getHoveredStrokeColorForComponent(c);
+    }
+
+    public getHoveredTextColorForComponent(c: FirebaseComponent): string {
+        return this
+            .getRelevantPresentation(c)
+            .getHoveredTextColorForComponent(c);
+    }
 }

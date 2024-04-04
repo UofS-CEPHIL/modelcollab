@@ -19,6 +19,12 @@ export default class CausalLoopVertexPresentation
         return theme.palette.canvas.main;
     }
 
+    public getHoveredStrokeColorForComponent(
+        _: FirebaseCausalLoopVertex
+    ): string {
+        return theme.palette.canvas.main;
+    }
+
     public makeVertexParameters(
         parent: Cell,
         component: FirebaseCausalLoopVertex,

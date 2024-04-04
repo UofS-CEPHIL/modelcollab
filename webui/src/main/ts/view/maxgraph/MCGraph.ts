@@ -263,29 +263,65 @@ export default abstract class MCGraph extends Graph {
                 const messages = errors[cell.getId()!];
                 const isError = isCellError(cell);
                 if (messages && !isError) {
-                    this.displayCellError(cell, true);
+                    this.setCellDisplayError(cell);
                 }
                 else if (!messages && isError) {
-                    this.displayCellError(cell, false);
+                    this.setCellDisplayNormal(cell);
                 }
             }
         }
     }
 
-    public displayCellError(cell: Cell, error: boolean) {
+    public setCellDisplayError(cell: Cell): void {
+        this.setCellColor(
+            cell,
+            this.presentation.getErrorStrokeColorForComponent(cell.getValue()),
+            this.presentation.getErrorTextColorForComponent(cell.getValue()),
+        );
+    }
+
+    public setCellDisplayHovered(cell: Cell): void {
+        this.setCellColor(
+            cell,
+            this.presentation.getHoveredStrokeColorForComponent(cell.getValue()),
+            this.presentation.getHoveredTextColorForComponent(cell.getValue()),
+        );
+    }
+
+    public setCellDisplayNormal(cell: Cell): void {
+        this.setCellColor(
+            cell,
+            this.presentation.getNormalStrokeColorForComponent(cell.getValue()),
+            this.presentation.getNormalTextColorForComponent(cell.getValue()),
+        );
+    }
+
+    public setAllCellsNormal(): void {
+        const isAbnormalStrokeColor = (c: Cell) =>
+            c.getValue() instanceof FirebaseComponentBase<any>
+            && c.getStyle().strokeColor
+            !== this.presentation.getNormalStrokeColorForComponent(c.getValue());
+
+        const isAbnormalTextColor = (c: Cell) =>
+            c.getValue() instanceof FirebaseComponentBase<any>
+            && c.getStyle().strokeColor
+            !== this.presentation.getNormalTextColorForComponent(c.getValue());
+
+        const isAbnormalColor = (c: Cell) =>
+            isAbnormalStrokeColor(c) || isAbnormalTextColor(c);
+
+
+        const notNormal = this.getAllCells().filter(isAbnormalColor);
+        notNormal.forEach(c => this.setCellDisplayNormal(c));
+    }
+
+    public setCellColor(
+        cell: Cell,
+        strokeColor: string,
+        fontColor: string
+    ): void {
         if (!(cell.getValue() instanceof FirebaseComponentBase<any>)) return;
         this.batchUpdate(() => {
-            const strokeColor = error
-                ? this.presentation
-                    .getErrorStrokeColorForComponent(cell.getValue())
-                : this.presentation
-                    .getNormalStrokeColorForComponent(cell.getValue());
-            const fontColor = error
-                ? this.presentation
-                    .getErrorTextColorForComponent(cell.getValue())
-                : this.presentation
-                    .getNormalTextColorForComponent(cell.getValue());
-
             this.setCellStyle(
                 {
                     ...cell.getStyle(),

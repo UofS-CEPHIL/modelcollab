@@ -17,6 +17,7 @@ export default abstract class ModeBehaviour {
     protected setKeydownPosition: (p: Point | null) => void;
     protected getKeydownCell: () => (Cell | null);
     protected setKeydownCell: (c: Cell | null) => void;
+    protected getHoverCell: () => (Cell | null);
     protected setMode: (mode: UiMode) => void;
 
     public constructor(
@@ -30,6 +31,7 @@ export default abstract class ModeBehaviour {
         setKeydownPosition: (p: Point | null) => void,
         getKeydownCell: () => (Cell | null),
         setKeydownCell: (c: Cell | null) => void,
+        getHoverCell: () => (Cell | null),
         setMode: (mode: UiMode) => void,
     ) {
         this.graph = graph;
@@ -42,6 +44,7 @@ export default abstract class ModeBehaviour {
         this.setKeydownPosition = setKeydownPosition;
         this.getKeydownCell = getKeydownCell;
         this.setKeydownCell = setKeydownCell;
+        this.getHoverCell = getHoverCell;
         this.setMode = setMode;
     }
 

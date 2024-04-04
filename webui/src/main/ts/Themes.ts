@@ -206,8 +206,7 @@ export const theme = createTheme({
         canvas: {
             main: "#ffffff",
             contrastText: "#000000"
-        }
-
+        },
     },
     custom: {
         sidebar: {
