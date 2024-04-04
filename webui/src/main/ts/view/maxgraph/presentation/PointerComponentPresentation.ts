@@ -1,5 +1,6 @@
 import { Cell, EdgeParameters, Point } from "@maxgraph/core";
 import FirebasePointerComponent, { FirebasePointerData } from "../../../data/components/FirebasePointerComponent";
+import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
@@ -15,6 +16,22 @@ export default abstract class PointerComponentPresentation
         target: Cell,
         graph: MCGraph
     ): EdgeParameters;
+
+    public getNormalStrokeColorForComponent(_: DataType): string {
+        return theme.palette.primary.main;
+    }
+
+    public getNormalTextColorForComponent(_: DataType): string {
+        return theme.palette.primary.main;
+    }
+
+    public getErrorStrokeColorForComponent(_: DataType): string {
+        return theme.palette.error.main;
+    }
+
+    public getErrorTextColorForComponent(_: DataType): string {
+        return theme.palette.error.main;
+    }
 
     public addComponent(
         component: DataType,

@@ -74,6 +74,10 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
             case this.getKeyForMode(UiMode.LOOP_ICON):
                 this.doLoopIconKeyupAction();
                 break;
+
+            case this.getKeyForMode(UiMode.DELETE):
+                this.doDeleteKeyupAction();
+                break;
         }
     }
 
@@ -290,11 +294,22 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     private doDeleteKeydownAction(): void {
         const pos = this.getCursorPosition();
         const cell = this.getGraph().getCellAt(pos.x, pos.y);
-        if (
-            cell
-            && cell.getValue() instanceof FirebaseComponentBase<any>
-        ) {
+        if (cell && cell.getValue() instanceof FirebaseComponentBase<any>) {
+            this.setKeydownCell(cell);
+            this.getGraph().displayCellError(cell, true);
+        }
+    }
+
+    private doDeleteKeyupAction(): void {
+        const pos = this.getCursorPosition();
+        const cell = this.getGraph().getCellAt(pos.x, pos.y);
+        const keydownCell = this.getKeydownCell();
+        if (cell && keydownCell && cell.getId() === keydownCell.getId()) {
             this.getActions().deleteComponent(cell.getValue());
         }
+        else if (keydownCell) {
+            this.getGraph().displayCellError(keydownCell, false);
+        }
+        this.setKeydownCell(null);
     }
 }

@@ -48,7 +48,6 @@ export default class CausalLoopPresentationGetter
             .updateCell(component, cell, graph, loadedModels);
     }
 
-
     public updateComponent(
         component: FirebaseComponent,
         cell: Cell,

@@ -7,6 +7,18 @@ import TextComponentPresentation from "./TextComponentPresentation";
 export default class CausalLoopVertexPresentation
     extends TextComponentPresentation<FirebaseCausalLoopVertex> {
 
+    public getNormalStrokeColorForComponent(
+        _: FirebaseCausalLoopVertex
+    ): string {
+        return theme.palette.canvas.main;
+    }
+
+    public getErrorStrokeColorForComponent(
+        _: FirebaseCausalLoopVertex
+    ): string {
+        return theme.palette.canvas.main;
+    }
+
     public makeVertexParameters(
         parent: Cell,
         component: FirebaseCausalLoopVertex,
