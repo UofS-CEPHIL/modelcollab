@@ -35,4 +35,9 @@ export default interface ComponentPresentation<T extends FirebaseComponent> {
     // Return the color for the component to indicate an error
     getErrorStrokeColorForComponent(component: T): string;
     getErrorTextColorForComponent(component: T): string;
+
+    // Return the color for the component to indicate that it is currently
+    // hovered over
+    getHoveredStrokeColorForComponent(component: T): string;
+    getHoveredTextColorForComponent(component: T): string;
 }

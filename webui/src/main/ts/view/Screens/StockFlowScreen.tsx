@@ -81,6 +81,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             cursorPosition: CanvasScreen.INIT_CURSOR,
             keydownPosition: null,
             keydownCell: null,
+            cursorCell: null,
         };
     }
 
@@ -143,7 +144,8 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             () => this.state.keydownPosition,
             p => this.setState({ keydownPosition: p }),
             () => this.state.keydownCell,
-            c => this.setState({ keydownCell: c })
+            c => this.setState({ keydownCell: c }),
+            () => this.state.cursorCell,
         );
     }
 

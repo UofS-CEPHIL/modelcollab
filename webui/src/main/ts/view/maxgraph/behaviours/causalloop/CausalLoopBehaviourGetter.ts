@@ -37,6 +37,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
         setKeydownPosition: (p: Point | null) => void,
         getKeydownCell: () => (Cell | null),
         setKeydownCell: (c: Cell | null) => void,
+        getHoverCell: () => (Cell | null),
     ): void {
         this.behaviours[UiMode.NONE] = new CausalLoopHotkeyBehaviour(
             graph,
@@ -49,6 +50,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.STOCK] = new CausalLoopVertexBehaviour(
@@ -62,6 +64,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.CONNECT] = new CausalLoopLinkBehaviour(
@@ -75,6 +78,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.EDIT] = new EditBehaviour(
@@ -88,6 +92,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.STICKY_NOTE] = new StickyNoteBehaviour(
@@ -101,6 +106,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.LOOP_ICON] = new LoopIconBehaviour(
@@ -114,6 +120,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.DELETE] = new DeleteBehaviour(
@@ -127,6 +134,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.MOVE] = new ChangeModeOnButtonPressBehaviour(
@@ -140,6 +148,7 @@ export default class CausalLoopBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
     }

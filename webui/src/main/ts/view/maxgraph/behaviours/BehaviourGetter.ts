@@ -24,6 +24,7 @@ export default abstract class BehaviourGetter {
         setKeydownPosition: (p: Point | null) => void,
         getKeydownCell: () => (Cell | null),
         setKeydownCell: (c: Cell | null) => void,
+        getHoverCell: () => (Cell | null),
     ): void;
 
     public constructor(
@@ -37,6 +38,7 @@ export default abstract class BehaviourGetter {
         setKeydownPosition: (p: Point | null) => void,
         getKeydownCell: () => (Cell | null),
         setKeydownCell: (c: Cell | null) => void,
+        getHoverCell: () => (Cell | null),
     ) {
         this.setBehaviours(
             setMode,
@@ -48,7 +50,8 @@ export default abstract class BehaviourGetter {
             getKeydownPosition,
             setKeydownPosition,
             getKeydownCell,
-            setKeydownCell
+            setKeydownCell,
+            getHoverCell,
         );
     }
 

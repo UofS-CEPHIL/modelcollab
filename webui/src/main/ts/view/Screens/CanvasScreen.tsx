@@ -8,8 +8,9 @@ import ModalBoxType from "../ModalBox/ModalBoxType";
 import RestClient from "../../rest/RestClient";
 import { Grid } from "@mui/material";
 import { theme } from "../../Themes";
-import FirebaseComponent from '../../data/components/FirebaseComponent';
+import FirebaseComponent, { FirebaseComponentBase } from '../../data/components/FirebaseComponent';
 import { ComponentErrors } from '../../validation/ModelValitador';
+import MCGraph from '../maxgraph/MCGraph';
 
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
@@ -19,6 +20,7 @@ export interface Props {
 
 export interface State {
     cursorPosition: Point;
+    cursorCell: Cell | null;
     keydownPosition: Point | null;
     keydownCell: Cell | null;
 
@@ -34,7 +36,7 @@ export interface State {
 }
 
 export default abstract class CanvasScreen
-    <P extends Props, S extends State, G extends Graph>
+    <P extends Props, S extends State, G extends MCGraph>
     extends React.Component<P, S>
 {
 
@@ -98,14 +100,36 @@ export default abstract class CanvasScreen
         this.graph.addMouseListener({
             mouseDown: () => { },
             mouseUp: () => { },
-            mouseMove: (_: EventSource, e: InternalMouseEvent) =>
+            mouseMove: (_: EventSource, e: InternalMouseEvent) => {
+                const cell = this.getCellForEvent(e)
                 this.setState({
                     cursorPosition: new Point(
                         e.getGraphX(),
                         e.getGraphY()
-                    )
-                })
+                    ),
+                    cursorCell: cell,
+                });
+                if (cell !== this.state.cursorCell) {
+                    if (cell) {
+                        this.graph!.setCellDisplayHovered(cell);
+                    }
+                    if (this.state.cursorCell) {
+                        this.graph!.setCellDisplayNormal(this.state.cursorCell);
+                    }
+                }
+                else if (!cell) {
+                    this.graph!.setAllCellsNormal();
+                }
+            }
         });
+    }
+
+    private getCellForEvent(e: InternalMouseEvent): Cell | null {
+        var cell = e.getCell();
+        if (cell && !(cell.getValue() instanceof FirebaseComponentBase<any>)) {
+            cell = null;
+        }
+        return cell;
     }
 
     public componentWillUnmount(): void {

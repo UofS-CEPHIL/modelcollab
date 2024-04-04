@@ -1,5 +1,5 @@
-import { Cell, CellStyle, EventSource, InternalEvent, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
-import FirebaseCausalLoopLink, { Polarity } from "../../../../data/components/FirebaseCausalLoopLink";
+import { Cell, CellStyle, EventSource, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
+import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
 import FirebaseLoopIcon from "../../../../data/components/FirebaseLoopIcon";
@@ -169,8 +169,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     }
 
     private doLinkKeydownAction(): void {
-        const pos = this.getCursorPosition();
-        const keydownCell = this.getGraph().getCellAt(pos.x, pos.y);
+        const keydownCell = this.getHoverCell();
         this.setKeydownCell(keydownCell);
         if (
             keydownCell !== null
@@ -191,11 +190,8 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     }
 
     private doLinkKeyupAction(): void {
-        this.deleteTempComponents();
-
-        const pos = this.getCursorPosition();
         const source = this.getKeydownCell();
-        const target = this.getGraph().getCellAt(pos.x, pos.y);
+        const target = this.getHoverCell();
 
         if (this.shouldAddLink(source, target)) {
             this.getActions().addComponent(
@@ -229,8 +225,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     }
 
     private doEditKeydownAction(): void {
-        const pos = this.getCursorPosition();
-        const cell = this.getGraph().getCellAt(pos.x, pos.y);
+        const cell = this.getHoverCell();
         if (
             cell
             && (
@@ -290,29 +285,27 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     }
 
     private doDeleteKeydownAction(): void {
-        const pos = this.getCursorPosition();
-        const cell = this.getGraph().getCellAt(pos.x, pos.y);
+        const cell = this.getHoverCell();
         if (cell && cell.getValue() instanceof FirebaseComponentBase<any>) {
             this.setKeydownCell(cell);
-            this.getGraph().displayCellError(cell, true);
+            this.getGraph().setCellDisplayError(cell);
         }
     }
 
     private doDeleteKeyupAction(): void {
-        const pos = this.getCursorPosition();
-        const cell = this.getGraph().getCellAt(pos.x, pos.y);
+        const cell = this.getHoverCell();
         const keydownCell = this.getKeydownCell();
         if (cell && keydownCell && cell.getId() === keydownCell.getId()) {
             this.getActions().deleteComponent(cell.getValue());
         }
         else if (keydownCell) {
-            this.getGraph().displayCellError(keydownCell, false);
+            this.getGraph().setCellDisplayNormal(keydownCell);
         }
     }
 
     private doSelectAndResizeKeydownAction(): void {
         const pos = this.getCursorPosition();
-        const cell = this.getGraph().getCellAt(pos.x, pos.y);
+        const cell = this.getHoverCell();
         if (cell) {
             this.getGraph().setSelectionCell(cell);
             if (cell.getValue() instanceof FirebaseRectangleComponent) {
@@ -351,6 +344,11 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         }
     }
 
+    // Normally, to bend an arrow you have to click and drag with the
+    // mouse. We do a similar behaviour, except we initialize the
+    // event with a key press instead of a mouse button press. To do
+    // that, we create a fake mouse event and trigger it on a key
+    // press to simulate the same behaviour.
     private createMockMouseEvent(
         pos: Point,
         target: Cell,

@@ -37,7 +37,8 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
         getKeydownPosition: () => (Point | null),
         setKeydownPosition: (p: Point | null) => void,
         getKeydownCell: () => (Cell | null),
-        setKeydownCell: (c: Cell | null) => void
+        setKeydownCell: (c: Cell | null) => void,
+        getHoverCell: () => (Cell | null),
     ): void {
         this.behaviours[UiMode.MOVE] = new MoveModeBehaviour(
             graph,
@@ -50,6 +51,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.STOCK] = new StockModeBehaviour(
@@ -63,6 +65,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.PARAM] = new ParameterModeBehaviour(
@@ -76,6 +79,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.DYN_VARIABLE] = new DynamicVariableModeBehaviour(
@@ -89,6 +93,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.SUM_VARIABLE] = new SumVariableModeBehaviour(
@@ -102,6 +107,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.FLOW] = new FlowModeBehaviour(
@@ -115,6 +121,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.CONNECT] = new ConnectModeBehaviour(
@@ -128,6 +135,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
         this.behaviours[UiMode.IDENTIFY] = new IdentifyModeBehaviour(
@@ -141,6 +149,7 @@ export default class StockFlowBehaviourGetter extends BehaviourGetter {
             setKeydownPosition,
             getKeydownCell,
             setKeydownCell,
+            getHoverCell,
             setMode,
         );
     }
