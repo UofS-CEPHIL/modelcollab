@@ -146,6 +146,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             () => this.state.keydownCell,
             c => this.setState({ keydownCell: c }),
             () => this.state.hoverCell,
+            c => this.setState({ hoverCell: c }),
         );
     }
 

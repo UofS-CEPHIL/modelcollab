@@ -1,4 +1,4 @@
-import { Cell, CellRenderer, CellState, ChildChange, EdgeHandler, EventObject, Geometry, GeometryChange, Graph, InternalEvent, InternalMouseEvent, SelectionHandler, StyleChange, TooltipHandler, UndoableChange, UndoableEdit, UndoManager, ValueChange } from "@maxgraph/core";
+import { Cell, CellRenderer, CellState, ChildChange, EdgeHandler, EventObject, EventSource, Geometry, GeometryChange, Graph, InternalEvent, InternalMouseEvent, SelectionHandler, StyleChange, TooltipHandler, UndoableChange, UndoableEdit, UndoManager, ValueChange } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseCausalLoopVertex from "../../data/components/FirebaseCausalLoopVertex";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
@@ -63,6 +63,7 @@ export default abstract class MCGraph extends Graph {
         this.setAllowDanglingEdges(false);
         this.setAllowLoops(true);
         this.setHtmlLabels(true);
+        this.setEnterStopsCellEditing(true);
 
         const selHandler =
             this.getPlugin("SelectionHandler") as SelectionHandler;
@@ -214,18 +215,6 @@ export default abstract class MCGraph extends Graph {
     public updateCell(c: FirebaseComponent): void {
         const cell = this.getCellWithId(c.getId())!;
         this.presentation.updateCell(c, cell, this);
-    }
-
-    // Update a component to match the given cell
-    public updateComponent(c: Cell): void {
-        if (c.getValue() instanceof FirebaseComponentBase<any>) {
-            const updated = this.presentation.updateComponent(
-                c.getValue(),
-                c,
-                this
-            );
-            this.firebaseDataModel.updateComponent(this.modelUuid, updated);
-        }
     }
 
     public isCellType(cell: Cell, cptType: ComponentType): boolean {

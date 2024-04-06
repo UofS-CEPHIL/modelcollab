@@ -1,4 +1,4 @@
-import { Cell, ChildChange, EventObject, GeometryChange, InternalEvent, Point, StyleChange, UndoableChange, ValueChange } from "@maxgraph/core";
+import { Cell, EventObject, InternalEvent, Point } from "@maxgraph/core";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointComponent from "../../data/components/FirebasePointComponent";
 import FirebaseDataModel from '../../data/FirebaseDataModel';
@@ -10,13 +10,13 @@ import MCEdgeHandler from "./MCEdgeHandler";
 import FirebaseFlow from "../../data/components/FirebaseFlow";
 
 // This class contains the logic for making changes to the diagram, including
-// the positions of the components and their values.
+// the positions of the components and their values. This happens either by
+// simply updating the database and allowing the change to propagate through the
+// database listeners, or by listening for direct actions on the graph
+// (e.g. moving a component with the mouse) and updating the database
+// accordingly.
 //
-// Actions are almost always performed by first updating Firebase and allowing
-// the change to propagate via the listeners. The only exceptions to this are
-// ones that must be triggered by performing actions on individual graph cells,
-// such as moving or resizing an existing component. In such cases, we set up
-// listeners for the event and update Firebase within them.
+// TODO untangle this class, MCGraph, and UserControls. Kinda spaghetti.
 export default abstract class DiagramActions<G extends MCGraph> {
 
     protected firebaseDataModel: FirebaseDataModel;
@@ -84,8 +84,32 @@ export default abstract class DiagramActions<G extends MCGraph> {
         }
     }
 
-    public updateComponent(component: FirebaseComponent): void {
+    /**
+     * Update the component in Firebase to match the given component. If a
+     * cell is given, update Firebase to match the cell.
+     */
+    public updateComponent(component: FirebaseComponent | Cell): void {
+        if (component instanceof Cell) {
+            if (component.getValue() instanceof FirebaseComponentBase) {
+                component = this.presentation.updateComponent(
+                    component.getValue(),
+                    component,
+                    this.graph
+                );
+            }
+            else {
+                console.warn("Called update component on unexpected cell: ");
+                console.warn(component);
+                return;
+            }
+        }
         this.firebaseDataModel.updateComponent(this.modelUuid, component);
+        if (this.actionLogger) {
+            this.actionLogger.logAction(
+                "Component updated",
+                component.getReadableComponentName()
+            );
+        }
     }
 
     public deleteSelection(): void {
@@ -289,5 +313,13 @@ export default abstract class DiagramActions<G extends MCGraph> {
             replacedComponent.getId(),
             replacementComponent.getId(),
         );
+
+        if (this.actionLogger) {
+            this.actionLogger.logAction(
+                "identify",
+                `replaced ${replacedComponent.getReadableComponentName()} with `
+                + `${replacementComponent.getReadableComponentName()}`
+            );
+        }
     }
 }
