@@ -7,4 +7,6 @@ export default class DefaultBehaviour extends ModeBehaviour {
     public cellClicked(c: Cell): void { }
     public handleKeyDown(e: KeyboardEvent): void { }
     public handleKeyUp(e: KeyboardEvent): void { }
+    public handleControlKeyDown(e: KeyboardEvent): void { }
+    public handleControlKeyUp(e: KeyboardEvent): void { }
 }

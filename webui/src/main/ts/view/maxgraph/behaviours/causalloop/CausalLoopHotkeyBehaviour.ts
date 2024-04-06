@@ -44,10 +44,6 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 this.doLinkKeydownAction();
                 break;
 
-            case this.getKeyForMode(UiMode.EDIT):
-                this.doEditKeydownAction();
-                break;
-
             case this.getKeyForMode(UiMode.STICKY_NOTE):
                 this.doStickyNoteKeydownAction();
                 break;
@@ -74,6 +70,10 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         switch (e.key) {
             case this.getKeyForMode(UiMode.STOCK):
                 this.doVertexKeyupAction();
+                break;
+
+            case this.getKeyForMode(UiMode.EDIT):
+                this.doEditKeyupAction();
                 break;
 
             case this.getKeyForMode(UiMode.CONNECT):
@@ -235,7 +235,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         return true;
     }
 
-    private doEditKeydownAction(): void {
+    private doEditKeyupAction(): void {
         const cell = this.getHoverCell();
         if (
             cell
@@ -253,7 +253,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
             cell
             && cell.getValue() instanceof FirebaseTextComponent
         ) {
-            this.getGraph().startEditingAtCell(cell)
+            this.getGraph().startEditingAtCell(cell);
         }
     }
 
@@ -307,6 +307,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         const keydownCell = this.getKeydownCell();
         if (cell && keydownCell && cell.getId() === keydownCell.getId()) {
             this.getActions().deleteComponent(cell.getValue());
+            this.setHoverCell(null);
         }
         else if (keydownCell) {
             this.getGraph().setCellDisplayNormal(keydownCell);
@@ -380,7 +381,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         const keydownCell = this.getKeydownCell();
         if (keydownCell) {
             if (keydownCell.getValue() instanceof FirebaseRectangleComponent) {
-                this.getGraph().updateComponent(keydownCell);
+                this.getActions().updateComponent(keydownCell);
             }
             else if (
                 keydownCell.getValue() instanceof FirebasePointerComponent
@@ -433,7 +434,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     private doSelectAndMoveKeyupAction(): void {
         const cell = this.getKeydownCell();
         if (cell) {
-            this.getGraph().updateComponent(cell);
+            this.getActions().updateComponent(cell);
             if (this.initialGeo) {
                 this.fireGeometryChangeEvent(cell);
             }

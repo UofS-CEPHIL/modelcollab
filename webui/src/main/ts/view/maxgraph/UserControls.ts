@@ -139,11 +139,17 @@ export default class UserControls {
         // Undo, redo
         this.keyHandler.bindControlKey(
             getCharCode("Z"),
-            () => { this.graph.undo() }
+            () => {
+                this.graph.undo();
+                if (this.actionLogger) this.actionLogger.logAction("undo")
+            }
         );
         this.keyHandler.bindControlShiftKey(
             getCharCode("Z"),
-            () => { this.graph.redo() }
+            () => {
+                this.graph.redo();
+                if (this.actionLogger) this.actionLogger.logAction("redo")
+            }
         );
     }
 
