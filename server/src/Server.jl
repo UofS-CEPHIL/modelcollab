@@ -95,25 +95,23 @@ function handle_computemodel(req::HTTP.Request)
         runid::String,
         path::String
     )::Nothing
-        @async begin
-            try
-                wait(
-                    @spawn begin
-                    println(
-                        "Computing model on thread pool "
-                        * "$(threadpool()) and on thread $(threadid())"
-                    )
-                    eval(Meta.parse(code))
-                    println("Complete!!")
-                    end
+        try
+            wait(
+                @spawn begin
+                println(
+                    "Computing model on thread pool "
+                    * "$(threadpool()) and on thread $(threadid())"
                 )
-            catch e
-                println(e)
-                resultpaths[runid] = "error"
-            finally
-                if (resultpaths[runid] == nothing)
-                    resultpaths[runid] = path
+                eval(Meta.parse(code))
+                println("Complete!")
                 end
+            )
+        catch e
+            println(e)
+            resultpaths[runid] = "error"
+        finally
+            if (resultpaths[runid] == nothing)
+                resultpaths[runid] = path
             end
         end
         return
@@ -163,10 +161,10 @@ function handle_computemodel(req::HTTP.Request)
         )
         resultpaths[runid] = nothing
 
-        println(code)
+        # println(code)
         println("Spawning model computation thread for run $(runid)")
         code = replace(code, "\n"=>";")
-        start_computing_model(code, runid, path)
+        @async start_computing_model(code, runid, path)
 
         return HTTP.Response(
             ResponseCode.ACCEPTED,
@@ -214,7 +212,10 @@ end
 
 function create_and_start()::HTTP.Server
 
-    sslconf = SSLConfig(CHAIN_PATH, PRIVKEY_PATH)
+    sslconf = nothing
+    if (REQUIRE_SSL)
+        sslconf = SSLConfig(CHAIN_PATH, PRIVKEY_PATH)
+    end
 
     router = HTTP.Router(
         (req::HTTP.Request) -> HTTP.Response(404, CORS_RES_HEADERS),
