@@ -1,3 +1,5 @@
 node_modules
 package-lock.json
 build/
+src/main/ts/config/applicationConfig.ts
+src/main/ts/config/firebaseConfig.ts
