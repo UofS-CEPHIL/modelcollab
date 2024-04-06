@@ -2,23 +2,12 @@ module FirebaseClient
 
 using ..FirebaseComponents
 using ..RTDB
-
-# TODO make a config file
-CONFIG_FILE_PATH = "../../../../firebase-config.json"
-#BASE_URL = "https://modelcollab-default-rtdb.firebaseio.com"
-BASE_URL = "http://127.0.0.1:9000"
-# 'nothing' if we aren't using the emulator
-EMULATOR_PROJECT_ID = "modelcollab-default-rtdb"
-MODELS_PATH_PREFIX = "models"
-INNER_MODELS_PATH_SUFFIX = "loadedModels"
-COMPONENTS_PATH_SUFFIX = "components"
-SUBSTITUTIONS_PATH_SUFFIX = "substitutions"
-SCENARIOS_PATH_SUFFIX = "scenarios"
+using ..Config
 
 ##################################### Init #####################################
 
 function initialize()::Nothing
-    RTDB.realdb_init(BASE_URL, EMULATOR_PROJECT_ID)
+    RTDB.realdb_init(FIREBASE_URL, EMULATOR_PROJECT_ID)
 end
 export initialize
 

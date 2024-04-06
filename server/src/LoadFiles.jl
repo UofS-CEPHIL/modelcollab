@@ -1,3 +1,4 @@
+include("./Config.jl")
 include("./Types.jl")
 include("./firebase/FirebaseComponents.jl")
 include("./http/realtime.jl")

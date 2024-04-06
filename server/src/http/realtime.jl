@@ -93,6 +93,9 @@ function realdb_post(url, authheader = "", body = Dict("name" => "real_db_test")
     pagesize = 300
     pagetoken = ""
     final_url = "$BASE_URL$url.json"
+    if (EMULATOR_PROJECT_ID != nothing)
+        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
+    end
     println("FINAL URL:", final_url)
     body = JSON.json(body)
     println("Body:", body)
@@ -123,6 +126,9 @@ function realdb_patch(url, authheader = "", body = Dict("name" => "real_db_test"
     pagesize = 300
     pagetoken = ""
     final_url = "$BASE_URL$url.json"
+    if (EMULATOR_PROJECT_ID != nothing)
+        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
+    end
     println("FINAL URL:", final_url)
     query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
     body = JSON.json(body)
@@ -151,6 +157,9 @@ function realdb_delete(url, authheader = "", body = Dict("name" => "real_db_test
     pagesize = 300
     pagetoken = ""
     final_url = "$BASE_URL$url.json"
+    if (EMULATOR_PROJECT_ID != nothing)
+        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
+    end
     println("FINAL URL:", final_url)
     query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
     body = JSON.json(body)
@@ -180,6 +189,9 @@ realdb_put("/users/jack/name",body)
 function realdb_put(url, authheader = "", body = Dict("name" => "real_db_test"))
     pagesize = 300
     pagetoken = ""
+    if (EMULATOR_PROJECT_ID != nothing)
+        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
+    end
     final_url = "$BASE_URL$url.json"
     println("FINAL URL:", final_url)
     query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
@@ -199,9 +211,12 @@ readdb_download(url, filename = "test"; query = Dict())
 
 Download request
 """
-function readdb_download(url, authheader = "", filename = "test")
+function realdb_download(url, authheader = "", filename = "test")
     pagesize = 300
     pagetoken = ""
+    if (EMULATOR_PROJECT_ID != nothing)
+        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
+    end
     final_url = "$BASE_URL$url.json?download=$filename.txt"
     println("FINAL URL:", final_url)
     query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)

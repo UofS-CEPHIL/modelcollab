@@ -1,13 +1,13 @@
 module Server
 
 using HTTP
+using MbedTLS
 using JSON
 using LabelledArrays
 using OrdinaryDiffEq
 using Catlab
 using Plots
 using StockFlow
-using Sockets
 using Base.Threads
 
 using ..FirebaseClient
@@ -17,6 +17,7 @@ using ..FootBuilder
 using ..IdentificationBuilder
 using ..CodeGenerator
 using ..ModelValidator
+using ..Config
 
 const ResponseCode = (
     OK = 200,
@@ -181,7 +182,6 @@ end
 function handle_getmodelresults(req::HTTP.Request)
     resultid = HTTP.getparams(req)["resultid"]
     println("getmodelresults: id=$(resultid)")
-    println("resultpaths = $(resultpaths)")
 
     if resultid in keys(resultpaths)
         actual = resultpaths[resultid]
@@ -214,9 +214,11 @@ end
 
 function create_and_start()::HTTP.Server
 
+    sslconf = SSLConfig(CHAIN_PATH, PRIVKEY_PATH)
+
     router = HTTP.Router(
-        HTTP.Response(404, CORS_RES_HEADERS),
-        HTTP.Response(405, CORS_RES_HEADERS)
+        (req::HTTP.Request) -> HTTP.Response(404, CORS_RES_HEADERS),
+        (req::HTTP.Request) -> HTTP.Response(405, CORS_RES_HEADERS)
     )
     HTTP.register!(
         router,
@@ -238,8 +240,9 @@ function create_and_start()::HTTP.Server
     )
     return HTTP.serve(
         router |> CorsMiddleware,
-        Sockets.localhost,
-        8088;
+        SERVER_IP,
+        SERVER_PORT;
+        sslconfig=sslconf,
         on_shutdown=() -> println("Shutting down server.")
     )
 end
