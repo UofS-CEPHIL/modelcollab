@@ -10,6 +10,10 @@ ModelCollab is written by Eric Redekopp, Xiaoyan Li, and Long Pham of the
 University of Saskatchewan CEPHIL lab, with support from Dr. Nathaniel
 Osgood.
 
+The current production version of this application is available for public 
+use. See the instructions in [the docs](docs/UserInterface.md) for more 
+information.
+
 ## Design
 
 Modelcollab currently consists of 3 components:
