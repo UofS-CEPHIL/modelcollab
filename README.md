@@ -15,20 +15,10 @@ Osgood.
 Modelcollab currently consists of 3 components:
 - The React frontend, found in the 'webui' directory
 - The server which invokes the Julia code, found in the 'server' directory
-- The Firebase database, for which we use the API. Classes describing the database structure are found in the 'database' directory. 
+- The Firebase database, which runs on the Firebase servers. The
+  "Database" directory still exists for posterity but doesn't include
+  anything particularly interesting anymore.
 
-## Build
-- webui
-  - `npm start` to run a development version of the frontend on localhost:3000
-  - `npm run build` to compile an optimized version of the frontend
-  - `num test` to run the Jest unit tests
-- server
-  - `npm run build` to build
-  - `npm run start` to start the https server
-  - `npm test` to run the Jest unit tests
-- database
-  - `npm run build` to build
-  - No code to run, and no unit tests. 
-  - Must be built before running webui or server
-  
-You must also create a Firebase project and insert its config information into src/main/ts/config/FirebaseConfig.ts under the server and webui directories.
+No build instructions for a local development build are included at
+this time. If you would like detailed build instructions to run the
+software locally, please create an issue requesting them.
