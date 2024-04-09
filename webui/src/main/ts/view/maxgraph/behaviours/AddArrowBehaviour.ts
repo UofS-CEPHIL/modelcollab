@@ -29,12 +29,12 @@ export default abstract class AddArrowBehaviour
 
     public canvasClicked(): void {
         this.setKeydownCell(null);
-        this.deleteTempComponents();
+        this.setNeutralMode();
     }
 
     public canvasRightClicked(): void {
         this.setKeydownCell(null);
-        this.deleteTempComponents();
+        this.setNeutralMode();
     }
 
     public cellClicked(cell: Cell) {
@@ -47,9 +47,9 @@ export default abstract class AddArrowBehaviour
                 this.getActions().addComponent(
                     this.makeLink(keydownCell, cell)
                 );
-                this.setKeydownCell(null);
             }
-            this.deleteTempComponents();
+
+            this.setNeutralMode();
         }
         else if (this.isValidArrowSource(cell)) {
             this.setKeydownCell(cell);
