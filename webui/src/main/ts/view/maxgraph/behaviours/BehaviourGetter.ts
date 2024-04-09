@@ -63,4 +63,8 @@ export default abstract class BehaviourGetter {
         if (!behaviour) throw new Error("Unrecognized mode: " + mode);
         return behaviour;
     }
+
+    public onModeChanged(): void {
+        Object.values(this.behaviours).forEach(b => b.onModeChanged());
+    }
 }

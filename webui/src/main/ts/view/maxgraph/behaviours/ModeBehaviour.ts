@@ -79,6 +79,11 @@ export default abstract class ModeBehaviour {
         return pair ? pair[0] : undefined;
     }
 
+    // Perform any necessary cleanup when we change out of this mode.
+    public onModeChanged(): void {
+        this.deleteTempComponents();
+    }
+
     protected addPreviewVertex(
         width: number,
         height: number,

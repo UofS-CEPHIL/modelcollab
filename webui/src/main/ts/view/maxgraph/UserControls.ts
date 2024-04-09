@@ -77,6 +77,10 @@ export default class UserControls {
         this.setupModeBehaviours();
     }
 
+    public onModeChanged(): void {
+        this.behaviourGetter.onModeChanged();
+    }
+
     private setupUniversalKeyboardShortcuts(): void {
         const getCharCode = this.getCharCode;
 

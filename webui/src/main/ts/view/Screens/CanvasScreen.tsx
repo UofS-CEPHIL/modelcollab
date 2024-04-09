@@ -224,4 +224,9 @@ export default abstract class CanvasScreen
     protected setKeydownCell(c: Cell | null): void {
         this.setState({ keydownCell: c });
     }
+
+    protected setMode(mode: UiMode): void {
+        this.controls?.onModeChanged();
+        this.setState({ mode });
+    }
 }

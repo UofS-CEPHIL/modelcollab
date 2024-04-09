@@ -105,7 +105,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             <CausalLoopModeSelectPanel
                 sx={{ left: 30, top: 30 }}
                 mode={this.state.mode}
-                changeMode={mode => this.setState({ mode })}
+                changeMode={mode => this.setMode(mode)}
             />
         );
     }
@@ -133,7 +133,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             () => this.pasteComponents(),
             () => this.state.components,
             () => this.state.mode,
-            (mode: UiMode) => this.setState({ mode }),
+            mode => this.setMode(mode),
             m => this.setState({ displayedModalBox: m }),
             () => this.state.cursorPosition,
             () => this.state.keydownPosition,
@@ -147,7 +147,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
     private makeBehaviourGetter(): CausalLoopBehaviourGetter {
         if (!this.graph || !this.actions) throw new Error("Not initialized");
         return new CausalLoopBehaviourGetter(
-            mode => this.setState({ mode }),
+            mode => this.setMode(mode),
             this.graph,
             this.actions,
             () => this.state.components,
@@ -165,7 +165,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
     protected makeToolbar(): ReactElement {
         return (
             <CausalLoopToolbar
-                changeMode={(mode: UiMode) => this.setState({ mode })}
+                changeMode={mode => this.setMode(mode)}
                 setOpenModalBox={m => this.setState({ displayedModalBox: m })}
                 modelName={this.state.modelName ?? ""}
                 sessionId={this.props.modelUuid!}
