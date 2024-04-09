@@ -62,13 +62,15 @@ export default abstract class AddArrowBehaviour
         source: Cell | null,
         target: Cell | null,
     ): boolean {
-        return !(source && !(source.getValue() instanceof FirebaseComponentBase))
-            && !(target && !(target.getValue() instanceof FirebaseComponentBase))
-            && this.canConnectComponents(
-                source ? source.getValue() : null,
-                target ? target.getValue() : null,
-                this.getArrowType()
-            );
+        if (source && !(source.getValue() instanceof FirebaseComponentBase))
+            source = null;
+        if (target && !(target.getValue() instanceof FirebaseComponentBase))
+            target = null;
+        return this.canConnectComponents(
+            source ? source.getValue() : null,
+            target ? target.getValue() : null,
+            this.getArrowType()
+        );
     }
 
     private canConnectComponents(
@@ -100,7 +102,6 @@ export default abstract class AddArrowBehaviour
 
             default:
                 return false;
-
         }
     }
 }

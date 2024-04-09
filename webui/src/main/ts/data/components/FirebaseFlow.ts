@@ -119,8 +119,8 @@ export default class FirebaseFlow
         if (source && target && source.getId() === target.getId()) return false;
         if (allComponents
             .find(c =>
-                isSameId(c.getData().from, source)
-                && isSameId(c.getData().to, target)
+                c.getData().from && isSameId(c.getData().from, source)
+                && c.getData().to && isSameId(c.getData().to, target)
             )
         ) return false;
         return true;

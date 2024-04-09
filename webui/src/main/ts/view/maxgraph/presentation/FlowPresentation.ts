@@ -140,7 +140,7 @@ export default class FlowPresentation
             value: flow,
             source: fr,
             target: to,
-            style: FlowPresentation.makeEdgeStyle(isInner)
+            style: FlowPresentation.getEdgeStyle(isInner)
         };
     }
 
@@ -174,7 +174,7 @@ export default class FlowPresentation
         };
     }
 
-    public static makeEdgeStyle(isInner: boolean = false): CellStyle {
+    public static getEdgeStyle(isInner: boolean = false): CellStyle {
         return {
             shape: theme.custom.maxgraph.flow.shape,
             strokeColor: theme.palette.canvas.contrastText,

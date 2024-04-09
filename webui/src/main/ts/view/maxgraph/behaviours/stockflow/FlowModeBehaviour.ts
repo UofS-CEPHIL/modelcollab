@@ -1,6 +1,7 @@
-import { Cell, CellStyle, Point } from "@maxgraph/core";
+import { Cell, CellStyle } from "@maxgraph/core";
 import ComponentType from "../../../../data/components/ComponentType";
 import FirebaseFlow from "../../../../data/components/FirebaseFlow";
+import FirebaseStock from "../../../../data/components/FirebaseStock";
 import IdGenerator from "../../../../IdGenerator";
 import { theme } from "../../../../Themes";
 import FlowPresentation from "../../presentation/FlowPresentation";
@@ -10,6 +11,10 @@ export default class FlowModeBehaviour extends AddArrowBehaviour {
 
     public getArrowType(): ComponentType {
         return ComponentType.FLOW;
+    }
+
+    public isValidArrowSource(c: Cell): boolean {
+        return c.getValue() instanceof FirebaseStock || this.isTempCell(c);
     }
 
     public makeLink(src: Cell, tgt: Cell): FirebaseFlow {
@@ -53,10 +58,10 @@ export default class FlowModeBehaviour extends AddArrowBehaviour {
     }
 
     public getPreviewArrowStyle(): CellStyle {
-        return FlowPresentation.makeEdgeStyle();
+        const style = FlowPresentation.getEdgeStyle();
+        // Add spacing away from the cursor to avoid accidentally clicking on
+        // the preview arrow
+        style.perimeterSpacing = 7;
+        return style;
     }
-
-    // TODO refactor to handle clouds, add 'canConnect' to FirebaseFlow, add
-    // preview arrow style
-
 }
