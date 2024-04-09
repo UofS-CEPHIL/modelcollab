@@ -1,4 +1,4 @@
-import { Cell, EdgeParameters } from "@maxgraph/core";
+import { Cell, CellStyle, EdgeParameters } from "@maxgraph/core";
 import FirebaseConnection from "../../../data/components/FirebaseConnection";
 import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
@@ -21,18 +21,22 @@ export default class ConnectionPresentation
             value: conn,
             source: fr,
             target: to,
-            style: {
-                endArrow: theme.custom.maxgraph.connection.endArrow,
-                strokeColor: theme.palette.primary.main,
-                strokeWidth: theme.custom.maxgraph.connection.strokeWidthPx,
-                endSize: theme.custom.maxgraph.connection.endSizePx,
-                edgeStyle: theme.custom.maxgraph.connection.edgeStyle,
-                curved: true,
-                editable: false,
-                bendable: !isInner,
-                movable: !isInner,
-                resizable: !isInner,
-            }
+            style: ConnectionPresentation.getEdgeStyle(isInner)
         }
+    }
+
+    public static getEdgeStyle(isInner: boolean = false): CellStyle {
+        return {
+            endArrow: theme.custom.maxgraph.connection.endArrow,
+            strokeColor: theme.palette.primary.main,
+            strokeWidth: theme.custom.maxgraph.connection.strokeWidthPx,
+            endSize: theme.custom.maxgraph.connection.endSizePx,
+            edgeStyle: theme.custom.maxgraph.connection.edgeStyle,
+            curved: true,
+            editable: false,
+            bendable: !isInner,
+            movable: !isInner,
+            resizable: !isInner,
+        };
     }
 }

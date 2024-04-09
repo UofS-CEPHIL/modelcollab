@@ -1,4 +1,4 @@
-import { Cell, EdgeParameters, VertexParameters } from "@maxgraph/core";
+import { Cell, CellStyle, EdgeParameters, VertexParameters } from "@maxgraph/core";
 import FirebaseFlow from "../../../data/components/FirebaseFlow";
 import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
@@ -140,24 +140,7 @@ export default class FlowPresentation
             value: flow,
             source: fr,
             target: to,
-            style: {
-                shape: theme.custom.maxgraph.flow.shape,
-                strokeColor: theme.palette.canvas.contrastText,
-                strokeWidth: theme.custom.maxgraph.flow.strokeWidthPx,
-                endSize: theme.custom.maxgraph.flow.endSizePx,
-                fillColor: theme.palette.canvas.main,
-                fontColor: theme.palette.canvas.contrastText,
-                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
-                fontStyle: 1,
-                curved: false,
-                edgeStyle: theme.custom.maxgraph.flow.edgeStyle,
-                bendable: !isInner,
-                movable: !isInner,
-                editable: !isInner,
-                resizable: !isInner,
-                labelBackgroundColor: theme.palette.canvas.main,
-                labelBorderColor: theme.palette.canvas.contrastText
-            }
+            style: FlowPresentation.makeEdgeStyle(isInner)
         };
     }
 
@@ -176,14 +159,39 @@ export default class FlowPresentation
             y,
             width: theme.custom.maxgraph.cloud.defaultWidthPx,
             height: theme.custom.maxgraph.cloud.defaultHeightPx,
-            style: {
-                shape: "cloud",
-                fillColor: theme.palette.canvas.main,
-                strokeColor: theme.palette.canvas.contrastText,
-                movable: !isInner,
-                editable: false,
-                resizable: false,
-            }
+            style: FlowPresentation.makeCloudStyle(isInner)
+        };
+    }
+
+    public static makeCloudStyle(isInner: boolean = false): CellStyle {
+        return {
+            shape: "cloud",
+            fillColor: theme.palette.canvas.main,
+            strokeColor: theme.palette.canvas.contrastText,
+            movable: !isInner,
+            editable: false,
+            resizable: false,
+        };
+    }
+
+    public static makeEdgeStyle(isInner: boolean = false): CellStyle {
+        return {
+            shape: theme.custom.maxgraph.flow.shape,
+            strokeColor: theme.palette.canvas.contrastText,
+            strokeWidth: theme.custom.maxgraph.flow.strokeWidthPx,
+            endSize: theme.custom.maxgraph.flow.endSizePx,
+            fillColor: theme.palette.canvas.main,
+            fontColor: theme.palette.canvas.contrastText,
+            fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
+            fontStyle: 1,
+            curved: false,
+            edgeStyle: theme.custom.maxgraph.flow.edgeStyle,
+            bendable: !isInner,
+            movable: !isInner,
+            editable: !isInner,
+            resizable: !isInner,
+            labelBackgroundColor: theme.palette.canvas.main,
+            labelBorderColor: theme.palette.canvas.contrastText
         };
     }
 }
