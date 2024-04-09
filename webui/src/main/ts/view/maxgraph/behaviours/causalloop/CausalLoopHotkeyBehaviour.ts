@@ -1,4 +1,4 @@
-import { Cell, CellStyle, EventSource, Geometry, GeometryChange, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
+import { Cell, EventSource, Geometry, GeometryChange, InternalMouseEvent, Point } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
@@ -10,6 +10,7 @@ import FirebaseTextComponent from "../../../../data/components/FirebaseTextCompo
 import IdGenerator from "../../../../IdGenerator";
 import { theme } from "../../../../Themes";
 import { UiMode } from "../../../../UiMode";
+import CausalLoopLinkPresentation from "../../presentation/CausalLoopLinkPresentation";
 import CausalLoopVertexPresentation from "../../presentation/CausalLoopVertexPresentation";
 import LoopIconPresentation from "../../presentation/LoopIconPresentation";
 import StickyNotePresentation from "../../presentation/StickyNotePresentation";
@@ -17,19 +18,6 @@ import DefaultBehaviour from "../DefaultBehaviour";
 
 export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
 
-    private static readonly PREVIEW_VTX_CELL_ID = "pointercell";
-    private static readonly TEMP_EDGE_ID = "tempedge";
-    private static readonly TEMP_EDGE_STYLE = {
-        endArrow: theme.custom.maxgraph.connection.endArrow,
-        strokeColor: theme.palette.primary.main,
-        strokeWidth: theme.custom.maxgraph.connection.strokeWidthPx,
-        curved: true,
-        bendable: true,
-        edgeStyle: theme.custom.maxgraph.connection.edgeStyle,
-        movable: false
-    };
-
-    private mouseListener: MouseListenerSet | null = null;
     private initialGeo: Geometry | null = null;
 
     public handleKeyDown(e: KeyboardEvent): void {
@@ -115,41 +103,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         );
     }
 
-    private addPreviewVertex(
-        width: number,
-        height: number,
-        value: string,
-        style: CellStyle,
-    ): Cell {
-        const pos = this.getCursorPosition();
-        const preview = this.getGraph().insertVertex({
-            id: CausalLoopHotkeyBehaviour.PREVIEW_VTX_CELL_ID,
-            x: pos.x,
-            y: pos.y,
-            width,
-            height,
-            value,
-            style,
-        });
-        this.mouseListener = {
-            mouseDown: () => { },
-            mouseUp: () => { },
-            mouseMove: (_: EventSource, e: InternalMouseEvent) =>
-                this.getGraph().batchUpdate(() => {
-                    const newGeo = preview
-                        .getGeometry()!.clone();
-                    newGeo.x = e.getGraphX();
-                    newGeo.y = e.getGraphY();
-                    this.getGraph().batchUpdate(() =>
-                        this.getGraph()
-                            .getDataModel()
-                            .setGeometry(preview, newGeo)
-                    );
-                }),
-        };
-        this.getGraph().addMouseListener(this.mouseListener);
-        return preview;
-    }
+
 
     private doVertexKeyupAction(): void {
         this.deleteTempComponents();
@@ -163,48 +117,32 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         );
     }
 
-    private deleteTempComponents(): void {
-        if (this.mouseListener) {
-            this.getGraph().removeMouseListener(this.mouseListener);
-            this.mouseListener = null;
-        }
-        const pointerCell = this.getGraph()
-            .getCellWithId(CausalLoopHotkeyBehaviour.PREVIEW_VTX_CELL_ID);
-        const arrowCell = this.getGraph()
-            .getCellWithId(CausalLoopHotkeyBehaviour.TEMP_EDGE_ID);
-        const existingCells: Cell[] = [pointerCell, arrowCell]
-            .filter(c => c !== undefined)
-            .map(c => c as Cell);
-        if (existingCells.length > 0) {
-            this.getGraph().removeCells(existingCells);
-        }
-    }
-
     private doLinkKeydownAction(): void {
         const keydownCell = this.getHoverCell();
         if (
             keydownCell !== null
             && keydownCell.getValue() instanceof FirebaseCausalLoopVertex
         ) {
-            this.addTempArrow(keydownCell);
+            this.addPreviewArrow(
+                keydownCell,
+                CausalLoopLinkPresentation.getEdgeStyle()
+            );
         }
-    }
-
-    private addTempArrow(source: Cell): void {
-        const pointerCell = this.addPreviewVertex(0, 0, "", {});
-        this.getGraph().insertEdge({
-            id: CausalLoopHotkeyBehaviour.TEMP_EDGE_ID,
-            source: source,
-            target: pointerCell,
-            style: CausalLoopHotkeyBehaviour.TEMP_EDGE_STYLE
-        });
     }
 
     private doLinkKeyupAction(): void {
         const source = this.getKeydownCell();
         const target = this.getHoverCell();
 
-        if (this.shouldAddLink(source, target)) {
+        if (
+            !(source && !(source.getValue() instanceof FirebaseComponentBase))
+            && !(target && !(target.getValue() instanceof FirebaseComponentBase))
+            && FirebaseCausalLoopLink.canConnect(
+                source ? source.getValue() : null,
+                target ? target.getValue() : null,
+                this.getFirebaseState()
+            )
+        ) {
             this.getActions().addComponent(
                 FirebaseCausalLoopLink.createNew(
                     IdGenerator.generateUniqueId(
@@ -215,24 +153,6 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
                 )
             );
         }
-    }
-
-    private shouldAddLink(source: Cell | null, target: Cell | null): boolean {
-        if (!source || !target) return false;
-        if (!(source.getValue() instanceof FirebaseCausalLoopVertex))
-            return false;
-        if (!(target.getValue() instanceof FirebaseCausalLoopVertex))
-            return false;
-        if (source.getId() === target.getId()) return false;
-        if (
-            this.getFirebaseState()
-                .find(c =>
-                    c.getData().from === source.getId()
-                    && c.getData().to === target.getId()
-                )
-        ) return false;
-
-        return true;
     }
 
     private doEditKeyupAction(): void {
@@ -315,37 +235,21 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     }
 
     private doSelectAndResizeKeydownAction(): void {
-        const pos = this.getCursorPosition();
         const cell = this.getHoverCell();
         this.getGraph().setSelectionCell(cell);
         if (cell) {
             this.initialGeo = cell.getGeometry();
             if (cell.getValue() instanceof FirebaseRectangleComponent) {
-                const oldWidth = cell.getGeometry()!.width;
-                const oldHeight = cell.getGeometry()!.height;
-                this.mouseListener = {
-                    mouseDown: () => { },
-                    mouseUp: () => { },
-                    mouseMove: (_: EventSource, e: InternalMouseEvent) =>
-                        this.getGraph().batchUpdate(() => {
-                            const dx = e.getGraphX() - pos.x;
-                            const dy = e.getGraphY() - pos.y;
-                            const newGeo = cell.getGeometry()!.clone();
-                            newGeo.width = Math.max(10, oldWidth + dx);
-                            newGeo.height = Math.max(10, oldHeight + dy);
-                            this.getGraph().batchUpdate(() =>
-                                this.getGraph()
-                                    .getDataModel()
-                                    .setGeometry(cell, newGeo)
-                            );
-                        }),
-                };
-                this.getGraph().addMouseListener(this.mouseListener);
+                this.addResizeComponentListener(cell);
             }
             else if (cell.getValue() instanceof FirebasePointerComponent) {
                 this.getGraph().getLastEdgeHandler()?.mouseDown(
                     this.getGraph(),
-                    this.createMockMouseEvent(pos, cell, true)
+                    this.createMockMouseEvent(
+                        this.getCursorPosition(),
+                        cell,
+                        true
+                    )
                 );
             }
         }
@@ -403,31 +307,11 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     }
 
     private doSelectAndMoveKeydownAction(): void {
-        const pos = this.getCursorPosition();
         const cell = this.getHoverCell();
         this.getGraph().setSelectionCell(cell);
         if (cell) {
-            const oldX = cell.getGeometry()!.x;
-            const oldY = cell.getGeometry()!.y;
             this.initialGeo = cell.getGeometry()!;
-            this.mouseListener = {
-                mouseDown: () => { },
-                mouseUp: () => { },
-                mouseMove: (_: EventSource, e: InternalMouseEvent) =>
-                    this.getGraph().batchUpdate(() => {
-                        const dx = e.getGraphX() - pos.x;
-                        const dy = e.getGraphY() - pos.y;
-                        const newGeo = cell.getGeometry()!.clone();
-                        newGeo.x = Math.max(0, oldX + dx);
-                        newGeo.y = Math.max(0, oldY + dy);
-                        this.getGraph().batchUpdate(() =>
-                            this.getGraph()
-                                .getDataModel()
-                                .setGeometry(cell, newGeo)
-                        );
-                    }),
-            };
-            this.getGraph().addMouseListener(this.mouseListener);
+            this.addMoveComponentListener(cell);
         }
     }
 

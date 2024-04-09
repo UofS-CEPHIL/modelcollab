@@ -1,4 +1,5 @@
 import ComponentType from "./ComponentType";
+import FirebaseComponent from "./FirebaseComponent";
 import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
 
 export enum Polarity {
@@ -90,6 +91,30 @@ export default class FirebaseCausalLoopLink
             ...this.getData(),
             polarity: nextPolarity(this.getData().polarity)
         });
+    }
+
+    public static canConnect(
+        source: FirebaseComponent | null,
+        target: FirebaseComponent | null,
+        allComponents: FirebaseComponent[],
+    ): boolean {
+        if (!source || !target) return false;
+        if (
+            source.getType() !== ComponentType.CLD_VERTEX
+            || target.getType() !== ComponentType.CLD_VERTEX
+        )
+            return false;
+        if (source.getId() === target.getId()) return false;
+
+        if (
+            allComponents
+                .find(c =>
+                    c.getData().from === source.getId()
+                    && c.getData().to === target.getId()
+                )
+        ) return false;
+
+        return true;
     }
 
     public static createNew(

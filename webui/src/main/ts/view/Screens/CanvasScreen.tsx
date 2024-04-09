@@ -81,7 +81,6 @@ export default abstract class CanvasScreen
             if (!this.graph) this.setupGraph();
 
             // TODO remove this after experiments
-            let mouseDown: boolean = false
             this.graphRef.current?.addEventListener(
                 "click",
                 () =>
