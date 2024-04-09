@@ -1,4 +1,4 @@
-import { Cell, CellRenderer, CellState, ChildChange, EdgeHandler, EventObject, EventSource, Geometry, GeometryChange, Graph, InternalEvent, InternalMouseEvent, SelectionHandler, StyleChange, TooltipHandler, UndoableChange, UndoableEdit, UndoManager, ValueChange } from "@maxgraph/core";
+import { Cell, CellEditorHandler, CellRenderer, CellState, ChildChange, EdgeHandler, EventObject, EventSource, Geometry, GeometryChange, Graph, InternalEvent, InternalMouseEvent, SelectionHandler, StyleChange, TooltipHandler, UndoableChange, UndoableEdit, UndoManager, ValueChange } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseCausalLoopVertex from "../../data/components/FirebaseCausalLoopVertex";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
@@ -74,6 +74,8 @@ export default abstract class MCGraph extends Graph {
             return null;
         }
 
+        this.setupCellEditHandler();
+
         this.undoManager = new UndoManager();
         this.undoHandler = new UndoHandler(
             this,
@@ -116,6 +118,21 @@ export default abstract class MCGraph extends Graph {
             //@ts-ignore
             LoopIconShape
         );
+    }
+
+    // CellEditorHandler sets cell editor divs as relative by default -- we need
+    // them to be absolute. Delete the existing handler and replace with a
+    // custom one.
+    private setupCellEditHandler(): void {
+        class AbsolutePositionEditHandler extends CellEditorHandler {
+            public init(): void {
+                super.init();
+                this.textarea!.style.position = "absolute";
+            }
+        }
+        this.pluginsMap["CellEditorHandler"]?.onDestroy();
+        this.pluginsMap["CellEditorHandler"] =
+            new AbsolutePositionEditHandler(this);
     }
 
     private setupUndoManager(): void {
