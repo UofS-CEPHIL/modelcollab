@@ -1,61 +1,62 @@
-import { Cell, Point } from "@maxgraph/core";
+import { Cell, CellStyle, Point } from "@maxgraph/core";
 import ComponentType from "../../../../data/components/ComponentType";
 import FirebaseFlow from "../../../../data/components/FirebaseFlow";
 import IdGenerator from "../../../../IdGenerator";
-import ArrowBehaviour from "./ArrowBehaviour";
+import { theme } from "../../../../Themes";
+import FlowPresentation from "../../presentation/FlowPresentation";
+import AddArrowBehaviour from "../AddArrowBehaviour";
 
-export default class FlowModeBehaviour extends ArrowBehaviour {
+export default class FlowModeBehaviour extends AddArrowBehaviour {
 
-    public canvasClicked(x: number, y: number): void {
-        // Only allow flows if at least one item is a cell
-        if (this.firstClick instanceof Cell) {
-            this.connectComponents(this.firstClick, new Point(x, y));
-        }
-        else {
-            this.firstClick = new Point(x, y);
-        }
+    public getArrowType(): ComponentType {
+        return ComponentType.FLOW;
     }
 
-    protected canConnect(source: Cell | Point, target: Cell | Point): boolean {
-        // Can't connect two clouds together
-        if (!(source instanceof Cell || target instanceof Cell)) {
-            return false;
+    public makeLink(src: Cell, tgt: Cell): FirebaseFlow {
+        const extractId = (c: Cell) => {
+            if (this.isTempCell(c)) {
+                if (!c.getGeometry())
+                    throw new Error(`Cell ${c.getId()} has no geometry`);
+                return FirebaseFlow.makePoint(
+                    c.getGeometry()!.x,
+                    c.getGeometry()!.y
+                );
+            }
+            else {
+                if (!c.getId())
+                    throw new Error(`Cell ${c.getValue()} has no geometry`);
+                return c.getId()!;
+            }
         }
 
-        // Can't connect anything other than a stock
-        if (source instanceof Cell && !this.isCellStock(source)) {
-            return false;
-        }
-        if (target instanceof Cell && !this.isCellStock(target)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    protected connectComponents(
-        source: Cell | Point,
-        target: Cell | Point
-    ): void {
-        const getStringRepresentation = (c: Cell | Point) => {
-            return c instanceof Cell
-                ? c.getId()!
-                : FirebaseFlow.makePoint(c.x, c.y);
-        }
-
-        var fromId: string = getStringRepresentation(source);
-        var toId: string = getStringRepresentation(target);
-
-        this.getActions().addComponent(
-            FirebaseFlow.createNew(
-                IdGenerator.generateUniqueId(this.getFirebaseState()),
-                fromId,
-                toId
-            )
+        return FirebaseFlow.createNew(
+            IdGenerator.generateUniqueId(this.getFirebaseState()),
+            extractId(src),
+            extractId(tgt),
         );
     }
 
-    private isCellStock(cell: Cell): boolean {
-        return this.getGraph().isCellType(cell, ComponentType.STOCK);
+    public canvasClicked(): void {
+        const keydownCell = this.getKeydownCell();
+        if (keydownCell) {
+            super.canvasClicked();
+        }
+        else {
+            const previewCloud = this.addTempVertex(
+                theme.custom.maxgraph.cloud.defaultWidthPx,
+                theme.custom.maxgraph.cloud.defaultHeightPx,
+                "",
+                FlowPresentation.makeCloudStyle()
+            );
+            this.cellClicked(previewCloud);
+        }
     }
+
+    public getPreviewArrowStyle(): CellStyle {
+        return FlowPresentation.makeEdgeStyle();
+    }
+
+    // TODO refactor to handle clouds, add 'canConnect' to FirebaseFlow, add
+    // preview arrow style
+
 }

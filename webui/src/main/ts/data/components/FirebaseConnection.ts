@@ -1,4 +1,5 @@
 import ComponentType from "./ComponentType";
+import FirebaseComponent from "./FirebaseComponent";
 import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
 
 export default class FirebaseConnection
@@ -31,6 +32,29 @@ export default class FirebaseConnection
 
     public getLabel(): string | null {
         return null;
+    }
+
+    public static canConnect(
+        source: FirebaseComponent | null,
+        target: FirebaseComponent | null,
+        allComponents: FirebaseComponent[],
+    ): boolean {
+        if (
+            !source
+            || !target
+            || target.getType() === ComponentType.PARAMETER
+            || target.getType() === ComponentType.CONNECTION
+            || source.getType() === ComponentType.FLOW
+            || source.getType() === ComponentType.CONNECTION
+            || allComponents.find(c =>
+                c.getType() === ComponentType.CONNECTION
+                && c.getData().from === source.getId()
+                && c.getData().to === target.getId())
+        ) {
+            return false;
+        }
+
+        return true;
     }
 
     public static createNew(

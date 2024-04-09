@@ -16,8 +16,7 @@ export default abstract class ModeBehaviour {
     public abstract handleControlKeyDown(e: KeyboardEvent): void;
     public abstract handleControlKeyUp(e: KeyboardEvent): void;
 
-    private static readonly PREVIEW_VTX_CELL_ID = "pointercell";
-    private static readonly TEMP_EDGE_ID = "tempedge";
+    private static readonly TEMP_ID_PREFIX = "temp_";
 
     private graph: MCGraph;
     private actions: DiagramActions<any>;
@@ -84,15 +83,15 @@ export default abstract class ModeBehaviour {
         this.deleteTempComponents();
     }
 
-    protected addPreviewVertex(
+    protected addTempVertex(
         width: number,
         height: number,
         value: string,
-        style: CellStyle,
+        style: CellStyle
     ): Cell {
         const pos = this.getCursorPosition();
-        const preview = this.getGraph().insertVertex({
-            id: ModeBehaviour.PREVIEW_VTX_CELL_ID,
+        return this.getGraph().insertVertex({
+            id: ModeBehaviour.TEMP_ID_PREFIX + "previewvtx",
             x: pos.x,
             y: pos.y,
             width,
@@ -100,24 +99,16 @@ export default abstract class ModeBehaviour {
             value,
             style,
         });
-        this.changeMouseListener({
-            mouseDown: () => { },
-            mouseUp: () => { },
-            mouseMove: (_: EventSource, e: InternalMouseEvent) =>
-                this.getGraph().batchUpdate(() => {
-                    const newGeo = preview
-                        .getGeometry()!.clone();
-                    newGeo.x = e.getGraphX();
-                    newGeo.y = e.getGraphY();
-                    this.getGraph().batchUpdate(() =>
-                        this.getGraph()
-                            .getDataModel()
-                            .setGeometry(preview, newGeo)
-                    );
-                }),
-        },
-            false
-        );
+    }
+
+    protected addPreviewVertex(
+        width: number,
+        height: number,
+        value: string,
+        style: CellStyle,
+    ): Cell {
+        const preview = this.addTempVertex(width, height, value, style);
+        this.addMoveComponentListener(preview, false);
         return preview;
     }
 
@@ -136,7 +127,7 @@ export default abstract class ModeBehaviour {
     ): void {
         const pointerCell = this.addPreviewVertex(0, 0, "", {});
         this.getGraph().insertEdge({
-            id: ModeBehaviour.TEMP_EDGE_ID,
+            id: ModeBehaviour.TEMP_ID_PREFIX + "previewedge",
             source: source,
             target: pointerCell,
             style
@@ -169,13 +160,15 @@ export default abstract class ModeBehaviour {
         });
     }
 
-    protected addMoveComponentListener(cell: Cell): void {
+    protected addMoveComponentListener(
+        cell: Cell,
+        reset: boolean = true
+    ): void {
         if (!cell.getGeometry()) return;
         const oldX = cell.getGeometry()!.x;
         const oldY = cell.getGeometry()!.y;
         if (!oldX || !oldY) return;
         const pos = this.getCursorPosition();
-
 
         this.changeMouseListener({
             mouseDown: () => { },
@@ -193,7 +186,9 @@ export default abstract class ModeBehaviour {
                             .setGeometry(cell, newGeo)
                     );
                 }),
-        });
+        },
+            reset
+        );
     }
 
     protected deleteTempComponents(): void {
@@ -201,15 +196,18 @@ export default abstract class ModeBehaviour {
             this.getGraph().removeMouseListener(this.mouseListener);
             this.mouseListener = null;
         }
-        const pointerCell = this.getGraph()
-            .getCellWithId(ModeBehaviour.PREVIEW_VTX_CELL_ID);
-        const arrowCell = this.getGraph()
-            .getCellWithId(ModeBehaviour.TEMP_EDGE_ID);
-        const existingCells: Cell[] = [pointerCell, arrowCell]
-            .filter(c => c !== undefined)
-            .map(c => c as Cell);
-        if (existingCells.length > 0) {
-            this.getGraph().removeCells(existingCells);
+
+        const tempCells = this.getGraph()
+            .getAllCells()
+            .filter(c => this.isTempCell(c));
+
+        if (tempCells.length > 0) {
+            this.getGraph().removeCells(tempCells);
         }
+    }
+
+    protected isTempCell(c: Cell): boolean {
+        const id = c.getId();
+        return id !== null && id.startsWith(ModeBehaviour.TEMP_ID_PREFIX);
     }
 }

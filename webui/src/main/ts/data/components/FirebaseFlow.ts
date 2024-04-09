@@ -1,4 +1,5 @@
 import ComponentType from "./ComponentType";
+import FirebaseComponent from "./FirebaseComponent";
 import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
 
 export interface FirebaseFlowData extends FirebasePointerData {
@@ -97,5 +98,31 @@ export default class FirebaseFlow
         if (!FirebaseFlow.isCloudId(cloudId))
             throw new Error("Invalid cloud id: " + cloudId);
         return cloudId.split('.')[0];
+    }
+
+    public static canConnect(
+        source: FirebaseComponent | null,
+        target: FirebaseComponent | null,
+        allComponents: FirebaseComponent[]
+    ): boolean {
+        const isSameId = (id: string, c: FirebaseComponent | null) => {
+            if (this.isPoint(id)) return c === null;
+            else if (c === null) return false;
+            else {
+                return c.getId() === id;
+            }
+        }
+
+        if (!source && !target) return false;
+        if (source && source.getType() !== ComponentType.STOCK) return false;
+        if (target && target.getType() !== ComponentType.STOCK) return false;
+        if (source && target && source.getId() === target.getId()) return false;
+        if (allComponents
+            .find(c =>
+                isSameId(c.getData().from, source)
+                && isSameId(c.getData().to, target)
+            )
+        ) return false;
+        return true;
     }
 }
