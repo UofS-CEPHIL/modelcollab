@@ -133,8 +133,12 @@ export default abstract class CanvasScreen
     }
 
     private getCellForEvent(e: InternalMouseEvent): Cell | null {
+        function isHoverableCell(c: Cell | null): boolean {
+            return c !== null && c.getValue() instanceof FirebaseComponentBase;
+        }
+
         var cell = e.getCell();
-        if (cell && !(cell.getValue() instanceof FirebaseComponentBase<any>)) {
+        if (!isHoverableCell(cell)) {
             cell = null;
         }
         return cell;

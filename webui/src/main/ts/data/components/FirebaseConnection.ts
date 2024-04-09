@@ -46,6 +46,7 @@ export default class FirebaseConnection
             || target.getType() === ComponentType.CONNECTION
             || source.getType() === ComponentType.FLOW
             || source.getType() === ComponentType.CONNECTION
+            || source.getId() === target.getId()
             || allComponents.find(c =>
                 c.getType() === ComponentType.CONNECTION
                 && c.getData().from === source.getId()

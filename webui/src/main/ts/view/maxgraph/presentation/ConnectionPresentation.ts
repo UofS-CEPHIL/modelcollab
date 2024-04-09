@@ -34,6 +34,7 @@ export default class ConnectionPresentation
             edgeStyle: theme.custom.maxgraph.connection.edgeStyle,
             curved: true,
             editable: false,
+            noLabel: true,
             bendable: !isInner,
             movable: !isInner,
             resizable: !isInner,

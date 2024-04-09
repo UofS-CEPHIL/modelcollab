@@ -4,7 +4,6 @@ import ModalBoxType from "../../ModalBox/ModalBoxType";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import MCGraph from "../MCGraph";
 import { UiMode } from "../../../UiMode";
-import { theme } from "../../../Themes";
 
 export default abstract class ModeBehaviour {
 
