@@ -1,35 +1,24 @@
 import { Cell } from "@maxgraph/core";
+import ComponentType from "../../../../data/components/ComponentType";
 import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
+import FirebasePointerComponent from "../../../../data/components/FirebasePointerComponent";
 import IdGenerator from "../../../../IdGenerator";
-import ChangeModeOnButtonPressBehaviour from "../ChangeModeOnButtonPressBehaviour";
+import AddArrowBehaviour from "../AddArrowBehaviour";
 
 export default class CausalLoopLinkBehaviour
-    extends ChangeModeOnButtonPressBehaviour {
+    extends AddArrowBehaviour {
 
-    public canvasClicked(): void {
-        this.setKeydownCell(null);
+    public getArrowType(): ComponentType {
+        return ComponentType.CLD_LINK;
     }
 
-    public cellClicked(cell: Cell) {
-        const keydownCell = this.getKeydownCell();
-        if (keydownCell) {
-            if (
-                cell.getId() !== keydownCell.getId()
-            ) {
-                this.getActions().addComponent(
-                    FirebaseCausalLoopLink.createNew(
-                        IdGenerator.generateUniqueId(
-                            this.getFirebaseState()
-                        ),
-                        keydownCell.getId()!,
-                        cell.getId()!
-                    )
-                );
-                this.setKeydownCell(null);
-            }
-        }
-        else {
-            this.setKeydownCell(cell);
-        }
+    public makeLink(source: Cell, target: Cell): FirebasePointerComponent<any> {
+        return FirebaseCausalLoopLink.createNew(
+            IdGenerator.generateUniqueId(
+                this.getFirebaseState()
+            ),
+            source.getId()!,
+            target.getId()!
+        );
     }
 }
