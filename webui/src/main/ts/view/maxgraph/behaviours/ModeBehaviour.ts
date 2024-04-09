@@ -82,6 +82,11 @@ export default abstract class ModeBehaviour {
         this.deleteTempComponents();
     }
 
+    public setNeutralMode(): void {
+        this.setMode(UiMode.MOVE);
+        this.deleteTempComponents();
+    }
+
     protected addTempVertex(
         width: number,
         height: number,

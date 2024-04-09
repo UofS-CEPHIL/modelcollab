@@ -13,6 +13,7 @@ export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
             this.getActions().updateComponent(
                 cell.getValue().withNextPolarity()
             );
+            this.getGraph().setSelectionCell(null);
         }
         else if (cell.getValue() instanceof FirebaseTextComponent) {
             this.getGraph().startEditingAtCell(cell);
