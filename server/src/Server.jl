@@ -118,26 +118,28 @@ function handle_computemodel(req::HTTP.Request)
     end
 
     modelid = HTTP.getparams(req)["modelid"]
-    scenario_name = HTTP.getparams(req)["scenario"]
+    scenario_id = HTTP.getparams(req)["scenario"]
 
     try
-        println("computemodel: model=$(modelid), scenario=$(scenario_name)")
+        println("computemodel: model=$(modelid), scenario=$(scenario_id)")
         runid::String = get_randid()
         while runid in keys(resultpaths)
             runid = get_randid()
         end
         fb_components = FirebaseClient.get_components(modelid)
-        if scenario_name == "baseline"
+        scenarios = fb_components.scenarios
+        if scenario_id == "baseline"
             scenario = FirebaseComponents.DEFAULT_SCENARIO
         else
-            scenario = findfirst(s -> s.name == scenario_name, scenarios)
-            if (scenario === nothing)
+            scenario_idx = findfirst(s -> s.id == scenario_id, scenarios)
+            if (scenario_idx === nothing)
                 scenario_names = map(s -> s.name, scenarios)
                 return make_error(
-                    "Can't find scenario $(scenario_name). Existing scenarios: "
-                    * scenario_names.join(", ")
+                    "Can't find scenario $(scenario_id). Existing scenarios: "
+                    * join(scenario_names, ", ")
                 )
             end
+            scenario = scenarios[scenario_idx]
         end
         models = ModelBuilder.make_stockflow_models(
             fb_components.outers,
