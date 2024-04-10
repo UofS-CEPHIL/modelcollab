@@ -1,11 +1,10 @@
 import React, { Fragment, ReactElement } from "react";
 import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, Badge, ListItem, Tooltip } from '@mui/material';
-import CatchingPokemonIcon from '@mui/icons-material/CatchingPokemon'
-import LogoutIcon from '@mui/icons-material/Logout';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import ErrorIcon from '@mui/icons-material/Error';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import ModalBoxType from "../../ModalBox/ModalBoxType";
 import { UiMode } from "../../../UiMode";
 import RestClient from "../../../rest/RestClient";
@@ -15,6 +14,7 @@ import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import ComponentType from "../../../data/components/ComponentType";
 import FirebaseScenario from "../../../data/components/FirebaseScenario";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
+import MCLogo from "../../icons/MCLogo";
 
 export interface Props {
     uiMode: UiMode;
@@ -59,7 +59,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
         return (
             <AppBar id={"app-bar"} position={"static"} >
                 <Toolbar>
-                    <CatchingPokemonIcon
+                    <MCLogo
                         aria-label="mc-logo"
                         color="inherit"
                         sx={{ marginRight: 2 }}
@@ -90,7 +90,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                         id="back-button"
                         href="/"
                     >
-                        <LogoutIcon />
+                        <ExitToAppIcon />
                     </IconButton>
                 </Tooltip>
 
