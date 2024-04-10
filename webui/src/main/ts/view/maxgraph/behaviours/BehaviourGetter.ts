@@ -12,6 +12,7 @@ import { Cell, Point } from "@maxgraph/core";
 export default abstract class BehaviourGetter {
 
     protected behaviours: { [b: string]: ModeBehaviour } = {};
+    protected graph: MCGraph;
 
     protected abstract setBehaviours(
         setMode: (mode: UiMode) => void,
@@ -56,6 +57,7 @@ export default abstract class BehaviourGetter {
             getHoverCell,
             setHoverCell,
         );
+        this.graph = graph;
     }
 
     public getBehaviourForMode(mode: UiMode): ModeBehaviour {
@@ -64,7 +66,16 @@ export default abstract class BehaviourGetter {
         return behaviour;
     }
 
-    public onModeChanged(): void {
+    public onModeChanged(mode: UiMode): void {
         Object.values(this.behaviours).forEach(b => b.onModeChanged());
+        if (mode === UiMode.EDIT) {
+            const sel = this.graph.getSelectionCells();
+            if (sel.length === 1) {
+                this.graph.startEditingAtCell(sel[0]);
+            }
+            else if (sel.length > 1) {
+                this.graph.setSelectionCell(null);
+            }
+        }
     }
 }

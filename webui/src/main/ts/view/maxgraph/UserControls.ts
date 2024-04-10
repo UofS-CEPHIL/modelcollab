@@ -77,8 +77,8 @@ export default class UserControls {
         this.setupModeBehaviours();
     }
 
-    public onModeChanged(): void {
-        this.behaviourGetter.onModeChanged();
+    public onModeChanged(mode: UiMode): void {
+        this.behaviourGetter.onModeChanged(mode);
     }
 
     private setupUniversalKeyboardShortcuts(): void {
