@@ -61,7 +61,7 @@ export default class FirebaseFlow
             {
                 from,
                 to,
-                text: "",
+                text: "Flow",
                 equation: "",
                 points: [],
             }

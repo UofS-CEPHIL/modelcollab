@@ -76,6 +76,11 @@ export default abstract class DiagramActions<G extends MCGraph> {
     public addComponent(component: FirebaseComponent): void {
         // "update" and "add" are the same thing in Firebase
         this.updateComponent(component);
+        setTimeout(() =>
+            this.graph.startEditingAtCell(
+                this.graph.getCellWithId(component.getId()) ?? null
+            )
+        );
         if (this.actionLogger) {
             this.actionLogger.logAction(
                 "Component added",

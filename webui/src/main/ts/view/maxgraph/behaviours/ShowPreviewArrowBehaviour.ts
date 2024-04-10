@@ -22,6 +22,9 @@ export default abstract class ShowPreviewArrowBehaviour
     }
 
     public cellClicked(cell: Cell) {
+        console.log(cell)
+        console.log(this.getKeydownCell())
+        console.log();
         const keydownCell = this.getKeydownCell();
         if (keydownCell) {
             this.cellsConnected(keydownCell, cell);

@@ -1,3 +1,4 @@
+import { FONT } from "@maxgraph/core/dist/util/Constants";
 import { createTheme } from "@mui/material";
 
 
@@ -47,6 +48,21 @@ declare module '@mui/material/styles' {
                     defaultWidthPx: number,
                     defaultHeightPx: number,
                     strokeWidth: number,
+                },
+                param: {
+                    strokeWidth: number,
+                    dashed: boolean,
+                    fontStyle: number,
+                },
+                dynvar: {
+                    strokeWidth: number,
+                    dashed: boolean,
+                    fontStyle: number,
+                },
+                sumvar: {
+                    strokeWidth: 3,
+                    dashed: boolean,
+                    fontStyle: number,
                 },
                 cldVertex: {
                     defaultWidthPx: number,
@@ -129,6 +145,21 @@ declare module '@mui/material/styles' {
                     defaultWidthPx?: number,
                     defaultHeightPx?: number,
                     strokeWidth?: number,
+                },
+                param: {
+                    strokeWidth?: number,
+                    dashed?: boolean,
+                    fontStyle?: number,
+                },
+                dynvar: {
+                    strokeWidth?: number,
+                    dashed?: boolean,
+                    fontStyle?: number,
+                },
+                sumvar: {
+                    strokeWidth?: number,
+                    dashed?: boolean,
+                    fontStyle?: number,
                 },
                 cldVertex?: {
                     defaultWidthPx?: number,
@@ -240,6 +271,21 @@ export const theme = createTheme({
                 defaultWidthPx: 80,
                 defaultHeightPx: 50,
                 strokeWidth: 1.5,
+            },
+            param: {
+                strokeWidth: 2,
+                dashed: false,
+                fontStyle: 2,
+            },
+            dynvar: {
+                strokeWidth: 1,
+                dashed: false,
+                fontStyle: 0,
+            },
+            sumvar: {
+                strokeWidth: 2,
+                dashed: true,
+                fontStyle: 0,
             },
             cldVertex: {
                 defaultWidthPx: 80,

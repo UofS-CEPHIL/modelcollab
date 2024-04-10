@@ -84,6 +84,7 @@ export default abstract class ModeBehaviour {
 
     public setNeutralMode(): void {
         this.setMode(UiMode.MOVE);
+        this.setKeydownCell(null);
         this.deleteTempComponents();
     }
 

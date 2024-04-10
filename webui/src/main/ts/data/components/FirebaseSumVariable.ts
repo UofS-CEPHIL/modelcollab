@@ -29,9 +29,9 @@ export default class FirebaseSumVariable
             {
                 x,
                 y,
-                text: "",
-                width: theme.custom.maxgraph.stock.defaultWidthPx,
-                height: theme.custom.maxgraph.stock.defaultHeightPx,
+                text: "Sum Var",
+                width: theme.custom.maxgraph.textComponent.defaultWidthPx,
+                height: theme.custom.maxgraph.textComponent.defaultHeightPx,
             }
         );
     }
