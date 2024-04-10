@@ -1,5 +1,5 @@
 import React, { Fragment, ReactElement } from "react";
-import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, Badge, ListItem } from '@mui/material';
+import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, Badge, ListItem, Tooltip } from '@mui/material';
 import CatchingPokemonIcon from '@mui/icons-material/CatchingPokemon'
 import LogoutIcon from '@mui/icons-material/Logout';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
@@ -84,13 +84,15 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
         return (
             <Stack direction="row" spacing={2}>
                 {/*Back button*/}
-                <IconButton
-                    color="inherit"
-                    id="back-button"
-                    href="/"
-                >
-                    <LogoutIcon />
-                </IconButton>
+                <Tooltip title="Return to model selection">
+                    <IconButton
+                        color="inherit"
+                        id="back-button"
+                        href="/"
+                    >
+                        <LogoutIcon />
+                    </IconButton>
+                </Tooltip>
 
                 {/*
                    Errors TODO errors temporarily disabled
@@ -119,42 +121,46 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                 }
 
                 {/*Model actions*/}
-                <IconButton
-                    color="inherit"
-                    id={CanvasToolbar.MODEL_ACTIONS_BUTTON_ID}
-                    onClick={e =>
-                        this.setState({
-                            ...this.withMenusClosed(this.state),
-                            modelActionsMenuAnchor: e.currentTarget
-                        })
-                    }
-                    aria-controls={
-                        this.state.modelActionsMenuAnchor != null
-                            ? CanvasToolbar.MODEL_ACTIONS_MENU_ID
-                            : undefined
-                    }
-                    aria-haspopup="true"
-                    aria-expanded={
-                        this.state.modelActionsMenuAnchor != null
-                    }
-                >
-                    <MoreHorizIcon />
-                </IconButton>
+                <Tooltip title="Model actions">
+                    <IconButton
+                        color="inherit"
+                        id={CanvasToolbar.MODEL_ACTIONS_BUTTON_ID}
+                        onClick={e =>
+                            this.setState({
+                                ...this.withMenusClosed(this.state),
+                                modelActionsMenuAnchor: e.currentTarget
+                            })
+                        }
+                        aria-controls={
+                            this.state.modelActionsMenuAnchor != null
+                                ? CanvasToolbar.MODEL_ACTIONS_MENU_ID
+                                : undefined
+                        }
+                        aria-haspopup="true"
+                        aria-expanded={
+                            this.state.modelActionsMenuAnchor != null
+                        }
+                    >
+                        <MoreHorizIcon />
+                    </IconButton>
+                </Tooltip>
 
                 {this.makeCustomMenus()}
 
                 {/*Open / Close Sidebar*/}
-                <IconButton
-                    color="inherit"
-                    id="open-sidebar-button"
-                    onClick={() => {
-                        this.resetFocus();
-                        this.props.toggleSidebarOpen();
-                    }}
-                >
-                    <ViewSidebarIcon />
-                </IconButton>
-            </Stack>
+                <Tooltip title="Toggle sidebar">
+                    <IconButton
+                        color="inherit"
+                        id="open-sidebar-button"
+                        onClick={() => {
+                            this.resetFocus();
+                            this.props.toggleSidebarOpen();
+                        }}
+                    >
+                        <ViewSidebarIcon />
+                    </IconButton>
+                </Tooltip>
+            </Stack >
         );
     }
 
