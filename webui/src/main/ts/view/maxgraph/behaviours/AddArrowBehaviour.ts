@@ -5,10 +5,10 @@ import FirebaseComponent, { FirebaseComponentBase } from "../../../data/componen
 import FirebaseConnection from "../../../data/components/FirebaseConnection";
 import FirebaseFlow from "../../../data/components/FirebaseFlow";
 import FirebasePointerComponent from "../../../data/components/FirebasePointerComponent";
-import ChangeModeOnButtonPressBehaviour from "./ChangeModeOnButtonPressBehaviour";
+import ShowPreviewArrowBehaviour from "./ShowPreviewArrowBehaviour";
 
 export default abstract class AddArrowBehaviour
-    extends ChangeModeOnButtonPressBehaviour {
+    extends ShowPreviewArrowBehaviour {
 
     public abstract makeLink(
         src: Cell,
@@ -27,38 +27,18 @@ export default abstract class AddArrowBehaviour
         return true;
     }
 
-    public canvasClicked(): void {
-        this.setKeydownCell(null);
-        this.setNeutralMode();
-    }
-
-    public canvasRightClicked(): void {
-        this.setKeydownCell(null);
-        this.setNeutralMode();
-    }
-
-    public cellClicked(cell: Cell) {
-        const keydownCell = this.getKeydownCell();
-        if (keydownCell) {
-            if (this.canConnect(
-                keydownCell,
-                cell
-            )) {
-                this.getActions().addComponent(
-                    this.makeLink(keydownCell, cell)
-                );
-            }
-
-            this.setNeutralMode();
-        }
-        else if (this.isValidArrowSource(cell)) {
-            this.setKeydownCell(cell);
-            const previewStyle = this.getPreviewArrowStyle();
-            if (previewStyle) this.addPreviewArrow(cell, previewStyle);
+    protected cellsConnected(src: Cell, tgt: Cell): void {
+        if (this.canConnect(
+            src,
+            tgt
+        )) {
+            this.getActions().addComponent(
+                this.makeLink(src, tgt)
+            );
         }
     }
 
-    public canConnect(
+    protected canConnect(
         source: Cell | null,
         target: Cell | null,
     ): boolean {

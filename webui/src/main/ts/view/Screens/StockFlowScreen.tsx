@@ -10,7 +10,7 @@ import ImportModelBox from "../ModalBox/ImportModelBox";
 import IdGenerator from "../../IdGenerator";
 import CanvasSidebar from "../maxgraph/toolbar/CanvasSidebar";
 import YesNoModalBox from "../ModalBox/YesNoModalBox";
-import FirebaseComponent from '../../data/components/FirebaseComponent';
+import FirebaseComponent, { FirebaseComponentBase } from '../../data/components/FirebaseComponent';
 import ComponentType from '../../data/components/ComponentType';
 import FirebaseStaticModel from '../../data/components/FirebaseStaticModel';
 import ModelValidator, { ComponentErrors } from '../../validation/ModelValitador';
@@ -24,6 +24,7 @@ import StockFlowPresentationGetter from '../maxgraph/presentation/StockFlowPrese
 import StockFlowBehaviourGetter from '../maxgraph/behaviours/stockflow/StockFlowBehaviourGetter';
 import StockFlowModeSelectPanel from '../maxgraph/toolbar/StockFlowModeSelectPanel';
 import FirebaseSubstitution from '../../data/components/FirebaseSubstitution';
+import { EventObject, EventSource, InternalEvent } from '@maxgraph/core';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -86,7 +87,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
     }
 
     protected makeGraph(): StockFlowGraph {
-        return new StockFlowGraph(
+        const graph = new StockFlowGraph(
             this.graphRef.current!,
             this.props.firebaseDataModel,
             this.props.modelUuid!,
@@ -98,6 +99,24 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             () => this.state.keydownCell !== null,
             () => { },
         );
+
+        graph.getSelectionModel().addListener(
+            InternalEvent.CHANGE,
+            (_: EventSource, e: EventObject) => {
+                const sel = graph.getSelectionCells();
+                if (
+                    sel.length === 1
+                    && sel[0].getValue() instanceof FirebaseComponentBase
+                ) {
+                    this.setState({ selectedComponent: sel[0].getValue() });
+                }
+                else {
+                    this.setState({ selectedComponent: null });
+                }
+            }
+        );
+
+        return graph;
     }
 
     protected makeActions(): StockFlowDiagramActions {

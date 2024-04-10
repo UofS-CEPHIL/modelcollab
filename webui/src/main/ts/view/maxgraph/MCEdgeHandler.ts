@@ -1,10 +1,15 @@
 import { Cell, EdgeHandler, EventObject, EventSource, InternalMouseEvent, Rectangle, RectangleShape } from "@maxgraph/core";
+import FirebaseStaticModel from "../../data/components/FirebaseStaticModel";
 
 export default class MCEdgeHandler extends EdgeHandler {
     public static readonly EDGE_POINTS = "edge_points";
 
-    // Disallow changing terminals
     public isConnectableCell(cell: Cell): boolean {
+        // Disallow moving arrows inside static models
+        if (FirebaseStaticModel.isStaticModelChildId(this.state.cell.getId()!))
+            return false;
+
+        // Disallow changing terminals
         const terminal = this.state.cell.getTerminal(this.isSource);
         if (!terminal) throw new Error("No terminal for cell " + cell.getId());
         return cell.getId() === terminal.getId();
