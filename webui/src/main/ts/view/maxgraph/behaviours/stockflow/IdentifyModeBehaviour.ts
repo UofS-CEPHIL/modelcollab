@@ -1,14 +1,16 @@
-import { Cell, Point } from "@maxgraph/core";
+import { Cell, CellStyle, Point } from "@maxgraph/core";
 import ComponentType from "../../../../data/components/ComponentType";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
 import FirebaseStaticModel from "../../../../data/components/FirebaseStaticModel";
+import { theme } from "../../../../Themes";
+import ConnectionPresentation from "../../presentation/ConnectionPresentation";
 import FlowPresentation from "../../presentation/FlowPresentation";
-import ArrowBehaviour from "./ArrowBehaviour";
+import ShowPreviewArrowBehaviour from "../ShowPreviewArrowBehaviour";
 
 // This mode acts as an "arrow mode" in the sense that it creates a pairing
 // between two objects by clicking on one then the other. In this case, however,
 // no arrow is created on the canvas
-export default class IdentifyModeBehaviour extends ArrowBehaviour {
+export default class IdentifyModeBehaviour extends ShowPreviewArrowBehaviour {
 
     public static readonly NON_IDENTIFIABLE_TYPES = [
         ComponentType.FLOW,
@@ -17,18 +19,25 @@ export default class IdentifyModeBehaviour extends ArrowBehaviour {
         ComponentType.SUBSTITUTION
     ];
 
-    protected canConnect(source: Cell | Point, target: Cell | Point): boolean {
-        // Can't identify anything with a point on the canvas background. This
-        // shouldn't be possible at all but is required to avoid compiler
-        // errors, and is a useful sanity check
-        if (!(source instanceof Cell && target instanceof Cell)) {
-            console.error(
-                "Trying to attach a non-component with a connection. "
-                + `Source ${source}, target ${target}`
-            );
-            return false;
-        }
+    protected isValidArrowSource(cell: Cell): boolean {
+        return cell.getValue() instanceof FirebaseComponentBase
+            && cell.getValue().getType() !== ComponentType.CONNECTION;
+    }
 
+    protected getPreviewArrowStyle(): CellStyle {
+        const style = ConnectionPresentation.getEdgeStyle();
+        style.dashed = true;
+        style.strokeColor = theme.palette.secondary.main;
+        return style;
+    }
+
+    protected cellsConnected(src: Cell, tgt: Cell): void {
+        console.log(src)
+        console.log(tgt)
+        if (this.canConnect(src, tgt)) this.connectComponents(src, tgt);
+    }
+
+    protected canConnect(source: Cell, target: Cell): boolean {
         // Can only identify components of the same type
         const componentsBothClouds =
             source.getValue() === FlowPresentation.CLOUD_VALUE
@@ -64,21 +73,7 @@ export default class IdentifyModeBehaviour extends ArrowBehaviour {
         return true;
     }
 
-    protected connectComponents(
-        source: Cell | Point,
-        target: Cell | Point
-    ): void {
-        // Can't identify anything with a point on the canvas background. This
-        // shouldn't be possible at all but is required to avoid compiler
-        // errors, and is a useful sanity check
-        if (!(source instanceof Cell && target instanceof Cell)) {
-            console.error(
-                "Trying to attach a non-component with a connection. "
-                + `Source ${source}, target ${target}`
-            );
-            return;
-        }
-
+    protected connectComponents(source: Cell, target: Cell): void {
         this.getActions().identifyComponents(
             source.getValue(),
             target.getValue()
