@@ -8,7 +8,7 @@ import { LoadedStaticModel } from '../../Screens/StockFlowScreen';
 import { ComponentErrors } from '../../../validation/ModelValitador';
 import CanvasToolbar, { Props as CanvasToolbarProps, State as CanvasToolbarState } from './CanvasToolbar';
 import { AxiosResponse } from 'axios';
-import { CircularProgress, IconButton, Menu, MenuItem } from '@mui/material';
+import { CircularProgress, IconButton, Menu, MenuItem, Tooltip } from '@mui/material';
 import PlayArrow from '@mui/icons-material/PlayArrow';
 import FirebaseScenario from '../../../data/components/FirebaseScenario';
 
@@ -73,29 +73,31 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
     protected makeCustomMenus(): ReactElement {
         // "Interpret" menu for stock & flow diagrams
         return (
-            <IconButton
-                color="inherit"
-                id={StockFlowToolbar.INTERPRET_BUTTON_ID}
-                onClick={e => this.setState({
-                    interpretMenuAnchor: e.currentTarget,
-                    modelActionsMenuAnchor: null
-                })}
-                aria-controls={
-                    this.state.interpretMenuAnchor != null
-                        ? StockFlowToolbar.INTERPRET_MENU_ID
-                        : undefined
-                }
-                aria-haspopup="true"
-                aria-expanded={
-                    this.state.interpretMenuAnchor != null
-                }
-            >
-                {
-                    this.state.waitingForResults
-                        ? <CircularProgress color="inherit" />
-                        : <PlayArrow />
-                }
-            </IconButton>
+            <Tooltip title="Interpret model">
+                <IconButton
+                    color="inherit"
+                    id={StockFlowToolbar.INTERPRET_BUTTON_ID}
+                    onClick={e => this.setState({
+                        interpretMenuAnchor: e.currentTarget,
+                        modelActionsMenuAnchor: null
+                    })}
+                    aria-controls={
+                        this.state.interpretMenuAnchor != null
+                            ? StockFlowToolbar.INTERPRET_MENU_ID
+                            : undefined
+                    }
+                    aria-haspopup="true"
+                    aria-expanded={
+                        this.state.interpretMenuAnchor != null
+                    }
+                >
+                    {
+                        this.state.waitingForResults
+                            ? <CircularProgress color="inherit" />
+                            : <PlayArrow />
+                    }
+                </IconButton>
+            </Tooltip>
         );
     }
 
