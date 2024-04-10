@@ -79,15 +79,6 @@ export default abstract class CanvasScreen
                 { once: true }
             );
             if (!this.graph) this.setupGraph();
-
-            // TODO remove this after experiments
-            this.graphRef.current?.addEventListener(
-                "click",
-                () =>
-                    this.state.mode === UiMode.NONE
-                    && alert("NO CLICKING ALLOWED")
-
-            );
         }
     }
 
