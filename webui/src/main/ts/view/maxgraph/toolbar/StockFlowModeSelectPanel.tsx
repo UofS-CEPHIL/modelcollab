@@ -1,16 +1,17 @@
 import ModeSelectPanel from "./ModeSelectPanel";
-import NorthEastIcon from '@mui/icons-material/NorthEast';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import EastIcon from '@mui/icons-material/East';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRightLong, faArrowPointer, faLink, faSquare, faSquareParking, faSquarePlus, faSquareRootVariable } from "@fortawesome/free-solid-svg-icons";
 import MediationIcon from '@mui/icons-material/Mediation';
+import RedoIcon from '@mui/icons-material/Redo';
+import CalculateIcon from '@mui/icons-material/Calculate';
 import OpenWithIcon from '@mui/icons-material/OpenWith';
-import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import { UiMode } from "../../../UiMode";
 import { ReactElement } from "react";
 import StockFlowBehaviourGetter from "../behaviours/stockflow/StockFlowBehaviourGetter";
+import { Typography } from "@mui/material";
 
 export default class StockFlowModeSelectPanel extends ModeSelectPanel {
     protected getModeForKey(key: string): UiMode | null {
@@ -23,21 +24,21 @@ export default class StockFlowModeSelectPanel extends ModeSelectPanel {
     protected getIconForMode(mode: UiMode): ReactElement {
         switch (mode) {
             case UiMode.CONNECT:
-                return (<NorthEastIcon />);
+                return (<RedoIcon />);
             case UiMode.DYN_VARIABLE:
-                return (<AddCircleIcon />);
+                return (<FontAwesomeIcon icon={faSquareRootVariable} />);
             case UiMode.SUM_VARIABLE:
-                return (<AddCircleOutlineIcon />);
+                return (<FontAwesomeIcon icon={faSquarePlus} />);
             case UiMode.FLOW:
-                return (<EastIcon />);
+                return (<FontAwesomeIcon icon={faRightLong} />);
             case UiMode.IDENTIFY:
-                return (<MediationIcon />);
+                return (<FontAwesomeIcon icon={faLink} />);
             case UiMode.MOVE:
-                return (<OpenWithIcon />);
+                return (<FontAwesomeIcon icon={faArrowPointer} />);
             case UiMode.PARAM:
-                return (<FontDownloadIcon />);
+                return (<FontAwesomeIcon icon={faSquareParking} />);
             case UiMode.STOCK:
-                return (<CheckBoxOutlineBlankIcon />);
+                return (<FontAwesomeIcon icon={faSquare} />);
             default:
                 return (<QuestionMarkIcon />);
         }
