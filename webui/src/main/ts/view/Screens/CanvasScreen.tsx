@@ -230,7 +230,7 @@ export default abstract class CanvasScreen
     }
 
     protected setMode(mode: UiMode): void {
-        this.controls?.onModeChanged();
+        this.controls?.onModeChanged(mode);
         this.setState({ mode });
     }
 }
