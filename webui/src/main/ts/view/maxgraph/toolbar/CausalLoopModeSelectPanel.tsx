@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowPointer, faCompress, faSquare, faArrowRightLong, faRotateLeft, faNoteSticky, faTrash } from "@fortawesome/free-solid-svg-icons";
 import NorthEastIcon from '@mui/icons-material/NorthEast';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import EditIcon from '@mui/icons-material/Edit';
@@ -34,21 +36,21 @@ export default class CausalLoopModeSelectPanel extends ModeSelectPanel {
     protected getIconForMode(mode: UiMode | null): ReactElement {
         switch (mode) {
             case UiMode.CONNECT:
-                return (<NorthEastIcon />);
+                return (<FontAwesomeIcon icon={faArrowRightLong} />);
             case UiMode.STOCK:
-                return (<CheckBoxOutlineBlankIcon />);
+                return (<FontAwesomeIcon icon={faSquare} />);
             case UiMode.EDIT:
                 return (<EditIcon />);
             case UiMode.STICKY_NOTE:
-                return (<NoteIcon />);
+                return (<FontAwesomeIcon icon={faNoteSticky} />);
             case UiMode.LOOP_ICON:
-                return (<ReplayIcon />);
+                return (<FontAwesomeIcon icon={faRotateLeft} />);
             case UiMode.DELETE:
-                return (<DeleteIcon />);
+                return (<FontAwesomeIcon icon={faTrash} />);
             case UiMode.MOVE:
-                return (<OpenWithIcon />);
+                return (<FontAwesomeIcon icon={faArrowPointer} />);
             case UiMode.RESIZE:
-                return (<ZoomOutMapIcon />);
+                return (<FontAwesomeIcon icon={faCompress} />);
             default:
                 return (<QuestionMarkIcon />);
         }
