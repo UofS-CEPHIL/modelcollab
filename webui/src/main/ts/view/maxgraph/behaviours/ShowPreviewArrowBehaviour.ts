@@ -12,11 +12,11 @@ export default abstract class ShowPreviewArrowBehaviour
     };
 
     public canvasClicked(): void {
-        this.resetMode();
+
     }
 
     public canvasRightClicked(): void {
-        this.resetMode();
+        this.setKeydownCell(null);
     }
 
     public cellClicked(cell: Cell) {

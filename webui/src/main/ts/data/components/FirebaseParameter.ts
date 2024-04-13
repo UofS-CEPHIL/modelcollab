@@ -29,8 +29,8 @@ export default class FirebaseParameter
             {
                 x,
                 y,
-                value: "Parameter",
-                text: "",
+                value: "",
+                text: "Parameter",
                 width: theme.custom.maxgraph.textComponent.defaultWidthPx,
                 height: theme.custom.maxgraph.textComponent.defaultHeightPx,
             }

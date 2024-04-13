@@ -27,14 +27,31 @@ export default abstract class AddArrowBehaviour
         return true;
     }
 
-    protected cellsConnected(src: Cell, tgt: Cell): void {
-        if (this.canConnect(
-            src,
-            tgt
-        )) {
-            this.getActions().addComponent(
-                this.makeLink(src, tgt)
-            );
+    public canvasClicked(): void {
+        this.resetMode();
+    }
+
+    public canvasRightClicked(): void {
+        this.resetMode();
+    }
+
+    public cellClicked(cell: Cell) {
+        const keydownCell = this.getKeydownCell();
+        if (keydownCell) {
+            if (this.canConnect(
+                keydownCell,
+                cell
+            )) {
+                this.getActions().addComponent(
+                    this.makeLink(keydownCell, cell)
+                );
+            }
+            this.resetMode();
+        }
+        else if (this.isValidArrowSource(cell)) {
+            this.setKeydownCell(cell);
+            const previewStyle = this.getPreviewArrowStyle();
+            if (previewStyle) this.addPreviewArrow(cell, previewStyle);
         }
         this.resetMode();
     }
