@@ -21,6 +21,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     private initialGeo: Geometry | null = null;
 
     public handleKeyDown(e: KeyboardEvent): void {
+        super.handleKeyDown(e);
         this.setKeydownPosition(this.getCursorPosition());
         this.setKeydownCell(this.getHoverCell());
         switch (e.key) {
@@ -55,6 +56,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     }
 
     public handleKeyUp(e: KeyboardEvent): void {
+        super.handleKeyUp(e);
         switch (e.key) {
             case this.getKeyForMode(UiMode.STOCK):
                 this.doVertexKeyupAction();

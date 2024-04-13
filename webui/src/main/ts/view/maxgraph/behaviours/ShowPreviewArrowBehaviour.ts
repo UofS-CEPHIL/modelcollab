@@ -12,23 +12,17 @@ export default abstract class ShowPreviewArrowBehaviour
     };
 
     public canvasClicked(): void {
-        this.setKeydownCell(null);
-        this.setNeutralMode();
+        this.resetMode();
     }
 
     public canvasRightClicked(): void {
-        this.setKeydownCell(null);
-        this.setNeutralMode();
+        this.resetMode();
     }
 
     public cellClicked(cell: Cell) {
-        console.log(cell)
-        console.log(this.getKeydownCell())
-        console.log();
         const keydownCell = this.getKeydownCell();
         if (keydownCell) {
             this.cellsConnected(keydownCell, cell);
-            this.setNeutralMode();
         }
         else if (this.isValidArrowSource(cell)) {
             this.setKeydownCell(cell);

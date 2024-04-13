@@ -15,9 +15,6 @@ import MCGraph from "./MCGraph";
 import MCKeyHandler from "./MCKeyHandler";
 import UserActionLogger from "../../logging/UserActionLogger";
 
-// TODO just bind all the keys and either have a function or don't
-export const BINDABLE_KEYS = "QWERASDF";
-
 export default class UserControls {
 
     private graph: MCGraph;
@@ -58,7 +55,10 @@ export default class UserControls {
         this.graph = graph;
         this.diagramActions = actions;
         this.behaviourGetter = behaviourGetter;
-        this.keyHandler = new MCKeyHandler(graph);
+        this.keyHandler = new MCKeyHandler(
+            graph,
+            () => this.onEscape()
+        );
         this.actionLogger = actionLogger;
 
         this.setOpenModalBox = setOpenModalBox;
@@ -156,6 +156,10 @@ export default class UserControls {
         );
     }
 
+    private onEscape(): void {
+        this.getBehaviour().resetMode();
+    }
+
     private getCharCode(c: String): number {
         return c.charCodeAt(0);
     }
@@ -181,6 +185,23 @@ export default class UserControls {
 
     private getBehaviour(): ModeBehaviour {
         return this.behaviourGetter.getBehaviourForMode(this.getMode());
+    }
+
+    private getBoundKeyCodes(): number[] {
+        function range(start: number, endIncl: number): number[] {
+            return [...Array(endIncl - start + 1).keys()]
+                .map((_, i) => i + start);
+        }
+
+        // 49-90 13, 32, 46, 37-40, 27
+        return [
+            ...range(48, 57),   // Numbers
+            ...range(65, 90),   // Letters
+            ...range(37, 40),   // Arrow keys
+            13,                 // Enter
+            32,                 // Space
+            46,                 // Delete
+        ];
     }
 
     private setupModeBehaviours(): void {
@@ -223,9 +244,9 @@ export default class UserControls {
         );
 
         // Custom keybind behaviours
-        BINDABLE_KEYS.split('').forEach(c =>
+        this.getBoundKeyCodes().forEach(c =>
             this.keyHandler.bindKey(
-                this.getCharCode(c),
+                c,
                 {
                     down: (e: KeyboardEvent) => {
                         // If user is already holding down a key then wait for

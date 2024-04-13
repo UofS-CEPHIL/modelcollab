@@ -6,6 +6,7 @@ export default abstract class AddVertexOnClickAndChangeModeOnButtonBehaviour
 
     // Change modes on button press. TODO design this better.
     public handleKeyDown(e: KeyboardEvent): void {
+        super.handleKeyDown(e);
         ChangeModeOnButtonPressBehaviour.doKeyDownHandler(
             e,
             m => this.setMode(m),

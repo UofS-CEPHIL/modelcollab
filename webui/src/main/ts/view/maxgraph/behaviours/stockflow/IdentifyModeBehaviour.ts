@@ -32,8 +32,6 @@ export default class IdentifyModeBehaviour extends ShowPreviewArrowBehaviour {
     }
 
     protected cellsConnected(src: Cell, tgt: Cell): void {
-        console.log(src)
-        console.log(tgt)
         if (this.canConnect(src, tgt)) this.connectComponents(src, tgt);
     }
 

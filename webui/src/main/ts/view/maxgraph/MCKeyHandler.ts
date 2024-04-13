@@ -9,13 +9,24 @@ export default class MCKeyHandler extends KeyHandler {
     public shiftKeysUp: { [key: number]: Function } = {};
     public controlKeysUp: { [key: number]: Function } = {};
     public controlShiftKeysUp: { [key: number]: Function } = {};
+    public onEscape: (() => void) | undefined;
 
-    public constructor(graph: Graph, target: Element | null = null) {
+    public constructor(
+        graph: Graph,
+        onEscape?: () => void,
+        target: Element | null = null
+    ) {
         super(graph, target);
+        this.onEscape = onEscape;
         if (graph != null) {
             this.keyupHandler = (evt) => this.keyUp(evt);
             InternalEvent.addListener(this.target!, 'keyup', this.keyupHandler);
         }
+    }
+
+    public escape(evt: KeyboardEvent): void {
+        super.escape(evt);
+        if (this.onEscape) this.onEscape();
     }
 
     public keyUp(evt: KeyboardEvent) {

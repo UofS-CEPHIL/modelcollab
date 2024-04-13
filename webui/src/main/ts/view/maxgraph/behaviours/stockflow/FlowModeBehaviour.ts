@@ -43,7 +43,7 @@ export default class FlowModeBehaviour extends AddArrowBehaviour {
 
     public canvasClicked(): void {
         const keydownCell = this.getKeydownCell();
-        if (keydownCell) {
+        if (keydownCell && this.isTempCell(keydownCell)) {
             super.canvasClicked();
         }
         else {

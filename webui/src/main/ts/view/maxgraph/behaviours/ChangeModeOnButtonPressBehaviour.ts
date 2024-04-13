@@ -4,6 +4,7 @@ import { UiMode } from "../../../UiMode";
 export default class ChangeModeOnButtonPressBehaviour extends DefaultBehaviour {
 
     public handleKeyDown(e: KeyboardEvent): void {
+        super.handleKeyDown(e);
         ChangeModeOnButtonPressBehaviour.doKeyDownHandler(
             e,
             m => this.setMode(m),

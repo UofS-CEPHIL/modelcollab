@@ -10,8 +10,6 @@ export default abstract class ModeBehaviour {
     public abstract canvasClicked(x: number, y: number): void;
     public abstract canvasRightClicked(x: number, y: number): void;
     public abstract cellClicked(c: Cell): void;
-    public abstract handleKeyDown(e: KeyboardEvent): void;
-    public abstract handleKeyUp(e: KeyboardEvent): void;
     public abstract handleControlKeyDown(e: KeyboardEvent): void;
     public abstract handleControlKeyUp(e: KeyboardEvent): void;
 
@@ -77,6 +75,18 @@ export default abstract class ModeBehaviour {
         return pair ? pair[0] : undefined;
     }
 
+    public handleKeyDown(e: KeyboardEvent): void {
+        console.log(e.key)
+        switch (e.key) {
+            case "Escape":
+                this.resetMode();
+        }
+    }
+
+    public handleKeyUp(_: KeyboardEvent): void {
+        // Nothing for now
+    }
+
     // Perform any necessary cleanup when we change out of this mode.
     public onModeChanged(): void {
         this.deleteTempComponents();
@@ -84,6 +94,10 @@ export default abstract class ModeBehaviour {
 
     public setNeutralMode(): void {
         this.setMode(UiMode.MOVE);
+        this.resetMode();
+    }
+
+    public resetMode(): void {
         this.setKeydownCell(null);
         this.deleteTempComponents();
     }
@@ -96,7 +110,7 @@ export default abstract class ModeBehaviour {
     ): Cell {
         const pos = this.getCursorPosition();
         return this.getGraph().insertVertex({
-            id: ModeBehaviour.TEMP_ID_PREFIX + "previewvtx",
+            id: ModeBehaviour.TEMP_ID_PREFIX + "previewvtx" + Date.now(),
             x: pos.x,
             y: pos.y,
             width,
@@ -132,7 +146,7 @@ export default abstract class ModeBehaviour {
     ): void {
         const pointerCell = this.addPreviewVertex(0, 0, "", {});
         this.getGraph().insertEdge({
-            id: ModeBehaviour.TEMP_ID_PREFIX + "previewedge",
+            id: ModeBehaviour.TEMP_ID_PREFIX + "previewedge" + Date.now(),
             source: source,
             target: pointerCell,
             style

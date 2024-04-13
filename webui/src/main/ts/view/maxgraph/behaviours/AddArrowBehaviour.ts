@@ -36,6 +36,7 @@ export default abstract class AddArrowBehaviour
                 this.makeLink(src, tgt)
             );
         }
+        this.resetMode();
     }
 
     protected canConnect(
