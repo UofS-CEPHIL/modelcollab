@@ -10,8 +10,12 @@ export default abstract class ModeBehaviour {
     public abstract canvasClicked(x: number, y: number): void;
     public abstract canvasRightClicked(x: number, y: number): void;
     public abstract cellClicked(c: Cell): void;
+    public abstract handleKeyDown(e: KeyboardEvent): void;
     public abstract handleControlKeyDown(e: KeyboardEvent): void;
+    public abstract handleControlShiftKeyDown(e: KeyboardEvent): void;
+    public abstract handleKeyUp(e: KeyboardEvent): void;
     public abstract handleControlKeyUp(e: KeyboardEvent): void;
+    public abstract handleControlShiftKeyUp(e: KeyboardEvent): void;
 
     private static readonly TEMP_ID_PREFIX = "temp_";
 
@@ -73,18 +77,6 @@ export default abstract class ModeBehaviour {
             .entries(this.modeKeyMappings)
             .find(([_, m]) => m === mode);
         return pair ? pair[0] : undefined;
-    }
-
-    public handleKeyDown(e: KeyboardEvent): void {
-        console.log(e.key)
-        switch (e.key) {
-            case "Escape":
-                this.resetMode();
-        }
-    }
-
-    public handleKeyUp(_: KeyboardEvent): void {
-        // Nothing for now
     }
 
     // Perform any necessary cleanup when we change out of this mode.

@@ -3,14 +3,13 @@ import {
     EventObject,
     InternalEvent,
     Point,
-    UndoManager
 } from "@maxgraph/core";
 import { UiMode } from "../../UiMode";
 import ModeBehaviour from "./behaviours/ModeBehaviour";
 import BehaviourGetter from "./behaviours/BehaviourGetter";
 import DiagramActions from "./DiagramActions";
 import ModalBoxType from "../ModalBox/ModalBoxType";
-import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
+import FirebaseComponent from "../../data/components/FirebaseComponent";
 import MCGraph from "./MCGraph";
 import MCKeyHandler from "./MCKeyHandler";
 import UserActionLogger from "../../logging/UserActionLogger";
@@ -73,7 +72,6 @@ export default class UserControls {
         this.setKeydownCell = setKeydownCell;
         this.setMode = setMode;
 
-        this.setupUniversalKeyboardShortcuts();
         this.setupModeBehaviours();
     }
 
@@ -81,87 +79,9 @@ export default class UserControls {
         this.behaviourGetter.onModeChanged(mode);
     }
 
-    private setupUniversalKeyboardShortcuts(): void {
-        const getCharCode = this.getCharCode;
-
-        // Copy, cut, paste
-        // TODO copy/cut/paste has bugs. Add these back once they are fixed
-        // const copySelection = () => this.copyCells(
-        //     this.getComponentsFromCells(
-        //         this.graph!.getSelectionCells()
-        //     )
-        // );
-        // this.keyHandler.bindControlKey(
-        //     getCharCode("C"),
-        //     () => copySelection()
-        // );
-        // this.keyHandler.bindControlKey(
-        //     getCharCode("X"),
-        //     () => {
-        //         copySelection();
-        //         this.diagramActions.deleteSelection();
-        //     }
-        // );
-        // this.keyHandler.bindControlKey(
-        //     getCharCode("V"),
-        //     () => console.error("Paste not implemented")
-        // );
-
-        // Select all
-        this.keyHandler.bindControlKey(
-            getCharCode("A"),
-            () => {
-                if (this.actionLogger) {
-                    this.actionLogger.logAction("Ctrl A");
-                }
-                this.graph.selectAll();
-            }
-        );
-
-        // Delete selection
-        this.keyHandler.bindKey(
-            getCharCode("\b"),
-            () => {
-                if (this.actionLogger) {
-                    this.actionLogger.logAction(
-                        "Backspace",
-                        this.graph
-                            .getSelectionCells()
-                            .map(c => c.getValue().getReadableComponentName())
-                            .join(", ")
-                    );
-                }
-                this.diagramActions.deleteSelection();
-            }
-        );
-        this.keyHandler.bindKey(
-            127 /*DEL*/,
-            () => this.diagramActions.deleteSelection()
-        );
-
-        // Undo, redo
-        this.keyHandler.bindControlKey(
-            getCharCode("Z"),
-            () => {
-                this.graph.undo();
-                if (this.actionLogger) this.actionLogger.logAction("undo")
-            }
-        );
-        this.keyHandler.bindControlShiftKey(
-            getCharCode("Z"),
-            () => {
-                this.graph.redo();
-                if (this.actionLogger) this.actionLogger.logAction("redo")
-            }
-        );
-    }
-
     private onEscape(): void {
         this.getBehaviour().resetMode();
-    }
-
-    private getCharCode(c: String): number {
-        return c.charCodeAt(0);
+        this.graph.setSelectionCell(null);
     }
 
     private getComponentsFromCells(
@@ -193,14 +113,14 @@ export default class UserControls {
                 .map((_, i) => i + start);
         }
 
-        // 49-90 13, 32, 46, 37-40, 27
         return [
             ...range(48, 57),   // Numbers
             ...range(65, 90),   // Letters
             ...range(37, 40),   // Arrow keys
             13,                 // Enter
             32,                 // Space
-            46,                 // Delete
+            46, 127,            // Delete,
+            8,                  // Backspace
         ];
     }
 
@@ -243,41 +163,74 @@ export default class UserControls {
             }
         );
 
-        // Custom keybind behaviours
-        this.getBoundKeyCodes().forEach(c =>
-            this.keyHandler.bindKey(
-                c,
-                {
-                    down: (e: KeyboardEvent) => {
-                        // If user is already holding down a key then wait for
-                        // them to lift it before doing anything
-                        if (this.getKeydownPosition() != null) return;
+        // Keyup and Keydown
+        const handlers = {
+            down: (e: KeyboardEvent) => {
+                if (this.actionLogger) {
+                    this.actionLogger.logAction(`Keydown ${e.key}`);
+                }
 
-                        if (this.actionLogger) {
-                            this.actionLogger.logAction(`Keydown ${e.key}`);
-                        }
-                        this.getBehaviour().handleKeyDown(e);
-                        this.setKeydownPosition(this.getCursorPosition());
-                    },
-                    up: (e: KeyboardEvent) => {
-                        // Shouldn't be possible to get here unless the key is
-                        // being held down
-                        if (this.getKeydownPosition() == null) {
-                            console.error(
-                                "Lifting key without keydown position"
-                            );
-                            return;
-                        }
+                // If user is already holding down a key then wait for
+                // them to lift it before doing anything
+                if (this.getKeydownPosition() != null) {
+                    console.warn(
+                        "Pressing key with key already down: " + e.key
+                    );
+                    return;
+                };
 
-                        if (this.actionLogger) {
-                            this.actionLogger.logAction(`Keyup ${e.key}`);
-                        }
-                        this.getBehaviour().handleKeyUp(e);
-                        this.setKeydownPosition(null);
-                        this.setKeydownCell(null);
+                if (e.ctrlKey) {
+                    if (e.shiftKey) {
+                        this.getBehaviour().handleControlShiftKeyDown(e);
+                    }
+                    else {
+                        this.getBehaviour().handleControlKeyDown(e);
                     }
                 }
-            )
-        );
+                else {
+                    this.getBehaviour().handleKeyDown(e);
+                }
+
+                this.setKeydownPosition(this.getCursorPosition());
+            },
+            up: (e: KeyboardEvent) => {
+                if (this.actionLogger) {
+                    this.actionLogger.logAction(`Keyup ${e.key}`);
+                }
+
+                // Shouldn't be possible to get here unless the key is
+                // being held down
+                if (
+                    this.getKeydownPosition() == null
+                    && this.getBoundKeyCodes().includes(e.keyCode)
+                ) {
+                    console.warn(
+                        "Lifting key without keydown position: " + e.key
+                    );
+                    return;
+                }
+
+                if (e.ctrlKey) {
+                    if (e.shiftKey) {
+                        this.getBehaviour().handleControlShiftKeyUp(e);
+                    }
+                    else {
+                        this.getBehaviour().handleControlKeyUp(e);
+                    }
+                }
+                else {
+                    this.getBehaviour().handleKeyUp(e);
+                }
+
+                this.setKeydownPosition(null);
+                this.setKeydownCell(null);
+            }
+        };
+
+        this.getBoundKeyCodes().forEach(c => {
+            this.keyHandler.bindKey(c, handlers);
+            this.keyHandler.bindControlKey(c, handlers);
+            this.keyHandler.bindControlShiftKey(c, handlers);
+        });
     }
 }
