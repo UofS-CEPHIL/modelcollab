@@ -13,7 +13,11 @@ export default abstract class AddVertexOnClickBehaviour
 
     public canvasClicked(x: number, y: number): void {
         const newId = IdGenerator.generateUniqueId(this.getFirebaseState());
-        this.getActions().addComponent(this.createComponent(x, y, newId));
+        var newComponent = this.createComponent(x, y, newId);
+        const width = newComponent.getData().width ?? 0;
+        const height = newComponent.getData().height ?? 0;
+        newComponent = newComponent.withUpdatedLocation(width / -2, height / -2);
+        this.getActions().addComponent(newComponent);
         this.resetMode();
     }
 }
