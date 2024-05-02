@@ -27,6 +27,18 @@ export default abstract class AddArrowBehaviour
         return true;
     }
 
+    protected cellsConnected(src: Cell, tgt: Cell): void {
+        if (this.canConnect(
+            src,
+            tgt
+        )) {
+            this.getActions().addComponent(
+                this.makeLink(src, tgt)
+            );
+        }
+        this.resetMode();
+    }
+
     public canvasClicked(): void {
         this.resetMode();
     }
