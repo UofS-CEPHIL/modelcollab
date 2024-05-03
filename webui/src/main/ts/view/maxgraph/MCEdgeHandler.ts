@@ -1,7 +1,18 @@
 import { Cell, EdgeHandler, EventObject, EventSource, InternalMouseEvent, Rectangle, RectangleShape } from "@maxgraph/core";
+import { HandleTheme, HandleThemes } from "@mui/material";
+import ComponentType from "../../data/components/ComponentType";
+import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";
 import FirebaseStaticModel from "../../data/components/FirebaseStaticModel";
+import { theme } from "../../Themes";
+
+enum HandleType {
+    INNER,
+    TERMINAL,
+    LABEL
+}
 
 export default class MCEdgeHandler extends EdgeHandler {
+
     public static readonly EDGE_POINTS = "edge_points";
 
     public isConnectableCell(cell: Cell): boolean {
@@ -15,18 +26,42 @@ export default class MCEdgeHandler extends EdgeHandler {
         return cell.getId() === terminal.getId();
     }
 
-    // The `isHandleVisible` and `isHandleEnabled` functions don't seem to
-    // do anything for the label handle. So instead we just make the label
-    // handle invisible by making its shape infinitely small if needed.
+    public getHandleFillColor(): string {
+        return this.getHandleStyle(HandleType.TERMINAL).fillColor!;
+    }
+
+    // Apply custom styles to handles -- can't do this without modifying the
+    // Constants file in maxgraphs
+    public createHandleShape(index?: number) {
+        const handle = super.createHandleShape(index);
+        this.editHandleShape(handle, HandleType.INNER);
+        return handle;
+    }
+
     public createLabelHandleShape() {
-        return this.state.cell.getValue().isLabelMovable()
-            ? super.createLabelHandleShape()
-            : new RectangleShape(
-                new Rectangle(0, 0, 0, 0),
-                "white",
-                "white",
-                0
+        const handle = super.createLabelHandleShape();
+        this.editHandleShape(handle, HandleType.LABEL);
+        return handle;
+    }
+
+    private editHandleShape(
+        shape: RectangleShape,
+        handleType: HandleType
+    ): void {
+        if (!this.labelHandleImage) {
+            const style = this.getHandleStyle(handleType);
+            shape.bounds = new Rectangle(
+                0,
+                0,
+                style.width,
+                style.width
             );
+            shape.strokeWidth = style.strokeWidth!;
+            shape.stroke = style.strokeColor!;
+            shape.strokeOpacity = style.strokeOpacity!;
+            shape.fillOpacity = style.fillOpacity!;
+            shape.fill = style.fillColor!;
+        }
     }
 
     // Handle edge bends and change of terminal points
@@ -45,5 +80,36 @@ export default class MCEdgeHandler extends EdgeHandler {
                 }
             )
         );
+    }
+
+    private getHandleStyle(h: HandleType): HandleTheme {
+        function getTheme(t: HandleThemes): HandleTheme {
+            if (h === HandleType.INNER) return t.innerHandle!;
+            else if (h === HandleType.LABEL) return t.labelHandle!;
+            else return t.terminalHandle!;
+        }
+
+        const cell = this.state.cell;
+        const defaultTheme: HandleTheme = getTheme(
+            theme.custom.maxgraph.arrowComponent
+        );
+        var specificTheme: HandleTheme = {};
+        if (
+            cell.getValue()
+            && cell.getValue() instanceof FirebasePointerComponent
+        ) {
+            switch (cell.getValue().getType()) {
+                case ComponentType.FLOW:
+                    specificTheme = getTheme(theme.custom.maxgraph.flow);
+                    break;
+                case ComponentType.CONNECTION:
+                    specificTheme = getTheme(theme.custom.maxgraph.connection);
+                    break;
+                case ComponentType.CLD_LINK:
+                    specificTheme = getTheme(theme.custom.maxgraph.cldLink);
+                    break;
+            }
+        }
+        return { ...defaultTheme, ...specificTheme };
     }
 }

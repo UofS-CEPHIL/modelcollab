@@ -1,9 +1,26 @@
 import { FONT } from "@maxgraph/core/dist/util/Constants";
-import { createTheme } from "@mui/material";
+import { createTheme, Palette } from "@mui/material";
 
 
 // Declare custom vars in theme
 declare module '@mui/material/styles' {
+
+    // Parameters for arrow handles
+    interface HandleTheme {
+        width?: number,
+        strokeWidth?: number,
+        strokeColor?: string,
+        strokeOpacity?: number,
+        fillOpacity?: number,
+        fillColor?: string,
+    }
+
+    interface HandleThemes {
+        terminalHandle?: HandleTheme,
+        innerHandle?: HandleTheme,
+        labelHandle?: HandleTheme,
+    }
+
     // Custom palette colors
     interface Palette {
         canvas: Palette['primary'];
@@ -14,6 +31,7 @@ declare module '@mui/material/styles' {
         canvas?: PaletteOptions['primary'];
         grayed?: PaletteOptions['primary'];
     }
+
     // Custom theme variables
     interface Theme {
         custom: {
@@ -28,13 +46,13 @@ declare module '@mui/material/styles' {
                 defaultVisibility: boolean
             },
             maxgraph: {
-                connection: {
+                connection: HandleThemes & {
                     strokeWidthPx: number,
                     endSizePx: number,
                     edgeStyle: string,
                     endArrow: string,
                 },
-                flow: {
+                flow: HandleThemes & {
                     strokeWidthPx: number,
                     endSizePx: number,
                     shape: string,
@@ -69,7 +87,7 @@ declare module '@mui/material/styles' {
                     defaultHeightPx: number,
                     strokeWidth: number,
                 },
-                cldLink: {
+                cldLink: HandleThemes & {
                     strokeWidthPx: number,
                     endSizePx: number,
                     edgeStyle: string,
@@ -87,6 +105,7 @@ declare module '@mui/material/styles' {
                     defaultHeightPx: number,
                     defaultFontSize: number
                 },
+                arrowComponent: HandleThemes,
                 canvas: {
                     borderWidthPx: number
                 },
@@ -124,14 +143,14 @@ declare module '@mui/material/styles' {
                 minWidthPx?: number,
                 defaultVisibility?: boolean
             },
-            maxgraph?: {
-                connection?: {
+            maxgraph: {
+                connection: HandleThemes & {
                     strokeWidthPx?: number,
                     endSizePx?: number,
                     edgeStyle?: string,
-                    endArrow?: string
+                    endArrow?: string,
                 },
-                flow?: {
+                flow?: HandleThemes & {
                     strokeWidthPx?: number,
                     endSizePx?: number,
                     shape?: string,
@@ -166,7 +185,7 @@ declare module '@mui/material/styles' {
                     defaultHeightPx?: number,
                     strokeWidth?: number,
                 },
-                cldLink?: {
+                cldLink?: HandleThemes & {
                     strokeWidthPx?: number,
                     endSizePx?: number,
                     edgeStyle?: string,
@@ -184,6 +203,7 @@ declare module '@mui/material/styles' {
                     defaultHeightPx?: number,
                     defaultFontSize?: number,
                 },
+                arrowComponent?: HandleThemes,
                 canvas?: {
                     borderWidthPx?: number
                 },
@@ -210,35 +230,37 @@ declare module '@mui/material/styles' {
     }
 }
 
+const palette = {
+    primary: {
+        main: "#1565c0",
+        light: "#4383cc",
+        dark: "#0e4686",
+        contrastText: "#fff"
+    },
+    secondary: {
+        main: "#ffa000",
+        light: "#ffb333",
+        dark: "#b27000",
+        contrastText: "#fff"
+    },
+    error: {
+        main: "#c62828",
+        light: "#d15353",
+        dark: "#8a1c1c",
+        contrastText: "#fff"
+    },
+    grayed: {
+        main: "#9B9F9F",
+    },
+    canvas: {
+        main: "#ffffff",
+        contrastText: "#000000"
+    },
+};
+
 export const theme = createTheme({
     spacing: 8,
-    palette: {
-        primary: {
-            main: "#1565c0",
-            light: "#4383cc",
-            dark: "#0e4686",
-            contrastText: "#fff"
-        },
-        secondary: {
-            main: "#ffa000",
-            light: "#ffb333",
-            dark: "#b27000",
-            contrastText: "#fff"
-        },
-        error: {
-            main: "#c62828",
-            light: "#d15353",
-            dark: "#8a1c1c",
-            contrastText: "#fff"
-        },
-        grayed: {
-            main: "#9B9F9F",
-        },
-        canvas: {
-            main: "#ffffff",
-            contrastText: "#000000"
-        },
-    },
+    palette,
     custom: {
         sidebar: {
             dragHandle: {
@@ -256,6 +278,14 @@ export const theme = createTheme({
                 endSizePx: 5,
                 edgeStyle: "orthogonalEdgeStyle",
                 endArrow: "classic",
+                labelHandle: {
+                    width: 0,
+                    strokeWidth: 0,
+                    strokeColor: palette.canvas.main,
+                    strokeOpacity: 0.0,
+                    fillColor: palette.canvas.main,
+                    fillOpacity: 0.0,
+                }
             },
             flow: {
                 strokeWidthPx: 2,
@@ -298,6 +328,14 @@ export const theme = createTheme({
                 edgeStyle: "orthogonalEdgeStyle",
                 endArrow: "classic",
                 fontSize: 20,
+                labelHandle: {
+                    width: 0,
+                    strokeWidth: 0,
+                    strokeColor: palette.canvas.main,
+                    strokeOpacity: 0.0,
+                    fillColor: palette.canvas.main,
+                    fillOpacity: 0.0,
+                }
             },
             stickynote: {
                 color: "rgba(243, 245, 39, 0.57)",
@@ -309,6 +347,32 @@ export const theme = createTheme({
                 defaultWidthPx: 80,
                 defaultHeightPx: 25,
                 defaultFontSize: 18,
+            },
+            arrowComponent: {
+                labelHandle: {
+                    width: 6,
+                    strokeWidth: 1,
+                    strokeColor: palette.canvas.contrastText,
+                    strokeOpacity: 100,
+                    fillColor: palette.secondary.light,
+                    fillOpacity: 100,
+                },
+                terminalHandle: {
+                    width: 8,
+                    strokeWidth: 1,
+                    strokeColor: palette.canvas.contrastText,
+                    strokeOpacity: 100,
+                    fillOpacity: 100,
+                    fillColor: palette.primary.main,
+                },
+                innerHandle: {
+                    width: 8,
+                    strokeWidth: 1,
+                    strokeColor: palette.canvas.contrastText,
+                    strokeOpacity: 100,
+                    fillOpacity: 100,
+                    fillColor: palette.secondary.main,
+                }
             },
             canvas: {
                 borderWidthPx: 1
