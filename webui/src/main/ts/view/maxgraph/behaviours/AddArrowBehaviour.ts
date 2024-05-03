@@ -65,7 +65,9 @@ export default abstract class AddArrowBehaviour
             const previewStyle = this.getPreviewArrowStyle();
             if (previewStyle) this.addPreviewArrow(cell, previewStyle);
         }
-        this.resetMode();
+        else {
+            this.resetMode();
+        }
     }
 
     protected canConnect(
