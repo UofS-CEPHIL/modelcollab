@@ -1,4 +1,4 @@
-import { Cell, EdgeHandler, EventObject, EventSource, InternalMouseEvent, Rectangle, RectangleShape } from "@maxgraph/core";
+import { Cell, CellState, EdgeHandler, ElbowEdgeHandler, EventObject, EventSource, InternalMouseEvent, Point, Rectangle, RectangleShape } from "@maxgraph/core";
 import { HandleTheme, HandleThemes } from "@mui/material";
 import ComponentType from "../../data/components/ComponentType";
 import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";
@@ -11,9 +11,17 @@ enum HandleType {
     LABEL
 }
 
-export default class MCEdgeHandler extends EdgeHandler {
+export default class MCEdgeHandler extends ElbowEdgeHandler {
 
     public static readonly EDGE_POINTS = "edge_points";
+
+    public constructor(state: CellState) {
+        super(state);
+        this.dblClickRemoveEnabled = true;
+        this.removeEnabled = true;
+        this.addEnabled = true;
+        this.straightRemoveEnabled = true;
+    }
 
     public isConnectableCell(cell: Cell): boolean {
         // Disallow moving arrows inside static models
@@ -24,6 +32,11 @@ export default class MCEdgeHandler extends EdgeHandler {
         const terminal = this.state.cell.getTerminal(this.isSource);
         if (!terminal) throw new Error("No terminal for cell " + cell.getId());
         return cell.getId() === terminal.getId();
+    }
+
+    public changePoints(edge: Cell, points: Point[], clone: boolean): Cell {
+        const c = super.changePoints(edge, points, clone);
+        return c;
     }
 
     public getHandleFillColor(): string {

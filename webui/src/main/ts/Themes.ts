@@ -350,11 +350,11 @@ export const theme = createTheme({
             },
             arrowComponent: {
                 labelHandle: {
-                    width: 6,
+                    width: 8,
                     strokeWidth: 1,
                     strokeColor: palette.canvas.contrastText,
                     strokeOpacity: 100,
-                    fillColor: palette.secondary.light,
+                    fillColor: palette.grayed.main,
                     fillOpacity: 100,
                 },
                 terminalHandle: {
