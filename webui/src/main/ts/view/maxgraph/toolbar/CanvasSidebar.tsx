@@ -9,7 +9,8 @@ export interface Props {
     getIsVisible: () => boolean;
     firebaseDataModel: FirebaseDataModel;
     modelUuid: string;
-    components: FirebaseComponent[],
+    components: FirebaseComponent[];
+    selectedComponent: FirebaseComponent | null;
 }
 
 export interface State {

@@ -1,9 +1,11 @@
-import { Button, Divider, List, ListItem, ListItemButton, TextField, Typography } from '@mui/material';
-import React, { ReactElement } from 'react';
+import { Button, Divider, IconButton, List, ListItem, ListItemButton, TextField } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import React, { ChangeEvent, KeyboardEvent, ReactElement } from 'react';
 import ComponentType from '../../../data/components/ComponentType';
 import FirebaseComponent from '../../../data/components/FirebaseComponent';
 import FirebaseStaticModel from '../../../data/components/FirebaseStaticModel';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
+import EditTextListItem from './EditTextListItem';
 import RefreshAndSaveListItem from './RefreshAndSaveListItem';
 import TypographyListItem from './TypographyListItem';
 
@@ -27,34 +29,22 @@ export default class EditComponentsSidebarContent
     }
 
     public componentDidUpdate(prevProps: Props): void {
-        const curId = this.props.component?.getId();
-        const prevId = prevProps.component?.getId();
-        if (curId !== prevId) {
+        if (
+            (prevProps.component === null && this.props.component !== null)
+            || (prevProps.component !== null && this.props.component === null)
+            || (
+                prevProps.component
+                && this.props.component
+                && !prevProps.component.equals(this.props.component)
+            )
+        ) {
             this.setState({ currentComponent: this.props.component });
         }
     }
 
     public render(): ReactElement {
-        const hasChanges = this.props.component !== null
-            && this.state.currentComponent !== null
-            && !this.state.currentComponent.equals(this.props.component);
         return (
             <List>
-                <RefreshAndSaveListItem
-                    onRefresh={() =>
-                        this.setState({ currentComponent: this.props.component })
-                    }
-                    onSave={() =>
-                        this.state.currentComponent &&
-                        this.props.firebaseDataModel.updateComponent(
-                            this.props.sessionId,
-                            this.state.currentComponent
-                        )
-                    }
-                    disabled={this.props.component === null}
-                    hasChanges={hasChanges}
-                    key={-1}
-                />
                 {
                     this.props.component?.getType() &&
                     <TypographyListItem
@@ -81,6 +71,7 @@ export default class EditComponentsSidebarContent
                 case ComponentType.STOCK:
                     return [
                         this.makeUnapplySubstitutionsButton(),
+                        this.makeFontEditListItem(),
                         this.makeTextBoxListItem("text", isInner, "Name"),
                         this.makeTextBoxListItem(
                             "value",
@@ -92,17 +83,28 @@ export default class EditComponentsSidebarContent
                 case ComponentType.VARIABLE:
                     return [
                         this.makeUnapplySubstitutionsButton(),
+                        this.makeFontEditListItem(),
                         this.makeTextBoxListItem("text", isInner, "Name"),
                         this.makeTextBoxListItem("value", isInner, "Value"),
                     ];
                 case ComponentType.SUM_VARIABLE:
+                case ComponentType.CLD_VERTEX:
+                case ComponentType.STICKY_NOTE:
                     return [
                         this.makeUnapplySubstitutionsButton(),
-                        this.makeTextBoxListItem("text", isInner, "Name")
+                        this.makeFontEditListItem(),
+                        this.makeTextBoxListItem(
+                            "text",
+                            isInner,
+                            "Name",
+                            this.state.currentComponent.getType()
+                            !== ComponentType.CLD_VERTEX
+                        ),
                     ];
                 case ComponentType.FLOW:
                     return [
                         this.makeUnapplySubstitutionsButton(),
+                        this.makeFontEditListItem(),
                         this.makeTextBoxListItem("text", isInner, "Name"),
                         this.makeTextBoxListItem(
                             "equation",
@@ -131,27 +133,83 @@ export default class EditComponentsSidebarContent
         }
     }
 
+    private makeFontEditListItem(): ReactElement {
+        return (
+            <EditTextListItem
+                fontSize={this.state.currentComponent?.getData().fontSize}
+                bold={this.state.currentComponent?.getData().bold}
+                italic={this.state.currentComponent?.getData().italic}
+                underline={this.state.currentComponent?.getData().underline}
+                onChange={(fs, b, i, u) =>
+                    this.state.currentComponent &&
+                    this.props.firebaseDataModel.updateComponent(
+                        this.props.sessionId,
+                        this.state.currentComponent.withData({
+                            ...this.state.currentComponent?.getData(),
+                            bold: b,
+                            italic: i,
+                            underline: u,
+                            fontSize: fs,
+                        }),
+                    )}
+                key={"editFont"}
+            />
+        );
+    }
+
+    private resetComponent(): void {
+        this.setState({ currentComponent: this.props.component });
+    }
+
     private makeTextBoxListItem(
         fieldName: string,
         disabled: boolean,
-        text: string = fieldName
+        text: string = fieldName,
+        allowEmpty: boolean = true
     ): ReactElement {
+
+        const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") {
+                var value = this.state.currentComponent!.getData()[fieldName];
+                if (/^(\s+)?$/.test(value) && !allowEmpty) {
+                    this.resetComponent();
+                }
+                else if (
+                    this.state.currentComponent
+                    && this.props.component
+                    && !this.state.currentComponent.equals(this.props.component)
+                ) {
+                    this.props.firebaseDataModel.updateComponent(
+                        this.props.sessionId,
+                        this.state.currentComponent
+                    );
+                }
+                document.body.focus();
+            }
+        }
+
+        const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+            this.setState({
+                currentComponent: this.state.currentComponent?.withData({
+                    ...this.state.currentComponent?.getData(),
+                    [fieldName]: e.target.value
+                }) ?? null
+            })
+        }
+
         return (
             <ListItem key={fieldName}>
                 <TextField
                     value={this.state.currentComponent!.getData()[fieldName]}
-                    onChange={e => this.setState({
-                        currentComponent: this.state.currentComponent?.withData({
-                            ...this.state.currentComponent?.getData(),
-                            [fieldName]: e.target.value
-                        }) ?? null
-                    })}
+                    onChange={handleChange}
                     name={text}
                     label={text}
                     error={false}
                     inputProps={{
                         id: `${fieldName}-editbox`,
                     }}
+                    onKeyUp={handleKeyUp}
+                    onBlur={() => this.resetComponent()}
                     disabled={disabled}
                 />
             </ListItem>
@@ -161,9 +219,10 @@ export default class EditComponentsSidebarContent
     private makeUnapplySubstitutionsButton(): ReactElement | null {
         if (!this.state.currentComponent) return null;
         return (
-            <ListItem key={-4}>
+            <ListItem key={"undoids"}>
                 <Button
                     variant={"contained"}
+                    fullWidth={true}
                     onClick={() =>
                         this.props.firebaseDataModel
                             .unidentifyAllComponents(

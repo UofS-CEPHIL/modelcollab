@@ -100,22 +100,6 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             () => { },
         );
 
-        graph.getSelectionModel().addListener(
-            InternalEvent.CHANGE,
-            (_: EventSource, e: EventObject) => {
-                const sel = graph.getSelectionCells();
-                if (
-                    sel.length === 1
-                    && sel[0].getValue() instanceof FirebaseComponentBase
-                ) {
-                    this.setState({ selectedComponent: sel[0].getValue() });
-                }
-                else {
-                    this.setState({ selectedComponent: null });
-                }
-            }
-        );
-
         return graph;
     }
 

@@ -32,7 +32,11 @@ export default class FirebaseStickyNote
                 y,
                 width: theme.custom.maxgraph.stickynote.defaultWidthPx,
                 height: theme.custom.maxgraph.stickynote.defaultHeightPx,
-                text: "Note"
+                text: "Note",
+                bold: false,
+                italic: false,
+                underline: false,
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
             }
         );
     }

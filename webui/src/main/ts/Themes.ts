@@ -2,6 +2,12 @@ import { FONT } from "@maxgraph/core/dist/util/Constants";
 import { createTheme, Palette } from "@mui/material";
 
 
+declare module '@mui/material/Button' {
+    interface ButtonPropsSizeOverrides {
+        xsmall: true;
+    }
+}
+
 // Declare custom vars in theme
 declare module '@mui/material/styles' {
 
@@ -395,6 +401,23 @@ export const theme = createTheme({
             border: '2px solid #000',
             boxShadow: 24,
             p: 4,
+        }
+    },
+    components: {
+        MuiButton: {
+            variants: [
+                {
+                    props: { size: "xsmall" },
+                    style: {
+                        padding: "2px 2px",
+                        fontSize: 10,
+                        minWidth: 10,
+                        minHeight: 10,
+                        maxWidth: 30,
+                        maxHeight: 30,
+                    }
+                },
+            ]
         }
     }
 });

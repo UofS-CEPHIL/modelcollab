@@ -1,11 +1,11 @@
+import { theme } from "../../Themes";
 import ComponentType from "./ComponentType";
 import FirebaseComponent from "./FirebaseComponent";
 import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
+import { FirebaseTextProperties } from "./FirebaseTextComponent";
 
-export interface FirebaseFlowData extends FirebasePointerData {
-    equation: string;
-    text: string;
-}
+export type FirebaseFlowData =
+    FirebasePointerData & FirebaseTextProperties & { equation: string };
 
 export default class FirebaseFlow
     extends FirebasePointerComponent<FirebaseFlowData>
@@ -44,8 +44,15 @@ export default class FirebaseFlow
             from: String(data.from),
             to: String(data.to),
             points: data.points ?? [],
-            text: String(data.text),
-            equation: String(data.equation)
+            text: String(data.text ?? ""),
+            equation: String(data.equation ?? ""),
+            bold: Boolean(data.bold ?? false),
+            italic: Boolean(data.italic ?? false),
+            underline: Boolean(data.underline ?? false),
+            fontSize: Number(
+                data.fontSize
+                ?? theme.custom.maxgraph.textComponent.defaultFontSize
+            ),
         };
         FirebasePointerComponent.sanitizePointerData(d);
         return d;
@@ -64,6 +71,10 @@ export default class FirebaseFlow
                 text: "Flow",
                 equation: "",
                 points: [],
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
+                bold: false,
+                underline: false,
+                italic: false
             }
         );
     }

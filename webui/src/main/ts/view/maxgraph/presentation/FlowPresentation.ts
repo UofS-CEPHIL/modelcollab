@@ -4,6 +4,7 @@ import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
 import StockFlowGraph from "../StockFlowGraph";
 import PointerComponentPresentation from "./PointerComponentPresentation";
+import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class FlowPresentation
     extends PointerComponentPresentation<FirebaseFlow>
@@ -91,12 +92,39 @@ export default class FlowPresentation
         return newComponents;
     }
 
+    public updateComponent(
+        component: FirebaseFlow,
+        cell: Cell,
+        graph: MCGraph
+    ): FirebaseFlow {
+        const update = super.updateComponent(component, cell, graph);
+        const { bold, italic, underline } = TextComponentPresentation
+            .decodeFontStyle(cell.getStyle().fontStyle ?? 0);
+        return update.withData({
+            ...update.getData(),
+            text: cell.getValue().getData().text,
+            bold,
+            italic,
+            underline
+        });
+    }
+
     public updateCell(
         flow: FirebaseFlow,
         cell: Cell,
         graph: StockFlowGraph
     ): void {
         super.updateCell(flow, cell, graph);
+
+        const style = { ...cell.getStyle() };
+        style.fontSize = flow.getData().fontSize;
+        style.fontStyle = TextComponentPresentation.encodeFontStyle(
+            flow.getData().bold,
+            flow.getData().italic,
+            flow.getData().underline
+        );
+        graph.getDataModel().setStyle(cell, style);
+
         const flowFrom = flow.getData().from;
         const flowTo = flow.getData().to;
         if (FirebaseFlow.isPoint(flowFrom)) {

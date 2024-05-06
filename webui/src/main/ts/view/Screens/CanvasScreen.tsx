@@ -1,5 +1,5 @@
 import React, { createRef, Fragment, ReactElement, RefObject } from 'react';
-import { Cell, EventSource, Graph, InternalEvent, InternalMouseEvent, Point, RubberBandHandler, SelectionHandler } from '@maxgraph/core';
+import { Cell, EventObject, EventSource, Graph, InternalEvent, InternalMouseEvent, Point, RubberBandHandler, SelectionHandler } from '@maxgraph/core';
 import UserControls from '../maxgraph/UserControls';
 import { UiMode } from '../../UiMode';
 import DiagramActions from "../maxgraph/DiagramActions";
@@ -23,6 +23,7 @@ export interface State {
     hoverCell: Cell | null;
     keydownPosition: Point | null;
     keydownCell: Cell | null;
+    selectedComponent: FirebaseComponent | null;
 
     modelName: string | null;
     mode: UiMode,
@@ -82,6 +83,22 @@ export default abstract class CanvasScreen
         }
     }
 
+    public componentDidUpdate(): void {
+        if (this.state.selectedComponent) {
+            const updatedComponent = this.state.components.find(
+                c => c.getId() === this.state.selectedComponent!.getId()
+            );
+            if (updatedComponent) {
+                if (!updatedComponent.equals(this.state.selectedComponent)) {
+                    this.setState({ selectedComponent: updatedComponent });
+                }
+            }
+            else {
+                this.setState({ selectedComponent: null });
+            }
+        }
+    }
+
     protected setupRubberBandHandler(graph: G): RubberBandHandler {
         const rbHandler = new RubberBandHandler(graph);
         rbHandler.fadeOut = true;
@@ -121,6 +138,22 @@ export default abstract class CanvasScreen
                 }
             }
         });
+
+        this.graph.getSelectionModel().addListener(
+            InternalEvent.CHANGE,
+            (_: EventSource, e: EventObject) => {
+                const sel = this.graph!.getSelectionCells();
+                if (
+                    sel.length === 1
+                    && sel[0].getValue() instanceof FirebaseComponentBase
+                ) {
+                    this.setState({ selectedComponent: sel[0].getValue() });
+                }
+                else {
+                    this.setState({ selectedComponent: null });
+                }
+            }
+        );
     }
 
     private getCellForEvent(e: InternalMouseEvent): Cell | null {

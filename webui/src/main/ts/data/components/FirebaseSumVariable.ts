@@ -32,6 +32,10 @@ export default class FirebaseSumVariable
                 text: "Sum Var",
                 width: theme.custom.maxgraph.textComponent.defaultWidthPx,
                 height: theme.custom.maxgraph.textComponent.defaultHeightPx,
+                bold: false,
+                italic: false,
+                underline: false,
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
             }
         );
     }

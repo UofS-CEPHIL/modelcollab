@@ -34,6 +34,7 @@ interface State extends CanvasScreenState {
     displayedModalBox: ModalBoxType | null;
     sidebarWidth: number;
     sidebarVisible: boolean;
+    selectedComponent: FirebaseComponent | null;
 }
 
 class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
@@ -82,6 +83,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
             keydownCell: null,
             mode: UiMode.MOVE,
             hoverCell: null,
+            selectedComponent: null,
         };
     }
 
@@ -188,6 +190,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
                 firebaseDataModel={this.props.firebaseDataModel}
                 modelUuid={this.props.modelUuid!}
                 components={this.state.components}
+                selectedComponent={this.state.selectedComponent}
             />
         );
     }

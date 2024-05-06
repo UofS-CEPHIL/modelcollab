@@ -36,7 +36,11 @@ export default class FirebaseDynamicVariable
                 width: theme.custom.maxgraph.textComponent.defaultWidthPx,
                 height: theme.custom.maxgraph.textComponent.defaultHeightPx,
                 value: "",
-                text: "Variable"
+                text: "Variable",
+                bold: false,
+                italic: false,
+                underline: false,
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
             }
         );
     }

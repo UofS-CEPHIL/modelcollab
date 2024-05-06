@@ -36,6 +36,10 @@ export default class FirebaseCausalLoopVertex
                 width: theme.custom.maxgraph.cldVertex.defaultWidthPx,
                 height: theme.custom.maxgraph.cldVertex.defaultHeightPx,
                 text: FirebaseCausalLoopVertex.EMPTY_VERTEX_TEXT,
+                bold: false,
+                italic: false,
+                underline: false,
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize
             }
         );
     }

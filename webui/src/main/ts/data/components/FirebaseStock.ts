@@ -30,7 +30,11 @@ export default class FirebaseStock
                 width: theme.custom.maxgraph.stock.defaultWidthPx,
                 height: theme.custom.maxgraph.stock.defaultHeightPx,
                 value: "",
-                text: "Stock"
+                text: "Stock",
+                bold: false,
+                italic: false,
+                underline: false,
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
             }
         );
     }

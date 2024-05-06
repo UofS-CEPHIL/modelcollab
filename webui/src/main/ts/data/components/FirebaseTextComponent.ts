@@ -1,20 +1,18 @@
+import { theme } from "../../Themes";
 import ComponentType from "./ComponentType";
 import FirebaseRectangleComponent, { FirebaseRectangleData } from "./FirebaseRectangleComponent";
 
-export interface FirebaseTextData extends FirebaseRectangleData {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+export interface FirebaseTextProperties {
+    fontSize: number;
+    bold: boolean;
+    italic: boolean;
+    underline: boolean;
     text: string;
 }
 
+export type FirebaseTextData = FirebaseRectangleData & FirebaseTextProperties;
+
 export interface FirebaseNameValueData extends FirebaseTextData {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    text: string;
     value: string;
 }
 
@@ -44,11 +42,24 @@ export default abstract class FirebaseTextComponent
 
     public static toTextComponentData(d: any): FirebaseTextData {
         return {
-            x: Number(d.x),
-            y: Number(d.y),
-            width: Number(d.width),
-            height: Number(d.height),
-            text: String(d.text)
+            x: Number(d.x ?? 0),
+            y: Number(d.y ?? 0),
+            width: Number(
+                d.width
+                ?? theme.custom.maxgraph.textComponent.defaultWidthPx
+            ),
+            height: Number(
+                d.height
+                ?? theme.custom.maxgraph.textComponent.defaultHeightPx
+            ),
+            fontSize: Number(
+                d.fontSize
+                ?? theme.custom.maxgraph.textComponent.defaultFontSize
+            ),
+            bold: Boolean(d.bold ?? false),
+            italic: Boolean(d.italic ?? false),
+            underline: Boolean(d.underline ?? false),
+            text: String(d.text ?? "")
         };
     }
 
