@@ -45,8 +45,14 @@ export default class LoopIconPresentation
         graph: MCGraph,
     ): FirebaseLoopIcon {
         const newComponent = super.updateComponent(component, cell, graph);
+        const size = Math.min(
+            newComponent.getData().width,
+            newComponent.getData().height
+        );
         return newComponent.withData({
             ...newComponent.getData(),
+            width: size,
+            height: size,
             color: cell.getStyle().fontColor!
         });
     }
