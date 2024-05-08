@@ -75,17 +75,14 @@ declare module '@mui/material/styles' {
                 param: {
                     strokeWidth: number,
                     dashed: boolean,
-                    fontStyle: number,
                 },
                 dynvar: {
                     strokeWidth: number,
                     dashed: boolean,
-                    fontStyle: number,
                 },
                 sumvar: {
                     strokeWidth: 3,
                     dashed: boolean,
-                    fontStyle: number,
                 },
                 cldVertex: {
                     defaultWidthPx: number,
@@ -124,6 +121,9 @@ declare module '@mui/material/styles' {
                     arrowHeadHeight: number,
                     defaultWidthPx: number,
                 },
+                icons: {
+                    sizePx: number,
+                }
             },
             modal: {
                 position: string,
@@ -176,17 +176,14 @@ declare module '@mui/material/styles' {
                 param: {
                     strokeWidth?: number,
                     dashed?: boolean,
-                    fontStyle?: number,
                 },
                 dynvar: {
                     strokeWidth?: number,
                     dashed?: boolean,
-                    fontStyle?: number,
                 },
                 sumvar: {
                     strokeWidth?: number,
                     dashed?: boolean,
-                    fontStyle?: number,
                 },
                 cldVertex?: {
                     defaultWidthPx?: number,
@@ -224,6 +221,9 @@ declare module '@mui/material/styles' {
                     arrowHeadWidth?: number,
                     arrowHeadHeight?: number,
                     defaultWidthPx?: number,
+                },
+                icons: {
+                    sizePx?: number,
                 },
             },
             modal?: {
@@ -316,17 +316,14 @@ export const theme = createTheme({
             param: {
                 strokeWidth: 2,
                 dashed: false,
-                fontStyle: 2,
             },
             dynvar: {
-                strokeWidth: 1,
+                strokeWidth: 2,
                 dashed: false,
-                fontStyle: 0,
             },
             sumvar: {
                 strokeWidth: 2,
-                dashed: true,
-                fontStyle: 0,
+                dashed: false,
             },
             cldVertex: {
                 defaultWidthPx: 80,
@@ -396,6 +393,9 @@ export const theme = createTheme({
                 arrowHeadWidth: 10,
                 arrowHeadHeight: 10,
                 defaultWidthPx: 50,
+            },
+            icons: {
+                sizePx: 20,
             }
         },
         modal: {
