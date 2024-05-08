@@ -1,16 +1,11 @@
 import { theme } from "../../Themes";
+import { FirebaseColorProperties, FirebaseTextProperties } from "../FirebaseProperties";
 import ComponentType from "./ComponentType";
 import FirebaseRectangleComponent, { FirebaseRectangleData } from "./FirebaseRectangleComponent";
 
-export interface FirebaseTextProperties {
-    fontSize: number;
-    bold: boolean;
-    italic: boolean;
-    underline: boolean;
-    text: string;
-}
-
-export type FirebaseTextData = FirebaseRectangleData & FirebaseTextProperties;
+export type FirebaseTextData = FirebaseRectangleData
+    & FirebaseTextProperties
+    & FirebaseColorProperties;
 
 export interface FirebaseNameValueData extends FirebaseTextData {
     value: string;
@@ -59,7 +54,8 @@ export default abstract class FirebaseTextComponent
             bold: Boolean(d.bold ?? false),
             italic: Boolean(d.italic ?? false),
             underline: Boolean(d.underline ?? false),
-            text: String(d.text ?? "")
+            text: String(d.text ?? ""),
+            color: String(d.color ?? "#000000"),
         };
     }
 

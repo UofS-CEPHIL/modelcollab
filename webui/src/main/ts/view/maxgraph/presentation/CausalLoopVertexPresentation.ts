@@ -7,24 +7,6 @@ import TextComponentPresentation from "./TextComponentPresentation";
 export default class CausalLoopVertexPresentation
     extends TextComponentPresentation<FirebaseCausalLoopVertex> {
 
-    public getNormalStrokeColorForComponent(
-        _: FirebaseCausalLoopVertex
-    ): string {
-        return theme.palette.canvas.main;
-    }
-
-    public getErrorStrokeColorForComponent(
-        _: FirebaseCausalLoopVertex
-    ): string {
-        return theme.palette.canvas.main;
-    }
-
-    public getHoveredStrokeColorForComponent(
-        _: FirebaseCausalLoopVertex
-    ): string {
-        return theme.palette.canvas.main;
-    }
-
     public makeVertexParameters(
         parent: Cell,
         component: FirebaseCausalLoopVertex,
@@ -43,15 +25,27 @@ export default class CausalLoopVertexPresentation
         };
     }
 
+    public updateCell(
+        component: FirebaseCausalLoopVertex,
+        cell: Cell,
+        graph: MCGraph,
+    ): void {
+        super.updateCell(component, cell, graph);
+        const style = {
+            ...cell.getStyle(),
+            strokeColor: "none"
+        };
+        graph.batchUpdate(() =>
+            graph.getDataModel().setStyle(cell, style)
+        );
+    }
+
     public static getVertexStyle(isInner: boolean = false): CellStyle {
         return {
             shape: "text",
-            fillColor: theme.palette.canvas.main,
+            fillColor: "none",
             strokeWidth: 0,
-            strokeColor: theme.palette.canvas.main,
-            //rounded: true,
-            //strokeWidth: theme.custom.maxgraph.cldVertex.strokeWidth,
-            //strokeColor: theme.palette.canvas.contrastText,
+            strokeColor: "none",
             fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
             fontColor: theme.palette.canvas.contrastText,
             movable: !isInner,

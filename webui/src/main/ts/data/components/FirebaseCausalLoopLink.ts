@@ -1,3 +1,5 @@
+import { theme } from "../../Themes";
+import { FirebaseColorProperties } from "../FirebaseProperties";
 import ComponentType from "./ComponentType";
 import FirebaseComponent from "./FirebaseComponent";
 import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
@@ -39,16 +41,9 @@ export function nextPolarity(p: Polarity): Polarity {
     return polarities.at(idx)!;
 }
 
-export interface FirebaseCausalLoopLinkData extends FirebasePointerData {
-    from: string,
-    to: string,
-    points: { x: number, y: number }[],
-    entryX?: number,
-    entryY?: number,
-    exitX?: number,
-    exitY?: number,
-    polarity: Polarity,
-}
+export type FirebaseCausalLoopLinkData = FirebaseColorProperties
+    & FirebasePointerData
+    & { polarity: Polarity };
 
 export default class FirebaseCausalLoopLink
     extends FirebasePointerComponent<FirebaseCausalLoopLinkData>
@@ -128,7 +123,8 @@ export default class FirebaseCausalLoopLink
                 from,
                 to,
                 points: [],
-                polarity: Polarity.POSITIVE
+                polarity: Polarity.POSITIVE,
+                color: theme.custom.maxgraph.arrowComponent.defaultColor,
             }
         );
     }
@@ -138,7 +134,11 @@ export default class FirebaseCausalLoopLink
             from: data.from.toString(),
             to: data.to.toString(),
             points: data.points ?? [],
-            polarity: toPolarity(data.polarity)
+            polarity: toPolarity(data.polarity),
+            color: String(
+                data.color
+                ?? theme.custom.maxgraph.arrowComponent.defaultColor
+            ),
         };
         FirebasePointerComponent.sanitizePointerData(d);
         return d;

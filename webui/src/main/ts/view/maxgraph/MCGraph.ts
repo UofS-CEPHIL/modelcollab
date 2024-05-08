@@ -1,5 +1,6 @@
 import { Cell, CellEditorHandler, CellRenderer, CellState, ChildChange, EdgeHandler, EventObject, EventSource, Geometry, GeometryChange, Graph, InternalEvent, InternalMouseEvent, SelectionHandler, StyleChange, TooltipHandler, UndoableChange, UndoableEdit, UndoManager, ValueChange } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
+import FirebaseCausalLoopLink from "../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../data/components/FirebaseCausalLoopVertex";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";
@@ -368,44 +369,39 @@ export default abstract class MCGraph extends Graph {
     public setCellDisplayError(cell: Cell): void {
         this.setCellColor(
             cell,
-            this.presentation.getErrorStrokeColorForComponent(cell.getValue()),
-            this.presentation.getErrorTextColorForComponent(cell.getValue()),
+            theme.palette.error.main,
+            theme.palette.error.main
         );
     }
 
     public setCellDisplayHovered(cell: Cell): void {
         this.setCellColor(
             cell,
-            this.presentation.getHoveredStrokeColorForComponent(cell.getValue()),
-            this.presentation.getHoveredTextColorForComponent(cell.getValue()),
+            theme.custom.maxgraph.canvas.hoverColor,
+            theme.custom.maxgraph.canvas.hoverColor
         );
     }
 
     public setCellDisplayNormal(cell: Cell): void {
+        const val = cell.getValue();
+        const fontColor =
+            (val instanceof FirebaseComponentBase && val.getData().color)
+                ? val.getData().color
+                : theme.palette.canvas.contrastText;
+        var strokeColor = fontColor;
+        if (val instanceof FirebaseCausalLoopVertex) {
+            strokeColor = "none";
+        }
+
         this.setCellColor(
             cell,
-            this.presentation.getNormalStrokeColorForComponent(cell.getValue()),
-            this.presentation.getNormalTextColorForComponent(cell.getValue()),
+            strokeColor,
+            fontColor,
         );
     }
 
     public setAllCellsNormal(): void {
-        const isAbnormalStrokeColor = (c: Cell) =>
-            c.getValue() instanceof FirebaseComponentBase<any>
-            && c.getStyle().strokeColor
-            !== this.presentation.getNormalStrokeColorForComponent(c.getValue());
-
-        const isAbnormalTextColor = (c: Cell) =>
-            c.getValue() instanceof FirebaseComponentBase<any>
-            && c.getStyle().fontColor
-            !== this.presentation.getNormalTextColorForComponent(c.getValue());
-
-        const isAbnormalColor = (c: Cell) =>
-            isAbnormalStrokeColor(c) || isAbnormalTextColor(c);
-
-
-        const notNormal = this.getAllCells().filter(isAbnormalColor);
-        notNormal.forEach(c => this.setCellDisplayNormal(c));
+        this.getAllCells().forEach(c => this.setCellDisplayNormal(c));
     }
 
     public setCellColor(

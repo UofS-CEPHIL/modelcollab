@@ -27,6 +27,30 @@ export default class LoopIconPresentation
         };
     }
 
+    public updateCell(
+        component: FirebaseLoopIcon,
+        cell: Cell,
+        graph: MCGraph,
+    ): void {
+        super.updateCell(component, cell, graph);
+        const style = { ...cell.getStyle() };
+        style.fontColor = component.getData().color;
+        style.strokeColor = component.getData().color;
+        graph.batchUpdate(() => graph.getDataModel().setStyle(cell, style));
+    }
+
+    public updateComponent(
+        component: FirebaseLoopIcon,
+        cell: Cell,
+        graph: MCGraph,
+    ): FirebaseLoopIcon {
+        const newComponent = super.updateComponent(component, cell, graph);
+        return newComponent.withData({
+            ...newComponent.getData(),
+            color: cell.getStyle().fontColor!
+        });
+    }
+
     public static getVertexStyle(isInner: boolean = false): CellStyle {
         return {
             shape: LoopIconShape.LOOP_ICON_NAME,

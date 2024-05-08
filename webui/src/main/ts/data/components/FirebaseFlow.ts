@@ -2,10 +2,12 @@ import { theme } from "../../Themes";
 import ComponentType from "./ComponentType";
 import FirebaseComponent from "./FirebaseComponent";
 import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
-import { FirebaseTextProperties } from "./FirebaseTextComponent";
+import { FirebaseColorProperties, FirebaseTextProperties } from "../FirebaseProperties";
 
-export type FirebaseFlowData =
-    FirebasePointerData & FirebaseTextProperties & { equation: string };
+export type FirebaseFlowData = FirebasePointerData
+    & FirebaseTextProperties
+    & FirebaseColorProperties
+    & { equation: string };
 
 export default class FirebaseFlow
     extends FirebasePointerComponent<FirebaseFlowData>
@@ -53,6 +55,7 @@ export default class FirebaseFlow
                 data.fontSize
                 ?? theme.custom.maxgraph.textComponent.defaultFontSize
             ),
+            color: String(data.color ?? theme.palette.canvas.contrastText),
         };
         FirebasePointerComponent.sanitizePointerData(d);
         return d;
@@ -74,7 +77,8 @@ export default class FirebaseFlow
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 bold: false,
                 underline: false,
-                italic: false
+                italic: false,
+                color: theme.palette.canvas.contrastText,
             }
         );
     }

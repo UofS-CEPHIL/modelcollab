@@ -1,11 +1,16 @@
+import { theme } from "../../Themes";
+import { FirebaseColorProperties } from "../FirebaseProperties";
 import ComponentType from "./ComponentType";
 import FirebaseComponent from "./FirebaseComponent";
 import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
 
+export type FirebaseConnectionData = FirebasePointerData
+    & FirebaseColorProperties;
+
 export default class FirebaseConnection
-    extends FirebasePointerComponent<FirebasePointerData>
+    extends FirebasePointerComponent<FirebaseConnectionData>
 {
-    public constructor(id: string, data: FirebasePointerData) {
+    public constructor(id: string, data: FirebaseConnectionData) {
         super(id, data);
     }
 
@@ -17,7 +22,7 @@ export default class FirebaseConnection
         return ComponentType.CONNECTION;
     }
 
-    public withData(d: FirebasePointerData): FirebaseConnection {
+    public withData(d: FirebaseConnectionData): FirebaseConnection {
         FirebasePointerComponent.sanitizePointerData(d);
         return new FirebaseConnection(this.getId(), d);
     }
@@ -68,16 +73,18 @@ export default class FirebaseConnection
             {
                 from,
                 to,
-                points: []
+                points: [],
+                color: theme.custom.maxgraph.arrowComponent.defaultColor,
             }
         );
     }
 
-    public static toConnectionComponentData(data: any): FirebasePointerData {
-        const d: FirebasePointerData = {
+    public static toConnectionComponentData(data: any): FirebaseConnectionData {
+        const d: FirebaseConnectionData = {
             from: data.from.toString(),
             to: data.to.toString(),
             points: data.points ?? [],
+            color: String(data.color) ?? theme.custom.maxgraph.connection,
         };
         FirebasePointerComponent.sanitizePointerData(d);
         return d;

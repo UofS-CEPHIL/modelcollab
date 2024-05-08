@@ -1,15 +1,12 @@
 import { theme } from "../../Themes";
+import { FirebaseColorProperties } from "../FirebaseProperties";
 import ComponentType from "./ComponentType";
-import { Polarity } from "./FirebaseCausalLoopLink";
+import { Polarity, toPolarity } from "./FirebaseCausalLoopLink";
 import FirebaseRectangleComponent, { FirebaseRectangleData } from "./FirebaseRectangleComponent";
 
-export interface FirebaseLoopIconData extends FirebaseRectangleData {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    polarity: Polarity,
-}
+export type FirebaseLoopIconData = FirebaseRectangleData
+    & FirebaseColorProperties
+    & { polarity: Polarity }
 
 export default class FirebaseLoopIcon extends
     FirebaseRectangleComponent<FirebaseLoopIconData>
@@ -58,18 +55,20 @@ export default class FirebaseLoopIcon extends
                 y,
                 width: theme.custom.maxgraph.loopIcon.defaultWidthPx,
                 height: theme.custom.maxgraph.loopIcon.defaultWidthPx,
-                polarity: Polarity.POSITIVE
+                polarity: Polarity.POSITIVE,
+                color: theme.palette.canvas.contrastText
             }
         );
     }
 
     public static toLoopIconData(data: any): FirebaseLoopIconData {
         return {
-            x: data.x,
-            y: data.y,
-            width: data.width,
-            height: data.height,
-            polarity: data.polarity
+            x: Number(data.x),
+            y: Number(data.y),
+            width: Number(data.width),
+            height: Number(data.height),
+            polarity: toPolarity(data.polarity),
+            color: String(data.color ?? theme.palette.canvas.contrastText)
         };
     }
 }

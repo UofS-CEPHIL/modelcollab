@@ -15,30 +15,6 @@ export default abstract class PointComponentPresentation
         graph: MCGraph,
     ): VertexParameters;
 
-    public getNormalStrokeColorForComponent(_: DataType): string {
-        return theme.palette.canvas.contrastText;
-    }
-
-    public getNormalTextColorForComponent(_: DataType): string {
-        return theme.palette.canvas.contrastText;
-    }
-
-    public getErrorStrokeColorForComponent(_: DataType): string {
-        return theme.palette.error.main;
-    }
-
-    public getErrorTextColorForComponent(_: DataType): string {
-        return theme.palette.error.main;
-    }
-
-    public getHoveredStrokeColorForComponent(_: DataType): string {
-        return theme.palette.secondary.main;
-    }
-
-    public getHoveredTextColorForComponent(_: DataType): string {
-        return theme.palette.secondary.main;
-    }
-
     public addComponent(
         component: DataType,
         graph: MCGraph,

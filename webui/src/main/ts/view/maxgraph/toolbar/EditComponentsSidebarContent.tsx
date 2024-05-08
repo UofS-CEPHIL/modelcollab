@@ -1,13 +1,12 @@
-import { Button, Divider, IconButton, List, ListItem, ListItemButton, TextField } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { Button, Divider, List, ListItem, TextField } from '@mui/material';
 import React, { ChangeEvent, KeyboardEvent, ReactElement } from 'react';
 import ComponentType from '../../../data/components/ComponentType';
 import FirebaseComponent from '../../../data/components/FirebaseComponent';
 import FirebaseStaticModel from '../../../data/components/FirebaseStaticModel';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
 import EditTextListItem from './EditTextListItem';
-import RefreshAndSaveListItem from './RefreshAndSaveListItem';
 import TypographyListItem from './TypographyListItem';
+import EditColorListItem from './EditColorListItem';
 
 export interface Props {
     component: FirebaseComponent | null;
@@ -72,6 +71,7 @@ export default class EditComponentsSidebarContent
                     return [
                         this.makeUnapplySubstitutionsButton(),
                         this.makeFontEditListItem(),
+                        this.makeColorEditListItem(),
                         this.makeTextBoxListItem("text", isInner, "Name"),
                         this.makeTextBoxListItem(
                             "value",
@@ -84,15 +84,16 @@ export default class EditComponentsSidebarContent
                     return [
                         this.makeUnapplySubstitutionsButton(),
                         this.makeFontEditListItem(),
+                        this.makeColorEditListItem(),
                         this.makeTextBoxListItem("text", isInner, "Name"),
                         this.makeTextBoxListItem("value", isInner, "Value"),
                     ];
                 case ComponentType.SUM_VARIABLE:
                 case ComponentType.CLD_VERTEX:
-                case ComponentType.STICKY_NOTE:
                     return [
                         this.makeUnapplySubstitutionsButton(),
                         this.makeFontEditListItem(),
+                        this.makeColorEditListItem(),
                         this.makeTextBoxListItem(
                             "text",
                             isInner,
@@ -105,12 +106,19 @@ export default class EditComponentsSidebarContent
                     return [
                         this.makeUnapplySubstitutionsButton(),
                         this.makeFontEditListItem(),
+                        this.makeColorEditListItem(),
                         this.makeTextBoxListItem("text", isInner, "Name"),
                         this.makeTextBoxListItem(
                             "equation",
                             isInner,
                             "Equation"
                         ),
+                    ];
+                case ComponentType.CONNECTION:
+                case ComponentType.CLD_LINK:
+                case ComponentType.LOOP_ICON:
+                    return [
+                        this.makeColorEditListItem(),
                     ];
                 default:
                     return [
@@ -157,6 +165,24 @@ export default class EditComponentsSidebarContent
         );
     }
 
+    private makeColorEditListItem(): ReactElement {
+        return (
+            <EditColorListItem
+                color={this.state.currentComponent!.getData().color}
+                onChange={color =>
+                    this.props.firebaseDataModel.updateComponent(
+                        this.props.sessionId,
+                        this.state.currentComponent!.withData({
+                            ...this.state.currentComponent!.getData(),
+                            color
+                        })
+                    )
+                }
+                key={"editColor"}
+            />
+        );
+    }
+
     private resetComponent(): void {
         this.setState({ currentComponent: this.props.component });
     }
@@ -167,7 +193,6 @@ export default class EditComponentsSidebarContent
         text: string = fieldName,
         allowEmpty: boolean = true
     ): ReactElement {
-
         const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
                 var value = this.state.currentComponent!.getData()[fieldName];
@@ -211,6 +236,7 @@ export default class EditComponentsSidebarContent
                     onKeyUp={handleKeyUp}
                     onBlur={() => this.resetComponent()}
                     disabled={disabled}
+                    fullWidth
                 />
             </ListItem>
         );

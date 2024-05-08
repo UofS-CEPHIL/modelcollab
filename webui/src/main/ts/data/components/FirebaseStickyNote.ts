@@ -37,6 +37,7 @@ export default class FirebaseStickyNote
                 italic: false,
                 underline: false,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
+                color: theme.palette.canvas.contrastText,
             }
         );
     }

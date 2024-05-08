@@ -12,14 +12,6 @@ export default class FlowPresentation
 
     public static readonly CLOUD_VALUE = "cloud";
 
-    public getNormalTextColorForComponent(_: FirebaseFlow): string {
-        return theme.palette.canvas.contrastText;
-    }
-
-    public getNormalStrokeColorForComponent(_: FirebaseFlow): string {
-        return theme.palette.canvas.contrastText;
-    }
-
     public addComponent(
         component: FirebaseFlow,
         graph: StockFlowGraph,
@@ -103,6 +95,8 @@ export default class FlowPresentation
         return update.withData({
             ...update.getData(),
             text: cell.getValue().getData().text,
+            color:
+                cell.getStyle().fontColor ?? theme.palette.canvas.contrastText,
             bold,
             italic,
             underline
@@ -123,7 +117,10 @@ export default class FlowPresentation
             flow.getData().italic,
             flow.getData().underline
         );
-        graph.getDataModel().setStyle(cell, style);
+        style.fontColor = flow.getData().color;
+        style.strokeColor = flow.getData().color;
+        console.log(style)
+        graph.batchUpdate(() => graph.getDataModel().setStyle(cell, style));
 
         const flowFrom = flow.getData().from;
         const flowTo = flow.getData().to;

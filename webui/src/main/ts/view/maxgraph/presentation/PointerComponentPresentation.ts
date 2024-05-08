@@ -17,30 +17,6 @@ export default abstract class PointerComponentPresentation
         graph: MCGraph
     ): EdgeParameters;
 
-    public getNormalStrokeColorForComponent(_: DataType): string {
-        return theme.palette.primary.main;
-    }
-
-    public getNormalTextColorForComponent(_: DataType): string {
-        return theme.palette.primary.main;
-    }
-
-    public getErrorStrokeColorForComponent(_: DataType): string {
-        return theme.palette.error.main;
-    }
-
-    public getErrorTextColorForComponent(_: DataType): string {
-        return theme.palette.error.main;
-    }
-
-    public getHoveredStrokeColorForComponent(_: DataType): string {
-        return theme.palette.secondary.main;
-    }
-
-    public getHoveredTextColorForComponent(_: DataType): string {
-        return theme.palette.secondary.main;
-    }
-
     public addComponent(
         component: DataType,
         graph: MCGraph,

@@ -1,8 +1,7 @@
 import ComponentType from "./ComponentType";
-import FirebaseStaticModel from "./FirebaseStaticModel";
 
 // Represents any object that acts as the "data" field for any FirebaseDataComponent
-export interface FirebaseDataObject { };
+export interface FirebaseDataObject { }
 
 export abstract class FirebaseEntityBase<DataType extends FirebaseDataObject> {
     public abstract toFirebaseEntry(): [string, Object];

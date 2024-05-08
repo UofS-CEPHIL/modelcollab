@@ -39,7 +39,8 @@ export default class FirebaseCausalLoopVertex
                 bold: false,
                 italic: false,
                 underline: false,
-                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
+                color: theme.palette.canvas.contrastText,
             }
         );
     }

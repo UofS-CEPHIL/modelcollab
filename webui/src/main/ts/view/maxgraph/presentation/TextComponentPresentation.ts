@@ -53,9 +53,10 @@ export default abstract class TextComponentPresentation
         return update.withData({
             ...update.getData(),
             text: cell.getValue().getData().text,
+            color: cell.getStyle().fontColor,
             bold,
             italic,
-            underline
+            underline,
         }) as DataType;
     }
 
@@ -72,6 +73,10 @@ export default abstract class TextComponentPresentation
             component.getData().italic,
             component.getData().underline
         );
-        graph.getDataModel().setStyle(cell, style);
+        style.fontColor = component.getData().color;
+        style.strokeColor = component.getData().color;
+        graph.batchUpdate(() =>
+            graph.getDataModel().setStyle(cell, style)
+        );
     }
 }

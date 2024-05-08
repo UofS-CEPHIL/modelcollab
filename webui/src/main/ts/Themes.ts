@@ -1,5 +1,4 @@
-import { FONT } from "@maxgraph/core/dist/util/Constants";
-import { createTheme, Palette } from "@mui/material";
+import { createTheme } from "@mui/material";
 
 
 declare module '@mui/material/Button' {
@@ -111,9 +110,12 @@ declare module '@mui/material/styles' {
                     defaultHeightPx: number,
                     defaultFontSize: number
                 },
-                arrowComponent: HandleThemes,
+                arrowComponent: HandleThemes & {
+                    defaultColor: string,
+                },
                 canvas: {
-                    borderWidthPx: number
+                    borderWidthPx: number,
+                    hoverColor: string,
                 },
                 loopIcon: {
                     strokeWidth: number,
@@ -209,9 +211,12 @@ declare module '@mui/material/styles' {
                     defaultHeightPx?: number,
                     defaultFontSize?: number,
                 },
-                arrowComponent?: HandleThemes,
+                arrowComponent?: HandleThemes & {
+                    defaultColor: string,
+                },
                 canvas?: {
-                    borderWidthPx?: number
+                    borderWidthPx?: number,
+                    hoverColor?: string,
                 },
                 loopIcon?: {
                     strokeWidth?: number,
@@ -378,10 +383,12 @@ export const theme = createTheme({
                     strokeOpacity: 100,
                     fillOpacity: 100,
                     fillColor: palette.secondary.main,
-                }
+                },
+                defaultColor: palette.primary.main,
             },
             canvas: {
-                borderWidthPx: 1
+                borderWidthPx: 1,
+                hoverColor: palette.secondary.main,
             },
             loopIcon: {
                 strokeWidth: 2,

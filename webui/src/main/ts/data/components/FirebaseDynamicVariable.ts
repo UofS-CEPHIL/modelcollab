@@ -41,6 +41,7 @@ export default class FirebaseDynamicVariable
                 italic: false,
                 underline: false,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
+                color: theme.palette.canvas.contrastText,
             }
         );
     }
