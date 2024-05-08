@@ -33,6 +33,7 @@ export default class DynamicVariablePresentation
                 fontColor: dynvar.getData().text,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 dashed: theme.custom.maxgraph.dynvar.dashed,
+                align: theme.custom.maxgraph.textComponent.defaultAlignValue,
                 whiteSpace: "wrap",
                 movable: !isInner,
                 editable: !isInner,

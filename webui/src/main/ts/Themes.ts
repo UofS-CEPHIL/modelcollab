@@ -1,3 +1,4 @@
+import { AlignValue } from "@maxgraph/core";
 import { createTheme } from "@mui/material";
 
 
@@ -105,7 +106,8 @@ declare module '@mui/material/styles' {
                 textComponent: {
                     defaultWidthPx: number,
                     defaultHeightPx: number,
-                    defaultFontSize: number
+                    defaultFontSize: number,
+                    defaultAlignValue: AlignValue,
                 },
                 arrowComponent: HandleThemes & {
                     defaultColor: string,
@@ -207,6 +209,7 @@ declare module '@mui/material/styles' {
                     defaultWidthPx?: number,
                     defaultHeightPx?: number,
                     defaultFontSize?: number,
+                    defaultAlignValue?: AlignValue,
                 },
                 arrowComponent?: HandleThemes & {
                     defaultColor: string,
@@ -352,9 +355,10 @@ export const theme = createTheme({
                 defaultWidthPx: 120,
             },
             textComponent: {
-                defaultWidthPx: 80,
-                defaultHeightPx: 25,
+                defaultWidthPx: 140,
+                defaultHeightPx: 30,
                 defaultFontSize: 18,
+                defaultAlignValue: "right"
             },
             arrowComponent: {
                 labelHandle: {

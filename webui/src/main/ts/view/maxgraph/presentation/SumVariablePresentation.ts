@@ -32,6 +32,7 @@ export default class SumVariablePresentation
                 strokeWidth: theme.custom.maxgraph.sumvar.strokeWidth,
                 fontColor: theme.palette.canvas.contrastText,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
+                align: theme.custom.maxgraph.textComponent.defaultAlignValue,
                 dashed: theme.custom.maxgraph.sumvar.dashed,
                 whiteSpace: "wrap",
                 movable: !isInner,

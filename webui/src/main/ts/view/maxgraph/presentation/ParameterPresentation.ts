@@ -31,6 +31,7 @@ export default class ParameterPresentation
                 fontColor: param.getData().color,
                 fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
                 dashed: theme.custom.maxgraph.param.dashed,
+                align: theme.custom.maxgraph.textComponent.defaultAlignValue,
                 whiteSpace: "wrap",
                 movable: !isInner,
                 resizable: !isInner,
