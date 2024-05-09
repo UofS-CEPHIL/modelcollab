@@ -1,4 +1,4 @@
-import { Cell, CellStyle } from "@maxgraph/core";
+import { Cell, CellStyle, EventObject } from "@maxgraph/core";
 import ChangeModeOnButtonPressBehaviour from "./ChangeModeOnButtonPressBehaviour";
 
 export default abstract class ShowPreviewArrowBehaviour
@@ -11,7 +11,7 @@ export default abstract class ShowPreviewArrowBehaviour
         return null;
     };
 
-    public canvasClicked(): void {
+    public canvasClicked(x: number, y: number, _: EventObject): void {
 
     }
 
@@ -19,7 +19,7 @@ export default abstract class ShowPreviewArrowBehaviour
         this.setKeydownCell(null);
     }
 
-    public cellClicked(cell: Cell) {
+    public cellClicked(cell: Cell, event: EventObject) {
         const keydownCell = this.getKeydownCell();
         if (keydownCell) {
             this.cellsConnected(keydownCell, cell);

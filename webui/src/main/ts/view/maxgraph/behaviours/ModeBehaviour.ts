@@ -1,4 +1,4 @@
-import { Cell, CellStyle, EventSource, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
+import { Cell, CellStyle, EventObject, EventSource, InternalMouseEvent, MouseListenerSet, Point } from "@maxgraph/core";
 import DiagramActions from "../DiagramActions";
 import ModalBoxType from "../../ModalBox/ModalBoxType";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
@@ -7,9 +7,17 @@ import { UiMode } from "../../../UiMode";
 
 export default abstract class ModeBehaviour {
 
-    public abstract canvasClicked(x: number, y: number): void;
-    public abstract canvasRightClicked(x: number, y: number): void;
-    public abstract cellClicked(c: Cell): void;
+    public abstract canvasClicked(
+        x: number,
+        y: number,
+        event: EventObject
+    ): void;
+    public abstract canvasRightClicked(
+        x: number,
+        y: number,
+        event: EventObject
+    ): void;
+    public abstract cellClicked(c: Cell, event: EventObject): void;
     public abstract handleKeyDown(e: KeyboardEvent): void;
     public abstract handleControlKeyDown(e: KeyboardEvent): void;
     public abstract handleControlShiftKeyDown(e: KeyboardEvent): void;

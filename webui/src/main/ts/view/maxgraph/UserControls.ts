@@ -136,16 +136,18 @@ export default class UserControls {
                             `RightClick (${pos.x}, ${pos.y})`
                         );
                     }
-                    this.getBehaviour().canvasRightClicked(pos.x, pos.y);
+                    this.getBehaviour().canvasRightClicked(pos.x, pos.y, event);
                 }
                 else {
                     const cell = event.getProperty("cell");
                     if (cell) {
-                        this.getBehaviour()
-                            .cellClicked(cell);
+                        this.getBehaviour().cellClicked(
+                            cell,
+                            event
+                        );
                     }
                     else {
-                        this.getBehaviour().canvasClicked(pos.x, pos.y);
+                        this.getBehaviour().canvasClicked(pos.x, pos.y, event);
                     }
                     if (this.actionLogger) {
                         const cell = event.getProperty("cell");

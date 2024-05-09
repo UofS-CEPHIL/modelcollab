@@ -1,4 +1,4 @@
-import { Cell } from "@maxgraph/core";
+import { Cell, EventObject } from "@maxgraph/core";
 import ModeBehaviour from "./ModeBehaviour";
 
 export default class DefaultBehaviour extends ModeBehaviour {
@@ -14,13 +14,13 @@ export default class DefaultBehaviour extends ModeBehaviour {
 
     public handleKeyUp(e: KeyboardEvent): void { }
 
-    public canvasClicked(x: number, y: number): void { }
+    public canvasClicked(x: number, y: number, event: EventObject): void { }
 
-    public canvasRightClicked(x: number, y: number): void {
+    public canvasRightClicked(x: number, y: number, event: EventObject): void {
         this.getGraph().setSelectionCell(null);
     }
 
-    public cellClicked(c: Cell): void { }
+    public cellClicked(c: Cell, event: EventObject): void { }
 
     public handleControlKeyDown(e: KeyboardEvent): void {
         // Copy, cut, paste

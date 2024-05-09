@@ -1,4 +1,4 @@
-import { Cell, CellStyle } from "@maxgraph/core";
+import { Cell, CellStyle, EventObject } from "@maxgraph/core";
 import ComponentType from "../../../data/components/ComponentType";
 import FirebaseCausalLoopLink from "../../../data/components/FirebaseCausalLoopLink";
 import FirebaseComponent, { FirebaseComponentBase } from "../../../data/components/FirebaseComponent";
@@ -39,7 +39,7 @@ export default abstract class AddArrowBehaviour
         this.resetMode();
     }
 
-    public canvasClicked(): void {
+    public canvasClicked(x: number, y: number, _: EventObject): void {
         this.resetMode();
     }
 
@@ -47,15 +47,17 @@ export default abstract class AddArrowBehaviour
         this.resetMode();
     }
 
-    public cellClicked(cell: Cell) {
+    public cellClicked(cell: Cell, event: EventObject) {
         const keydownCell = this.getKeydownCell();
+        const isCtrlHeld = event.getProperty("event").ctrlKey;
         if (keydownCell) {
             if (this.canConnect(
                 keydownCell,
                 cell
             )) {
                 this.getActions().addComponent(
-                    this.makeLink(keydownCell, cell)
+                    this.makeLink(keydownCell, cell),
+                    !isCtrlHeld
                 );
             }
             this.resetMode();

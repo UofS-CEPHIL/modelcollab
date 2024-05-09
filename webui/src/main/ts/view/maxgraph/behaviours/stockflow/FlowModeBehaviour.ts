@@ -1,4 +1,4 @@
-import { Cell, CellStyle } from "@maxgraph/core";
+import { Cell, CellStyle, EventObject } from "@maxgraph/core";
 import ComponentType from "../../../../data/components/ComponentType";
 import FirebaseFlow from "../../../../data/components/FirebaseFlow";
 import FirebaseStock from "../../../../data/components/FirebaseStock";
@@ -41,10 +41,10 @@ export default class FlowModeBehaviour extends AddArrowBehaviour {
         );
     }
 
-    public canvasClicked(): void {
+    public canvasClicked(x: number, y: number, event: EventObject): void {
         const keydownCell = this.getKeydownCell();
         if (keydownCell && this.isTempCell(keydownCell)) {
-            super.canvasClicked();
+            super.canvasClicked(x, y, event);
         }
         else {
             const previewCloud = this.addTempVertex(
@@ -53,7 +53,7 @@ export default class FlowModeBehaviour extends AddArrowBehaviour {
                 "",
                 FlowPresentation.makeCloudStyle()
             );
-            this.cellClicked(previewCloud);
+            this.cellClicked(previewCloud, event);
         }
     }
 
