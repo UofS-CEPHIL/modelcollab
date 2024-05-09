@@ -1,12 +1,11 @@
 import { theme } from "../../Themes";
-import { FirebaseColorProperties } from "../FirebaseProperties";
+import { FirebaseColorProperties, FirebaseTextProperties } from "../FirebaseProperties";
 import ComponentType from "./ComponentType";
-import { Polarity, toPolarity } from "./FirebaseCausalLoopLink";
 import FirebaseRectangleComponent, { FirebaseRectangleData } from "./FirebaseRectangleComponent";
 
 export type FirebaseLoopIconData = FirebaseRectangleData
     & FirebaseColorProperties
-    & { polarity: Polarity }
+    & FirebaseTextProperties
 
 export default class FirebaseLoopIcon extends
     FirebaseRectangleComponent<FirebaseLoopIconData>
@@ -24,23 +23,16 @@ export default class FirebaseLoopIcon extends
     }
 
     public getReadableComponentName(): string {
-        return `Loop ${this.getData().polarity} (#${this.getId()})`;
+        return `Loop ${this.getData().text} (#${this.getId()})`;
     }
 
     public getLabel(): string {
-        return this.getData().polarity;
+        return this.getData().text;
     }
 
     public withUpdatedSize(width: number, height: number): FirebaseLoopIcon {
         const size = Math.max(width, height);
         return super.withUpdatedSize(size, size) as FirebaseLoopIcon;
-    }
-
-    public withNextPolarity(): FirebaseLoopIcon {
-        const newPolarity = this.getData().polarity === Polarity.POSITIVE
-            ? Polarity.NEGATIVE
-            : Polarity.POSITIVE;
-        return this.withData({ ...this.getData(), polarity: newPolarity });
     }
 
     public static createNew(
@@ -55,8 +47,12 @@ export default class FirebaseLoopIcon extends
                 y,
                 width: theme.custom.maxgraph.loopIcon.defaultWidthPx,
                 height: theme.custom.maxgraph.loopIcon.defaultWidthPx,
-                polarity: Polarity.POSITIVE,
-                color: theme.palette.canvas.contrastText
+                text: "+",
+                color: theme.palette.canvas.contrastText,
+                fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
+                bold: false,
+                italic: false,
+                underline: false,
             }
         );
     }
@@ -67,8 +63,15 @@ export default class FirebaseLoopIcon extends
             y: Number(data.y),
             width: Number(data.width),
             height: Number(data.height),
-            polarity: toPolarity(data.polarity),
-            color: String(data.color ?? theme.palette.canvas.contrastText)
+            text: String(data.text ?? ""),
+            color: String(data.color ?? theme.palette.canvas.contrastText),
+            fontSize: Number(
+                data.fontSize
+                ?? theme.custom.maxgraph.textComponent.defaultFontSize
+            ),
+            bold: Boolean(data.bold ?? false),
+            italic: Boolean(data.italic ?? false),
+            underline: Boolean(data.underline ?? false),
         };
     }
 }

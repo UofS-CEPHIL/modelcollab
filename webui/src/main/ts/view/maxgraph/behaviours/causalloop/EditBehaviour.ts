@@ -6,10 +6,7 @@ import ChangeModeOnButtonPressBehaviour from "../ChangeModeOnButtonPressBehaviou
 
 export default class EditBehaviour extends ChangeModeOnButtonPressBehaviour {
     public cellClicked(cell: Cell) {
-        if (
-            cell.getValue() instanceof FirebaseCausalLoopLink
-            || cell.getValue() instanceof FirebaseLoopIcon
-        ) {
+        if (cell.getValue() instanceof FirebaseCausalLoopLink) {
             this.getActions().updateComponent(
                 cell.getValue().withNextPolarity()
             );

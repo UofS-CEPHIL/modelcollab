@@ -90,6 +90,7 @@ export default class EditComponentsSidebarContent
                     ];
                 case ComponentType.SUM_VARIABLE:
                 case ComponentType.CLD_VERTEX:
+                case ComponentType.LOOP_ICON:
                     return [
                         this.makeUnapplySubstitutionsButton(),
                         this.makeFontEditListItem(),
@@ -116,7 +117,6 @@ export default class EditComponentsSidebarContent
                     ];
                 case ComponentType.CONNECTION:
                 case ComponentType.CLD_LINK:
-                case ComponentType.LOOP_ICON:
                     return [
                         this.makeColorEditListItem(),
                     ];
