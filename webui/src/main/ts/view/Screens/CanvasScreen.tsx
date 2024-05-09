@@ -117,7 +117,10 @@ export default abstract class CanvasScreen
             mouseDown: () => { },
             mouseUp: () => { },
             mouseMove: (_: EventSource, e: InternalMouseEvent) => {
-                const cell = this.getCellForEvent(e)
+                // No hover changes if mouse button held
+                const cell = e.getEvent().buttons === 0
+                    ? this.getCellForEvent(e)
+                    : this.state.hoverCell;
                 this.setState({
                     cursorPosition: new Point(
                         e.getGraphX(),
@@ -126,15 +129,12 @@ export default abstract class CanvasScreen
                     hoverCell: cell,
                 });
                 if (cell !== this.state.hoverCell) {
+                    if (this.state.hoverCell) {
+                        this.graph!.setAllCellsNormal();
+                    }
                     if (cell) {
                         this.graph!.setCellDisplayHovered(cell);
                     }
-                    if (this.state.hoverCell) {
-                        this.graph!.setCellDisplayNormal(this.state.hoverCell);
-                    }
-                }
-                else if (!cell) {
-                    this.graph!.setAllCellsNormal();
                 }
             }
         });

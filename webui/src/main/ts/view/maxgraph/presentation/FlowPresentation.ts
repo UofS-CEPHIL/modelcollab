@@ -119,7 +119,6 @@ export default class FlowPresentation
         );
         style.fontColor = flow.getData().color;
         style.strokeColor = flow.getData().color;
-        console.log(style)
         graph.batchUpdate(() => graph.getDataModel().setStyle(cell, style));
 
         const flowFrom = flow.getData().from;
