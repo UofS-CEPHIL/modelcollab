@@ -8,22 +8,8 @@ import PointerComponentPresentation from "./PointerComponentPresentation";
 export default class CausalLoopLinkPresentation
     extends PointerComponentPresentation<FirebaseCausalLoopLink> {
 
-    protected makeEdgeParameters(
-        link: FirebaseCausalLoopLink,
-        parent: Cell,
-        source: Cell,
-        target: Cell,
-        graph: MCGraph,
-    ): EdgeParameters {
-        const isInner = parent !== graph.getDefaultParent();
-        return {
-            parent,
-            id: link.getId(),
-            value: link,
-            source,
-            target,
-            style: CausalLoopLinkPresentation.getEdgeStyle(isInner)
-        };
+    protected getDefaultStyle(isInner: boolean = false): CellStyle {
+        return CausalLoopLinkPresentation.getEdgeStyle(isInner);
     }
 
     public static getEdgeStyle(isInner: boolean = false): CellStyle {

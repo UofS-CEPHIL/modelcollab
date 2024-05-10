@@ -1,6 +1,5 @@
-import { Cell, EdgeParameters, Point } from "@maxgraph/core";
+import { Cell, CellStyle, Point } from "@maxgraph/core";
 import FirebasePointerComponent, { FirebasePointerData } from "../../../data/components/FirebasePointerComponent";
-import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
 import ComponentPresentation from "./ComponentPresentation";
 
@@ -9,13 +8,7 @@ export default abstract class PointerComponentPresentation
     implements ComponentPresentation<DataType>
 {
 
-    protected abstract makeEdgeParameters(
-        component: DataType,
-        parent: Cell,
-        source: Cell,
-        target: Cell,
-        graph: MCGraph
-    ): EdgeParameters;
+    protected abstract getDefaultStyle(isInner?: boolean): CellStyle;
 
     public addComponent(
         component: DataType,
@@ -29,32 +22,37 @@ export default abstract class PointerComponentPresentation
         if (!target)
             target = graph.getCellWithIdOrThrow(component.getData().to);
 
-        const e = graph.insertEdge(
-            this.makeEdgeParameters(
-                component,
-                parent ?? graph.getDefaultParent(),
-                source,
-                target,
-                graph,
-            )
-        );
-
-        graph.getDataModel().setStyle(
-            e,
-            {
-                ...e.getStyle() ?? {},
-                entryX: component.getData().entryX,
-                entryY: component.getData().entryY,
-                exitX: component.getData().exitX,
-                exitY: component.getData().exitY,
-            }
-        );
+        const isInner = parent !== graph.getDefaultParent();
+        const e = graph.insertEdge({
+            parent,
+            id: component.getId(),
+            value: component,
+            source,
+            target,
+            style: this.getStyle(component, isInner)
+        });
 
         const geo = e.getGeometry()!.clone();
         geo.points = this.getPoints(component);
         graph.getDataModel().setGeometry(e, geo);
 
         return e;
+    }
+
+    /**
+     * Get the style to use for the given component.
+     * Override this in child classes to add details.
+     */
+    protected getStyle(component: DataType, isInner: boolean): CellStyle {
+        return {
+            ...this.getDefaultStyle(isInner),
+            entryX: component.getData().entryX,
+            entryY: component.getData().entryY,
+            exitX: component.getData().exitX,
+            exitY: component.getData().exitY,
+            strokeColor: component.getData().color,
+            fontColor: component.getData().color,
+        };
     }
 
     public updateCell(

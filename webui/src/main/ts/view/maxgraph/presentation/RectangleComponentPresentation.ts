@@ -1,6 +1,5 @@
-import { Cell } from "@maxgraph/core";
+import { Cell, VertexParameters } from "@maxgraph/core";
 import FirebaseRectangleComponent from "../../../data/components/FirebaseRectangleComponent";
-import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import MCGraph from "../MCGraph";
 import PointComponentPresentation from "./PointComponentPresentation";
 
@@ -8,6 +7,19 @@ export default abstract class RectangleComponentPresentation
     <DataType extends FirebaseRectangleComponent<any>>
     extends PointComponentPresentation<DataType>
 {
+
+    protected getVertexParameters(
+        component: DataType,
+        graph: MCGraph,
+        parent?: Cell,
+    ): VertexParameters {
+        return {
+            ...super.getVertexParameters(component, graph, parent),
+            width: component.getData().width,
+            height: component.getData().height,
+        };
+    }
+
     public updateCell(
         component: DataType,
         cell: Cell,

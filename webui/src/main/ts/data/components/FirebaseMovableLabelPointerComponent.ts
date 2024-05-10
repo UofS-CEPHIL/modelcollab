@@ -1,9 +1,8 @@
-import { FirebaseColorProperties, FirebaseMovableLabelProperties, FirebaseTextProperties } from "../FirebaseProperties";
+import { FirebaseMovableLabelProperties, FirebaseTextProperties } from "../FirebaseProperties";
 import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
 
 export type FirebaseMovableLabelPointerData = FirebasePointerData
     & FirebaseTextProperties
-    & FirebaseColorProperties
     & FirebaseMovableLabelProperties;
 
 export default abstract class FirebaseMovableLabelPointerComponent

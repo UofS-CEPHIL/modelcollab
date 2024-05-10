@@ -1,4 +1,4 @@
-import { Cell, CellStyle, VertexParameters } from "@maxgraph/core";
+import { Cell, CellStyle } from "@maxgraph/core";
 import FirebaseCausalLoopVertex from "../../../data/components/FirebaseCausalLoopVertex";
 import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
@@ -6,24 +6,6 @@ import TextComponentPresentation from "./TextComponentPresentation";
 
 export default class CausalLoopVertexPresentation
     extends TextComponentPresentation<FirebaseCausalLoopVertex> {
-
-    public makeVertexParameters(
-        parent: Cell,
-        component: FirebaseCausalLoopVertex,
-        graph: MCGraph,
-    ): VertexParameters {
-        const isInner = parent !== graph.getDefaultParent();
-        return {
-            parent,
-            id: component.getId(),
-            value: component,
-            x: component.getData().x,
-            y: component.getData().y,
-            width: component.getData().width,
-            height: component.getData().height,
-            style: CausalLoopVertexPresentation.getVertexStyle(isInner),
-        };
-    }
 
     public updateCell(
         component: FirebaseCausalLoopVertex,
@@ -38,6 +20,10 @@ export default class CausalLoopVertexPresentation
         graph.batchUpdate(() =>
             graph.getDataModel().setStyle(cell, style)
         );
+    }
+
+    protected getDefaultStyle(isInner: boolean = false): CellStyle {
+        return CausalLoopVertexPresentation.getVertexStyle(isInner);
     }
 
     public static getVertexStyle(isInner: boolean = false): CellStyle {

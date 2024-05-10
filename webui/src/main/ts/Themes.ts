@@ -72,6 +72,7 @@ declare module '@mui/material/styles' {
                     defaultWidthPx: number,
                     defaultHeightPx: number,
                     strokeWidth: number,
+                    rounded: boolean,
                 },
                 param: {
                     strokeWidth: number,
@@ -102,6 +103,7 @@ declare module '@mui/material/styles' {
                     strokeWidth: number,
                     defaultHeightPx: number,
                     defaultWidthPx: number,
+                    fillOpacity: number,
                 },
                 textComponent: {
                     defaultWidthPx: number,
@@ -122,6 +124,16 @@ declare module '@mui/material/styles' {
                     arrowHeadWidth: number,
                     arrowHeadHeight: number,
                     defaultWidthPx: number,
+                },
+                staticModel: {
+                    strokeColor: string,
+                    strokeOpacity: number,
+                    strokeWidthPx: number,
+                    componentPaddingPx: number,
+                    defaultWidthPx: number,
+                    defaultHeightPx: number,
+                    fillOpacity: number,
+                    rounded: boolean,
                 },
                 icons: {
                     sizePx: number,
@@ -174,6 +186,7 @@ declare module '@mui/material/styles' {
                     defaultWidthPx?: number,
                     defaultHeightPx?: number,
                     strokeWidth?: number,
+                    rounded?: boolean,
                 },
                 param: {
                     strokeWidth?: number,
@@ -199,11 +212,12 @@ declare module '@mui/material/styles' {
                     endArrow?: string,
                     fontSize?: number,
                 },
-                stickynote: {
+                stickynote?: {
                     color?: string,
                     strokeWidth?: number,
                     defaultHeightPx?: number,
                     defaultWidthPx?: number,
+                    fillOpacity?: number,
                 },
                 textComponent?: {
                     defaultWidthPx?: number,
@@ -213,6 +227,16 @@ declare module '@mui/material/styles' {
                 },
                 arrowComponent?: HandleThemes & {
                     defaultColor: string,
+                },
+                staticModel?: {
+                    strokeColor?: string,
+                    strokeOpacity?: number,
+                    strokeWidthPx?: number,
+                    componentPaddingPx?: number,
+                    defaultWidthPx?: number,
+                    defaultHeightPx?: number,
+                    fillOpacity?: number,
+                    rounded?: boolean,
                 },
                 canvas?: {
                     borderWidthPx?: number,
@@ -315,6 +339,7 @@ export const theme = createTheme({
                 defaultWidthPx: 80,
                 defaultHeightPx: 50,
                 strokeWidth: 1.5,
+                rounded: true,
             },
             param: {
                 strokeWidth: 2,
@@ -349,10 +374,11 @@ export const theme = createTheme({
                 }
             },
             stickynote: {
-                color: "rgba(243, 245, 39, 0.57)",
+                color: "rgb(243, 245, 39)",
                 strokeWidth: 1,
                 defaultHeightPx: 120,
                 defaultWidthPx: 120,
+                fillOpacity: 57,
             },
             textComponent: {
                 defaultWidthPx: 140,
@@ -386,6 +412,16 @@ export const theme = createTheme({
                     fillColor: palette.secondary.main,
                 },
                 defaultColor: palette.primary.main,
+            },
+            staticModel: {
+                strokeColor: palette.canvas.contrastText,
+                strokeOpacity: 100,
+                strokeWidthPx: 1,
+                componentPaddingPx: 15,
+                defaultWidthPx: 100,
+                defaultHeightPx: 100,
+                fillOpacity: 25,
+                rounded: true,
             },
             canvas: {
                 borderWidthPx: 1,

@@ -186,24 +186,6 @@ export default class FlowPresentation
         graph.getDataModel().setGeometry(cloud, newGeo);
     }
 
-    protected makeEdgeParameters(
-        flow: FirebaseFlow,
-        parent: Cell,
-        fr: Cell,
-        to: Cell,
-        graph: MCGraph,
-    ): EdgeParameters {
-        const isInner = parent !== graph.getDefaultParent();
-        return {
-            parent,
-            id: flow.getId(),
-            value: flow,
-            source: fr,
-            target: to,
-            style: FlowPresentation.getEdgeStyle(isInner)
-        };
-    }
-
     private makeCloudArgs(
         parent: Cell,
         x: number,
@@ -231,6 +213,25 @@ export default class FlowPresentation
             movable: !isInner,
             editable: false,
             resizable: false,
+        };
+    }
+
+    public getDefaultStyle(isInner: boolean = false): CellStyle {
+        return FlowPresentation.getEdgeStyle(isInner);
+    }
+
+    public getStyle(component: FirebaseFlow, isInner: boolean = false) {
+        return {
+            ...super.getStyle(component, isInner),
+            strokeColor: component.getData().color,
+            fontColor: component.getData().color,
+            labelBorderColor: component.getData().color,
+            fontSize: component.getData().fontSize,
+            fontStyle: TextComponentPresentation.encodeFontStyle(
+                component.getData().bold,
+                component.getData().italic,
+                component.getData().underline,
+            ),
         };
     }
 

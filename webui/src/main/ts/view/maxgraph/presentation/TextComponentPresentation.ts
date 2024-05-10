@@ -1,4 +1,4 @@
-import { Cell } from "@maxgraph/core";
+import { Cell, CellStyle } from "@maxgraph/core";
 import FirebaseTextComponent from "../../../data/components/FirebaseTextComponent";
 import MCGraph from "../MCGraph";
 import RectangleComponentPresentation from "./RectangleComponentPresentation";
@@ -41,6 +41,23 @@ export default abstract class TextComponentPresentation
         return fontStyle;
     }
 
+    protected getStyle(
+        component: DataType,
+        isInner: boolean = false
+    ): CellStyle {
+        return {
+            ...super.getStyle(component, isInner),
+            fontSize: component.getData().fontSize,
+            fontStyle: TextComponentPresentation.encodeFontStyle(
+                component.getData().bold,
+                component.getData().italic,
+                component.getData().underline,
+            ),
+            fontColor: component.getData().color,
+            strokeColor: component.getData().color,
+        }
+    }
+
     public updateComponent(
         component: DataType,
         cell: Cell,
@@ -53,7 +70,6 @@ export default abstract class TextComponentPresentation
         return update.withData({
             ...update.getData(),
             text: cell.getValue().getData().text,
-            color: cell.getStyle().fontColor,
             bold,
             italic,
             underline,

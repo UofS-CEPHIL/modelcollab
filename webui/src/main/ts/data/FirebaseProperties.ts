@@ -7,6 +7,16 @@ export interface FirebaseMovableLabelProperties {
     labelY: number;
 }
 
+export interface FirebasePointerProperties {
+    from: string;
+    to: string;
+    points: { x: number; y: number }[];
+    entryX?: number;
+    entryY?: number;
+    exitX?: number;
+    exitY?: number;
+};
+
 export interface FirebaseTextProperties {
     fontSize: number;
     bold: boolean;

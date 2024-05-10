@@ -1,7 +1,6 @@
-import { Cell, CellStyle, VertexParameters } from "@maxgraph/core";
+import { CellStyle } from "@maxgraph/core";
 import FirebaseLoopIcon from "../../../data/components/FirebaseLoopIcon";
 import { theme } from "../../../Themes";
-import MCGraph from "../MCGraph";
 import LoopIconShape from "./LoopIconShape";
 import TextComponentPresentation from "./TextComponentPresentation";
 
@@ -9,22 +8,8 @@ export default class LoopIconPresentation
     extends TextComponentPresentation<FirebaseLoopIcon>
 {
 
-    protected makeVertexParameters(
-        parent: Cell,
-        component: FirebaseLoopIcon,
-        graph: MCGraph,
-    ): VertexParameters {
-        const isInner = parent !== graph.getDefaultParent();
-        return {
-            parent,
-            id: component.getId(),
-            value: component,
-            x: component.getData().x,
-            y: component.getData().y,
-            width: component.getData().width,
-            height: component.getData().height,
-            style: LoopIconPresentation.getVertexStyle(isInner)
-        };
+    protected getDefaultStyle(isInner: boolean = false): CellStyle {
+        return LoopIconPresentation.getVertexStyle(isInner);
     }
 
     public static getVertexStyle(isInner: boolean = false): CellStyle {

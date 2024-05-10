@@ -1,16 +1,9 @@
 import { Point } from "@maxgraph/core";
-import { FirebaseComponentBase, FirebaseDataObject } from "./FirebaseComponent";
+import { FirebaseColorProperties, FirebasePointerProperties } from "../FirebaseProperties";
+import { FirebaseComponentBase } from "./FirebaseComponent";
 
-export interface FirebasePointerData extends FirebaseDataObject {
-    from: string,
-    to: string,
-    points: { x: number, y: number }[],
-    entryX?: number,
-    entryY?: number,
-    exitX?: number,
-    exitY?: number,
-};
-
+export type FirebasePointerData = FirebasePointerProperties
+    & FirebaseColorProperties;
 
 export default abstract class FirebasePointerComponent
     <DataType extends FirebasePointerData>

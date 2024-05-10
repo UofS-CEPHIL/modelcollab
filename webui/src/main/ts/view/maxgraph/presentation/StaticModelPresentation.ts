@@ -1,8 +1,9 @@
-import { Cell, VertexParameters } from "@maxgraph/core";
+import { Cell, CellStyle } from "@maxgraph/core";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import FirebaseFlow from "../../../data/components/FirebaseFlow";
 import FirebasePointComponent from "../../../data/components/FirebasePointComponent";
 import FirebaseStaticModel from "../../../data/components/FirebaseStaticModel";
+import { theme } from "../../../Themes";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import StockFlowGraph from "../StockFlowGraph";
 import PointComponentPresentation from "./PointComponentPresentation";
@@ -10,14 +11,6 @@ import PointComponentPresentation from "./PointComponentPresentation";
 export default class StaticModelPresentation
     extends PointComponentPresentation<FirebaseStaticModel>
 {
-
-    public static readonly STROKE_COLOR = "Black";
-    public static readonly STROKE_WIDTH_PX = 1;
-    public static readonly STROKE_OPACITY = 100;
-    public static readonly FILL_OPACITY = 25;
-    public static readonly DEFAULT_WIDTH_PX = 100;
-    public static readonly DEFAULT_HEIGHT_PX = 100;
-    public static readonly COMPONENT_PADDING_PX = 15;
 
     public addComponent(
         component: FirebaseStaticModel,
@@ -55,37 +48,32 @@ export default class StaticModelPresentation
                 return;
             }
             const newGeo = cell.getGeometry()!.clone();
-            const pad = StaticModelPresentation.COMPONENT_PADDING_PX;
+            const pad = theme.custom.maxgraph.staticModel.componentPaddingPx;
             newGeo.width = bbox.width + (2 * pad);
             newGeo.height = bbox.height + (2 * pad);
             cell.setGeometry(newGeo);
         }
     }
 
-    protected makeVertexParameters(
-        parent: Cell,
-        sm: FirebaseStaticModel
-    ): VertexParameters {
+    protected getDefaultStyle(): CellStyle {
         return {
-            parent,
-            value: sm,
-            id: sm.getId(),
-            x: sm.getData().x,
-            y: sm.getData().y,
-            width: StaticModelPresentation.DEFAULT_WIDTH_PX,
-            height: StaticModelPresentation.DEFAULT_HEIGHT_PX,
-            style: {
-                shape: "rectangle",
-                fillColor: sm.getData().color,
-                strokeColor: StaticModelPresentation.STROKE_COLOR,
-                strokeOpacity: StaticModelPresentation.STROKE_OPACITY,
-                rounded: true,
-                editable: false,
-                resizable: false,
-                strokeWidth: StaticModelPresentation.STROKE_WIDTH_PX,
-                fillOpacity: StaticModelPresentation.FILL_OPACITY
-            }
-        }
+            shape: "rectangle",
+            fillColor: "none",
+            strokeColor: theme.custom.maxgraph.staticModel.strokeColor,
+            strokeOpacity: theme.custom.maxgraph.staticModel.strokeOpacity,
+            rounded: true,
+            editable: theme.custom.maxgraph.staticModel.rounded,
+            resizable: false,
+            strokeWidth: theme.custom.maxgraph.staticModel.strokeWidthPx,
+            fillOpacity: theme.custom.maxgraph.staticModel.fillOpacity
+        };
+    }
+
+    protected getStyle(component: FirebaseStaticModel): CellStyle {
+        return {
+            ...super.getStyle(component, false),
+            fillColor: component.getData().color
+        };
     }
 
     private translateComponentPositions(
@@ -99,7 +87,8 @@ export default class StaticModelPresentation
         ));
         return cpts.map(c => {
             if (c instanceof FirebasePointComponent) {
-                const pad = StaticModelPresentation.COMPONENT_PADDING_PX;
+                const pad =
+                    theme.custom.maxgraph.staticModel.componentPaddingPx;
                 const oldData = c.getData();
                 return c.withData({
                     ...oldData,
@@ -121,7 +110,8 @@ export default class StaticModelPresentation
         dx: number,
         dy: number
     ): FirebaseFlow {
-        const pad = StaticModelPresentation.COMPONENT_PADDING_PX;
+        const pad =
+            theme.custom.maxgraph.staticModel.componentPaddingPx;
         const updatePoint = (p: string) => {
             const oldpoint = FirebaseFlow.extractPointFromId(p);
             return FirebaseFlow.makePoint(

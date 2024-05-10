@@ -1,28 +1,14 @@
-import { Cell, CellStyle, EdgeParameters } from "@maxgraph/core";
+import { CellStyle } from "@maxgraph/core";
 import FirebaseConnection from "../../../data/components/FirebaseConnection";
 import { theme } from "../../../Themes";
-import MCGraph from "../MCGraph";
 import PointerComponentPresentation from "./PointerComponentPresentation";
 
 export default class ConnectionPresentation
     extends PointerComponentPresentation<FirebaseConnection>
 {
-    protected makeEdgeParameters(
-        conn: FirebaseConnection,
-        parent: Cell,
-        fr: Cell,
-        to: Cell,
-        graph: MCGraph,
-    ): EdgeParameters {
-        const isInner = parent !== graph.getDefaultParent();
-        return {
-            parent,
-            id: conn.getId(),
-            value: conn,
-            source: fr,
-            target: to,
-            style: ConnectionPresentation.getEdgeStyle(isInner)
-        }
+
+    protected getDefaultStyle(isInner: boolean = false): CellStyle {
+        return ConnectionPresentation.getEdgeStyle(isInner);
     }
 
     public static getEdgeStyle(isInner: boolean = false): CellStyle {

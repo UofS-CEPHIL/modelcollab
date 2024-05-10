@@ -1,4 +1,4 @@
-import { Cell, VertexParameters } from "@maxgraph/core";
+import { Cell, CellStyle, VertexParameters } from "@maxgraph/core";
 import FirebasePointComponent from "../../../data/components/FirebasePointComponent";
 import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
@@ -9,22 +9,46 @@ export default abstract class PointComponentPresentation
     implements ComponentPresentation<DataType>
 {
 
-    protected abstract makeVertexParameters(
-        parent: Cell,
-        component: DataType,
-        graph: MCGraph,
-    ): VertexParameters;
+    protected abstract getDefaultStyle(isInner?: boolean): CellStyle;
 
     public addComponent(
         component: DataType,
         graph: MCGraph,
         parent?: Cell,
     ): Cell | Cell[] {
-        return graph.insertVertex(this.makeVertexParameters(
-            parent ?? graph.getDefaultParent(),
-            component,
-            graph
-        ));
+        return graph.insertVertex(
+            this.getVertexParameters(
+                component,
+                graph,
+                parent,
+            )
+        );
+    }
+
+    protected getVertexParameters(
+        component: DataType,
+        graph: MCGraph,
+        parent?: Cell,
+    ): VertexParameters {
+        return {
+            parent: parent ?? graph.getDefaultParent(),
+            id: component.getId(),
+            value: component,
+            x: component.getData().x,
+            y: component.getData().y,
+            style: this.getStyle(component, parent !== graph.getDefaultParent())
+        };
+    }
+
+    /**
+     * Get the style to use for the given component.
+     * Override this in child classes to add specifics.
+     */
+    protected getStyle(
+        _: DataType,
+        isInner: boolean = false
+    ): CellStyle {
+        return this.getDefaultStyle(isInner);
     }
 
     public updateCell(
