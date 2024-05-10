@@ -1,4 +1,4 @@
-import { Cell, CellState, EdgeHandler, ElbowEdgeHandler, EventObject, EventSource, InternalMouseEvent, Point, Rectangle, RectangleShape } from "@maxgraph/core";
+import { Cell, CellState, ElbowEdgeHandler, EventObject, EventSource, InternalMouseEvent, Point, Rectangle, RectangleShape } from "@maxgraph/core";
 import { HandleTheme, HandleThemes } from "@mui/material";
 import ComponentType from "../../data/components/ComponentType";
 import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";

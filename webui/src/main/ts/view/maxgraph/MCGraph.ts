@@ -1,6 +1,5 @@
-import { Cell, CellEditorHandler, CellRenderer, CellState, ChildChange, EdgeHandler, EventObject, EventSource, Geometry, GeometryChange, Graph, InternalEvent, InternalMouseEvent, SelectionHandler, StyleChange, TooltipHandler, UndoableChange, UndoableEdit, UndoManager, ValueChange } from "@maxgraph/core";
+import { Cell, CellEditorHandler, CellRenderer, CellState, EdgeHandler, EventObject, Graph, InternalEvent, InternalMouseEvent, SelectionHandler, TooltipHandler, UndoManager, ValueChange } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
-import FirebaseCausalLoopLink from "../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../data/components/FirebaseCausalLoopVertex";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
 import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";
@@ -287,7 +286,7 @@ export default abstract class MCGraph extends Graph {
                 newValue = FirebaseCausalLoopVertex.EMPTY_VERTEX_TEXT;
             }
 
-            if (component.getData().text == undefined) {
+            if (!component.getData().text) {
                 throw new Error(
                     "Editing text for invalid component type: "
                     + component.getType()
@@ -624,7 +623,7 @@ export default abstract class MCGraph extends Graph {
             this.haveStaticModelsLoaded = true;
         }
 
-        if (models.length == 0) return;
+        if (models.length === 0) return;
         else tryRefreshLoadedModels();
     }
 

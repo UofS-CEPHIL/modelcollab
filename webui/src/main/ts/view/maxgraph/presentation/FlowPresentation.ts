@@ -1,5 +1,4 @@
-import { Cell, CellStyle, Dictionary, EdgeParameters, VertexParameters } from "@maxgraph/core";
-import ComponentType from "../../../data/components/ComponentType";
+import { Cell, CellStyle, VertexParameters } from "@maxgraph/core";
 import FirebaseFlow from "../../../data/components/FirebaseFlow";
 import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";

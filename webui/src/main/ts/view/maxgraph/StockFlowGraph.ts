@@ -1,5 +1,5 @@
 import { Cell } from "@maxgraph/core";
-import ModelValidator, { ComponentErrors } from "../../validation/ModelValitador";
+import { ComponentErrors } from "../../validation/ModelValitador";
 import FirebaseComponent from "../../data/components/FirebaseComponent";
 import FirebaseSubstitution from "../../data/components/FirebaseSubstitution";
 import MCGraph from "./MCGraph";
@@ -46,7 +46,6 @@ export default class StockFlowGraph extends MCGraph {
             newComponents.find(c => c.getId() === id)!;
 
         const updates = this.findComponentUpdates(newComponents, oldComponents);
-        console.log(updates)
         const toAdd = updates.newIds.map(findComponent);
         const toUpdate = updates.updatedIds.map(findComponent);
 

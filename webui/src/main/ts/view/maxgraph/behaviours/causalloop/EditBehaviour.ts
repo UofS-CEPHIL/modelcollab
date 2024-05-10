@@ -1,6 +1,5 @@
 import { Cell } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
-import FirebaseLoopIcon from "../../../../data/components/FirebaseLoopIcon";
 import FirebaseTextComponent from "../../../../data/components/FirebaseTextComponent";
 import ChangeModeOnButtonPressBehaviour from "../ChangeModeOnButtonPressBehaviour";
 

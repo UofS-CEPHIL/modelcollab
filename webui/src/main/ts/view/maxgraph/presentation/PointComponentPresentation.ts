@@ -1,6 +1,5 @@
 import { Cell, CellStyle, VertexParameters } from "@maxgraph/core";
 import FirebasePointComponent from "../../../data/components/FirebasePointComponent";
-import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
 import ComponentPresentation from "./ComponentPresentation";
 

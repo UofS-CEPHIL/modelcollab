@@ -286,6 +286,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
             }
 
             // Only update if we did anything above
+            // @ts-ignore we actually want != in this case
             if (component != cell.getValue()) {
                 this.updateComponent(component);
             }

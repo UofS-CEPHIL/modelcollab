@@ -1,8 +1,7 @@
 import { theme } from "../../Themes";
 import ComponentType from "./ComponentType";
 import FirebaseComponent from "./FirebaseComponent";
-import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
-import { FirebaseColorProperties, FirebaseMovableLabelProperties, FirebaseTextProperties } from "../FirebaseProperties";
+import FirebasePointerComponent from "./FirebasePointerComponent";
 import FirebaseMovableLabelPointerComponent, { FirebaseMovableLabelPointerData } from "./FirebaseMovableLabelPointerComponent";
 
 export type FirebaseFlowData = FirebaseMovableLabelPointerData
@@ -11,10 +10,6 @@ export type FirebaseFlowData = FirebaseMovableLabelPointerData
 export default class FirebaseFlow
     extends FirebaseMovableLabelPointerComponent<FirebaseFlowData>
 {
-
-    constructor(id: string, data: FirebaseFlowData) {
-        super(id, data);
-    }
 
     public getType(): ComponentType {
         return ComponentType.FLOW;

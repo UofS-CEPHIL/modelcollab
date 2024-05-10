@@ -1,7 +1,6 @@
-import { Cell, CellStyle, EdgeParameters } from "@maxgraph/core";
+import { CellStyle } from "@maxgraph/core";
 import FirebaseCausalLoopLink from "../../../data/components/FirebaseCausalLoopLink";
 import { theme } from "../../../Themes";
-import MCGraph from "../MCGraph";
 import CausalLoopLinkShape from "./CausalLoopLinkShape";
 import PointerComponentPresentation from "./PointerComponentPresentation";
 

@@ -32,7 +32,7 @@ export function nextPolarity(p: Polarity): Polarity {
     if (idx < 0 || idx >= polarities.length) {
         throw new Error("Returned invalid idx " + idx);
     }
-    if (idx == polarities.length - 1) {
+    if (idx === polarities.length - 1) {
         idx = 0;
     }
     else {
