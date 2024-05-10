@@ -8,6 +8,7 @@ import UserActionLogger from "../../logging/UserActionLogger";
 import FirebasePointerComponent from "../../data/components/FirebasePointerComponent";
 import MCEdgeHandler from "./MCEdgeHandler";
 import FirebaseFlow from "../../data/components/FirebaseFlow";
+import FirebaseMovableLabelPointerComponent from "../../data/components/FirebaseMovableLabelPointerComponent";
 
 // This class contains the logic for making changes to the diagram, including
 // the positions of the components and their values. This happens either by
@@ -255,23 +256,38 @@ export default abstract class DiagramActions<G extends MCGraph> {
         const entryY: number = event.getProperty("entryY");
         const exitX: number = event.getProperty("exitX");
         const exitY: number = event.getProperty("exitY");
+        const labelX: number = event.getProperty("labelX");
+        const labelY: number = event.getProperty("labelY");
 
-        if (
-            cell.getValue() instanceof FirebasePointerComponent
-            && !cell.getValue()
-                .pointsEqual(points, entryX, entryY, exitX, exitY)
-        ) {
-            this.updateComponent(
-                cell
-                    .getValue()
+        if (cell.getValue() instanceof FirebasePointerComponent) {
+            var component: FirebasePointerComponent<any> = cell.getValue();
+            if (!component.pointsEqual(points, entryX, entryY, exitX, exitY)) {
+                component = cell.getValue()
                     .withPoints(points, entryX, entryY, exitX, exitY)
-            );
 
-            if (this.actionLogger) {
-                this.actionLogger.logAction(
-                    "Bend arrow",
-                    cell.getValue().getReadableComponentName()
-                );
+                if (this.actionLogger) {
+                    this.actionLogger.logAction(
+                        "Bend arrow",
+                        cell.getValue().getReadableComponentName()
+                    );
+                }
+            }
+            if (
+                component instanceof FirebaseMovableLabelPointerComponent
+                && !component.labelPositionEqual(labelX, labelY)
+            ) {
+                component = component.withLabelPosition(labelX, labelY);
+                if (this.actionLogger) {
+                    this.actionLogger.logAction(
+                        "Move label",
+                        cell.getValue().getReadableComponentName()
+                    );
+                }
+            }
+
+            // Only update if we did anything above
+            if (component != cell.getValue()) {
+                this.updateComponent(component);
             }
         }
     }

@@ -52,10 +52,6 @@ export default class FirebaseCausalLoopLink
         super(id, data);
     }
 
-    public isLabelMovable(): boolean {
-        return false;
-    }
-
     public getType(): ComponentType {
         return ComponentType.CLD_LINK;
     }

@@ -17,7 +17,6 @@ export default abstract class FirebasePointerComponent
     extends FirebaseComponentBase<DataType>
 {
 
-    public abstract isLabelMovable(): boolean;
     public abstract withData(d: DataType): FirebasePointerComponent<DataType>;
 
     public static sanitizePointerData(d: any): void {

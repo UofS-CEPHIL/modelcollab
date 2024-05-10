@@ -80,6 +80,7 @@ export default class MCEdgeHandler extends ElbowEdgeHandler {
     // Handle edge bends and change of terminal points
     public mouseUp(sender: EventSource, me: InternalMouseEvent): void {
         super.mouseUp(sender, me);
+
         sender.fireEvent(
             new EventObject(
                 MCEdgeHandler.EDGE_POINTS,
@@ -90,6 +91,8 @@ export default class MCEdgeHandler extends ElbowEdgeHandler {
                     entryY: this.state.cell.style.entryY,
                     exitX: this.state.cell.style.exitX,
                     exitY: this.state.cell.style.exitY,
+                    labelX: this.state.text?.bounds.x,
+                    labelY: this.state.text?.bounds.y,
                 }
             )
         );

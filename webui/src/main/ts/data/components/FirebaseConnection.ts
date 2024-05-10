@@ -14,10 +14,6 @@ export default class FirebaseConnection
         super(id, data);
     }
 
-    public isLabelMovable(): boolean {
-        return false;
-    }
-
     public getType(): ComponentType {
         return ComponentType.CONNECTION;
     }

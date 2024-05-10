@@ -1,4 +1,5 @@
-import { Cell, CellStyle, EdgeParameters, VertexParameters } from "@maxgraph/core";
+import { Cell, CellStyle, Dictionary, EdgeParameters, VertexParameters } from "@maxgraph/core";
+import ComponentType from "../../../data/components/ComponentType";
 import FirebaseFlow from "../../../data/components/FirebaseFlow";
 import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
@@ -80,6 +81,7 @@ export default class FlowPresentation
         if (newCell instanceof Cell) {
             newCell = [newCell];
         }
+
         newComponents.push(...newCell);
         return newComponents;
     }
@@ -92,6 +94,15 @@ export default class FlowPresentation
         const update = super.updateComponent(component, cell, graph);
         const { bold, italic, underline } = TextComponentPresentation
             .decodeFontStyle(cell.getStyle().fontStyle ?? 0);
+        var labelX = component.getData().labelX
+        var labelY = component.getData().labelY;
+
+        const state = graph.getView().getState(cell);
+        if (state) {
+            labelX = state.absoluteOffset.x;
+            labelY = state.absoluteOffset.y;
+        }
+
         return update.withData({
             ...update.getData(),
             text: cell.getValue().getData().text,
@@ -99,7 +110,9 @@ export default class FlowPresentation
                 cell.getStyle().fontColor ?? theme.palette.canvas.contrastText,
             bold,
             italic,
-            underline
+            underline,
+            labelX,
+            labelY,
         });
     }
 
@@ -109,7 +122,6 @@ export default class FlowPresentation
         graph: StockFlowGraph
     ): void {
         super.updateCell(flow, cell, graph);
-
         const style = { ...cell.getStyle() };
         style.fontSize = flow.getData().fontSize;
         style.fontStyle = TextComponentPresentation.encodeFontStyle(
@@ -119,24 +131,48 @@ export default class FlowPresentation
         );
         style.fontColor = flow.getData().color;
         style.strokeColor = flow.getData().color;
-        graph.batchUpdate(() => graph.getDataModel().setStyle(cell, style));
 
-        const flowFrom = flow.getData().from;
-        const flowTo = flow.getData().to;
-        if (FirebaseFlow.isPoint(flowFrom)) {
-            this.updateCloud(
-                FirebaseFlow.extractPointFromId(flowFrom),
-                cell.getTerminal(true)!,
-                graph
-            );
-        }
-        if (FirebaseFlow.isPoint(flowTo)) {
-            this.updateCloud(
-                FirebaseFlow.extractPointFromId(flowTo),
-                cell.getTerminal(false)!,
-                graph
-            );
-        }
+        graph.batchUpdate(() => {
+            graph.getDataModel().setStyle(cell, style);
+            if (!flow.isUninitializedLabelPosition()) {
+                this.updateCellLabelPosition(
+                    flow.getData().labelX,
+                    flow.getData().labelY,
+                    cell,
+                    graph,
+                );
+            }
+
+            const flowFrom = flow.getData().from;
+            const flowTo = flow.getData().to;
+            if (FirebaseFlow.isPoint(flowFrom)) {
+                this.updateCloud(
+                    FirebaseFlow.extractPointFromId(flowFrom),
+                    cell.getTerminal(true)!,
+                    graph
+                );
+            }
+            if (FirebaseFlow.isPoint(flowTo)) {
+                this.updateCloud(
+                    FirebaseFlow.extractPointFromId(flowTo),
+                    cell.getTerminal(false)!,
+                    graph
+                );
+            }
+        });
+    }
+
+    private updateCellLabelPosition(
+        x: number,
+        y: number,
+        cell: Cell,
+        graph: StockFlowGraph
+    ): void {
+        const state = graph.getView().getState(cell)!;
+        const handler = graph.createEdgeHandler(state, {});
+        handler.moveLabel(state, x, y);
+        handler.reset();
+        handler.onDestroy();
     }
 
     private updateCloud(
@@ -207,7 +243,7 @@ export default class FlowPresentation
             fillColor: theme.palette.canvas.main,
             fontColor: theme.palette.canvas.contrastText,
             fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
-            fontStyle: 1,
+            fontStyle: 0,
             curved: false,
             edgeStyle: theme.custom.maxgraph.flow.edgeStyle,
             bendable: !isInner,

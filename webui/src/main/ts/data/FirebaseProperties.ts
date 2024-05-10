@@ -2,6 +2,11 @@ export interface FirebaseColorProperties {
     color: string;
 }
 
+export interface FirebaseMovableLabelProperties {
+    labelX: number;
+    labelY: number;
+}
+
 export interface FirebaseTextProperties {
     fontSize: number;
     bold: boolean;

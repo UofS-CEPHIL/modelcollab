@@ -46,6 +46,7 @@ export default class StockFlowGraph extends MCGraph {
             newComponents.find(c => c.getId() === id)!;
 
         const updates = this.findComponentUpdates(newComponents, oldComponents);
+        console.log(updates)
         const toAdd = updates.newIds.map(findComponent);
         const toUpdate = updates.updatedIds.map(findComponent);
 

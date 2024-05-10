@@ -2,22 +2,18 @@ import { theme } from "../../Themes";
 import ComponentType from "./ComponentType";
 import FirebaseComponent from "./FirebaseComponent";
 import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
-import { FirebaseColorProperties, FirebaseTextProperties } from "../FirebaseProperties";
+import { FirebaseColorProperties, FirebaseMovableLabelProperties, FirebaseTextProperties } from "../FirebaseProperties";
+import FirebaseMovableLabelPointerComponent, { FirebaseMovableLabelPointerData } from "./FirebaseMovableLabelPointerComponent";
 
-export type FirebaseFlowData = FirebasePointerData
-    & FirebaseTextProperties
-    & FirebaseColorProperties
+export type FirebaseFlowData = FirebaseMovableLabelPointerData
     & { equation: string };
 
 export default class FirebaseFlow
-    extends FirebasePointerComponent<FirebaseFlowData>
+    extends FirebaseMovableLabelPointerComponent<FirebaseFlowData>
 {
+
     constructor(id: string, data: FirebaseFlowData) {
         super(id, data);
-    }
-
-    public isLabelMovable(): boolean {
-        return true;
     }
 
     public getType(): ComponentType {
@@ -42,6 +38,7 @@ export default class FirebaseFlow
     }
 
     public static toFlowComponentData(data: any): FirebaseFlowData {
+        const ul = FirebaseMovableLabelPointerComponent.UNINITIALIZED_LABEL_POS;
         const d: FirebaseFlowData = {
             from: String(data.from),
             to: String(data.to),
@@ -56,6 +53,8 @@ export default class FirebaseFlow
                 ?? theme.custom.maxgraph.textComponent.defaultFontSize
             ),
             color: String(data.color ?? theme.palette.canvas.contrastText),
+            labelX: Number(data.labelX ?? ul),
+            labelY: Number(data.labelY ?? ul),
         };
         FirebasePointerComponent.sanitizePointerData(d);
         return d;
@@ -66,6 +65,7 @@ export default class FirebaseFlow
         from: string,
         to: string
     ): FirebaseFlow {
+        const ul = FirebaseMovableLabelPointerComponent.UNINITIALIZED_LABEL_POS;
         return new FirebaseFlow(
             id,
             {
@@ -79,6 +79,8 @@ export default class FirebaseFlow
                 underline: false,
                 italic: false,
                 color: theme.palette.canvas.contrastText,
+                labelX: ul,
+                labelY: ul,
             }
         );
     }
