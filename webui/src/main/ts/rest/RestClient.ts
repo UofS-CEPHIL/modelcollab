@@ -1,14 +1,19 @@
 import Axios, { AxiosResponse } from "axios";
-import applicationConfig from '../config/applicationConfig';
 
 export default class RestClientImpl {
+
+    // TODO this would be great to handle through codegen so it
+    // stays consistent between TS and Julia
+    public static readonly GET_CODE_PATH = "getCode";
+    public static readonly COMPUTE_MODEL_PATH = "computeModel";
+    public static readonly GET_RESULTS_PATH = "getModelResults";
 
     public async getCode(
         modelId: string,
         onCodeReceived: (result: string, success: boolean) => void,
     ): Promise<void> {
         return Axios.get(
-            `${applicationConfig.serverAddress}/getCode/${modelId}`,
+            `/api/${RestClientImpl.GET_CODE_PATH}/${modelId}`,
             {
                 headers: {
                     "Content-Type": "application/json",
@@ -30,9 +35,9 @@ export default class RestClientImpl {
     ): Promise<void> {
         if (!scenarioName) scenarioName = 'baseline';
         return Axios.post(
-            `${applicationConfig.serverAddress}/computeModel/${sessionId}/${scenarioName}`,
+            `/api/${RestClientImpl.COMPUTE_MODEL_PATH}`
+                + `/${sessionId}/${scenarioName}`,
             {
-                method: 'post',
                 headers: {
                     "Content-Type": "application/x-www-urlencoded"
                 }
@@ -45,7 +50,7 @@ export default class RestClientImpl {
         onResultsReceived: (success: boolean, result?: Blob | string) => void
     ): Promise<void> {
         return Axios.get(
-            `${applicationConfig.serverAddress}/getModelResults/${resultId}`,
+            `/api/${RestClientImpl.GET_RESULTS_PATH}/${resultId}`,
             {
                 method: 'get',
                 headers: {
