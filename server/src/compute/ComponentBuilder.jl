@@ -9,7 +9,7 @@ function make_julia_components(
 )::StockFlowModel
     fbcomponents = organize_components(model_components)
     julia_components = filter(is_julia_component, model_components)
-    nativecomponents = map(
+    nativecomponents::Vector{Component} = map(
         c -> make_julia_component(c, fbcomponents),
         julia_components
     )
