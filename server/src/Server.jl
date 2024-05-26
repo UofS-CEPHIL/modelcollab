@@ -37,6 +37,16 @@ const CORS_OPT_HEADERS = [
 resultpaths = Dict{String, Union{Nothing, String}}()
 
 
+function is_valid_uuid(uuid::String)::Bool
+    regex = r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+    return occursin(regex, uuid);
+end
+
+function is_valid_result_id(id::String)::Bool
+    regex = r"^\d+$"
+    return occursin(regex, id)
+end
+
 function CorsMiddleware(handler)
     return function(req::HTTP.Request)
         if HTTP.method(req)=="OPTIONS"
@@ -58,6 +68,9 @@ end
 function handle_getcode(req::HTTP.Request)
     try
         model_id = HTTP.getparams(req)["modelid"]
+        if (!is_valid_uuid(model_id))
+            return make_error("Invalid model id: " * model_id)
+        end
         println("getcode: model=$(model_id)")
         fb_components = FirebaseClient.get_components(model_id)
         models = ModelBuilder.make_stockflow_models(
@@ -70,6 +83,8 @@ function handle_getcode(req::HTTP.Request)
 
         errors = ModelValidator.validate_models(models, feet)
         if (length(errors) > 0)
+            err_string = join(errors, "\n")
+            print("Error: " * err_string)
             return make_error(join(errors, "\n"))
         end
         code = CodeGenerator.generate_code(models, feet)
@@ -80,6 +95,7 @@ function handle_getcode(req::HTTP.Request)
             code
         )
     catch e
+        showerror(stdout, e)
         return make_error(sprint(showerror, e))
     end
 end
@@ -119,9 +135,15 @@ function handle_computemodel(req::HTTP.Request)
 
     modelid = HTTP.getparams(req)["modelid"]
     scenario_id = HTTP.getparams(req)["scenario"]
+    println("computemodel: model=$(modelid), scenario=$(scenario_id)")
+
+    if (!is_valid_uuid(modelid))
+        return make_error("Invalid model id: " * modelid)
+    elseif (!is_valid_uuid(scenario_id))
+        return make_error("Invalid scenario id: " * scenario_id)
+    end
 
     try
-        println("computemodel: model=$(modelid), scenario=$(scenario_id)")
         runid::String = get_randid()
         while runid in keys(resultpaths)
             runid = get_randid()
@@ -183,6 +205,10 @@ function handle_getmodelresults(req::HTTP.Request)
     resultid = HTTP.getparams(req)["resultid"]
     println("getmodelresults: id=$(resultid)")
 
+    if (!is_valid_result_id(resultid))
+        return make_error("Invalid result id: " + resultid)
+    end
+
     if resultid in keys(resultpaths)
         actual = resultpaths[resultid]
         if actual === nothing
@@ -198,6 +224,7 @@ function handle_getmodelresults(req::HTTP.Request)
                 )
             end
             data = read(resultpaths[resultid])
+            delete!(resultpaths, resultid)
             return HTTP.Response(
                 ResponseCode.OK,
                 CORS_RES_HEADERS,
