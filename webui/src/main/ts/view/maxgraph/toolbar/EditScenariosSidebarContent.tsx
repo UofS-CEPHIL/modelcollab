@@ -1,7 +1,7 @@
 import { FormControl, InputLabel, List, ListItem, ListItemButton, ListItemIcon, ListItemText, MenuItem, Select, SelectChangeEvent, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import React, { ReactElement } from 'react';
+import React, { KeyboardEvent, ReactElement } from 'react';
 import FirebaseDataModel from '../../../data/FirebaseDataModel';
 import ModelValidator from "../../../validation/ModelValitador";
 import { theme } from "../../../Themes";
@@ -23,7 +23,6 @@ export interface State {
     scenarioEditing: FirebaseScenario | null;
     originalScenario: FirebaseScenario | null;
     newScenarioName: string;
-    newScenarioNameIsError: boolean;
 }
 
 type ReactChangeEvent = React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>;
@@ -39,8 +38,30 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
             scenarioEditing: null,
             originalScenario: null,
             newScenarioName: "",
-            newScenarioNameIsError: false
         };
+    }
+
+    public componentDidUpdate() {
+        if (this.state.scenarioEditing) {
+            const newScenario = this.props.scenarios.find(s =>
+                s.getId() === this.state.scenarioEditing!.getId()
+            );
+            if (
+                newScenario
+                && !newScenario.equals(this.state.originalScenario!)
+            ) {
+                this.setState({
+                    scenarioEditing: newScenario,
+                    originalScenario: newScenario
+                });
+            }
+            else if (!newScenario) {
+                this.setState({
+                    scenarioEditing: null,
+                    originalScenario: null
+                });
+            }
+        }
     }
 
     public componentDidMount() {
@@ -48,21 +69,10 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
     }
 
     public render(): ReactElement {
-        const hasChanges = this.state.originalScenario !== null
-            && this.state.scenarioEditing !== null
-            && !this.state.originalScenario.equals(this.state.scenarioEditing);
-
         return (
             <List>
                 {this.makeAddScenarioListItem()}
                 {this.makeSelectScenarioListItem()}
-                <RefreshAndSaveListItem
-                    onSave={() => this.updateScenario()}
-                    onRefresh={() => this.refresh()}
-                    disabled={!this.state.scenarioEditing}
-                    hasChanges={hasChanges}
-                    key={'refreshandsave'}
-                />
                 {this.makeStartStopTimeListItems()}
                 {this.makeParameterListItems()}
                 {this.makeDeleteScenarioListItem()}
@@ -71,6 +81,7 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
     }
 
     private makeAddScenarioListItem(): ReactElement {
+
         return (
             <ListItem key="add-scenario">
                 <TextField
@@ -81,7 +92,12 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                     inputProps={{
                         id: "add-scenario-input",
                     }}
-                    error={this.state.newScenarioNameIsError}
+                    error={
+                        this.state.newScenarioName.length > 0
+                        && !this.isValidScenarioName(
+                            this.state.newScenarioName
+                        )
+                    }
                     sx={{ flexGrow: 2, marginRight: 0 }}
                 />
                 <ListItemButton
@@ -221,15 +237,23 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
             });
         }
         const scenario = this.state.scenarioEditing;
+        const startTime = scenario ? scenario.getData().startTime : "0.0";
+        const stopTime = scenario ? scenario.getData().stopTime : "0.0";
+
         const isDisabled = scenario === null;
+        const isError = !ModelValidator.isValidNumber(startTime)
+            || !ModelValidator.isValidNumber(stopTime)
+            || Number(stopTime) < Number(startTime);
+
         return [
             this.makeOneParameterListItem(
                 "Start Time",
-                scenario ? scenario.getData().startTime : "0.0",
+                startTime,
                 isDisabled,
                 isDisabled,
                 -1,
-                e => handleChange(e, true)
+                e => handleChange(e, true),
+                isError,
             ),
             this.makeOneParameterListItem(
                 "Stop Time",
@@ -237,7 +261,8 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                 isDisabled,
                 isDisabled,
                 -2,
-                e => handleChange(e, false)
+                e => handleChange(e, false),
+                isError,
             ),
         ];
     }
@@ -248,18 +273,27 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         isGrayed: boolean,
         isDisabled: boolean,
         key: number,
-        handleChange?: (e: ReactChangeEvent) => void
+        handleChange?: (e: ReactChangeEvent) => void,
+        isError: boolean = false,
     ): ReactElement {
-        const isError = !ModelValidator.isValidNumber(value);
+        isError = isError || !ModelValidator.isValidNumber(value);
         const color = isGrayed
             ? theme.palette.grayed.main
             : theme.palette.canvas.contrastText;
+        const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") {
+                this.updateScenario();
+                document.body.focus();
+            }
+        }
 
         return (
             <ListItem key={key}>
                 <TextField
                     value={value}
                     onChange={handleChange}
+                    onKeyUp={handleKeyUp}
+                    onBlur={() => this.refresh()}
                     name={name}
                     label={name}
                     error={isError}
@@ -326,14 +360,8 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                 this.props.modelUuid,
                 this.state.newScenarioName,
             );
-            this.setState({
-                newScenarioName: "",
-                newScenarioNameIsError: false
-            });
+            this.setState({ newScenarioName: "" });
             setTimeout(() => this.refresh());
-        }
-        else {
-            this.setState({ newScenarioNameIsError: true });
         }
     }
 
