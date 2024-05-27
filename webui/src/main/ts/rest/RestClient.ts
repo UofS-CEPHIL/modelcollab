@@ -1,6 +1,6 @@
 import Axios, { AxiosResponse } from "axios";
 
-export default class RestClientImpl {
+export default class RestClient {
 
     // TODO this would be great to handle through codegen so it
     // stays consistent between TS and Julia
@@ -13,7 +13,7 @@ export default class RestClientImpl {
         onCodeReceived: (result: string, success: boolean) => void,
     ): Promise<void> {
         return Axios.get(
-            `/api/${RestClientImpl.GET_CODE_PATH}/${modelId}`,
+            `/api/${RestClient.GET_CODE_PATH}/${modelId}`,
             {
                 headers: {
                     "Content-Type": "application/json",
@@ -33,16 +33,21 @@ export default class RestClientImpl {
         scenarioName: string | null,
         onResponseReceived: (response: string, wasSuccess: boolean) => void
     ): Promise<void> {
-        if (!scenarioName) scenarioName = 'baseline';
-        return Axios.post(
-            `/api/${RestClientImpl.COMPUTE_MODEL_PATH}`
+        if (!scenarioName) {
+            onResponseReceived("Please select a scenario!", false);
+            return new Promise(() => { });
+        }
+        else {
+            return Axios.post(
+                `/api/${RestClient.COMPUTE_MODEL_PATH}`
                 + `/${sessionId}/${scenarioName}`,
-            {
-                headers: {
-                    "Content-Type": "application/x-www-urlencoded"
+                {
+                    headers: {
+                        "Content-Type": "application/x-www-urlencoded"
+                    }
                 }
-            }
-        ).then(res => onResponseReceived(res.data, !this.isError(res)));
+            ).then(res => onResponseReceived(res.data, !this.isError(res)));
+        }
     }
 
     public async getResults(
@@ -50,7 +55,7 @@ export default class RestClientImpl {
         onResultsReceived: (success: boolean, result?: Blob | string) => void
     ): Promise<void> {
         return Axios.get(
-            `/api/${RestClientImpl.GET_RESULTS_PATH}/${resultId}`,
+            `/api/${RestClient.GET_RESULTS_PATH}/${resultId}`,
             {
                 method: 'get',
                 headers: {

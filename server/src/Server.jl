@@ -150,19 +150,17 @@ function handle_computemodel(req::HTTP.Request)
         end
         fb_components = FirebaseClient.get_components(modelid)
         scenarios = fb_components.scenarios
-        if scenario_id == "baseline"
-            scenario = FirebaseComponents.DEFAULT_SCENARIO
-        else
-            scenario_idx = findfirst(s -> s.id == scenario_id, scenarios)
-            if (scenario_idx === nothing)
-                scenario_names = map(s -> s.name, scenarios)
-                return make_error(
-                    "Can't find scenario $(scenario_id). Existing scenarios: "
-                    * join(scenario_names, ", ")
-                )
-            end
-            scenario = scenarios[scenario_idx]
+
+        scenario_idx = findfirst(s -> s.id == scenario_id, scenarios)
+        if (scenario_idx === nothing)
+            scenario_names = map(s -> s.name, scenarios)
+            return make_error(
+                "Can't find scenario $(scenario_id). Existing scenarios: "
+                * join(scenario_names, ", ")
+            )
         end
+        scenario = scenarios[scenario_idx]
+
         models = ModelBuilder.make_stockflow_models(
             fb_components.outers,
             fb_components.inners,
