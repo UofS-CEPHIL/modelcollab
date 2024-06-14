@@ -17,7 +17,7 @@ export default class DynamicVariablePresentation
             image: "/icons/variable-icon.png",
             imageWidth: theme.custom.maxgraph.icons.sizePx,
             imageHeight: theme.custom.maxgraph.icons.sizePx,
-            fillColor: "none",
+            fillColor: theme.palette.canvas.main,
             strokeColor: theme.palette.canvas.contrastText,
             strokeWidth: theme.custom.maxgraph.dynvar.strokeWidth,
             fontColor: theme.palette.canvas.contrastText,

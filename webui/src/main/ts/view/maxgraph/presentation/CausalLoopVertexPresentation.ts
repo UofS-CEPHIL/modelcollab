@@ -29,7 +29,7 @@ export default class CausalLoopVertexPresentation
     public static getVertexStyle(isInner: boolean = false): CellStyle {
         return {
             shape: "text",
-            fillColor: "none",
+            fillColor: theme.palette.canvas.main,
             strokeWidth: 0,
             strokeColor: "none",
             fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
