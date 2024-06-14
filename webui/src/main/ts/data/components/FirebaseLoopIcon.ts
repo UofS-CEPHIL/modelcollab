@@ -61,8 +61,14 @@ export default class FirebaseLoopIcon extends
         return {
             x: Number(data.x),
             y: Number(data.y),
-            width: Number(data.width),
-            height: Number(data.height),
+            width: Number(
+                data.width
+                ?? theme.custom.maxgraph.loopIcon.defaultWidthPx
+            ),
+            height: Number(
+                data.height
+                ?? theme.custom.maxgraph.loopIcon.defaultWidthPx
+            ),
             text: String(data.text ?? ""),
             color: String(data.color ?? theme.palette.canvas.contrastText),
             fontSize: Number(

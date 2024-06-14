@@ -67,7 +67,7 @@ export default class FirebaseStaticModel
             x: Number(d.x),
             y: Number(d.y),
             modelId: String(d.modelId),
-            color: String(d.color)
+            color: String(d.color ?? "gray")
         };
     }
 }

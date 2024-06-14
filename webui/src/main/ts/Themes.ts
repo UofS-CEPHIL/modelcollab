@@ -134,6 +134,7 @@ declare module '@mui/material/styles' {
                     defaultHeightPx: number,
                     fillOpacity: number,
                     rounded: boolean,
+                    loadingModelWidthPx: number,
                 },
                 icons: {
                     sizePx: number,
@@ -237,6 +238,7 @@ declare module '@mui/material/styles' {
                     defaultHeightPx?: number,
                     fillOpacity?: number,
                     rounded?: boolean,
+                    loadingModelWidthPx?: number,
                 },
                 canvas?: {
                     borderWidthPx?: number,
@@ -422,6 +424,7 @@ export const theme = createTheme({
                 defaultHeightPx: 100,
                 fillOpacity: 25,
                 rounded: true,
+                loadingModelWidthPx: 10,
             },
             canvas: {
                 borderWidthPx: 1,

@@ -130,7 +130,7 @@ export default class FirebaseCausalLoopLink
             from: data.from.toString(),
             to: data.to.toString(),
             points: data.points ?? [],
-            polarity: toPolarity(data.polarity),
+            polarity: toPolarity(data.polarity ?? Polarity.UNKNOWN),
             color: String(
                 data.color
                 ?? theme.custom.maxgraph.arrowComponent.defaultColor

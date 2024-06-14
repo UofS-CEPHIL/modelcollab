@@ -1,10 +1,11 @@
-import { Cell, CellStyle } from "@maxgraph/core";
+import { Cell, CellStyle, VertexParameters } from "@maxgraph/core";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import FirebaseFlow from "../../../data/components/FirebaseFlow";
 import FirebasePointComponent from "../../../data/components/FirebasePointComponent";
 import FirebaseStaticModel from "../../../data/components/FirebaseStaticModel";
 import { theme } from "../../../Themes";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
+import MCGraph from "../MCGraph";
 import StockFlowGraph from "../StockFlowGraph";
 import PointComponentPresentation from "./PointComponentPresentation";
 
@@ -55,6 +56,18 @@ export default class StaticModelPresentation
         }
     }
 
+    protected getVertexParameters(
+        component: FirebaseStaticModel,
+        graph: MCGraph,
+        parent?: Cell,
+    ): VertexParameters {
+        return {
+            ...super.getVertexParameters(component, graph, parent),
+            width: theme.custom.maxgraph.staticModel.loadingModelWidthPx,
+            height: theme.custom.maxgraph.staticModel.loadingModelWidthPx,
+        };
+    }
+
     protected getDefaultStyle(): CellStyle {
         return {
             shape: "rectangle",
@@ -65,7 +78,7 @@ export default class StaticModelPresentation
             editable: theme.custom.maxgraph.staticModel.rounded,
             resizable: false,
             strokeWidth: theme.custom.maxgraph.staticModel.strokeWidthPx,
-            fillOpacity: theme.custom.maxgraph.staticModel.fillOpacity
+            fillOpacity: theme.custom.maxgraph.staticModel.fillOpacity,
         };
     }
 
