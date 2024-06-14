@@ -63,6 +63,8 @@ export default class DefaultBehaviour extends ModeBehaviour {
             case "z":
                 this.getGraph().redo();
                 break;
+            case "r":
+                window.location.reload();
         }
     }
 
