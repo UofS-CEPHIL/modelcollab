@@ -1,5 +1,5 @@
 import React, { createRef, Fragment, ReactElement, RefObject } from 'react';
-import { Cell, EventObject, EventSource, InternalEvent, InternalMouseEvent, Point, RubberBandHandler } from '@maxgraph/core';
+import { Cell, EventObject, EventSource, InternalEvent, InternalMouseEvent, Point } from '@maxgraph/core';
 import UserControls from '../maxgraph/UserControls';
 import { UiMode } from '../../UiMode';
 import DiagramActions from "../maxgraph/DiagramActions";
@@ -42,6 +42,7 @@ export default abstract class CanvasScreen
 
     public static readonly INIT_MODE = UiMode.MOVE;
     public static readonly INIT_CURSOR = new Point(0, 0);
+    public static readonly GRAPH_DIV_ID = "graph-container";
 
     protected graphRef: RefObject<HTMLDivElement> = createRef<HTMLDivElement>();
     protected graph: G | null = null;
@@ -99,12 +100,6 @@ export default abstract class CanvasScreen
         }
     }
 
-    protected setupRubberBandHandler(graph: G): RubberBandHandler {
-        const rbHandler = new RubberBandHandler(graph);
-        rbHandler.fadeOut = true;
-        return rbHandler;
-    }
-
     protected setupGraph(): void {
         if (this.graph) throw new Error("Already initialized");
         // Allow right-click on canvas
@@ -112,7 +107,6 @@ export default abstract class CanvasScreen
         this.graph = this.makeGraph();
         this.actions = this.makeActions();
         this.controls = this.makeUserControls();
-        this.setupRubberBandHandler(this.graph);
         this.graph.addMouseListener({
             mouseDown: () => { },
             mouseUp: () => { },
@@ -211,7 +205,7 @@ export default abstract class CanvasScreen
                             }}
                         >
                             <div
-                                id="graph-container"
+                                id={CanvasScreen.GRAPH_DIV_ID}
                                 ref={this.graphRef}
                                 style={{
                                     border: theme.palette.grayed.main

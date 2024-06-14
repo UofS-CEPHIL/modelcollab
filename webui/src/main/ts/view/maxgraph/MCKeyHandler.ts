@@ -1,4 +1,5 @@
 import { Graph, InternalEvent, KeyHandler } from "@maxgraph/core";
+import MCCellEditorHandler from "./MCCellEditorHandler";
 
 // A MaxGraph KeyHandler but with a key-up listener too
 export default class MCKeyHandler extends KeyHandler {
@@ -21,12 +22,23 @@ export default class MCKeyHandler extends KeyHandler {
         if (graph != null) {
             this.keyupHandler = (evt) => this.keyUp(evt);
             InternalEvent.addListener(this.target!, 'keyup', this.keyupHandler);
+            InternalEvent.addListener(
+                document,
+                "keydown",
+                (e: KeyboardEvent) => {
+                    this.keyDown(e);
+                });
         }
     }
 
     public escape(evt: KeyboardEvent): void {
         super.escape(evt);
         if (this.onEscape) this.onEscape();
+    }
+
+    public isEnabledForEvent(e: KeyboardEvent): boolean {
+        const target = e.target as HTMLElement;
+        return target.nodeName !== "INPUT" && target.contentEditable !== "true";
     }
 
     public keyUp(evt: KeyboardEvent) {

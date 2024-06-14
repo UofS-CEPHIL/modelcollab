@@ -97,8 +97,8 @@ export default abstract class CanvasSidebar
     }
 
     private handleModeChanged(event: SelectChangeEvent): void {
-        this.setState({
-            mode: event.target.value.toString()
-        });
+        this.setState(
+            { mode: event.target.value.toString() }
+        );
     }
 }

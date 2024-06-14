@@ -1,4 +1,4 @@
-import { Cell, CellEditorHandler, CellRenderer, CellState, EdgeHandler, EventObject, Graph, InternalEvent, InternalMouseEvent, SelectionHandler, TooltipHandler, UndoManager, ValueChange } from "@maxgraph/core";
+import { Cell, CellEditorHandler, CellRenderer, CellState, ConnectionHandler, EdgeHandler, EventObject, Graph, InternalEvent, InternalMouseEvent, PanningHandler, PopupMenuHandler, RubberBandHandler, SelectionCellsHandler, SelectionHandler, TooltipHandler, UndoManager, ValueChange } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseCausalLoopVertex from "../../data/components/FirebaseCausalLoopVertex";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
@@ -10,6 +10,7 @@ import { theme } from "../../Themes";
 import { UiMode } from "../../UiMode";
 import { ComponentErrors } from "../../validation/ModelValitador";
 import { LoadedStaticModel } from "../Screens/StockFlowScreen";
+import MCCellEditorHandler from "./MCCellEditorHandler";
 import MCEdgeHandler from "./MCEdgeHandler";
 import CausalLoopLinkShape from "./presentation/CausalLoopLinkShape";
 import ComponentPresentation from "./presentation/ComponentPresentation";
@@ -21,6 +22,16 @@ export default abstract class MCGraph extends Graph {
 
     private static readonly MAX_COMPONENT_LOAD_ATTEMPTS = 5;
     private static readonly COMPONENT_LOAD_POLL_MS = 500;
+    private static readonly DEFAULT_PLUGINS = [
+        MCCellEditorHandler,
+        TooltipHandler,
+        SelectionCellsHandler,
+        PopupMenuHandler,
+        ConnectionHandler,
+        SelectionHandler,
+        PanningHandler,
+        RubberBandHandler,
+    ]
 
     protected haveStaticModelsLoaded: boolean;
     protected lastEdgeHandler: EdgeHandler | null = null;
@@ -48,7 +59,7 @@ export default abstract class MCGraph extends Graph {
         getMode: () => UiMode,
         keydownCellExists: () => boolean,
     ) {
-        super(container);
+        super(container, undefined, MCGraph.DEFAULT_PLUGINS);
         this.presentation = presentation;
         this.getCurrentComponents = getCurrentComponents;
         this.getSubstitutions = getSubstitutions;
@@ -65,17 +76,6 @@ export default abstract class MCGraph extends Graph {
         this.setHtmlLabels(true);
         this.setEnterStopsCellEditing(true);
 
-        const selHandler =
-            this.getPlugin("SelectionHandler") as SelectionHandler;
-        selHandler.getInitialCellForEvent = (me: InternalMouseEvent) => {
-            if (me.getState() && me.getState()!.cell) {
-                return me.getState()!.cell;
-            }
-            return null;
-        }
-
-        this.setupCellEditHandler();
-
         this.undoManager = new UndoManager();
         this.undoHandler = new UndoHandler(
             this,
@@ -87,6 +87,8 @@ export default abstract class MCGraph extends Graph {
             keydownCellExists,
         );
         this.setupUndoManager();
+        this.setupSelectionHandler();
+        this.setupRubberBandHandler();
 
         // When we undo changes to labels, this listener makes sure that they
         // get propagated to Firebase
@@ -120,19 +122,23 @@ export default abstract class MCGraph extends Graph {
         );
     }
 
-    // CellEditorHandler sets cell editor divs as relative by default -- we need
-    // them to be absolute. Delete the existing handler and replace with a
-    // custom one.
-    private setupCellEditHandler(): void {
-        class AbsolutePositionEditHandler extends CellEditorHandler {
-            public init(): void {
-                super.init();
-                this.textarea!.style.position = "absolute";
+    private setupRubberBandHandler(): void {
+        const rbHandler = this.getPlugin(
+            RubberBandHandler.pluginId
+        ) as RubberBandHandler;
+        rbHandler.fadeOut = true;
+    }
+
+    private setupSelectionHandler(): void {
+        const selHandler = this.getPlugin(
+            SelectionHandler.pluginId
+        ) as SelectionHandler;
+        selHandler.getInitialCellForEvent = (me: InternalMouseEvent) => {
+            if (me.getState() && me.getState()!.cell) {
+                return me.getState()!.cell;
             }
+            return null;
         }
-        this.pluginsMap["CellEditorHandler"]?.onDestroy();
-        this.pluginsMap["CellEditorHandler"] =
-            new AbsolutePositionEditHandler(this);
     }
 
     private setupUndoManager(): void {
