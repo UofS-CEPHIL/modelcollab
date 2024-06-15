@@ -1,5 +1,5 @@
 import { AlignValue } from "@maxgraph/core";
-import { createTheme } from "@mui/material";
+import { alpha, createTheme } from "@mui/material";
 
 
 declare module '@mui/material/Button' {
@@ -453,6 +453,7 @@ export const theme = createTheme({
             p: 4,
         }
     },
+    // Styled MUI components
     components: {
         MuiButton: {
             variants: [
@@ -468,6 +469,18 @@ export const theme = createTheme({
                     }
                 },
             ]
-        }
+        },
+        MuiListItemButton: {
+            styleOverrides: {
+                root: {
+                    '&.Mui-selected': {
+                        backgroundColor: alpha(palette.primary.main, 0.20),
+                    },
+                    '&:hover,&.Mui-selected:hover': {
+                        backgroundColor: alpha(palette.primary.main, 0.25)
+                    }
+                }
+            },
+        },
     }
 });
