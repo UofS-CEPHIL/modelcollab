@@ -193,13 +193,25 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         param: FirebaseParameter,
         key: number
     ): ReactElement {
+
+        // If a user names a parameter the same thing as a built-in method on
+        // Object (e.g. "pop") and the scenario doesn't override it, then JS
+        // will assume that the value is overridden and its value is a function,
+        // which will crash the site. To avoid this, we have to check the type.
+        function isValidOverrideValue(v: any): boolean {
+            return v && v instanceof String;
+        }
+
         if (!this.state.scenarioEditing) throw new Error("No scenario selected");
+
         const scenario = this.state.scenarioEditing;
         const paramName = param.getData().text;
-        const value =
-            scenario.getData().overrides[param.getData().text]
-            || param.getData().value;
+        const overrideValue = scenario.getData().overrides[param.getData().text];
+        const value = isValidOverrideValue(overrideValue)
+            ? overrideValue
+            : param.getData().value;
         const isGrayed = value === param.getData().value;
+
         const handleChange = (e: ReactChangeEvent) => {
             const oldOverrides =
                 this.state.scenarioEditing!.getData().overrides;
