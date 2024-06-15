@@ -9,12 +9,17 @@ import FirebaseScenario from '../../../data/components/FirebaseScenario';
 import FirebaseComponent from '../../../data/components/FirebaseComponent';
 import FirebaseParameter from '../../../data/components/FirebaseParameter';
 import ComponentType from '../../../data/components/ComponentType';
-import RefreshAndSaveListItem from './RefreshAndSaveListItem';
+import { LoadedStaticModel } from '../../Screens/StockFlowScreen';
+import FirebaseSubstitution from '../../../data/components/FirebaseSubstitution';
+import FirebaseStockFlowModel from '../../../data/FirebaseStockFlowModel';
+import FirebaseStaticModel from '../../../data/components/FirebaseStaticModel';
 
 export interface Props {
     modelUuid: string;
     firebaseDataModel: FirebaseDataModel;
     components: FirebaseComponent[];
+    substitutions: FirebaseSubstitution[];
+    inners: LoadedStaticModel[];
     scenarios: FirebaseScenario[];
     deleteScenario: (s: FirebaseScenario, callback: () => void) => void;
 }
@@ -171,9 +176,32 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
                     i
                 );
         }
-        return this.props.components
+
+        const findAssociatedModel = (modelId: string) => {
+            const model = this.props.components.find(c =>
+                c.getType() === ComponentType.STATIC_MODEL
+                && c.getData().modelId === modelId
+            );
+            if (!model)
+                throw new Error("Can't find inner model for id: " + modelId);
+            else return model as FirebaseStaticModel;
+        }
+
+        const outerParameters = this.props.components
+            .filter(c => c.getType() === ComponentType.PARAMETER);
+        const innerParameters = this.props.inners.map(m => m.components
             .filter(c => c.getType() === ComponentType.PARAMETER)
-            .map((p, i) => itemFunc(p, i));
+            .map(p => findAssociatedModel(m.modelId).makeChild(p))
+        ).flatMap(_ => _);
+        const allParameters = outerParameters.concat(innerParameters);
+
+        const replacedIds = this.props.substitutions.map(s => s.replacedId);
+
+        const usedParameters = allParameters.filter(p =>
+            !replacedIds.includes(p.getId())
+        );
+
+        return usedParameters.map((p, i) => itemFunc(p, i));
     }
 
     private makeOneDefaultParameterListItem(

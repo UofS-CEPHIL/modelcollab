@@ -1,7 +1,9 @@
 import { ReactElement } from "react";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import FirebaseScenario from "../../../data/components/FirebaseScenario";
+import FirebaseSubstitution from "../../../data/components/FirebaseSubstitution";
 import FirebaseDataModel from "../../../data/FirebaseDataModel";
+import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import CanvasSidebar, { Props as CanvasSidebarProps, State as CanvasSidebarState } from "./CanvasSidebar";
 import EditComponentsSidebarContent from "./EditComponentsSidebarContent";
 import EditScenariosSidebarContent from "./EditScenariosSidebarContent";
@@ -20,6 +22,8 @@ export interface Props extends CanvasSidebarProps {
     firebaseDataModel: FirebaseDataModel;
     modelUuid: string;
     components: FirebaseComponent[],
+    inners: LoadedStaticModel[],
+    substitutions: FirebaseSubstitution[],
     scenarios: FirebaseScenario[],
     selectedScenarioId: string,
     selectedComponent: FirebaseComponent | null;
@@ -49,6 +53,8 @@ export default class StockFlowSidebar
                         modelUuid={this.props.modelUuid}
                         deleteScenario={this.props.deleteScenario}
                         components={this.props.components}
+                        inners={this.props.inners}
+                        substitutions={this.props.substitutions}
                         scenarios={this.props.scenarios}
                     />
                 );

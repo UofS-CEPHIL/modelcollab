@@ -1,5 +1,5 @@
 import ComponentType from "./ComponentType";
-import { FirebaseComponentBase } from "./FirebaseComponent";
+import FirebaseComponent, { FirebaseComponentBase } from "./FirebaseComponent";
 import FirebasePointComponent, {
     FirebasePointData
 } from "./FirebasePointComponent";
@@ -11,6 +11,8 @@ export interface FirebaseStaticModelData extends FirebasePointData {
     modelId: string
 }
 
+// TODO we should somehow merge this with LoadedStaticModel, or at least
+// come up with a better-defined way for them to interact
 export default class FirebaseStaticModel
     extends FirebasePointComponent<FirebaseStaticModelData>
 {
@@ -41,11 +43,19 @@ export default class FirebaseStaticModel
     }
 
     public makeChildId(id: string): string {
-        return this.getId() + FirebaseComponentBase.ID_DELIMITER + id;
+        return FirebaseStaticModel.makeChildIdFor(this.getId(), id);
     }
 
     public isChildId(id: string): boolean {
         return FirebaseStaticModel.isChildIdFor(this.getId(), id);
+    }
+
+    public makeChild(cpt: FirebaseComponent): FirebaseComponent {
+        return cpt.withId(this.makeChildId(cpt.getId()));
+    }
+
+    public makeChildren(cpts: FirebaseComponent[]): FirebaseComponent[] {
+        return cpts.map(c => this.makeChild(c));
     }
 
     public static getParentModelId(id: string): string {
@@ -60,6 +70,13 @@ export default class FirebaseStaticModel
         return childId.startsWith(
             staticModelId + FirebaseComponentBase.ID_DELIMITER
         );
+    }
+
+    public static makeChildIdFor(
+        staticModelId: string,
+        childId: string
+    ): string {
+        return staticModelId + FirebaseComponentBase.ID_DELIMITER + childId;
     }
 
     public static toStaticModelComponentData(d: any): FirebaseStaticModelData {

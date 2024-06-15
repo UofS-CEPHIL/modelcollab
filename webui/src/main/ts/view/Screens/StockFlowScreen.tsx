@@ -183,6 +183,8 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
                 selectScenario={s => this.setState({ selectedScenarioId: s })}
                 selectedScenarioId={this.state.selectedScenarioId}
                 components={this.state.components}
+                inners={this.state.loadedModels}
+                substitutions={this.state.substitutions}
                 scenarios={this.state.scenarios}
                 deleteScenario={(s, c) => this.setState({
                     modalBoxComponent: s,
