@@ -43,10 +43,6 @@ export default abstract class AddArrowBehaviour
         this.resetMode();
     }
 
-    public canvasRightClicked(): void {
-        this.resetMode();
-    }
-
     public cellClicked(cell: Cell, event: EventObject) {
         const keydownCell = this.getKeydownCell();
         const isCtrlHeld = event.getProperty("event").ctrlKey;

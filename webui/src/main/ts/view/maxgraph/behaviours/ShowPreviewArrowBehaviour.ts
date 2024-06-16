@@ -17,17 +17,22 @@ export default abstract class ShowPreviewArrowBehaviour
 
     public canvasRightClicked(): void {
         this.setKeydownCell(null);
+        this.resetMode();
     }
 
     public cellClicked(cell: Cell, event: EventObject) {
         const keydownCell = this.getKeydownCell();
         if (keydownCell) {
             this.cellsConnected(keydownCell, cell);
+            this.resetMode();
         }
         else if (this.isValidArrowSource(cell)) {
             this.setKeydownCell(cell);
             const previewStyle = this.getPreviewArrowStyle();
             if (previewStyle) this.addPreviewArrow(cell, previewStyle);
+        }
+        else {
+            this.resetMode();
         }
     }
 
