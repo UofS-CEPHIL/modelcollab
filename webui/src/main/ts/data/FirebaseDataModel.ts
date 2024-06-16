@@ -13,6 +13,7 @@ import FirebaseCausalLoopModel from "./FirebaseCausalLoopModel";
 import { ModelSchema } from "./components/FirebaseModel";
 import ComponentType from "./components/ComponentType";
 import FirebaseSubstitution from "./components/FirebaseSubstitution";
+import FirebasePropertyOverrides, { ComponentPropertyOverrides } from "./components/FirebasePropertyOverrides";
 
 export enum ModelType {
     CausalLoop = "CL",
@@ -458,6 +459,38 @@ export default class FirebaseDataModel {
                 }
                 callback(components);
             }
+        );
+    }
+
+    public subscribeToSessionOverrides(
+        modelUuid: string,
+        callback: (_: FirebasePropertyOverrides) => void
+    ): Unsubscribe {
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeOverridesPath(modelUuid)
+            ),
+            snapshot => {
+                if (snapshot.exists() && snapshot.key) {
+                    callback(snapshot.val() as FirebasePropertyOverrides)
+                }
+            }
+        );
+    }
+
+    public async addComponentOverride(
+        modelUuid: string,
+        staticModelCptId: string,
+        cptId: string,
+        override: ComponentPropertyOverrides
+    ): Promise<void> {
+        await set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeOverridePath(modelUuid, staticModelCptId, cptId),
+            ),
+            override
         );
     }
 }

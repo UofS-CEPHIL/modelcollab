@@ -31,6 +31,28 @@ export default class RTDBSchema {
         return this.makeSubstitutionsPath(modelUuid) + "/" + replacedId;
     }
 
+    static makeOverridesPath(modelUuid: string): string {
+        return this.makeModelPath(modelUuid) + "/overrides";
+    }
+
+    static makeOverridesPathForStaticModel(
+        modelUuid: string,
+        staticModelId: string
+    ): string {
+        return this.makeOverridesPath(modelUuid) + `/${staticModelId}`
+    }
+
+    static makeOverridePath(
+        modelUuid: string,
+        staticModelUuid: string,
+        cptId: string
+    ): string {
+        return this.makeOverridesPathForStaticModel(
+            modelUuid,
+            staticModelUuid
+        ) + `/${cptId}`;
+    }
+
     static makeSavedModelsPath(modelUuid: string): string {
         return this.makeModelPath(modelUuid) + "/loadedModels";
     }

@@ -1,5 +1,6 @@
 import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
 import FirebaseComponent from "./components/FirebaseComponent";
+import FirebasePropertyOverrides from "./components/FirebasePropertyOverrides";
 import FirebaseScenario from "./components/FirebaseScenario";
 import FirebaseSubstitution from "./components/FirebaseSubstitution";
 import FirebaseDataModel from "./FirebaseDataModel";
@@ -40,6 +41,7 @@ export default class FirebaseSessionDataGetter {
         onLoadedModelsUpdated: (models: LoadedStaticModel[]) => void,
         onScenariosUpdated: (scenarios: FirebaseScenario[]) => void,
         onSubstitutionsUpdated: (subs: FirebaseSubstitution[]) => void,
+        onOverridesUpdated: (overrides: FirebasePropertyOverrides) => void,
     ): () => void {
         // A stock flow model is treated the same in the DB as
         // a CLD but with sub-models and scenarios
@@ -63,12 +65,18 @@ export default class FirebaseSessionDataGetter {
                 modelUuid,
                 onSubstitutionsUpdated
             );
+        const unsubOverrides = this.firebaseDataModel
+            .subscribeToSessionOverrides(
+                modelUuid,
+                onOverridesUpdated
+            );
 
         return () => {
             unsubLoadedModels();
             unsubScenarios();
             unsubOtherComponents();
             unsubSubstitutions();
+            unsubOverrides();
         };
     }
 }

@@ -9,6 +9,9 @@ import FirebasePointerComponent from "../../data/components/FirebasePointerCompo
 import MCEdgeHandler from "./MCEdgeHandler";
 import FirebaseFlow from "../../data/components/FirebaseFlow";
 import FirebaseMovableLabelPointerComponent from "../../data/components/FirebaseMovableLabelPointerComponent";
+import FirebaseStaticModel from "../../data/components/FirebaseStaticModel";
+import ComponentType from "../../data/components/ComponentType";
+import { ComponentPropertyOverrides } from "../../data/components/FirebasePropertyOverrides";
 
 // This class contains the logic for making changes to the diagram, including
 // the positions of the components and their values. This happens either by
@@ -113,13 +116,53 @@ export default abstract class DiagramActions<G extends MCGraph> {
                 return;
             }
         }
-        this.firebaseDataModel.updateComponent(this.modelUuid, component);
+
+        if (FirebaseStaticModel.isStaticModelChildId(component.getId())) {
+            this.updateInnerComponent(component);
+        }
+        else {
+            this.firebaseDataModel.updateComponent(this.modelUuid, component);
+        }
+
         if (this.actionLogger) {
             this.actionLogger.logAction(
                 "Component updated",
                 component.getReadableComponentName()
             );
         }
+    }
+
+    protected updateInnerComponent(cpt: FirebaseComponent): void {
+
+        // TODO implement this properly
+
+        // TODO this is wasteful and bad. Design it better.
+        // const staticModelCptId = cpt.getContainingModelId();
+        // if (!staticModelCptId)
+        //     throw new Error("Expected inner component: " + cpt.getId());
+
+        // const model = this.getComponentWithId(staticModelCptId);
+        // if (!model) {
+        //     throw new Error("Can't find model with id " + staticModelCptId);
+        // }
+        // else if (model.getType() !== ComponentType.STATIC_MODEL) {
+        //     throw new Error(
+        //         "Component was not a static model: " + staticModelCptId
+        //     );
+        // }
+
+        // const disallowedFields = ["to", "from"];
+        // const overrides = Object.fromEntries(
+        //     Object.entries(model.getData())
+        //         .filter(([k, _]) => !disallowedFields.includes(k))
+        // ) as ComponentPropertyOverrides;
+
+        // this.firebaseDataModel.addComponentOverride(
+        //     this.modelUuid,
+        //     model.getId(),
+        //     cpt.getUnqualifiedId(),
+        //     overrides
+        // );
     }
 
     public deleteSelection(): void {

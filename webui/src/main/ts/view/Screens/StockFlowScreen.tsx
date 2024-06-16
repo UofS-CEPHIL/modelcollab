@@ -24,7 +24,7 @@ import StockFlowPresentationGetter from '../maxgraph/presentation/StockFlowPrese
 import StockFlowBehaviourGetter from '../maxgraph/behaviours/stockflow/StockFlowBehaviourGetter';
 import StockFlowModeSelectPanel from '../maxgraph/toolbar/StockFlowModeSelectPanel';
 import FirebaseSubstitution from '../../data/components/FirebaseSubstitution';
-import { EventObject, EventSource, InternalEvent } from '@maxgraph/core';
+import FirebasePropertyOverrides, { ComponentPropertyOverrides } from '../../data/components/FirebasePropertyOverrides';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -44,6 +44,7 @@ interface State extends CanvasScreenState {
     scenarios: FirebaseScenario[];
     loadedModels: LoadedStaticModel[];
     substitutions: FirebaseSubstitution[];
+    overrides: FirebasePropertyOverrides;
     clipboard: FirebaseComponent[];
     selectedComponent: FirebaseComponent | null;
     errors: ComponentErrors;
@@ -69,6 +70,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             clipboard: [],
             components: [],
             scenarios: [],
+            overrides: {},
             substitutions: [],
             selectedComponent: null,
             errors: {},
@@ -229,6 +231,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             m => this.onLoadedModelsUpdated(m),
             s => this.setState({ scenarios: s }),
             s => this.onSubstitutionsUpdated(s),
+            o => this.onOverridesUpdated(o),
         );
     }
 
@@ -342,10 +345,55 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             this.graph
                 ? this.setState(
                     { loadedModels: models },
-                    () => this.graph!.refreshLoadedModels(models)
+                    () => this.applyOverrides(
+                        () => this.graph!.refreshLoadedModels(
+                            this.state.loadedModels
+                        )
+                    )
                 ) : setTimeout(tryUpdateModels, 200);
         };
         tryUpdateModels();
+    }
+
+    private applyOverrides(afterSetState?: () => void): void {
+
+        const models = [...this.state.loadedModels];
+
+        const updateOneComponent = (
+            modelId: string,
+            cptId: string,
+            overrides: ComponentPropertyOverrides
+        ) => {
+            const model = models.find(m => m.modelId === modelId);
+            if (!model) {
+                console.warn(`Can't find model with id ${modelId}`);
+                return;
+            }
+
+            const oldSize = model.components.length;
+            model.components = model.components.map(c =>
+                c.getId() === cptId
+                    ? c.withData({ ...c.getData(), ...overrides })
+                    : c
+            );
+            if (model.components.length === oldSize) {
+                console.warn(
+                    `Can't find component with id ` +
+                    `${cptId} in model with id ${modelId}`
+                );
+            }
+        }
+
+        Object.entries(this.state.overrides).forEach(([modelId, cpts]) =>
+            Object.entries(cpts).forEach(([cptId, overrides]) =>
+                updateOneComponent(modelId, cptId, overrides)
+            )
+        );
+        this.setState({ loadedModels: models }, afterSetState);
+    }
+
+    private onOverridesUpdated(overrides: FirebasePropertyOverrides): void {
+        this.setState({ overrides }, () => this.applyOverrides());
     }
 
     private getRandomStaticModelColor(): string {

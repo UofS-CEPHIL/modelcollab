@@ -57,6 +57,14 @@ export abstract class FirebaseComponentBase
             .join(FirebaseComponentBase.ID_DELIMITER);
     }
 
+    public getUnqualifiedId(): string {
+        const id = this.getId()
+            .split(FirebaseComponentBase.ID_DELIMITER)
+            .at(-1);
+        if (!id) throw new Error("Cannot de-qualify id: " + this.getId());
+        else return id;
+    }
+
     public clone(): FirebaseComponentBase<DataType> {
         return this.withId(this.getId());
     }

@@ -1,6 +1,7 @@
 import { LoadedStaticModel } from "../view/Screens/StockFlowScreen"
 import FirebaseComponent from "./components/FirebaseComponent"
 import FirebaseModel, { ComponentSchema, ModelSchema, SharedUsersSchema } from "./components/FirebaseModel"
+import FirebasePropertyOverrides from "./components/FirebasePropertyOverrides"
 import FirebaseScenario from "./components/FirebaseScenario"
 import FirebaseSubstitution from "./components/FirebaseSubstitution"
 import { ModelType } from "./FirebaseDataModel"
@@ -32,7 +33,8 @@ export interface StockFlowComponentSchema extends ComponentSchema {
     },
     substitutions: {
         [replacedId: string]: string
-    }
+    },
+    overrides: FirebasePropertyOverrides,
 }
 
 export interface StockFlowSchema extends ModelSchema {
@@ -53,6 +55,7 @@ export default class FirebaseStockFlowModel
         components: FirebaseComponent[],
         scenarios: FirebaseScenario[],
         substitutions: FirebaseSubstitution[],
+        overrides: FirebasePropertyOverrides,
         loadedModels: LoadedStaticModel[]
     ): StockFlowComponentSchema {
         return {
@@ -73,6 +76,7 @@ export default class FirebaseStockFlowModel
                     ),
                 ])
             ),
+            overrides
         }
     }
 
@@ -89,7 +93,8 @@ export default class FirebaseStockFlowModel
                 components: {},
                 loadedModels: {},
                 scenarios: {},
-                substitutions: {}
+                substitutions: {},
+                overrides: {},
             }
         };
     }
