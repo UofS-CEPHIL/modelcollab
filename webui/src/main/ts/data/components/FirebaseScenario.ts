@@ -46,7 +46,7 @@ export default class FirebaseScenario
                 name: data.name || "",
                 startTime: data.startTime || "",
                 stopTime: data.stopTime || "",
-                overrides: data.paramOverrides || []
+                overrides: data.overrides || []
             }
         );
     }

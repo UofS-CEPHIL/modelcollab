@@ -172,11 +172,10 @@ export default class FirebaseDataModel {
                 this.firebaseManager.getDb(),
                 RTDBSchema.makeScenariosPath(modelUuid)
             ),
-            s =>
-                callback(
-                    Object.entries(s.val() ?? {})
-                        .map(e => FirebaseScenario.fromData(e[0], e[1]))
-                )
+            s => callback(
+                Object.entries(s.val() ?? {})
+                    .map(e => FirebaseScenario.fromData(e[0], e[1]))
+            )
         );
     }
 

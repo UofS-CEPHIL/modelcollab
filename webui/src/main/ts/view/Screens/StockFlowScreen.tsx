@@ -173,6 +173,10 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
         tryUpdateGraph();
     }
 
+    protected onScenariosUpdated(scenarios: FirebaseScenario[]): void {
+        this.setState({ scenarios });
+    }
+
     protected makeSidebar(): ReactElement {
         return (
             <StockFlowSidebar
@@ -229,7 +233,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             n => this.setState({ modelName: n }),
             c => this.onComponentsUpdated(c),
             m => this.onLoadedModelsUpdated(m),
-            s => this.setState({ scenarios: s }),
+            s => this.onScenariosUpdated(s),
             s => this.onSubstitutionsUpdated(s),
             o => this.onOverridesUpdated(o),
         );

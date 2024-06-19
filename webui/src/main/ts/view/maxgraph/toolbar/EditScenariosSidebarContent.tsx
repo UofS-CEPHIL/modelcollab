@@ -47,25 +47,36 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         };
     }
 
-    public componentDidUpdate() {
+    public componentDidUpdate(prevProps: Props) {
         if (this.state.scenarioEditing) {
             const newScenario = this.props.scenarios.find(s =>
                 s.getId() === this.state.scenarioEditing!.getId()
             );
-            if (
-                newScenario
-                && !newScenario.equals(this.state.originalScenario!)
+            const oldScenario = prevProps.scenarios.find(s =>
+                s.getId() === this.state.scenarioEditing!.getId()
+            );
+
+            // Scenario was deleted
+            if (oldScenario && !newScenario) {
+                this.setState({ scenarioEditing: null, originalScenario: null });
+            }
+            // Sceneario was edited
+            else if (
+                oldScenario
+                && newScenario
+                && !oldScenario.equals(newScenario)
             ) {
                 this.setState({
                     scenarioEditing: newScenario,
                     originalScenario: newScenario
                 });
             }
-            else if (!newScenario) {
-                this.setState({
-                    scenarioEditing: null,
-                    originalScenario: null
-                });
+            // Something weird happened
+            else if (!oldScenario && !newScenario) {
+                console.error(
+                    "Editing non-existent scenario: "
+                    + this.state.scenarioEditing.getData().name
+                );
             }
         }
     }
@@ -230,13 +241,12 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         param: FirebaseParameter,
         key: number
     ): ReactElement {
-
         // If a user names a parameter the same thing as a built-in method on
         // Object (e.g. "pop") and the scenario doesn't override it, then JS
         // will assume that the value is overridden and its value is a function,
         // which will crash the site. To avoid this, we have to check the type.
         function isValidOverrideValue(v: any): boolean {
-            return v && v instanceof String;
+            return v && (typeof v === 'string' || v instanceof String);
         }
 
         if (!this.state.scenarioEditing) throw new Error("No scenario selected");
@@ -325,7 +335,8 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
         handleChange?: (e: ReactChangeEvent) => void,
         isError: boolean = false,
     ): ReactElement {
-        isError = isError || !ModelValidator.isValidNumber(value);
+        isError = !isDisabled
+            && (isError || !ModelValidator.isValidNumber(value));
         const color = isGrayed
             ? theme.palette.grayed.main
             : theme.palette.canvas.contrastText;
