@@ -5,4 +5,10 @@ export default abstract class PresentationGetter {
     public abstract getRelevantPresentation(
         component: FirebaseComponent
     ): ComponentPresentation<any>;
+
+    public hasVisibleStroke(component: FirebaseComponent): boolean {
+        return this
+            .getRelevantPresentation(component)
+            .hasVisibleStroke(component);
+    }
 }

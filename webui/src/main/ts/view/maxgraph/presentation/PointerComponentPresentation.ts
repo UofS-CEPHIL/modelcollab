@@ -105,4 +105,8 @@ export default abstract class PointerComponentPresentation
             exitY: cell.style.exitY,
         }) as DataType;
     }
+
+    public hasVisibleStroke(_: DataType): boolean {
+        return true;
+    }
 }

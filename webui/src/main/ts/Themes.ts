@@ -75,10 +75,12 @@ declare module '@mui/material/styles' {
                     rounded: boolean,
                 },
                 param: {
+                    strokeColor: string,
                     strokeWidth: number,
                     dashed: boolean,
                 },
                 dynvar: {
+                    strokeColor: string,
                     strokeWidth: number,
                     dashed: boolean,
                 },
@@ -109,6 +111,7 @@ declare module '@mui/material/styles' {
                     defaultWidthPx: number,
                     defaultHeightPx: number,
                     defaultFontSize: number,
+                    defaultPadding: number,
                     defaultAlignValue: AlignValue,
                 },
                 arrowComponent: HandleThemes & {
@@ -190,10 +193,12 @@ declare module '@mui/material/styles' {
                     rounded?: boolean,
                 },
                 param: {
+                    strokeColor?: string,
                     strokeWidth?: number,
                     dashed?: boolean,
                 },
                 dynvar: {
+                    strokeColor?: string,
                     strokeWidth?: number,
                     dashed?: boolean,
                 },
@@ -224,6 +229,7 @@ declare module '@mui/material/styles' {
                     defaultWidthPx?: number,
                     defaultHeightPx?: number,
                     defaultFontSize?: number,
+                    defaultPadding?: number,
                     defaultAlignValue?: AlignValue,
                 },
                 arrowComponent?: HandleThemes & {
@@ -344,11 +350,13 @@ export const theme = createTheme({
                 rounded: true,
             },
             param: {
-                strokeWidth: 2,
+                strokeColor: palette.canvas.main,
+                strokeWidth: 1,
                 dashed: false,
             },
             dynvar: {
-                strokeWidth: 2,
+                strokeColor: palette.canvas.main,
+                strokeWidth: 1,
                 dashed: false,
             },
             sumvar: {
@@ -386,7 +394,8 @@ export const theme = createTheme({
                 defaultWidthPx: 140,
                 defaultHeightPx: 30,
                 defaultFontSize: 18,
-                defaultAlignValue: "right"
+                defaultPadding: 30,
+                defaultAlignValue: "left"
             },
             arrowComponent: {
                 labelHandle: {

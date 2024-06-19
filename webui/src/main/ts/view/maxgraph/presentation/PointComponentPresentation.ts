@@ -10,6 +10,8 @@ export default abstract class PointComponentPresentation
 
     protected abstract getDefaultStyle(isInner?: boolean): CellStyle;
 
+    public abstract hasVisibleStroke(c: DataType): boolean;
+
     public addComponent(
         component: DataType,
         graph: MCGraph,
@@ -27,10 +29,10 @@ export default abstract class PointComponentPresentation
     protected getVertexParameters(
         component: DataType,
         graph: MCGraph,
-        parent?: Cell,
+        parent: Cell = graph.getDefaultParent(),
     ): VertexParameters {
         return {
-            parent: parent ?? graph.getDefaultParent(),
+            parent,
             id: component.getId(),
             value: component,
             x: component.getData().x,

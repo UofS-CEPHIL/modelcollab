@@ -27,4 +27,6 @@ export default interface ComponentPresentation<T extends FirebaseComponent> {
 
     // Return the given component with the data updated to match the given cell
     updateComponent(component: T, cell: Cell, graph: MCGraph): T;
+
+    hasVisibleStroke(component: T): boolean;
 }

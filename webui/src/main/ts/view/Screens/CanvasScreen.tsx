@@ -135,7 +135,7 @@ export default abstract class CanvasScreen
 
         this.graph.getSelectionModel().addListener(
             InternalEvent.CHANGE,
-            (_: EventSource, e: EventObject) => {
+            (_: EventSource, __: EventObject) => {
                 const sel = this.graph!.getSelectionCells();
                 if (
                     sel.length === 1

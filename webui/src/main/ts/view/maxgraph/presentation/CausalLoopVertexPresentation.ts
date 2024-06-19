@@ -40,4 +40,8 @@ export default class CausalLoopVertexPresentation
             whiteSpace: "wrap",
         }
     }
+
+    public hasVisibleStroke(_: FirebaseCausalLoopVertex): boolean {
+        return false;
+    }
 }

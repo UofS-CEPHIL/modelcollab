@@ -141,6 +141,20 @@ export default abstract class MCGraph extends Graph {
         }
     }
 
+    private setupTooltips(): void {
+        this.setTooltips(true);
+        const tooltipHandler =
+            this.getPlugin("TooltipHandler") as TooltipHandler;
+        const style = tooltipHandler.div.style;
+        style.position = 'absolute';
+        style.background = theme.palette.canvas.main;
+        style.padding = '8px';
+        style.border = '1px solid ' + theme.palette.text.primary;
+        style.borderRadius = '5px';
+        style.fontFamily = theme.typography.fontFamily || "sans-serif";
+        style.fontSize = theme.typography.fontSize.toString();
+    }
+
     private setupUndoManager(): void {
         this.getDataModel().addListener(
             InternalEvent.UNDO,
@@ -175,20 +189,6 @@ export default abstract class MCGraph extends Graph {
 
     public redo(): void {
         this.undoManager.redo();
-    }
-
-    private setupTooltips(): void {
-        this.setTooltips(true);
-        const tooltipHandler =
-            this.getPlugin("TooltipHandler") as TooltipHandler;
-        const style = tooltipHandler.div.style;
-        style.position = 'absolute';
-        style.background = theme.palette.canvas.main;
-        style.padding = '8px';
-        style.border = '1px solid ' + theme.palette.text.primary;
-        style.borderRadius = '5px';
-        style.fontFamily = theme.typography.fontFamily || "sans-serif";
-        style.fontSize = theme.typography.fontSize.toString();
     }
 
     public getTooltipForCell = (cell: Cell) => {
@@ -393,10 +393,10 @@ export default abstract class MCGraph extends Graph {
             (val instanceof FirebaseComponentBase && val.getData().color)
                 ? val.getData().color
                 : theme.palette.canvas.contrastText;
-        var strokeColor = fontColor;
-        if (val instanceof FirebaseCausalLoopVertex) {
-            strokeColor = "none";
-        }
+
+        const strokeColor = this.presentation.hasVisibleStroke(val)
+            ? fontColor
+            : "none";
 
         this.setCellColor(
             cell,

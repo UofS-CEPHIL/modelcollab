@@ -18,16 +18,20 @@ export default class DynamicVariablePresentation
             imageWidth: theme.custom.maxgraph.icons.sizePx,
             imageHeight: theme.custom.maxgraph.icons.sizePx,
             fillColor: theme.palette.canvas.main,
-            strokeColor: theme.palette.canvas.contrastText,
+            strokeColor: theme.custom.maxgraph.dynvar.strokeColor,
             strokeWidth: theme.custom.maxgraph.dynvar.strokeWidth,
             fontColor: theme.palette.canvas.contrastText,
             fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
             dashed: theme.custom.maxgraph.dynvar.dashed,
-            align: theme.custom.maxgraph.textComponent.defaultAlignValue,
+            spacingLeft: theme.custom.maxgraph.textComponent.defaultPadding,
             whiteSpace: "wrap",
             movable: !isInner,
             editable: !isInner,
             resizable: !isInner,
         };
+    }
+
+    public hasVisibleStroke(_: FirebaseDynamicVariable): boolean {
+        return false;
     }
 }

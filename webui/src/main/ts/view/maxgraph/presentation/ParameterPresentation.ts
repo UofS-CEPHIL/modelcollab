@@ -18,16 +18,21 @@ export default class ParameterPresentation
             imageWidth: theme.custom.maxgraph.icons.sizePx,
             imageHeight: theme.custom.maxgraph.icons.sizePx,
             fillColor: theme.palette.canvas.main,
-            strokeColor: theme.palette.canvas.contrastText,
+            strokeColor: theme.custom.maxgraph.param.strokeColor,
             strokeWidth: theme.custom.maxgraph.param.strokeWidth,
             fontColor: theme.palette.canvas.contrastText,
             fontSize: theme.custom.maxgraph.textComponent.defaultFontSize,
             dashed: theme.custom.maxgraph.param.dashed,
-            align: theme.custom.maxgraph.textComponent.defaultAlignValue,
             whiteSpace: "wrap",
+            spacingLeft: theme.custom.maxgraph.textComponent.defaultPadding,
+            align: theme.custom.maxgraph.textComponent.defaultAlignValue,
             movable: !isInner,
             resizable: !isInner,
             editable: !isInner,
         };
+    }
+
+    public hasVisibleStroke(_: FirebaseParameter): boolean {
+        return false;
     }
 }

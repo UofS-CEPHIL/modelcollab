@@ -13,6 +13,10 @@ export default class StaticModelPresentation
     extends PointComponentPresentation<FirebaseStaticModel>
 {
 
+    public hasVisibleStroke(_: FirebaseStaticModel): boolean {
+        return true;
+    }
+
     public addComponent(
         component: FirebaseStaticModel,
         graph: StockFlowGraph,
