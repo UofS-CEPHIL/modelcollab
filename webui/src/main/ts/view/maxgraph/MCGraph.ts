@@ -303,15 +303,13 @@ export default abstract class MCGraph extends Graph {
                 ...component.getData(),
                 text: newValue
             });
-            // this.firebaseDataModel
-            //     .updateComponent(this.modelUuid, newComponent);
 
             this.getDataModel().setValue(cell, newComponent);
         }
-        // TODO
-        // if (resize) {
-        //     this.cellSizeUpdated(cell, false);
-        // }
+
+        if (resize) {
+            this.cellSizeUpdated(cell, false);
+        }
     }
 
     // Override

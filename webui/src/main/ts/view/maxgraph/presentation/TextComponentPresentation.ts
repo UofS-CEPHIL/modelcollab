@@ -41,13 +41,14 @@ export default abstract class TextComponentPresentation
         return fontStyle;
     }
 
+    protected getStrokeColor(c: DataType): string {
+        return this.hasVisibleStroke(c) ? c.getData().color : "none";
+    }
+
     protected getStyle(
         component: DataType,
         isInner: boolean = false
     ): CellStyle {
-        const strokeColor = this.hasVisibleStroke(component)
-            ? component.getData().color
-            : "none";
         return {
             ...super.getStyle(component, isInner),
             fontSize: component.getData().fontSize,
@@ -57,7 +58,7 @@ export default abstract class TextComponentPresentation
                 component.getData().underline,
             ),
             fontColor: component.getData().color,
-            strokeColor,
+            strokeColor: this.getStrokeColor(component),
         }
     }
 
@@ -93,7 +94,7 @@ export default abstract class TextComponentPresentation
             component.getData().underline
         );
         style.fontColor = component.getData().color;
-        style.strokeColor = component.getData().color;
+        style.strokeColor = this.getStrokeColor(component);
         graph.batchUpdate(() =>
             graph.getDataModel().setStyle(cell, style)
         );
