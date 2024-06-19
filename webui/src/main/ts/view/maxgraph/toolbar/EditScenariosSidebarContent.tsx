@@ -13,6 +13,7 @@ import { LoadedStaticModel } from '../../Screens/StockFlowScreen';
 import FirebaseSubstitution from '../../../data/components/FirebaseSubstitution';
 import FirebaseStockFlowModel from '../../../data/FirebaseStockFlowModel';
 import FirebaseStaticModel from '../../../data/components/FirebaseStaticModel';
+import { namedQuery } from 'firebase/firestore';
 
 export interface Props {
     modelUuid: string;
@@ -87,11 +88,19 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
 
     private makeAddScenarioListItem(): ReactElement {
 
+        const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") {
+                this.addNewScenario();
+                document.body.focus();
+            }
+        }
+
         return (
             <ListItem key="add-scenario">
                 <TextField
                     value={this.state.newScenarioName}
                     onChange={e => this.onNewScenarioTextChanged(e)}
+                    onKeyUp={handleKeyUp}
                     name={"Add Scenario"}
                     label={"Add Scenario"}
                     inputProps={{
@@ -372,22 +381,20 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
             const original = this.props.scenarios.find(s =>
                 s.getId() === this.state.scenarioEditing!.getId()
             );
-            if (!original) throw new Error(
-                "Can't find scenario: " + this.state.scenarioEditing!.getId()
-            );
-            this.setState({ scenarioEditing: original });
+            if (original) {
+                this.setState({ scenarioEditing: original });
+            }
+            else {
+                console.error(
+                    "Can't find scenario: " + this.state.scenarioEditing!.getId()
+                );
+                this.setState({ scenarioEditing: null });
+            }
         }
     }
 
     private onScenarioSelectionChanged(event: SelectChangeEvent): void {
-        const scenario = this.props.scenarios
-            .find(s => s.getData().name === event.target.value);
-        if (!scenario)
-            throw new Error("Selected unknown scenario " + event.target.value);
-        this.setState({
-            scenarioEditing: scenario,
-            originalScenario: scenario
-        });
+        this.startEditingScenario(event.target.value);
     }
 
     private onNewScenarioTextChanged(e: ReactChangeEvent): void {
@@ -395,14 +402,24 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
     }
 
     private addNewScenario(): void {
-        if (this.isValidScenarioName(this.state.newScenarioName)) {
+        const newScenarioName = this.state.newScenarioName;
+        if (this.isValidScenarioName(newScenarioName)) {
             this.props.firebaseDataModel.addNewScenario(
                 this.props.modelUuid,
-                this.state.newScenarioName,
-            );
+                newScenarioName,
+            ).then(() => this.startEditingScenario(newScenarioName));
             this.setState({ newScenarioName: "" });
-            setTimeout(() => this.refresh());
         }
+    }
+
+    private startEditingScenario(name: string): void {
+        const scenario = this.props.scenarios
+            .find(s => s.getData().name === name);
+        if (!scenario) throw new Error("Unknown scenario " + name);
+        this.setState({
+            scenarioEditing: scenario,
+            originalScenario: scenario
+        });
     }
 
     private updateScenario(): void {
