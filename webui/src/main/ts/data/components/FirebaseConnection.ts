@@ -80,7 +80,8 @@ export default class FirebaseConnection
             from: data.from.toString(),
             to: data.to.toString(),
             points: data.points ?? [],
-            color: String(data.color) ?? theme.custom.maxgraph.connection,
+            color: String(data.color)
+                ?? theme.custom.maxgraph.arrowComponent.defaultColor,
         };
         FirebasePointerComponent.sanitizePointerData(d);
         return d;
