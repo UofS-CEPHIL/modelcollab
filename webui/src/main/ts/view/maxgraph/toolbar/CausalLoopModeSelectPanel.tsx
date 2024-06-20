@@ -1,14 +1,8 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowPointer, faCompress, faSquare, faArrowRightLong, faRotateLeft, faNoteSticky, faTrash } from "@fortawesome/free-solid-svg-icons";
-import NorthEastIcon from '@mui/icons-material/NorthEast';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import { faArrowPointer, faCompress, faSquare, faRotateLeft, faNoteSticky, faTrash } from "@fortawesome/free-solid-svg-icons";
+import RedoIcon from '@mui/icons-material/Redo';
 import EditIcon from '@mui/icons-material/Edit';
-import NoteIcon from '@mui/icons-material/Note';
-import ReplayIcon from '@mui/icons-material/Replay';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
-import OpenWithIcon from '@mui/icons-material/OpenWith';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { UiMode } from "../../../UiMode";
 import ModeSelectPanel from './ModeSelectPanel';
 import { ReactElement } from 'react';
@@ -36,7 +30,7 @@ export default class CausalLoopModeSelectPanel extends ModeSelectPanel {
     protected getIconForMode(mode: UiMode | null): ReactElement {
         switch (mode) {
             case UiMode.CONNECT:
-                return (<FontAwesomeIcon icon={faArrowRightLong} />);
+                return (<RedoIcon />);
             case UiMode.STOCK:
                 return (<FontAwesomeIcon icon={faSquare} />);
             case UiMode.EDIT:

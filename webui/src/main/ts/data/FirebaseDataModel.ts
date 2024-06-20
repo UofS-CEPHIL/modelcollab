@@ -492,4 +492,58 @@ export default class FirebaseDataModel {
             override
         );
     }
+
+    public async deleteModel(modelUuid: string): Promise<void> {
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in!");
+        await set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeModelPath(modelUuid)
+            ),
+            {}
+        );
+        await set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeUserOwnedModelPath(
+                    user.uid,
+                    modelUuid
+                )
+            ),
+            {}
+        );
+    }
+
+    public async renameModel(
+        modelUuid: string,
+        newName: string
+    ): Promise<void> {
+        // TODO handle this via permissions once that's configured
+        const ownerUidSnap = await get(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.makeModelOwnerUidPath(modelUuid)
+            )
+        );
+        if (ownerUidSnap.exists()) {
+            await set(
+                ref(
+                    this.firebaseManager.getDb(),
+                    RTDBSchema.makeUserOwnedModelNamePath(
+                        ownerUidSnap.val(),
+                        modelUuid
+                    )
+                ),
+                newName
+            );
+            await set(
+                ref(
+                    this.firebaseManager.getDb(),
+                    RTDBSchema.makeModelNamePath(modelUuid),
+                ),
+                newName
+            );
+        }
+    }
 }

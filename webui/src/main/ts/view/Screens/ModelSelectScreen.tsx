@@ -1,4 +1,6 @@
 import { Button, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconButton, List, ListItem, ListItemButton, ListItemText, ListSubheader, Radio, RadioGroup, TextField, Typography } from '@mui/material';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import LogoutIcon from '@mui/icons-material/Logout';
 import React, { ReactElement } from 'react';
 import FirebaseDataModel, { ModelsList, ModelType, modelTypeFromString } from '../../data/FirebaseDataModel';
@@ -73,7 +75,7 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
                 <ListSubheader key={"your-models-header"}>
                     Your Models
                 </ListSubheader>
-                {this.makeModelsListItems(this.state.myModels)}
+                {this.makeModelsListItems(this.state.myModels, true)}
                 <Divider />
                 <ListSubheader key={"shared-models-header"}>
                     Shared With You
@@ -83,24 +85,54 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
         );
     }
 
-    private makeModelsListItems(models: ModelsList): ReactElement[] {
+    private makeModelsListItems(
+        models: ModelsList,
+        canDelete: boolean = false
+    ): ReactElement[] {
         return Object.entries(models).map(
             ([uuid, nametype]) => (
                 <ListItem
-                    component={Link}
-                    to={`${nametype.modelType}/${uuid}`}
                     style={{ color: theme.palette.text.primary }}
                     key={uuid}
                 >
-                    <ListItemButton>
-                        <ListItemText
-                            primary={nametype.name}
-                            secondary={this.getModelTypeDisplayText(
-                                nametype.modelType
-                            )}
-                        />
-                    </ListItemButton>
-                </ListItem>
+                    <Grid
+                        container
+                        direction="row"
+                        alignItems="center"
+                        spacing={2}
+                    >
+                        <Grid item xs={11}>
+                            <ListItemButton
+                                component={Link}
+                                to={`${nametype.modelType}/${uuid}`}
+                            >
+                                <ListItemText
+                                    primary={nametype.name}
+                                    secondary={this.getModelTypeDisplayText(
+                                        nametype.modelType
+                                    )}
+                                />
+                            </ListItemButton>
+                        </Grid>
+                        {
+                            canDelete && <Grid item xs={1}>
+                                <IconButton
+                                    sx={{
+                                        ["&:hover"]: {
+                                            color: theme.palette.error.main
+                                        }
+                                    }}
+                                    onClick={() =>
+                                        this.deleteModel(uuid, nametype.name)
+                                    }
+                                >
+                                    <FontAwesomeIcon icon={faTrash} />
+                                </IconButton>
+                            </Grid>
+
+                        }
+                    </Grid>
+                </ListItem >
             )
         );
     }
@@ -188,6 +220,12 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
         return Object.values(this.state.myModels).find(
             m => m.name == this.state.newModelText
         ) !== undefined;
+    }
+
+    private deleteModel(uuid: string, name: string): void {
+        if (window.confirm(`Delete model "${name}"?`)) {
+            this.props.firebaseDataModel.deleteModel(uuid);
+        }
     }
 
     private isModelNameError(): boolean {
