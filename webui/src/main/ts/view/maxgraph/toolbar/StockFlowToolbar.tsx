@@ -7,7 +7,6 @@ import FirebaseComponent from '../../../data/components/FirebaseComponent';
 import { LoadedStaticModel } from '../../Screens/StockFlowScreen';
 import { ComponentErrors } from '../../../validation/ModelValitador';
 import CanvasToolbar, { Props as CanvasToolbarProps, State as CanvasToolbarState } from './CanvasToolbar';
-import { AxiosResponse } from 'axios';
 import { CircularProgress, IconButton, Menu, MenuItem, Tooltip } from '@mui/material';
 import PlayArrow from '@mui/icons-material/PlayArrow';
 import FirebaseScenario from '../../../data/components/FirebaseScenario';
@@ -30,8 +29,6 @@ export interface State extends CanvasToolbarState {
     uiMode: UiMode;
     waitingForResults: boolean;
     interpretMenuAnchor: HTMLElement | null;
-    modelActionsMenuAnchor: HTMLElement | null;
-    errorsMenuAnchor: HTMLElement | null;
 }
 
 export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
@@ -45,6 +42,7 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
             interpretMenuAnchor: null,
             modelActionsMenuAnchor: null,
             errorsMenuAnchor: null,
+            modelNameText: null,
         };
     }
 

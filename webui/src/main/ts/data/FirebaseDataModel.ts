@@ -1,4 +1,4 @@
-import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update } from "firebase/database";
+import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update, query, orderByChild, equalTo } from "firebase/database";
 // @ts-ignore can't find types
 import { v4 as createUuid } from "uuid";
 import FirebaseComponent from "./components/FirebaseComponent";
@@ -515,11 +515,15 @@ export default class FirebaseDataModel {
         );
     }
 
+    /**
+     * Return error string if error occurred, or null if it worked
+     */
     public async renameModel(
         modelUuid: string,
         newName: string
-    ): Promise<void> {
+    ): Promise<String | null> {
         // TODO handle this via permissions once that's configured
+        debugger
         const ownerUidSnap = await get(
             ref(
                 this.firebaseManager.getDb(),
@@ -527,23 +531,45 @@ export default class FirebaseDataModel {
             )
         );
         if (ownerUidSnap.exists()) {
-            await set(
-                ref(
-                    this.firebaseManager.getDb(),
-                    RTDBSchema.makeUserOwnedModelNamePath(
-                        ownerUidSnap.val(),
-                        modelUuid
-                    )
-                ),
-                newName
+            const uid = ownerUidSnap.val();
+
+            const modelOfSameName = await get(
+                query(
+                    ref(
+                        this.firebaseManager.getDb(),
+                        RTDBSchema.makeUserOwnedModelsPath(uid)
+                    ),
+                    orderByChild("name"),
+                    equalTo(newName)
+                )
             );
-            await set(
-                ref(
-                    this.firebaseManager.getDb(),
-                    RTDBSchema.makeModelNamePath(modelUuid),
-                ),
-                newName
-            );
+            console.log(modelOfSameName)
+            if (modelOfSameName.exists()) {
+                return "User already has a model named " + newName;
+            }
+            else {
+                await set(
+                    ref(
+                        this.firebaseManager.getDb(),
+                        RTDBSchema.makeUserOwnedModelNamePath(
+                            uid,
+                            modelUuid
+                        )
+                    ),
+                    newName
+                );
+                await set(
+                    ref(
+                        this.firebaseManager.getDb(),
+                        RTDBSchema.makeModelNamePath(modelUuid),
+                    ),
+                    newName
+                );
+                return null;
+            }
+        }
+        else {
+            return "Cannot find owner UID for model: " + modelUuid;
         }
     }
 }

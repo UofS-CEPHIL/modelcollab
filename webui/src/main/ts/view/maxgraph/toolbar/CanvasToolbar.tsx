@@ -1,8 +1,8 @@
-import React, { Fragment, ReactElement } from "react";
-import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, Badge, ListItem, Tooltip } from '@mui/material';
+import React, { Fragment, KeyboardEvent, ReactElement } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheck, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, ListItem, Tooltip, TextField, Grid } from '@mui/material';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
-import ErrorIcon from '@mui/icons-material/Error';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import ModalBoxType from "../../ModalBox/ModalBoxType";
@@ -11,10 +11,8 @@ import RestClient from "../../../rest/RestClient";
 import FirebaseDataModel from "../../../data/FirebaseDataModel";
 import { ComponentErrors } from "../../../validation/ModelValitador";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
-import ComponentType from "../../../data/components/ComponentType";
-import FirebaseScenario from "../../../data/components/FirebaseScenario";
-import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
 import MCLogo from "../../icons/MCLogo";
+import { theme } from "../../../Themes";
 
 export interface Props {
     uiMode: UiMode;
@@ -31,6 +29,7 @@ export interface Props {
 export interface State {
     modelActionsMenuAnchor: HTMLElement | null;
     errorsMenuAnchor: HTMLElement | null;
+    modelNameText: string | null;
 }
 
 export default abstract class CanvasToolbar<P extends Props, S extends State> extends React.Component<P, S> {
@@ -62,16 +61,9 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     <MCLogo
                         aria-label="mc-logo"
                         color="inherit"
-                        sx={{ marginRight: 2 }}
+                        sx={{ marginRight: 3 }}
                     />
-                    <Typography
-                        variant="h6"
-                        noWrap
-                        component="div"
-                        sx={{ flexGrow: 1 }}
-                    >
-                        {this.props.modelName}
-                    </Typography>
+                    {this.makeModelName()}
                     {this.makeAppBarButtons(this.props.errors)}
                     {this.makeAppBarDropdowns(this.props.errors)}
                 </Toolbar>
@@ -192,6 +184,112 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                 {this.makeDropdownsForCustomMenus()}
             </Fragment>
         );
+    }
+
+    private makeModelName(): ReactElement {
+        if (this.state.modelNameText == null) {
+            return (
+                <Grid
+                    container
+                    direction="row"
+                    spacing={3}
+                    alignItems="center"
+                >
+
+                    <Grid item>
+                        <Typography
+                            variant="h5"
+                            noWrap
+                            component="div"
+                            onDoubleClick={() => this.startEditingModelName()}
+                            sx={{
+                                flexGrow: 1,
+                                fontWeight: "bold",
+                                textDecoration: "underline",
+                            }}
+                        >
+                            {this.props.modelName}
+                        </Typography>
+                    </Grid>
+                    <Grid item>
+                        <Tooltip title="Edit Model Name">
+                            <IconButton
+                                onClick={() => this.startEditingModelName()}
+                                color="inherit"
+                                size="small"
+                            >
+                                <FontAwesomeIcon icon={faPenToSquare} />
+                            </IconButton>
+                        </Tooltip>
+                    </Grid>
+                </Grid>
+            );
+        }
+        else {
+            const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === "Enter") {
+                    updateModelName();
+                }
+            }
+
+            const updateModelName = () => {
+                if (
+                    this.state.modelNameText !== null
+                    && this.state.modelNameText !== ""
+                    && this.state.modelNameText !== this.props.modelName
+                ) {
+                    this.props.firebaseDataModel.renameModel(
+                        this.props.sessionId,
+                        this.state.modelNameText
+                    ).then(err => err && alert("Error: " + err));
+                }
+                this.stopEditingModelName();
+            }
+
+            return (
+                <Grid
+                    container
+                    direction="row"
+                    spacing={2}
+                    alignItems="center"
+                >
+                    <Grid item>
+                        <TextField
+                            value={this.state.modelNameText}
+                            error={this.state.modelNameText === ""}
+                            onChange={e =>
+                                this.setState({ modelNameText: e.target.value })
+                            }
+                            onKeyUp={handleKeyUp}
+                            sx={{
+                                flexGrow: 1,
+                                backgroundColor: theme.palette.canvas.main
+                            }}
+                        />
+                    </Grid>
+                    <Grid item>
+                        <Tooltip title="Done">
+                            <IconButton
+                                onClick={updateModelName}
+                                size="small"
+                                color="inherit"
+                            >
+                                <FontAwesomeIcon icon={faCheck} />
+                            </IconButton>
+                        </Tooltip>
+                    </Grid>
+                </Grid>
+            );
+        }
+    }
+
+    private startEditingModelName(): void {
+        this.setState({ modelNameText: this.props.modelName })
+    }
+
+    private stopEditingModelName(): void {
+        this.setState({ modelNameText: null });
+        document.body.focus();
     }
 
     protected getComponentNames(): { [id: string]: string } {

@@ -15,6 +15,10 @@ export default class RTDBSchema {
         return this.makeModelPath(modelUuid) + "/name";
     }
 
+    static makeModelOwnerUidPath(modelUuid: string): string {
+        return this.makeModelPath(modelUuid) + "/ownerUid";
+    }
+
     static makeScenariosPath(modelUuid: string): string {
         return this.makeModelPath(modelUuid) + "/scenarios";
     }
@@ -62,6 +66,10 @@ export default class RTDBSchema {
         loadedModelUuid: string
     ): string {
         return this.makeSavedModelsPath(modelUuid) + "/" + loadedModelUuid;
+    }
+
+    static makeUserOwnedModelNamePath(uid: string, modelUuid: string): string {
+        return this.makeUserOwnedModelPath(uid, modelUuid) + "/name";
     }
 
     static makeUserOwnedModelPath(uid: string, modelUuid: string): string {

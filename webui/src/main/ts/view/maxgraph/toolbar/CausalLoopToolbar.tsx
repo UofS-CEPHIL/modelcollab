@@ -71,6 +71,7 @@ export default class CausalLoopToolbar extends CanvasToolbar<Props, State> {
         return {
             modelActionsMenuAnchor: null,
             errorsMenuAnchor: null,
+            modelNameText: null,
         };
     }
 

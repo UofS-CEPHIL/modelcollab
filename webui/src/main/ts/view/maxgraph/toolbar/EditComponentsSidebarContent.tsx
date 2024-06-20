@@ -213,14 +213,13 @@ export default class EditComponentsSidebarContent
             }
         }
 
-        const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
             this.setState({
                 currentComponent: this.state.currentComponent?.withData({
                     ...this.state.currentComponent?.getData(),
                     [fieldName]: e.target.value
                 }) ?? null
             })
-        }
 
         return (
             <ListItem key={fieldName}>
