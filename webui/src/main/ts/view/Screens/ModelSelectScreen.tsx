@@ -2,7 +2,7 @@ import { Button, Divider, FormControl, FormControlLabel, FormLabel, Grid, IconBu
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import LogoutIcon from '@mui/icons-material/Logout';
-import React, { ReactElement } from 'react';
+import React, { KeyboardEvent, ReactElement } from 'react';
 import FirebaseDataModel, { ModelsList, ModelType, modelTypeFromString } from '../../data/FirebaseDataModel';
 import { Link } from 'react-router-dom';
 import { theme } from '../../Themes';
@@ -129,7 +129,6 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
                                     <FontAwesomeIcon icon={faTrash} />
                                 </IconButton>
                             </Grid>
-
                         }
                     </Grid>
                 </ListItem >
@@ -138,13 +137,21 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     }
 
     private makeNewModelFormListItem(): ReactElement {
+
+        const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter" && !this.isModelNameError()) {
+                this.addModel();
+            }
+        }
+
         return (
             <ListItem key={-10}>
                 <TextField
                     label="Name"
                     sx={{ ml: 1, mr: 3, width: "60%" }}
                     value={this.state.newModelText}
-                    error={this.isModelNameUsed()}
+                    error={!this.isModelNameEmpty() && this.isModelNameError()}
+                    onKeyUp={handleKeyUp}
                     onChange={s =>
                         this.setState({ newModelText: s.target.value })
                     }
@@ -229,7 +236,15 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     }
 
     private isModelNameError(): boolean {
-        return this.state.newModelText == "" || this.isModelNameUsed();
+        return this.isModelNameBlank() || this.isModelNameUsed();
+    }
+
+    private isModelNameBlank(): boolean {
+        return /^\s*$/.test(this.state.newModelText);
+    }
+
+    private isModelNameEmpty(): boolean {
+        return this.state.newModelText === ""
     }
 
     private subscribeToModels(): void {
