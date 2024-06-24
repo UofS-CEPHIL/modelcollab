@@ -523,7 +523,6 @@ export default class FirebaseDataModel {
         newName: string
     ): Promise<String | null> {
         // TODO handle this via permissions once that's configured
-        debugger
         const ownerUidSnap = await get(
             ref(
                 this.firebaseManager.getDb(),

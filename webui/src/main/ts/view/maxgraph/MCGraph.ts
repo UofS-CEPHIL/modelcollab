@@ -1,4 +1,4 @@
-import { Cell, CellEditorHandler, CellRenderer, CellState, ConnectionHandler, EdgeHandler, EventObject, Graph, InternalEvent, InternalMouseEvent, PanningHandler, PopupMenuHandler, RubberBandHandler, SelectionCellsHandler, SelectionHandler, TooltipHandler, UndoManager, ValueChange } from "@maxgraph/core";
+import { Cell, CellRenderer, CellState, ConnectionHandler, EdgeHandler, EventObject, Graph, InternalEvent, InternalMouseEvent, PanningHandler, PopupMenuHandler, RubberBandHandler, SelectionCellsHandler, SelectionHandler, TooltipHandler, UndoManager, ValueChange } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseCausalLoopVertex from "../../data/components/FirebaseCausalLoopVertex";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
@@ -89,6 +89,8 @@ export default abstract class MCGraph extends Graph {
         this.setupUndoManager();
         this.setupSelectionHandler();
         this.setupRubberBandHandler();
+        this.setupCustomShapes();
+        this.setupTooltips();
 
         // When we undo changes to labels, this listener makes sure that they
         // get propagated to Firebase
@@ -107,9 +109,9 @@ export default abstract class MCGraph extends Graph {
                 }
             }
         );
+    }
 
-        this.setupTooltips();
-
+    private setupCustomShapes(): void {
         CellRenderer.registerShape(
             CausalLoopLinkShape.CLD_LINK_NAME,
             //@ts-ignore
@@ -392,9 +394,9 @@ export default abstract class MCGraph extends Graph {
                 ? val.getData().color
                 : theme.palette.canvas.contrastText;
 
-        const strokeColor = this.presentation.hasVisibleStroke(val)
-            ? fontColor
-            : "none";
+        const strokeColor = val instanceof FirebaseComponentBase
+            ? (this.presentation.hasVisibleStroke(val) ? fontColor : "none")
+            : fontColor;
 
         this.setCellColor(
             cell,
