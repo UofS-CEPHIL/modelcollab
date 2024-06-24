@@ -1,6 +1,7 @@
 import { Point } from "@maxgraph/core";
 import { FirebaseColorProperties, FirebasePointerProperties } from "../FirebaseProperties";
 import { FirebaseComponentBase } from "./FirebaseComponent";
+import FirebaseStaticModel from "./FirebaseStaticModel";
 
 export type FirebasePointerData = FirebasePointerProperties
     & FirebaseColorProperties;
@@ -25,7 +26,7 @@ export default abstract class FirebasePointerComponent
         entryY?: number,
         exitX?: number,
         exitY?: number,
-    ): FirebaseComponentBase<DataType> {
+    ): FirebasePointerComponent<DataType> {
         const newData: DataType = {
             ...this.getData(),
             entryX,
@@ -56,6 +57,32 @@ export default abstract class FirebasePointerComponent
                 p.x === points[i].x
                 && p.y === points[i].y
             );
+    }
+
+    public asChildOf(
+        parent: FirebaseStaticModel,
+        dx: number,
+        dy: number,
+    ): FirebasePointerComponent<DataType> {
+        let child = super.asChildOf(
+            parent,
+            dx,
+            dy
+        ) as FirebasePointerComponent<DataType>;
+        child = child.withPoints(
+            child.getData().points.map((p: { x: number, y: number }) =>
+                new Point(p.x - dx, p.y - dy)
+            ),
+            child.getData().entryX,
+            child.getData().entryY,
+            child.getData().exitX,
+            child.getData().exitY,
+        );
+        return child.withData({
+            ...child.getData(),
+            from: parent.makeChildId(child.getData().from),
+            to: parent.makeChildId(child.getData().to)
+        });
     }
 
     public static extractPoint(p: Point): { x: number, y: number } {

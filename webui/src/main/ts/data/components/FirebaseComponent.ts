@@ -1,4 +1,5 @@
 import ComponentType from "./ComponentType";
+import FirebaseStaticModel from "./FirebaseStaticModel";
 
 // Represents any object that acts as the "data" field for any FirebaseDataComponent
 export interface FirebaseDataObject { }
@@ -63,6 +64,14 @@ export abstract class FirebaseComponentBase
             .at(-1);
         if (!id) throw new Error("Cannot de-qualify id: " + this.getId());
         else return id;
+    }
+
+    public asChildOf(
+        parent: FirebaseStaticModel,
+        dx: number = 0,
+        dy: number = 0,
+    ): FirebaseComponentBase<DataType> {
+        return this.withId(parent.makeChildId(this.getId()));
     }
 
     public clone(): FirebaseComponentBase<DataType> {

@@ -2,6 +2,7 @@ import { Cell, CellStyle, VertexParameters } from "@maxgraph/core";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
 import FirebaseFlow from "../../../data/components/FirebaseFlow";
 import FirebasePointComponent from "../../../data/components/FirebasePointComponent";
+import FirebasePointerComponent from "../../../data/components/FirebasePointerComponent";
 import FirebaseStaticModel from "../../../data/components/FirebaseStaticModel";
 import { theme } from "../../../Themes";
 import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
@@ -30,19 +31,21 @@ export default class StaticModelPresentation
     }
 
     public updateCell(
-        component: FirebaseStaticModel,
+        staticModel: FirebaseStaticModel,
         cell: Cell,
         graph: StockFlowGraph,
         loadedModel?: LoadedStaticModel
     ): void {
-        super.updateCell(component, cell, graph);
+        super.updateCell(staticModel, cell, graph);
         // Load the inner components only if they haven't been loaded yet
         if (cell.getChildCount() === 0 && loadedModel) {
-            const translated = this.translateComponentPositions(
-                loadedModel.components.map(c => this.prefixId(c, component))
+            const pad = theme.custom.maxgraph.staticModel.componentPaddingPx;
+            const children = staticModel.makeChildren(
+                loadedModel.components,
+                pad,
             );
             const newCells = graph.addComponentsInCorrectOrder(
-                translated,
+                children,
                 cell,
             );
             const bbox = graph.getBoundingBoxFromGeometry(newCells, true);
@@ -53,7 +56,6 @@ export default class StaticModelPresentation
                 return;
             }
             const newGeo = cell.getGeometry()!.clone();
-            const pad = theme.custom.maxgraph.staticModel.componentPaddingPx;
             newGeo.width = bbox.width + (2 * pad);
             newGeo.height = bbox.height + (2 * pad);
             cell.setGeometry(newGeo);
@@ -91,78 +93,5 @@ export default class StaticModelPresentation
             ...super.getStyle(component, false),
             fillColor: component.getData().color
         };
-    }
-
-    private translateComponentPositions(
-        cpts: FirebaseComponent[]
-    ): FirebaseComponent[] {
-        const leftmost = Math.min(...cpts.map(
-            c => c.getData().x ?? Number.POSITIVE_INFINITY
-        ));
-        const topmost = Math.min(...cpts.map(
-            c => c.getData().y ?? Number.POSITIVE_INFINITY
-        ));
-        return cpts.map(c => {
-            if (c instanceof FirebasePointComponent) {
-                const pad =
-                    theme.custom.maxgraph.staticModel.componentPaddingPx;
-                const oldData = c.getData();
-                return c.withData({
-                    ...oldData,
-                    x: oldData.x - leftmost + pad,
-                    y: oldData.y - topmost + pad
-                });
-            }
-            else if (c instanceof FirebaseFlow) {
-                return this.translateFlowCloudPoints(c, leftmost, topmost);
-            }
-            else {
-                return c;
-            }
-        });
-    }
-
-    private translateFlowCloudPoints(
-        c: FirebaseFlow,
-        dx: number,
-        dy: number
-    ): FirebaseFlow {
-        const pad =
-            theme.custom.maxgraph.staticModel.componentPaddingPx;
-        const updatePoint = (p: string) => {
-            const oldpoint = FirebaseFlow.extractPointFromId(p);
-            return FirebaseFlow.makePoint(
-                oldpoint.x - dx + pad,
-                oldpoint.y - dy + pad
-            );
-        }
-        const newData = { ...c.getData() };
-        if (FirebaseFlow.isPoint(newData.from)) {
-            newData.from = updatePoint(newData.from);
-        }
-        if (FirebaseFlow.isPoint(newData.to)) {
-            newData.to = updatePoint(newData.to);
-        }
-        return c.withData(newData);
-    }
-
-    private prefixId(
-        c: FirebaseComponent,
-        sm: FirebaseStaticModel
-    ): FirebaseComponent {
-        c = c.withId(sm.makeChildId(c.getId()));
-        if (c.getData().from !== undefined) {
-            const oldData = c.getData();
-            c = c.withData({
-                ...oldData,
-                from: FirebaseFlow.isPoint(oldData.from)
-                    ? oldData.from
-                    : sm.makeChildId(oldData.from),
-                to: FirebaseFlow.isPoint(oldData.to)
-                    ? oldData.to
-                    : sm.makeChildId(oldData.to)
-            });
-        }
-        return c;
     }
 }

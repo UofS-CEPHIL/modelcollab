@@ -1,8 +1,10 @@
 import ComponentType from "./ComponentType";
 import FirebaseComponent, { FirebaseComponentBase } from "./FirebaseComponent";
+import FirebaseFlow from "./FirebaseFlow";
 import FirebasePointComponent, {
     FirebasePointData
 } from "./FirebasePointComponent";
+import FirebasePointerComponent from "./FirebasePointerComponent";
 
 export interface FirebaseStaticModelData extends FirebasePointData {
     x: number,
@@ -50,12 +52,29 @@ export default class FirebaseStaticModel
         return FirebaseStaticModel.isChildIdFor(this.getId(), id);
     }
 
-    public makeChild(cpt: FirebaseComponent): FirebaseComponent {
-        return cpt.withId(this.makeChildId(cpt.getId()));
+    public makeChildren(
+        cpts: FirebaseComponent[],
+        padding: number = 0
+    ): FirebaseComponent[] {
+        const { dx, dy } = FirebaseStaticModel.getChildTranslations(
+            cpts,
+            padding
+        );
+        return cpts.map(c => c.asChildOf(this, dx, dy));
     }
 
-    public makeChildren(cpts: FirebaseComponent[]): FirebaseComponent[] {
-        return cpts.map(c => this.makeChild(c));
+    public static getChildTranslations(
+        children: FirebaseComponent[],
+        padding: number = 0
+    ): { dx: number, dy: number } {
+        return {
+            dx: Math.min(...children.map(
+                c => c.getData().x ?? Number.POSITIVE_INFINITY
+            )) - padding,
+            dy: Math.min(...children.map(
+                c => c.getData().y ?? Number.POSITIVE_INFINITY
+            )) - padding
+        };
     }
 
     public static getParentModelId(id: string): string {

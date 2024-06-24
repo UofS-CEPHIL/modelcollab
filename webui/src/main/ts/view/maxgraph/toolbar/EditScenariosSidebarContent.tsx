@@ -211,7 +211,7 @@ export default class EditScenariosSidebarContent extends React.Component<Props, 
             .filter(c => c.getType() === ComponentType.PARAMETER);
         const innerParameters = this.props.inners.map(m => m.components
             .filter(c => c.getType() === ComponentType.PARAMETER)
-            .map(p => findAssociatedModel(m.modelId).makeChild(p))
+            .map(p => p.asChildOf(findAssociatedModel(m.modelId)))
         ).flatMap(_ => _);
         const allParameters = outerParameters.concat(innerParameters);
 

@@ -80,6 +80,8 @@ export default class FirebaseConnection
             from: data.from.toString(),
             to: data.to.toString(),
             points: data.points ?? [],
+            entryX: data.entryX ?? undefined,
+            entryY: data.entryY ?? undefined,
             color: String(data.color)
                 ?? theme.custom.maxgraph.arrowComponent.defaultColor,
         };

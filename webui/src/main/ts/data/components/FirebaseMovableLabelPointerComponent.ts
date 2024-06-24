@@ -1,5 +1,6 @@
 import { FirebaseMovableLabelProperties, FirebaseTextProperties } from "../FirebaseProperties";
 import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointerComponent";
+import FirebaseStaticModel from "./FirebaseStaticModel";
 
 export type FirebaseMovableLabelPointerData = FirebasePointerData
     & FirebaseTextProperties
@@ -31,6 +32,22 @@ export default abstract class FirebaseMovableLabelPointerComponent
             labelX,
             labelY,
         }) as FirebaseMovableLabelPointerComponent<DataType>;
+    }
+
+    public asChildOf(
+        parent: FirebaseStaticModel,
+        dx: number,
+        dy: number,
+    ): FirebaseMovableLabelPointerComponent<DataType> {
+        const child = super.asChildOf(
+            parent,
+            dx,
+            dy
+        ) as FirebaseMovableLabelPointerComponent<DataType>;
+        return child.withLabelPosition(
+            child.getData().labelX - dx,
+            child.getData().labelY - dy,
+        );
     }
 
 }

@@ -3,6 +3,7 @@ import ComponentType from "./ComponentType";
 import FirebaseComponent from "./FirebaseComponent";
 import FirebasePointerComponent from "./FirebasePointerComponent";
 import FirebaseMovableLabelPointerComponent, { FirebaseMovableLabelPointerData } from "./FirebaseMovableLabelPointerComponent";
+import FirebaseStaticModel from "./FirebaseStaticModel";
 
 export type FirebaseFlowData = FirebaseMovableLabelPointerData
     & { equation: string };
@@ -30,6 +31,31 @@ export default class FirebaseFlow
 
     public getLabel(): string | null {
         return this.getData().text;
+    }
+
+    public asChildOf(
+        parent: FirebaseStaticModel,
+        dx: number,
+        dy: number,
+    ): FirebaseFlow {
+        const updatePoint = (p: string) => {
+            const oldpoint = FirebaseFlow.extractPointFromId(p);
+            return FirebaseFlow.makePoint(
+                oldpoint.x - dx,
+                oldpoint.y - dy
+            );
+        }
+        let child = super.asChildOf(parent, dx, dy) as FirebaseFlow;
+        const { from, to } = this.getData();
+        return child.withData({
+            ...child.getData(),
+            from: FirebaseFlow.isPoint(from)
+                ? updatePoint(from)
+                : parent.makeChildId(from),
+            to: FirebaseFlow.isPoint(to)
+                ? updatePoint(to)
+                : parent.makeChildId(to)
+        });
     }
 
     public static toFlowComponentData(data: any): FirebaseFlowData {
