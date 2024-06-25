@@ -36,11 +36,6 @@ export default abstract class PointerComponentPresentation
         geo.points = this.getPoints(component);
         graph.getDataModel().setGeometry(e, geo);
 
-        console.log("%%%%%%%%%%%5")
-        console.log(component.getData())
-        console.log(this.getStyle(component, isInner));
-        console.log("%%%%%%%%%%%5")
-
         return e;
     }
 
