@@ -3,6 +3,7 @@ import FirebaseFlow from "../../../data/components/FirebaseFlow";
 import { theme } from "../../../Themes";
 import MCGraph from "../MCGraph";
 import StockFlowGraph from "../StockFlowGraph";
+import FlowShape from "./FlowShape";
 import PointerComponentPresentation from "./PointerComponentPresentation";
 import TextComponentPresentation from "./TextComponentPresentation";
 
@@ -167,11 +168,7 @@ export default class FlowPresentation
         cell: Cell,
         graph: StockFlowGraph
     ): void {
-        const state = graph.getView().getState(cell)!;
-        const handler = graph.createEdgeHandler(state, {});
-        handler.moveLabel(state, x, y);
-        handler.reset();
-        handler.onDestroy();
+        graph.updateCellLabelPosition(cell, x, y);
     }
 
     private updateCloud(
@@ -236,7 +233,7 @@ export default class FlowPresentation
 
     public static getEdgeStyle(isInner: boolean = false): CellStyle {
         return {
-            shape: theme.custom.maxgraph.flow.shape,
+            shape: FlowShape.FLOW_NAME,
             strokeColor: theme.palette.canvas.contrastText,
             strokeWidth: theme.custom.maxgraph.flow.strokeWidthPx,
             endSize: theme.custom.maxgraph.flow.endSizePx,

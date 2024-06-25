@@ -14,6 +14,7 @@ import MCCellEditorHandler from "./MCCellEditorHandler";
 import MCEdgeHandler from "./MCEdgeHandler";
 import CausalLoopLinkShape from "./presentation/CausalLoopLinkShape";
 import ComponentPresentation from "./presentation/ComponentPresentation";
+import FlowShape from "./presentation/FlowShape";
 import LoopIconShape from "./presentation/LoopIconShape";
 import UndoHandler from "./UndoHandler";
 
@@ -121,6 +122,11 @@ export default abstract class MCGraph extends Graph {
             LoopIconShape.LOOP_ICON_NAME,
             //@ts-ignore
             LoopIconShape
+        );
+        CellRenderer.registerShape(
+            FlowShape.FLOW_NAME,
+            //@ts-ignore
+            FlowShape
         );
     }
 
@@ -732,5 +738,13 @@ export default abstract class MCGraph extends Graph {
             this.modelUuid,
             relevantSubs.map(s => s.replacedId)
         );
+    }
+
+    public updateCellLabelPosition(cell: Cell, x: number, y: number): void {
+        const state = this.getView().getState(cell)!;
+        const handler = this.createEdgeHandler(state, {});
+        handler.moveLabel(state, x, y);
+        handler.reset();
+        handler.onDestroy();
     }
 }

@@ -88,5 +88,4 @@ export default abstract class FirebasePointerComponent
     public static extractPoint(p: Point): { x: number, y: number } {
         return { x: p.x, y: p.y };
     }
-
 }

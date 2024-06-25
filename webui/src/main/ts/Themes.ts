@@ -61,8 +61,10 @@ declare module '@mui/material/styles' {
                 flow: HandleThemes & {
                     strokeWidthPx: number,
                     endSizePx: number,
-                    shape: string,
                     edgeStyle: string,
+                    valveHeightPx: number,
+                    valveWidthPx: number,
+                    valveStrokePx: number,
                 },
                 cloud: {
                     defaultWidthPx: number,
@@ -179,8 +181,10 @@ declare module '@mui/material/styles' {
                 flow?: HandleThemes & {
                     strokeWidthPx?: number,
                     endSizePx?: number,
-                    shape?: string,
                     edgeStyle?: string,
+                    valveHeightPx?: number,
+                    valveWidthPx?: number,
+                    valveStrokePx?: number,
                 },
                 cloud?: {
                     defaultWidthPx?: number,
@@ -336,8 +340,10 @@ export const theme = createTheme({
             flow: {
                 strokeWidthPx: 2,
                 endSizePx: 10,
-                shape: "arrowConnector",
                 edgeStyle: "elbowEdgeStyle",
+                valveHeightPx: 18,
+                valveWidthPx: 9,
+                valveStrokePx: 2,
             },
             cloud: {
                 defaultWidthPx: 50,
