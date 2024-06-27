@@ -1,14 +1,12 @@
 import { FirebaseApp, initializeApp } from "firebase/app";
 import { Auth, connectAuthEmulator, getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/auth";
 import { connectDatabaseEmulator, Database, getDatabase } from "firebase/database";
-import { connectFirestoreEmulator, Firestore, getFirestore } from "firebase/firestore";
 
 import firebaseConfig from "../config/firebaseConfig";
 
 
 export default class FirebaseManager {
     private db: Database;
-    private firestore: Firestore;
     private auth: Auth;
     private app: FirebaseApp;
     private user: User | null;
@@ -17,7 +15,6 @@ export default class FirebaseManager {
         this.app = initializeApp(firebaseConfig);
         this.auth = getAuth(this.app);
         this.db = getDatabase(this.app);
-        this.firestore = getFirestore(this.app);
         this.user = null;
 
         if (firebaseConfig.useEmulators) {
@@ -30,20 +27,11 @@ export default class FirebaseManager {
                 "localhost",
                 9000
             );
-            connectFirestoreEmulator(
-                this.firestore,
-                "localhost",
-                9900
-            );
         }
     }
 
     public getDb(): Database {
         return this.db;
-    }
-
-    public getFirestore(): Firestore {
-        return this.firestore;
     }
 
     public registerAuthChangedCallback(callback: (isSignedIn: boolean) => void) {
@@ -64,6 +52,7 @@ export default class FirebaseManager {
         const provider = new GoogleAuthProvider();
         signInWithPopup(this.auth, provider)
             .then(() => {
+
                 console.log("Successfully logged in!");
             })
             .catch((error) => {
