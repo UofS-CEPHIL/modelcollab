@@ -740,11 +740,41 @@ export default abstract class MCGraph extends Graph {
         );
     }
 
-    public updateCellLabelPosition(cell: Cell, x: number, y: number): void {
-        const state = this.getView().getState(cell)!;
+    public isInnerComponent(cell: Cell): boolean {
+        return cell.getParent() !== this.getDefaultParent();
+    }
+
+    public updateCellLabelPosition(
+        cell: Cell,
+        x: number,
+        y: number,
+    ): void {
+        const state = this.getView().getState(cell);
+        if (!state) {
+            console.error("Can't find state for cell with id" + cell.getId());
+            return;
+        }
         const handler = this.createEdgeHandler(state, {});
         handler.moveLabel(state, x, y);
         handler.reset();
         handler.onDestroy();
+
+        // const parent = cell.getParent();
+        // if (this.isInnerComponent(cell) && parent) {
+        //     debugger;
+        //     const pad = theme.custom.maxgraph.staticModel.componentPaddingPx;
+        //     const bbox = this.getBoundingBoxFromGeometry(
+        //         parent.getChildren(),
+        //         true
+        //     )
+        //     if (bbox) {
+        //         this.batchUpdate(() => {
+        //             const geo = parent.getGeometry()!.clone();
+        //             geo.width = bbox.width + 2 * pad;
+        //             geo.height = bbox.height + 2 * pad;
+        //             cell.setGeometry(geo);
+        //         });
+        //     }
+        // }
     }
 }

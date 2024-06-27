@@ -78,9 +78,19 @@ export default class FlowPresentation
             source,
             target
         );
+
         if (newCell instanceof Cell) {
             newCell = [newCell];
         }
+
+        // Need to wait before doing this so that the cell state has a chance to
+        // be generated.
+        // TODO is there a better way to do this?
+        setTimeout(() => graph.updateCellLabelPosition(
+            (newCell as Cell[])[0],
+            component.getData().labelX,
+            component.getData().labelY)
+        );
 
         newComponents.push(...newCell);
         return newComponents;
@@ -135,11 +145,10 @@ export default class FlowPresentation
         graph.batchUpdate(() => {
             graph.getDataModel().setStyle(cell, style);
             if (!flow.isUninitializedLabelPosition()) {
-                this.updateCellLabelPosition(
-                    flow.getData().labelX,
-                    flow.getData().labelY,
+                graph.updateCellLabelPosition(
                     cell,
-                    graph,
+                    flow.getData().labelX,
+                    flow.getData().labelY
                 );
             }
 
@@ -160,15 +169,6 @@ export default class FlowPresentation
                 );
             }
         });
-    }
-
-    private updateCellLabelPosition(
-        x: number,
-        y: number,
-        cell: Cell,
-        graph: StockFlowGraph
-    ): void {
-        graph.updateCellLabelPosition(cell, x, y);
     }
 
     private updateCloud(

@@ -39,14 +39,16 @@ export default abstract class FirebaseMovableLabelPointerComponent
         dx: number,
         dy: number,
     ): FirebaseMovableLabelPointerComponent<DataType> {
+        // Unlike all other positions, for some reason label positions are
+        // absolute instead of relative to the parent component.
         const child = super.asChildOf(
             parent,
             dx,
             dy
         ) as FirebaseMovableLabelPointerComponent<DataType>;
         return child.withLabelPosition(
-            child.getData().labelX - dx,
-            child.getData().labelY - dy,
+            child.getData().labelX - dx + parent.getData().x,
+            child.getData().labelY - dy + parent.getData().y,
         );
     }
 
