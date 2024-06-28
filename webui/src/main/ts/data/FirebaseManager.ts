@@ -1,7 +1,6 @@
 import { FirebaseApp, initializeApp } from "firebase/app";
 import { Auth, connectAuthEmulator, getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/auth";
 import { connectDatabaseEmulator, Database, getDatabase } from "firebase/database";
-
 import firebaseConfig from "../config/firebaseConfig";
 
 
@@ -51,13 +50,8 @@ export default class FirebaseManager {
     public login(): void {
         const provider = new GoogleAuthProvider();
         signInWithPopup(this.auth, provider)
-            .then(() => {
-
-                console.log("Successfully logged in!");
-            })
-            .catch((error) => {
-                console.error("Error signing in: ", error);
-            });
+            .then(() => console.log("Successfully signed in!"))
+            .catch(e => console.error("Error signing in: ", e));
     }
 
     public logOut(): void {

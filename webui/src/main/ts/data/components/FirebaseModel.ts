@@ -1,20 +1,6 @@
-import { ModelType } from "../FirebaseDataModel";
-
-export type SharedUsersSchema = { [uid: string]: "r" | "w" };
-
 export interface ComponentSchema { }
 
-export interface ModelSchema {
-    name: string,
-    ownerUid: string,
-    modelType: ModelType,
-    sharedWith: SharedUsersSchema,
-    openRead: boolean,
-    openWrite: boolean,
-    data: ComponentSchema
-}
-
-export default abstract class FirebaseModel<T extends ModelSchema> {
+export default abstract class FirebaseModel<T extends ComponentSchema> {
     protected uuid: string | undefined;
     protected data: T | undefined;
 

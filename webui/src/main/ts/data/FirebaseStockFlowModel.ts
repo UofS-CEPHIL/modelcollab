@@ -1,13 +1,13 @@
 import { LoadedStaticModel } from "../view/Screens/StockFlowScreen"
 import FirebaseComponent from "./components/FirebaseComponent"
-import FirebaseModel, { ComponentSchema, ModelSchema, SharedUsersSchema } from "./components/FirebaseModel"
+import FirebaseModel, { ComponentSchema } from "./components/FirebaseModel"
 import FirebasePropertyOverrides from "./components/FirebasePropertyOverrides"
 import FirebaseScenario from "./components/FirebaseScenario"
 import FirebaseSubstitution from "./components/FirebaseSubstitution"
 import { ModelType } from "./FirebaseDataModel"
 
 
-export interface StockFlowComponentSchema extends ComponentSchema {
+export interface StockFlowSchema extends ComponentSchema {
     components: {
         [componentId: string]: {
             type: string,
@@ -37,16 +37,6 @@ export interface StockFlowComponentSchema extends ComponentSchema {
     overrides: FirebasePropertyOverrides,
 }
 
-export interface StockFlowSchema extends ModelSchema {
-    name: string,
-    ownerUid: string,
-    modelType: ModelType,
-    sharedWith: SharedUsersSchema,
-    openRead: boolean,
-    openWrite: boolean,
-    data: StockFlowComponentSchema
-}
-
 export default class FirebaseStockFlowModel
     extends FirebaseModel<StockFlowSchema>
 {
@@ -57,7 +47,7 @@ export default class FirebaseStockFlowModel
         substitutions: FirebaseSubstitution[],
         overrides: FirebasePropertyOverrides,
         loadedModels: LoadedStaticModel[]
-    ): StockFlowComponentSchema {
+    ): StockFlowSchema {
         return {
             components: Object.fromEntries(
                 components.map(c => c.toFirebaseEntry())
@@ -80,22 +70,14 @@ export default class FirebaseStockFlowModel
         }
     }
 
-    public empty(uuid: string, name: string, ownerUid: string) {
+    public empty(uuid: string) {
         this.uuid = uuid;
         this.data = {
-            name: name,
-            ownerUid: ownerUid,
-            modelType: ModelType.StockFlow,
-            sharedWith: {},
-            openRead: false,
-            openWrite: false,
-            data: {
-                components: {},
-                loadedModels: {},
-                scenarios: {},
-                substitutions: {},
-                overrides: {},
-            }
+            components: {},
+            loadedModels: {},
+            scenarios: {},
+            substitutions: {},
+            overrides: {},
         };
     }
 }

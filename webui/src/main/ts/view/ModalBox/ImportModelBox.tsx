@@ -45,7 +45,7 @@ export default class ImportModelBox extends ButtonListBox<Props, State> {
     protected makeListItems(): ReactElement[] {
         const allModels = { ...this.state.myModels, ...this.state.sharedModels }
         return Object.entries(allModels)
-            .filter(([_, t]) => t.modelType === ModelType.StockFlow)
+            .filter(([_, t]) => t.type === ModelType.StockFlow)
             .map(([uuid, nametype]) => (
                 <ListItem disablePadding key={uuid}>
                     <ListItemButton

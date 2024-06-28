@@ -1,4 +1,4 @@
-import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update, query, orderByChild, equalTo } from "firebase/database";
+import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update, query, orderByChild, equalTo, Query } from "firebase/database";
 // @ts-ignore can't find types
 import { v4 as createUuid } from "uuid";
 import FirebaseComponent from "./components/FirebaseComponent";
@@ -8,12 +8,12 @@ import RTDBSchema from "./RTDBSchema";
 import FirebaseStockFlowModel from "./FirebaseStockFlowModel";
 import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
 import FirebaseScenario from "./components/FirebaseScenario";
-import FirebaseModel from "./components/FirebaseModel";
+import FirebaseModel, { ComponentSchema } from "./components/FirebaseModel";
 import FirebaseCausalLoopModel from "./FirebaseCausalLoopModel";
-import { ModelSchema } from "./components/FirebaseModel";
 import ComponentType from "./components/ComponentType";
 import FirebaseSubstitution from "./components/FirebaseSubstitution";
 import FirebasePropertyOverrides, { ComponentPropertyOverrides } from "./components/FirebasePropertyOverrides";
+import { User } from "firebase/auth";
 
 export enum ModelType {
     CausalLoop = "CL",
@@ -31,7 +31,12 @@ export function modelTypeFromString(s: string): ModelType {
     }
 }
 
-export type ModelsList = { [uuid: string]: { name: string, modelType: string } };
+// TODO this duplicates information from ModelMetadataSchema
+export type BasicModelInfo = {
+    name: string,
+    type: ModelType
+}
+export type ModelsList = { [uuid: string]: BasicModelInfo };
 
 export default class FirebaseDataModel {
 
@@ -64,7 +69,10 @@ export default class FirebaseDataModel {
         return set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeComponentPath(modelUuid, component.getId())
+                RTDBSchema.ModelData.makeComponentPath(
+                    modelUuid,
+                    component.getId()
+                )
             ),
             {
                 type: component.getType().toString(),
@@ -80,7 +88,7 @@ export default class FirebaseDataModel {
         onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeModelPath(sessionId)
+                RTDBSchema.ModelData.makeModelPath(sessionId)
             ),
             callback,
             { onlyOnce: true }
@@ -94,24 +102,40 @@ export default class FirebaseDataModel {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeComponentsPath(sessionId)
+                RTDBSchema.ModelData.makeComponentsPath(sessionId)
             ),
             s => this.triggerCallback(s, callback)
+        );
+    }
+
+    private makeOwnedModelsQuery(uid: string): Query {
+        return query(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelMetadata.makePath()
+            ),
+            orderByChild(RTDBSchema.ModelMetadata.OWNER),
+            equalTo(uid),
         );
     }
 
     public async getOwnedModels(): Promise<ModelsList> {
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in");
-        const result = await get(
-            ref(
-                this.firebaseManager.getDb(),
-                RTDBSchema.makeUserOwnedModelsPath(user.uid)
-            )
-        );
 
-        if (!result.exists()) return {};
-        else return result.val();
+        const result = await get(this.makeOwnedModelsQuery(user.uid));
+
+        if (result.exists()) {
+            return Object.fromEntries(
+                Object.entries(result.val()).map(([id, data]) => [
+                    id,
+                    data as BasicModelInfo
+                ])
+            );
+        }
+        else {
+            return {};
+        }
     }
 
     public subscribeToOwnedModels(
@@ -120,33 +144,46 @@ export default class FirebaseDataModel {
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in");
         return onValue(
+            this.makeOwnedModelsQuery(user.uid),
+            s => callback(s.val() ?? {})
+        );
+    }
+
+    private makeSharedModelsQuery(uid: string): Query {
+        return query(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeUserOwnedModelsPath(user.uid)
+                RTDBSchema.ModelMetadata.makePath()
             ),
-            s => callback(s.val() ?? {})
+            orderByChild(`${RTDBSchema.ModelMetadata.SHARED_WITH}/${uid}`),
+            equalTo(true),
         );
     }
 
     public subscribeToSharedModels(
         callback: (m: ModelsList) => void
     ): Unsubscribe {
-        const user = this.firebaseManager.getUser();
-        if (!user) throw new Error("Not logged in");
-        return onValue(
-            ref(
-                this.firebaseManager.getDb(),
-                RTDBSchema.makeUsersPath(),
-            ),
-            s => callback(
-                Object.fromEntries(
+        function decodeDataSnapshot(s: DataSnapshot, user: User): ModelsList {
+            if (s.exists()) {
+                return Object.fromEntries(
                     Object.entries(s.val() ?? {})
                         .filter(([uid, _]) => uid !== user.uid)
                         .flatMap(([_, data]) =>
-                            Object.entries((data as any).ownedModels)
+                            Object.entries((data as any).ownedModels ?? {})
                         )
-                )
-            )
+                );
+            }
+            else {
+                return {};
+            }
+        }
+
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in");
+
+        return onValue(
+            this.makeSharedModelsQuery(user.uid),
+            s => callback(decodeDataSnapshot(s, user))
         );
     }
 
@@ -157,7 +194,7 @@ export default class FirebaseDataModel {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeModelNamePath(modelUuid)
+                RTDBSchema.ModelMetadata.makeModelNamePath(modelUuid)
             ),
             s => callback(s.val())
         );
@@ -170,7 +207,7 @@ export default class FirebaseDataModel {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeScenariosPath(modelUuid)
+                RTDBSchema.ModelData.makeScenariosPath(modelUuid)
             ),
             s => callback(
                 Object.entries(s.val() ?? {})
@@ -186,7 +223,7 @@ export default class FirebaseDataModel {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeSavedModelsPath(modelUuid)
+                RTDBSchema.ModelData.makeSavedModelsPath(modelUuid)
             ),
             s => callback(
                 !s.exists() ? [] : Object.entries(s.val()).map(modelEntry => {
@@ -215,7 +252,10 @@ export default class FirebaseDataModel {
         return set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeScenarioPath(modelUuid, newScenario.getId())
+                RTDBSchema.ModelData.makeScenarioPath(
+                    modelUuid,
+                    newScenario.getId()
+                )
             ),
             newScenario.getData()
         );
@@ -228,7 +268,10 @@ export default class FirebaseDataModel {
         return set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeScenarioPath(modelUuid, scenario.getId())
+                RTDBSchema.ModelData.makeScenarioPath(
+                    modelUuid,
+                    scenario.getId()
+                )
             ),
             scenario.getData()
         );
@@ -238,60 +281,36 @@ export default class FirebaseDataModel {
         return remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeScenarioPath(modelUuid, scenarioId)
+                RTDBSchema.ModelData.makeScenarioPath(modelUuid, scenarioId)
             )
         );
     }
 
     public async addStockFlowModel(name: string): Promise<void> {
-        const user = this.firebaseManager.getUser();
-        if (!user) throw new Error("Not logged in");
-
-        const model = new FirebaseStockFlowModel();
-        model.empty(
-            createUuid(),
-            name,
-            user.uid
-        );
-        this.addModel(model);
+        this.addModel(name, ModelType.StockFlow);
     }
 
     public async addCausalLoopModel(name: string): Promise<void> {
-        const user = this.firebaseManager.getUser();
-        if (!user) throw new Error("Not logged in");
-
-        const model = new FirebaseCausalLoopModel();
-        model.empty(
-            createUuid(),
-            name,
-            user.uid
-        );
-        this.addModel(model)
+        this.addModel(name, ModelType.CausalLoop);
     }
 
-    private async addModel(newModel: FirebaseModel<ModelSchema>): Promise<void> {
-        // Add the model to the user's list
-        const userDocRef = ref(
-            this.firebaseManager.getDb(),
-            RTDBSchema.makeUserOwnedModelPath(
-                newModel.getData().ownerUid,
-                newModel.getUuid()
+    private async addModel(name: string, modelType: ModelType): Promise<void> {
+        // Set the model metadata. The data itself will be populated when the
+        // user adds the first component to the model
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in!");
+        await set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelMetadata.makeModelPath(createUuid()),
+            ),
+            RTDBSchema.ModelMetadata.makeMetadataObject(
+                user.uid,
+                [],
+                name,
+                modelType,
             )
         );
-        await set(
-            userDocRef,
-            {
-                name: newModel.getData().name,
-                modelType: newModel.getData().modelType
-            }
-        );
-
-        // Add the model to the global list of models
-        const modelsRef = ref(
-            this.firebaseManager.getDb(),
-            `/models/${newModel.getUuid()}`
-        );
-        await set(modelsRef, newModel.getData());
     }
 
     public removeComponent(
@@ -301,7 +320,7 @@ export default class FirebaseDataModel {
         return remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeComponentPath(sessionId, componentId)
+                RTDBSchema.ModelData.makeComponentPath(sessionId, componentId)
             )
         );
     }
@@ -323,7 +342,7 @@ export default class FirebaseDataModel {
         return set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeComponentsPath(sessionId)
+                RTDBSchema.ModelData.makeComponentsPath(sessionId)
             ),
             Object.fromEntries(updatedComponentsList.map(c => {
                 return [
@@ -344,7 +363,7 @@ export default class FirebaseDataModel {
         const staticComponents = await get(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeComponentsPath(importedModelUuid)
+                RTDBSchema.ModelData.makeComponentsPath(importedModelUuid)
             )
         );
         if (!staticComponents.exists()) {
@@ -360,7 +379,10 @@ export default class FirebaseDataModel {
         return set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeSavedModelPath(modelUuid, importedModelUuid),
+                RTDBSchema.ModelData.makeSavedModelPath(
+                    modelUuid,
+                    importedModelUuid
+                ),
             ),
             staticComponents.val()
         );
@@ -373,7 +395,10 @@ export default class FirebaseDataModel {
         await remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeSavedModelPath(modelUuid, importedModelUuid)
+                RTDBSchema.ModelData.makeSavedModelPath(
+                    modelUuid,
+                    importedModelUuid
+                )
             )
         );
     }
@@ -386,7 +411,10 @@ export default class FirebaseDataModel {
         await set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeSubstitutionPath(modelUuid, replacedId),
+                RTDBSchema.ModelData.makeSubstitutionPath(
+                    modelUuid,
+                    replacedId
+                ),
             ),
             replacementId
         );
@@ -405,7 +433,7 @@ export default class FirebaseDataModel {
         await update(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeSubstitutionsPath(modelUuid),
+                RTDBSchema.ModelData.makeSubstitutionsPath(modelUuid),
             ),
             updates
         );
@@ -417,7 +445,7 @@ export default class FirebaseDataModel {
     ): Promise<void> {
         const subsRef = ref(
             this.firebaseManager.getDb(),
-            RTDBSchema.makeSubstitutionsPath(modelUuid),
+            RTDBSchema.ModelData.makeSubstitutionsPath(modelUuid),
         );
         const subs = await get(subsRef);
         if (subs.exists()) {
@@ -439,7 +467,7 @@ export default class FirebaseDataModel {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeSubstitutionsPath(modelUuid)
+                RTDBSchema.ModelData.makeSubstitutionsPath(modelUuid)
             ),
             snapshot => {
                 let components: FirebaseSubstitution[] = [];
@@ -468,7 +496,7 @@ export default class FirebaseDataModel {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeOverridesPath(modelUuid)
+                RTDBSchema.ModelData.makeOverridesPath(modelUuid)
             ),
             snapshot => {
                 if (snapshot.exists() && snapshot.key) {
@@ -487,7 +515,11 @@ export default class FirebaseDataModel {
         await set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeOverridePath(modelUuid, staticModelCptId, cptId),
+                RTDBSchema.ModelData.makeOverridePath(
+                    modelUuid,
+                    staticModelCptId,
+                    cptId
+                ),
             ),
             override
         );
@@ -496,22 +528,17 @@ export default class FirebaseDataModel {
     public async deleteModel(modelUuid: string): Promise<void> {
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in!");
-        await set(
+        await remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeModelPath(modelUuid)
-            ),
-            {}
+                RTDBSchema.ModelData.makeModelPath(modelUuid)
+            )
         );
-        await set(
+        await remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.makeUserOwnedModelPath(
-                    user.uid,
-                    modelUuid
-                )
-            ),
-            {}
+                RTDBSchema.ModelMetadata.makeModelPath(modelUuid)
+            )
         );
     }
 
@@ -521,54 +548,50 @@ export default class FirebaseDataModel {
     public async renameModel(
         modelUuid: string,
         newName: string
-    ): Promise<String | null> {
-        // TODO handle this via permissions once that's configured
-        const ownerUidSnap = await get(
-            ref(
-                this.firebaseManager.getDb(),
-                RTDBSchema.makeModelOwnerUidPath(modelUuid)
-            )
-        );
-        if (ownerUidSnap.exists()) {
-            const uid = ownerUidSnap.val();
-
-            const modelOfSameName = await get(
-                query(
-                    ref(
-                        this.firebaseManager.getDb(),
-                        RTDBSchema.makeUserOwnedModelsPath(uid)
-                    ),
-                    orderByChild("name"),
-                    equalTo(newName)
-                )
-            );
-            console.log(modelOfSameName)
-            if (modelOfSameName.exists()) {
-                return "User already has a model named " + newName;
-            }
-            else {
-                await set(
-                    ref(
-                        this.firebaseManager.getDb(),
-                        RTDBSchema.makeUserOwnedModelNamePath(
-                            uid,
-                            modelUuid
-                        )
-                    ),
-                    newName
-                );
-                await set(
-                    ref(
-                        this.firebaseManager.getDb(),
-                        RTDBSchema.makeModelNamePath(modelUuid),
-                    ),
-                    newName
-                );
-                return null;
-            }
+    ): Promise<void> {
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in!");
+        const ownedModels = await this.getOwnedModels();
+        if (Object.values(ownedModels).find(m => m.name === newName)) {
+            throw new Error(`User already has a model named "${newName}"`);
         }
         else {
-            return "Cannot find owner UID for model: " + modelUuid;
+            await set(
+                ref(
+                    this.firebaseManager.getDb(),
+                    RTDBSchema.ModelMetadata.makeModelNamePath(modelUuid)
+                ),
+                newName
+            );
         }
     }
+
+    public async ensureUserInformationInDatabase(): Promise<void> {
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in!");
+        const userPath = RTDBSchema.User.makeUserPath(user.uid);
+
+        let result = await get(
+            ref(
+                this.firebaseManager.getDb(),
+                userPath
+            )
+        );
+        if (!(result.exists() && result.val().name && result.val().email)) {
+            if (!user.displayName) throw new Error("No display name found");
+            if (!user.email) throw new Error("No email found");
+            await set(
+                ref(
+                    this.firebaseManager.getDb(),
+                    userPath
+                ),
+                {
+                    ...result.val(),
+                    name: user.displayName,
+                    email: user.email
+                }
+            );
+        }
+    }
+
 }

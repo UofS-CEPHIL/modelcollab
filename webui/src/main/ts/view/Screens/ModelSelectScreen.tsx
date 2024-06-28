@@ -33,7 +33,12 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     }
 
     public componentDidMount() {
-        this.subscribeToModels();
+        this.props.firebaseDataModel.ensureUserInformationInDatabase()
+            .then(() => this.subscribeToModels())
+            .catch(e => {
+                alert("Error logging in");
+                console.error(e);
+            });
     }
 
     public componentWillUnmount() {
@@ -104,12 +109,12 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
                         <Grid item xs={11}>
                             <ListItemButton
                                 component={Link}
-                                to={`${nametype.modelType}/${uuid}`}
+                                to={`${nametype.type}/${uuid}`}
                             >
                                 <ListItemText
                                     primary={nametype.name}
                                     secondary={this.getModelTypeDisplayText(
-                                        nametype.modelType
+                                        nametype.type
                                     )}
                                 />
                             </ListItemButton>
@@ -252,10 +257,10 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
             m => this.setState({ myModels: m })
         );
         const unsubOthers = this.props.firebaseDataModel.subscribeToSharedModels(
-            m => {
-                this.setState({ sharedModels: m })
-            }
+            m => this.setState({ sharedModels: m })
+
         );
+        //        const unsubOthers = () => { }
         this.setState({
             unsubscribe: () => {
                 unsubMine();

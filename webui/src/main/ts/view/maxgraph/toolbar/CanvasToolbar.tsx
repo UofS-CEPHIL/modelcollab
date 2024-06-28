@@ -241,7 +241,10 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     this.props.firebaseDataModel.renameModel(
                         this.props.sessionId,
                         this.state.modelNameText
-                    ).then(err => err && alert("Error: " + err));
+                    ).catch(err => {
+                        console.log(err)
+                        alert("Error updating model name");
+                    });
                 }
                 this.stopEditingModelName();
             }
