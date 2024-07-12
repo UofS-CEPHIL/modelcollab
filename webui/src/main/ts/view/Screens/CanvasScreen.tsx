@@ -232,7 +232,7 @@ export default abstract class CanvasScreen
     }
 
     protected closeModalBox(): void {
-        this.setState({ displayedModalBox: null });
+        this.setState({ displayedModalBox: null, });
     }
 
     protected toggleSidebarOpen(): void {

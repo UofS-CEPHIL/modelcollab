@@ -81,6 +81,17 @@ class ModelDataSchema {
     }
 }
 
+export enum Permission {
+    READ = "r",
+    READWRITE = "rw",
+}
+
+export enum Visibility {
+    PUBLIC = "Public",
+    READONLY = "Readonly",
+    PRIVATE = "Private",
+}
+
 class ModelMetadataSchema {
 
     static readonly OWNER = "ownerUid";
@@ -90,6 +101,8 @@ class ModelMetadataSchema {
     static readonly NAME = "name";
 
     static readonly TYPE = "type";
+
+    static readonly VISIBILITY = "visibility";
 
     static makePath(): string {
         return "/modelMeta";
@@ -101,18 +114,20 @@ class ModelMetadataSchema {
 
     static makeMetadataObject(
         ownerUid: string,
-        sharedWith: string[],
+        sharedWith: { [uid: string]: Permission },
         name: string,
-        modelType: ModelType
+        modelType: ModelType,
+        visibility: Visibility,
     ): any {
         const sharedWithDenormed = Object.fromEntries(
-            sharedWith.map(uid => [uid, true])
+            Object.entries(sharedWith).map(([uid, perm]) => [uid, perm])
         );
         return {
             [`${this.OWNER}`]: ownerUid,
             [`${this.SHARED_WITH}`]: sharedWithDenormed,
             [`${this.NAME}`]: name,
             [`${this.TYPE}`]: modelType,
+            [`${this.VISIBILITY}`]: visibility
         };
     }
 
@@ -126,6 +141,18 @@ class ModelMetadataSchema {
 
     static makeModelTypePath(modelUuid: string): string {
         return this.makeModelPath(modelUuid) + `/${this.TYPE}`;
+    }
+
+    static makeSharedWithUserPath(modelUuid: string, userUid: string): string {
+        return this.makeSharedWithUsersPath(modelUuid) + `/${userUid}`;
+    }
+
+    static makeSharedWithUsersPath(modelUuid: string): string {
+        return this.makeModelPath(modelUuid) + `/${this.SHARED_WITH}`
+    }
+
+    static makeModelVisibilityPath(modelUuid: string): string {
+        return this.makeModelPath(modelUuid) + `/${this.VISIBILITY}`;
     }
 }
 

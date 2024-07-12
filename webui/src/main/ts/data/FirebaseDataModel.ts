@@ -1,15 +1,12 @@
-import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update, query, orderByChild, equalTo, Query } from "firebase/database";
+import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update, query, orderByChild, equalTo, Query, startAt, endAt, startAfter } from "firebase/database";
 // @ts-ignore can't find types
 import { v4 as createUuid } from "uuid";
 import FirebaseComponent from "./components/FirebaseComponent";
 import { createFirebaseDataComponent } from "./components/FirebaseComponentBuilder";
 import FirebaseManager from "./FirebaseManager";
-import RTDBSchema from "./RTDBSchema";
-import FirebaseStockFlowModel from "./FirebaseStockFlowModel";
+import RTDBSchema, { Permission, Visibility } from "./RTDBSchema";
 import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
 import FirebaseScenario from "./components/FirebaseScenario";
-import FirebaseModel, { ComponentSchema } from "./components/FirebaseModel";
-import FirebaseCausalLoopModel from "./FirebaseCausalLoopModel";
 import ComponentType from "./components/ComponentType";
 import FirebaseSubstitution from "./components/FirebaseSubstitution";
 import FirebasePropertyOverrides, { ComponentPropertyOverrides } from "./components/FirebasePropertyOverrides";
@@ -37,6 +34,18 @@ export type BasicModelInfo = {
     type: ModelType
 }
 export type ModelsList = { [uuid: string]: BasicModelInfo };
+
+// TODO this duplicates information from ModelUserSchema
+export type BasicUserInfo = {
+    name: string,
+    email: string,
+}
+export type UsersList = { [uid: string]: BasicUserInfo };
+
+export type UserPermissionInfo = BasicUserInfo & { permission: Permission };
+export type UserPermissionInfoList = {
+    [uid: string]: UserPermissionInfo
+};
 
 export default class FirebaseDataModel {
 
@@ -150,13 +159,15 @@ export default class FirebaseDataModel {
     }
 
     private makeSharedModelsQuery(uid: string): Query {
+        // TODO this doesn't seem to work
         return query(
             ref(
                 this.firebaseManager.getDb(),
                 RTDBSchema.ModelMetadata.makePath()
             ),
             orderByChild(`${RTDBSchema.ModelMetadata.SHARED_WITH}/${uid}`),
-            equalTo(true),
+            startAt(''),
+            endAt('~')
         );
     }
 
@@ -306,9 +317,10 @@ export default class FirebaseDataModel {
             ),
             RTDBSchema.ModelMetadata.makeMetadataObject(
                 user.uid,
-                [],
+                {},
                 name,
                 modelType,
+                Visibility.PRIVATE
             )
         );
     }
@@ -566,6 +578,169 @@ export default class FirebaseDataModel {
         }
     }
 
+    public async getAllUsers(): Promise<UsersList> {
+        const result = await get(
+            query(
+                ref(
+                    this.firebaseManager.getDb(),
+                    RTDBSchema.User.makePath()
+                ),
+                orderByChild(RTDBSchema.User.NAME),
+            )
+        );
+
+        if (result.exists()) {
+            return Object.fromEntries(
+                Object.entries(result.val() as UsersList)
+            );
+        }
+        else {
+            return {};
+        }
+    }
+
+    /**
+     * @param searchString The name to search for
+     * @returns All users with names or emails that contain `searchString`
+     */
+    public async searchUsers(
+        searchString: string,
+        includeSelf: boolean = true,
+    ): Promise<UsersList> {
+        // TODO this is wasteful -- figure out how to do this with a query
+        const users = await this.getAllUsers();
+        const myuid = this.getCurrentUserUid();
+        return Object.fromEntries(
+            Object.entries(users).filter(([uid, user]) =>
+                (includeSelf || uid !== myuid)
+                && (
+                    user.email.includes(searchString)
+                    || user.name.includes(searchString)
+                )
+            )
+        )
+    }
+
+    public getCurrentUserUid(): string {
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in!");
+        else return user.uid;
+    }
+
+    public async shareWithUser(
+        modelUuid: string,
+        userUid: string,
+        permission: Permission,
+    ): Promise<void> {
+        const user = this.firebaseManager.getUser();
+        if (!user) throw new Error("Not logged in!");
+
+        if (user.uid === userUid)
+            throw new Error("Sharing with model owner not allowed");
+
+        await set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelMetadata.makeSharedWithUserPath(
+                    modelUuid,
+                    userUid
+                )
+            ),
+            permission
+        );
+    }
+
+    public async stopSharingWithUser(
+        modelUuid: string,
+        userUid: string
+    ): Promise<void> {
+        await remove(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelMetadata.makeSharedWithUserPath(
+                    modelUuid,
+                    userUid
+                )
+            )
+        );
+    }
+
+    public subscribeToModelVisibility(
+        modelUuid: string,
+        callback: (v?: Visibility) => void
+    ): Unsubscribe {
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelMetadata.makeModelVisibilityPath(modelUuid)
+            ),
+            snap => callback(
+                snap.exists() ? snap.val() as Visibility : undefined
+            )
+        );
+    }
+
+    public async setModelVisibility(
+        modelUuid: string,
+        visibility: Visibility
+    ): Promise<void> {
+        await set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelMetadata.makeModelVisibilityPath(modelUuid)
+            ),
+            visibility
+        );
+    }
+
+    public subscribeToModelSharedUsers(
+        modelUuid: string,
+        callback: (u: UserPermissionInfoList) => void
+    ): Unsubscribe {
+
+        const retrieveUserInfo = (u: { [uid: string]: Permission }) => {
+            const permissions = Object.entries(u);
+            Promise.all(Object.keys(u).map(uid => this.getUserInfo(uid)))
+                .then(basicInfo => callback(
+                    Object.fromEntries(
+                        basicInfo.map((info, i) => [
+                            permissions[i][0],
+                            {
+                                ...info,
+                                permission: permissions[i][1]
+                            }
+                        ])
+                    )
+                ))
+                .catch(e => console.error(e));
+        }
+
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelMetadata.makeSharedWithUsersPath(modelUuid)
+            ),
+            snap => retrieveUserInfo(
+                snap.exists() ? snap.val() : {}
+            )
+        );
+    }
+
+    public async getUserInfo(uid: string): Promise<BasicUserInfo> {
+        const result = await get(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.User.makeUserPath(uid)
+            )
+        );
+        if (result.exists()) {
+            return result.val() as BasicUserInfo;
+        }
+        else {
+            throw new Error("Can't find user for uid: " + uid);
+        }
+    }
+
     public async ensureUserInformationInDatabase(): Promise<void> {
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in!");
@@ -593,5 +768,4 @@ export default class FirebaseDataModel {
             );
         }
     }
-
 }

@@ -1,17 +1,22 @@
-import { ListItem, ListItemText, ListItemButton } from '@mui/material';
-import { ReactElement } from 'react';
-import { ModelsList, ModelType } from '../../data/FirebaseDataModel';
+import { ListItem, ListItemText, ListItemButton, List } from '@mui/material';
+import { Component, ReactElement } from 'react';
+import FirebaseDataModel, { ModelsList, ModelType } from '../../data/FirebaseDataModel';
+import ButtonBox from './ButtonBox';
 
-import ButtonListBox, { Props, State as BaseState } from './ButtonListBox';
+export interface Props {
+    firebaseDataModel: FirebaseDataModel;
+    onModelSelected: (uuid: string) => void;
+    onCancel: () => void;
+    width?: number;
+}
 
-
-interface State extends BaseState {
+export interface State {
     myModels: ModelsList;
     sharedModels: ModelsList;
     unsubscribe?: () => void;
 }
 
-export default class ImportModelBox extends ButtonListBox<Props, State> {
+export default class ImportModelBox extends Component<Props, State> {
 
     public constructor(props: Props) {
         super(props);
@@ -42,6 +47,22 @@ export default class ImportModelBox extends ButtonListBox<Props, State> {
         });
     }
 
+    public render(): ReactElement {
+        return (
+            <ButtonBox
+                width={this.props.width}
+                buttons={[{
+                    label: "Cancel",
+                    callback: () => this.props.onCancel()
+                }]}
+            >
+                <List>
+                    {this.makeListItems()}
+                </List>
+            </ButtonBox>
+        );
+    }
+
     protected makeListItems(): ReactElement[] {
         const allModels = { ...this.state.myModels, ...this.state.sharedModels }
         return Object.entries(allModels)
@@ -49,7 +70,7 @@ export default class ImportModelBox extends ButtonListBox<Props, State> {
             .map(([uuid, nametype]) => (
                 <ListItem disablePadding key={uuid}>
                     <ListItemButton
-                        onClick={() => this.props.handleSubmit(uuid)}
+                        onClick={() => this.props.onModelSelected(uuid)}
                     >
                         <ListItemText primary={nametype.name} />
                     </ListItemButton>

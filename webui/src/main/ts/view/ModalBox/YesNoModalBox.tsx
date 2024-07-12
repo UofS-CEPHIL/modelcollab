@@ -1,33 +1,30 @@
-import { ReactElement } from "react";
-import { Box, Button, Typography } from "@mui/material";
-import ModalBox, { Props as ModalBoxProps, State as ModalBoxState } from "./ModalBox";
+import { Component, ReactElement } from "react";
+import { Typography } from "@mui/material";
+import ButtonBox from "./ButtonBox";
 
-export interface Props extends ModalBoxProps {
+export interface Props {
     width?: number;
     prompt: string;
     onYes: () => void;
     onNo: () => void;
 }
 
-export default class YesNoModalBox extends ModalBox<Props, ModalBoxState> {
+export default abstract class YesNoModalBox extends Component<Props>
+{
 
-    protected getBoxContents(): ReactElement {
+    public render(): ReactElement {
         return (
-            <Box textAlign="center">
+            <ButtonBox
+                width={this.props.width}
+                buttons={[
+                    { label: "Yes", callback: this.props.onYes },
+                    { label: "No", callback: this.props.onNo },
+                ]}
+            >
                 <Typography variant="h4" component="div">
                     {this.props.prompt}
                 </Typography>
-                <Button onClick={this.props.onYes}>
-                    <Typography variant="h6" component="div">
-                        Yes
-                    </Typography>
-                </Button>
-                <Button onClick={this.props.onNo}>
-                    <Typography variant="h6" component="div">
-                        No
-                    </Typography>
-                </Button>
-            </Box>
+            </ButtonBox>
         );
     }
 }

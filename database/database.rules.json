@@ -1,6 +1,12 @@
 {
   "rules": {
     ".read": true,
-    ".write": true
+      ".write": true,
+      "modelMeta": {
+          ".indexOn": ["ownerUid"]
+      },
+      "users": {
+          ".indexOn": ["name"]
+      }
   }
 }

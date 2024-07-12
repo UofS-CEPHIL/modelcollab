@@ -10,7 +10,11 @@ export interface State {
 
 }
 
-export default abstract class ModalBox<BoxProps extends Props, BoxState extends State>
+export default abstract class ModalBox
+    <
+        BoxProps extends Props,
+        BoxState extends State
+    >
     extends React.Component<BoxProps, BoxState> {
 
     protected abstract getBoxContents(): ReactElement;

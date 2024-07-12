@@ -142,6 +142,14 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
             >
                 Import Model
             </MenuItem>,
+            <MenuItem
+                key={"permissions"}
+                onClick={() =>
+                    this.props.setOpenModalBox(ModalBoxType.PERMISSIONS)
+                }
+            >
+                Model Permissions
+            </MenuItem>,
         ];
     }
 

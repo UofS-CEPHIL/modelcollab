@@ -25,6 +25,7 @@ import StockFlowBehaviourGetter from '../maxgraph/behaviours/stockflow/StockFlow
 import StockFlowModeSelectPanel from '../maxgraph/toolbar/StockFlowModeSelectPanel';
 import FirebaseSubstitution from '../../data/components/FirebaseSubstitution';
 import FirebasePropertyOverrides, { ComponentPropertyOverrides } from '../../data/components/FirebasePropertyOverrides';
+import ModelPermissionsBox from '../ModalBox/ModelPermissionsBox';
 
 export interface LoadedStaticModel {
     modelId: string;
@@ -256,8 +257,8 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
         else if (this.state.displayedModalBox === ModalBoxType.IMPORT_MODEL) {
             return (
                 <ImportModelBox
-                    handleCancel={() => this.closeModalBox()}
-                    handleSubmit={name => this.importStaticModel(name)}
+                    onCancel={() => this.closeModalBox()}
+                    onModelSelected={name => this.importStaticModel(name)}
                     firebaseDataModel={this.props.firebaseDataModel}
                 />
             );
@@ -278,16 +279,20 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
                         );
                         this.state.afterScenarioDeleted!();
                         this.setState({
-                            modalBoxComponent: null,
-                            displayedModalBox: null,
-                            afterScenarioDeleted: null
+
                         });
 
                     }}
-                    onNo={() => this.setState({
-                        modalBoxComponent: null,
-                        displayedModalBox: null
-                    })}
+                    onNo={() => this.closeModalBox()}
+                />
+            );
+        }
+        else if (this.state.displayedModalBox === ModalBoxType.PERMISSIONS) {
+            return (
+                <ModelPermissionsBox
+                    onClose={() => this.closeModalBox()}
+                    firebaseDataModel={this.props.firebaseDataModel}
+                    modelUuid={this.props.modelUuid!}
                 />
             );
         }
@@ -342,6 +347,14 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
             addComponent();
             this.graph!.refreshLoadedModels(this.state.loadedModels);
         }
+    }
+
+    protected closeModalBox(): void {
+        this.setState({
+            modalBoxComponent: null,
+            displayedModalBox: null,
+            afterScenarioDeleted: null,
+        });
     }
 
     private onLoadedModelsUpdated(models: LoadedStaticModel[]): void {

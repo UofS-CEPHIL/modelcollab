@@ -242,8 +242,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                         this.props.sessionId,
                         this.state.modelNameText
                     ).catch(err => {
-                        console.log(err)
-                        alert("Error updating model name");
+                        alert(err);
                     });
                 }
                 this.stopEditingModelName();
