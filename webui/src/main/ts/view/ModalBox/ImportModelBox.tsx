@@ -56,9 +56,11 @@ export default class ImportModelBox extends Component<Props, State> {
                     callback: () => this.props.onCancel()
                 }]}
             >
-                <List>
-                    {this.makeListItems()}
-                </List>
+                <div style={{ maxHeight: "300px", overflow: "auto" }}>
+                    <List>
+                        {this.makeListItems()}
+                    </List>
+                </div>
             </ButtonBox>
         );
     }
