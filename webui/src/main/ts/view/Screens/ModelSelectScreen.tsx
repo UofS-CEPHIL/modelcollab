@@ -15,6 +15,7 @@ export interface Props {
 export interface State {
     myModels: ModelsList;
     sharedModels: ModelsList;
+    publicModels: ModelsList;
     newModelText: string;
     newModelType: ModelType;
     unsubscribe?: () => void;
@@ -27,6 +28,7 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
         this.state = {
             myModels: {},
             sharedModels: {},
+            publicModels: {},
             newModelText: "",
             newModelType: ModelType.StockFlow
         };
@@ -86,6 +88,11 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
                     Shared With You
                 </ListSubheader>
                 {this.makeModelsListItems(this.state.sharedModels)}
+                <Divider />
+                <ListSubheader key={"public-models-header"}>
+                    Public Models
+                </ListSubheader>
+                {this.makeModelsListItems(this.state.publicModels)}
             </List >
         );
     }
@@ -203,7 +210,7 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
             case ModelType.CausalLoop:
                 return "Causal Loop Diagram";
             default:
-                return "Error :Unknown model type " + dbText
+                return "Error: Unknown model type " + dbText
         }
     }
 
@@ -253,20 +260,23 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     }
 
     private subscribeToModels(): void {
-        const unsubMine = this.props.firebaseDataModel.subscribeToOwnedModels(
-            m => this.setState({ myModels: m })
-        );
-        const unsubOthers = this.props.firebaseDataModel.subscribeToSharedModels(
-            m => this.setState({ sharedModels: m })
 
+        const isAlreadyListed = (uuid: string) =>
+            this.state.myModels[uuid] !== undefined
+            || this.state.sharedModels[uuid] !== undefined;
+
+        const unsubscribe = this.props.firebaseDataModel.subscribeToAllAvailableModels(
+            m => this.setState({ myModels: m }),
+            m => this.setState({ sharedModels: m }),
+            m => this.setState({
+                publicModels: Object.fromEntries(
+                    Object.entries(m).filter(
+                        ([uuid, _]) => !isAlreadyListed(uuid))
+                )
+            }),
         );
-        //        const unsubOthers = () => { }
-        this.setState({
-            unsubscribe: () => {
-                unsubMine();
-                unsubOthers();
-            }
-        });
+
+        this.setState({ unsubscribe });
     }
 
     private refreshModelList(): void {

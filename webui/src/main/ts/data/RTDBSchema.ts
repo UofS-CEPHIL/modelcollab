@@ -119,12 +119,9 @@ class ModelMetadataSchema {
         modelType: ModelType,
         visibility: Visibility,
     ): any {
-        const sharedWithDenormed = Object.fromEntries(
-            Object.entries(sharedWith).map(([uid, perm]) => [uid, perm])
-        );
         return {
             [`${this.OWNER}`]: ownerUid,
-            [`${this.SHARED_WITH}`]: sharedWithDenormed,
+            [`${this.SHARED_WITH}`]: sharedWith,
             [`${this.NAME}`]: name,
             [`${this.TYPE}`]: modelType,
             [`${this.VISIBILITY}`]: visibility
@@ -162,6 +159,8 @@ class UserDataSchema {
 
     static readonly EMAIL = "email";
 
+    static readonly SHARED = "sharedWithMe";
+
     static makePath(): string {
         return "/users";
     }
@@ -176,6 +175,14 @@ class UserDataSchema {
 
     static makeUserEmailPath(uid: string): string {
         return `${this.makeUserPath(uid)}/${this.EMAIL}`;
+    }
+
+    static makeSharedModelsPath(uid: string): string {
+        return `${this.makeUserPath(uid)}/${this.SHARED}`;
+    }
+
+    static makeSharedModelPath(uid: string, modelUuid: string): string {
+        return `${this.makeSharedModelsPath(uid)}/${modelUuid}`;
     }
 }
 

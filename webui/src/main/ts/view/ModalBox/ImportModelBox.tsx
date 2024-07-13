@@ -13,6 +13,7 @@ export interface Props {
 export interface State {
     myModels: ModelsList;
     sharedModels: ModelsList;
+    publicModels: ModelsList;
     unsubscribe?: () => void;
 }
 
@@ -20,7 +21,11 @@ export default class ImportModelBox extends Component<Props, State> {
 
     public constructor(props: Props) {
         super(props);
-        this.state = { myModels: {}, sharedModels: {} };
+        this.state = {
+            myModels: {},
+            sharedModels: {},
+            publicModels: {}
+        };
     }
 
     public componentWillUnmount(): void {
@@ -31,20 +36,15 @@ export default class ImportModelBox extends Component<Props, State> {
     }
 
     public componentDidMount(): void {
-        const unsubMine = this.props.firebaseDataModel.subscribeToOwnedModels(
-            m => this.setState({ myModels: m })
-        );
-        const unsubOthers = this.props.firebaseDataModel.subscribeToSharedModels(
-            m => {
-                this.setState({ sharedModels: m })
-            }
-        );
-        this.setState({
-            unsubscribe: () => {
-                unsubMine();
-                unsubOthers();
-            }
-        });
+        if (!this.state.unsubscribe) {
+            const unsubscribe = this.props.firebaseDataModel
+                .subscribeToAllAvailableModels(
+                    m => this.setState({ myModels: m }),
+                    m => this.setState({ sharedModels: m }),
+                    m => this.setState({ publicModels: m }),
+                );
+            this.setState({ unsubscribe });
+        }
     }
 
     public render(): ReactElement {
@@ -64,7 +64,11 @@ export default class ImportModelBox extends Component<Props, State> {
     }
 
     protected makeListItems(): ReactElement[] {
-        const allModels = { ...this.state.myModels, ...this.state.sharedModels }
+        const allModels = {
+            ...this.state.myModels,
+            ...this.state.sharedModels,
+            ...this.state.publicModels,
+        }
         return Object.entries(allModels)
             .filter(([_, t]) => t.type === ModelType.StockFlow)
             .map(([uuid, nametype]) => (

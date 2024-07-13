@@ -31,7 +31,8 @@ export function modelTypeFromString(s: string): ModelType {
 // TODO this duplicates information from ModelMetadataSchema
 export type BasicModelInfo = {
     name: string,
-    type: ModelType
+    type: ModelType,
+    ownerUid: string,
 }
 export type ModelsList = { [uuid: string]: BasicModelInfo };
 
@@ -129,10 +130,8 @@ export default class FirebaseDataModel {
     }
 
     public async getOwnedModels(): Promise<ModelsList> {
-        const user = this.firebaseManager.getUser();
-        if (!user) throw new Error("Not logged in");
-
-        const result = await get(this.makeOwnedModelsQuery(user.uid));
+        const myuid = this.getCurrentUserUid();
+        const result = await get(this.makeOwnedModelsQuery(myuid));
 
         if (result.exists()) {
             return Object.fromEntries(
@@ -150,52 +149,104 @@ export default class FirebaseDataModel {
     public subscribeToOwnedModels(
         callback: (m: ModelsList) => void
     ): Unsubscribe {
-        const user = this.firebaseManager.getUser();
-        if (!user) throw new Error("Not logged in");
+        const myuid = this.getCurrentUserUid();
         return onValue(
-            this.makeOwnedModelsQuery(user.uid),
+            this.makeOwnedModelsQuery(myuid),
             s => callback(s.val() ?? {})
         );
     }
 
-    private makeSharedModelsQuery(uid: string): Query {
-        // TODO this doesn't seem to work
-        return query(
+    public async getModelMetadata(modelUuid: string): Promise<BasicModelInfo> {
+        const result = await get(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelMetadata.makePath()
-            ),
-            orderByChild(`${RTDBSchema.ModelMetadata.SHARED_WITH}/${uid}`),
-            startAt(''),
-            endAt('~')
+                RTDBSchema.ModelMetadata.makeModelPath(modelUuid)
+            )
         );
+        if (result.exists()) {
+            return result.val();
+        }
+        else {
+            throw new Error("Can't find model with uuid: " + modelUuid);
+        }
     }
 
     public subscribeToSharedModels(
         callback: (m: ModelsList) => void
     ): Unsubscribe {
-        function decodeDataSnapshot(s: DataSnapshot, user: User): ModelsList {
-            if (s.exists()) {
-                return Object.fromEntries(
-                    Object.entries(s.val() ?? {})
-                        .filter(([uid, _]) => uid !== user.uid)
-                        .flatMap(([_, data]) =>
-                            Object.entries((data as any).ownedModels ?? {})
-                        )
-                );
-            }
-            else {
-                return {};
-            }
-        }
-
-        const user = this.firebaseManager.getUser();
-        if (!user) throw new Error("Not logged in");
+        const myuid = this.getCurrentUserUid();
 
         return onValue(
-            this.makeSharedModelsQuery(user.uid),
-            s => callback(decodeDataSnapshot(s, user))
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.User.makeSharedModelsPath(myuid)
+            ),
+            s => {
+                if (s.exists()) {
+                    const uuids = Object.keys(s.val());
+                    Promise.all(
+                        uuids.map(uuid => this.getModelMetadata(uuid))
+                    ).then(models =>
+                        callback(
+                            Object.fromEntries(
+                                models.map((m, i) => [
+                                    uuids[i],
+                                    m
+                                ])
+                            )
+                        )
+                    )
+                }
+                else {
+                    callback({});
+                }
+            }
         );
+    }
+
+    public subscribeToPublicModels(
+        callback: (m: ModelsList) => void
+    ): Unsubscribe {
+        return onValue(
+            query(
+                ref(
+                    this.firebaseManager.getDb(),
+                    RTDBSchema.ModelMetadata.makePath()
+                ),
+                orderByChild(RTDBSchema.ModelMetadata.VISIBILITY),
+                startAfter("Private"),
+                endAt("~")
+            ),
+            s => {
+                if (s.exists()) {
+                    callback(s.val());
+                }
+                else {
+                    callback({});
+                }
+            }
+        )
+    }
+
+    public subscribeToAllAvailableModels(
+        myModelsCallback: (m: ModelsList) => void,
+        sharedModelsCallback: (m: ModelsList) => void,
+        publicModelsCallback: (m: ModelsList) => void,
+    ): Unsubscribe {
+        const unsubMine = this.subscribeToOwnedModels(
+            m => myModelsCallback(m)
+        );
+        const unsubShared = this.subscribeToSharedModels(
+            m => sharedModelsCallback(m)
+        );
+        const unsubPublic = this.subscribeToPublicModels(
+            m => publicModelsCallback(m)
+        );
+        return () => {
+            unsubMine();
+            unsubShared();
+            unsubPublic();
+        }
     }
 
     public subscribeToSessionModelName(
@@ -308,15 +359,14 @@ export default class FirebaseDataModel {
     private async addModel(name: string, modelType: ModelType): Promise<void> {
         // Set the model metadata. The data itself will be populated when the
         // user adds the first component to the model
-        const user = this.firebaseManager.getUser();
-        if (!user) throw new Error("Not logged in!");
+        const myuid = this.getCurrentUserUid();
         await set(
             ref(
                 this.firebaseManager.getDb(),
                 RTDBSchema.ModelMetadata.makeModelPath(createUuid()),
             ),
             RTDBSchema.ModelMetadata.makeMetadataObject(
-                user.uid,
+                myuid,
                 {},
                 name,
                 modelType,
@@ -538,8 +588,6 @@ export default class FirebaseDataModel {
     }
 
     public async deleteModel(modelUuid: string): Promise<void> {
-        const user = this.firebaseManager.getUser();
-        if (!user) throw new Error("Not logged in!");
         await remove(
             ref(
                 this.firebaseManager.getDb(),
@@ -554,15 +602,10 @@ export default class FirebaseDataModel {
         );
     }
 
-    /**
-     * Return error string if error occurred, or null if it worked
-     */
     public async renameModel(
         modelUuid: string,
         newName: string
     ): Promise<void> {
-        const user = this.firebaseManager.getUser();
-        if (!user) throw new Error("Not logged in!");
         const ownedModels = await this.getOwnedModels();
         if (Object.values(ownedModels).find(m => m.name === newName)) {
             throw new Error(`User already has a model named "${newName}"`);
@@ -632,10 +675,8 @@ export default class FirebaseDataModel {
         userUid: string,
         permission: Permission,
     ): Promise<void> {
-        const user = this.firebaseManager.getUser();
-        if (!user) throw new Error("Not logged in!");
-
-        if (user.uid === userUid)
+        const myuid = this.getCurrentUserUid();
+        if (myuid === userUid)
             throw new Error("Sharing with model owner not allowed");
 
         await set(
@@ -647,6 +688,13 @@ export default class FirebaseDataModel {
                 )
             ),
             permission
+        );
+        await set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.User.makeSharedModelPath(userUid, modelUuid)
+            ),
+            true
         );
     }
 
@@ -663,6 +711,12 @@ export default class FirebaseDataModel {
                 )
             )
         );
+        await remove(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.User.makeSharedModelPath(userUid, modelUuid)
+            )
+        )
     }
 
     public subscribeToModelVisibility(

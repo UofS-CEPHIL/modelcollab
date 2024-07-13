@@ -3,7 +3,7 @@
     ".read": true,
       ".write": true,
       "modelMeta": {
-          ".indexOn": ["ownerUid"]
+          ".indexOn": ["ownerUid", "visibility"]
       },
       "users": {
           ".indexOn": ["name"]
