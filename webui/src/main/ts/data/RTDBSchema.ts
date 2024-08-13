@@ -8,8 +8,6 @@ class ModelDataSchema {
 
     static readonly SUBSTITUTIONS = "substitutions";
 
-    static readonly OVERRIDES = "overrides";
-
     static readonly SAVED_MODELS = "loadedModels";
 
     static makePath(): string {
@@ -17,7 +15,7 @@ class ModelDataSchema {
     }
 
     static makeModelPath(modelUuid: string): string {
-        return `/${this.makePath()}/${modelUuid}/`;
+        return `${this.makePath()}/${modelUuid}`;
     }
 
     static makeComponentsPath(modelUuid: string): string {
@@ -39,34 +37,42 @@ class ModelDataSchema {
         return this.makeScenariosPath(modelUuid) + `/${scenarioId}`;
     }
 
+    static makeScenarioComponentPath(
+        modelUuid: string,
+        scenarioId: string,
+        parameterName: string
+    ): string {
+        const parent = this.makeScenarioPath(modelUuid, scenarioId);
+        return `${parent}/${parameterName}`;
+    }
+
+    static makeScenarioStartTimePath(
+        modelUuid: string,
+        scenarioId: string
+    ): string {
+        return this.makeScenarioPath(modelUuid, scenarioId) + "/startTime";
+    }
+
+    static makeScenarioStopTimePath(
+        modelUuid: string,
+        scenarioId: string
+    ): string {
+        return this.makeScenarioPath(modelUuid, scenarioId) + "/stopTime";
+    }
+
+    static makeScenarioNamePath(
+        modelUuid: string,
+        scenarioId: string
+    ): string {
+        return this.makeScenarioPath(modelUuid, scenarioId) + "/name";
+    }
+
     static makeSubstitutionsPath(modelUuid: string): string {
         return this.makeModelPath(modelUuid) + `/${this.SUBSTITUTIONS}`;
     }
 
     static makeSubstitutionPath(modelUuid: string, replacedId: string): string {
         return this.makeSubstitutionsPath(modelUuid) + `/${replacedId}`;
-    }
-
-    static makeOverridesPath(modelUuid: string): string {
-        return this.makeModelPath(modelUuid) + `/${this.OVERRIDES}`;
-    }
-
-    static makeStaticModelOverridesPath(
-        modelUuid: string,
-        staticModelId: string
-    ): string {
-        return this.makeOverridesPath(modelUuid) + `/${staticModelId}`
-    }
-
-    static makeOverridePath(
-        modelUuid: string,
-        staticModelUuid: string,
-        cptId: string
-    ): string {
-        return this.makeStaticModelOverridesPath(
-            modelUuid,
-            staticModelUuid
-        ) + `/${cptId}`;
     }
 
     static makeSavedModelsPath(modelUuid: string): string {
@@ -79,6 +85,15 @@ class ModelDataSchema {
     ): string {
         return this.makeSavedModelsPath(modelUuid) + `/${loadedModelUuid}`;
     }
+
+    static makeSavedModelComponentPath(
+        modelUuid: string,
+        loadedModelUuid: string,
+        componentId: string
+    ): string {
+        return this.makeSavedModelPath(modelUuid, loadedModelUuid)
+            + `/${componentId}`;
+    }
 }
 
 export enum Permission {
@@ -86,23 +101,15 @@ export enum Permission {
     READWRITE = "rw",
 }
 
-export enum Visibility {
-    PUBLIC = "Public",
-    READONLY = "Readonly",
-    PRIVATE = "Private",
-}
-
 class ModelMetadataSchema {
 
     static readonly OWNER = "ownerUid";
-
-    static readonly SHARED_WITH = "sharedWith";
 
     static readonly NAME = "name";
 
     static readonly TYPE = "type";
 
-    static readonly VISIBILITY = "visibility";
+    static readonly SHARED_WITH = "sharedWith";
 
     static makePath(): string {
         return "/modelMeta";
@@ -117,14 +124,12 @@ class ModelMetadataSchema {
         sharedWith: { [uid: string]: Permission },
         name: string,
         modelType: ModelType,
-        visibility: Visibility,
     ): any {
         return {
             [`${this.OWNER}`]: ownerUid,
-            [`${this.SHARED_WITH}`]: sharedWith,
             [`${this.NAME}`]: name,
             [`${this.TYPE}`]: modelType,
-            [`${this.VISIBILITY}`]: visibility
+            [`${this.SHARED_WITH}`]: sharedWith
         };
     }
 
@@ -140,16 +145,12 @@ class ModelMetadataSchema {
         return this.makeModelPath(modelUuid) + `/${this.TYPE}`;
     }
 
-    static makeSharedWithUserPath(modelUuid: string, userUid: string): string {
-        return this.makeSharedWithUsersPath(modelUuid) + `/${userUid}`;
-    }
-
     static makeSharedWithUsersPath(modelUuid: string): string {
-        return this.makeModelPath(modelUuid) + `/${this.SHARED_WITH}`
+        return this.makeModelPath(modelUuid) + `/${this.SHARED_WITH}`;
     }
 
-    static makeModelVisibilityPath(modelUuid: string): string {
-        return this.makeModelPath(modelUuid) + `/${this.VISIBILITY}`;
+    static makeSharedWithUserPath(modelUuid: string, sharedUid: string): string {
+        return this.makeSharedWithUsersPath(modelUuid) + `/${sharedUid}`;
     }
 }
 
@@ -158,8 +159,6 @@ class UserDataSchema {
     static readonly NAME = "name";
 
     static readonly EMAIL = "email";
-
-    static readonly SHARED = "sharedWithMe";
 
     static makePath(): string {
         return "/users";
@@ -177,12 +176,39 @@ class UserDataSchema {
         return `${this.makeUserPath(uid)}/${this.EMAIL}`;
     }
 
-    static makeSharedModelsPath(uid: string): string {
-        return `${this.makeUserPath(uid)}/${this.SHARED}`;
+    static makeUserData(
+        name: string,
+        email: string
+    ): Object {
+        return {
+            [`${this.NAME}`]: name,
+            [`${this.EMAIL}`]: email
+        };
+    }
+}
+
+class ModelPermissionsSchema {
+
+    static readonly PUBLIC = "public";
+
+    static makePath(): string {
+        return "/modelPermissions";
     }
 
-    static makeSharedModelPath(uid: string, modelUuid: string): string {
-        return `${this.makeSharedModelsPath(uid)}/${modelUuid}`;
+    static makePublicModelsPath(): string {
+        return `${this.makePath()}/${this.PUBLIC}`;
+    }
+
+    static makePublicModelPath(modelId: string): string {
+        return `${this.makePublicModelsPath()}/${modelId}`;
+    }
+
+    static makeUserSharedModelsPath(uid: string): string {
+        return `${this.makePath()}/${uid}`;
+    }
+
+    static makeSharedModelPath(uid: string, modelId: string): string {
+        return `${this.makeUserSharedModelsPath(uid)}/${modelId}`;
     }
 }
 
@@ -193,5 +219,7 @@ export default class RTDBSchema {
     static readonly ModelMetadata = ModelMetadataSchema;
 
     static readonly User = UserDataSchema;
+
+    static readonly ModelPermissions = ModelPermissionsSchema;
 
 }

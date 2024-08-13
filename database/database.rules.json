@@ -1,12 +1,74 @@
 {
-  "rules": {
-    ".read": true,
-      ".write": true,
-      "modelMeta": {
-          ".indexOn": ["ownerUid", "visibility"]
-      },
-      "users": {
-          ".indexOn": ["name"]
-      }
-  }
+    "rules": {
+        ".read": false,
+        ".write": false,
+        "models": {
+            "$model_id": {
+                ".read": "auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).exists() || root.child('modelPermissions/public/' + $model_id).exists() )",
+                ".write": "!newData.exists() && auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')",
+                "components": {
+                    ".write": "auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')"
+                },
+                "scenarios": {
+                    ".write": "auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')"
+                },
+                "substitutions": {
+                    "$replaced_id": {
+                        ".write": "auth.uid !== null && (!data.exists() || !newData.exists()) && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')"
+                    }
+                },
+                "loadedModels": {
+                    "$saved_model_id": {
+                        ".write": "auth.uid !== null && (!data.exists() || !newData.exists()) && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')"
+                    }
+                }
+            }
+        },
+        "modelMeta": {
+            ".indexOn": ["ownerUid"],
+            "$model_id": {
+                ".write": "auth.uid !== null && ( ( !newData.exists() && data.child('ownerUid').val() === auth.uid ) || ( !data.exists() && newData.child('ownerUid').val() === auth.uid && newData.child('type').exists() ) )",
+                "sharedWith": {
+                    ".write": "auth.uid !== null && newData.parent().child('ownerUid').val() === auth.uid && !newData.child(auth.uid).exists()",
+                    ".read": "auth.uid !== null && data.parent().child('ownerUid').val() === auth.uid",
+                    "$uid": {
+                        ".read": "auth.uid !== null && $uid === auth.uid"
+                    }
+                },
+                "name": {
+                    ".write": "auth.uid !== null && newData.parent().child('ownerUid').val() === auth.uid && ( newData.exists() || !newData.parent().exists() )",
+                    ".read": "auth.uid !== null && ( data.parent().child('ownerUid').val() === auth.uid || data.parent().child('sharedWith/' + auth.uid).exists() || root.child('modelPermissions/public/' + $model_id).exists() )"
+                },
+                "ownerUid": {
+                    ".write": "auth.uid !== null && !data.exists() && newData.val() === auth.uid",
+                    ".read": "auth.uid !== null && ( data.parent().child('ownerUid').val() === auth.uid || data.parent().child('sharedWith/' + auth.uid).exists() || root.child('modelPermissions/public/' + $model_id).exists() )"
+                },
+                "type": {
+                    ".write": "auth.uid !== null && ( (!data.exists() && newData.parent().child('ownerUid').exists()) || !newData.parent().exists() )",
+                    ".read": "auth.uid !== null && ( data.parent().child('ownerUid').val() === auth.uid || data.parent().child('sharedWith/' + auth.uid).exists() || root.child('modelPermissions/public/' + $model_id).exists() )"
+                }
+            }
+        },
+        "users": {
+            ".indexOn": ["name"],
+            "$uid": {
+                ".read": "auth.uid !== null",
+                ".write": "auth.uid !== null && auth.uid === $uid"
+            }
+        },
+        "modelPermissions": {
+            "public": {
+                ".read": "auth.uid !== null",
+                "$model_id": {
+                    ".write": "auth.uid !== null && auth.uid === root.child('modelMeta/' + $model_id + '/ownerUid').val()"
+                }
+            },
+            "$uid": {
+                ".read": "auth.uid !== null && auth.uid === $uid",
+                "$model_id": {
+                    ".write": "auth.uid !== null && auth.uid !== $uid && root.child('users/' + $uid).exists() && auth.uid === root.child('modelMeta/' + $model_id + '/ownerUid').val()",
+                }
+            }
+        }
+    }
 }

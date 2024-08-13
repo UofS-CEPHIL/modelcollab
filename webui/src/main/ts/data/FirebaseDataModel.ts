@@ -114,7 +114,11 @@ export default class FirebaseDataModel {
                 this.firebaseManager.getDb(),
                 RTDBSchema.ModelData.makeComponentsPath(sessionId)
             ),
-            s => this.triggerCallback(s, callback)
+            s => this.triggerCallback(s, callback),
+            e => {
+                console.error(e);
+                callback([]);
+            }
         );
     }
 
@@ -152,7 +156,11 @@ export default class FirebaseDataModel {
         const myuid = this.getCurrentUserUid();
         return onValue(
             this.makeOwnedModelsQuery(myuid),
-            s => callback(s.val() ?? {})
+            s => callback(s.val() ?? {}),
+            e => {
+                console.error(e);
+                callback({});
+            }
         );
     }
 
@@ -179,7 +187,7 @@ export default class FirebaseDataModel {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.User.makeSharedModelsPath(myuid)
+                RTDBSchema.ModelPermissions.makeUserSharedModelsPath(myuid)
             ),
             s => {
                 if (s.exists()) {
@@ -200,6 +208,10 @@ export default class FirebaseDataModel {
                 else {
                     callback({});
                 }
+            },
+            e => {
+                console.error(e);
+                callback({});
             }
         );
     }
@@ -551,42 +563,6 @@ export default class FirebaseDataModel {
         );
     }
 
-    public subscribeToSessionOverrides(
-        modelUuid: string,
-        callback: (_: FirebasePropertyOverrides) => void
-    ): Unsubscribe {
-        return onValue(
-            ref(
-                this.firebaseManager.getDb(),
-                RTDBSchema.ModelData.makeOverridesPath(modelUuid)
-            ),
-            snapshot => {
-                if (snapshot.exists() && snapshot.key) {
-                    callback(snapshot.val() as FirebasePropertyOverrides)
-                }
-            }
-        );
-    }
-
-    public async addComponentOverride(
-        modelUuid: string,
-        staticModelCptId: string,
-        cptId: string,
-        override: ComponentPropertyOverrides
-    ): Promise<void> {
-        await set(
-            ref(
-                this.firebaseManager.getDb(),
-                RTDBSchema.ModelData.makeOverridePath(
-                    modelUuid,
-                    staticModelCptId,
-                    cptId
-                ),
-            ),
-            override
-        );
-    }
-
     public async deleteModel(modelUuid: string): Promise<void> {
         await remove(
             ref(
@@ -692,7 +668,10 @@ export default class FirebaseDataModel {
         await set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.User.makeSharedModelPath(userUid, modelUuid)
+                RTDBSchema.ModelPermissions.makeSharedModelPath(
+                    userUid,
+                    modelUuid
+                )
             ),
             true
         );
@@ -714,7 +693,10 @@ export default class FirebaseDataModel {
         await remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.User.makeSharedModelPath(userUid, modelUuid)
+                RTDBSchema.ModelPermissions.makeSharedModelPath(
+                    userUid,
+                    modelUuid
+                )
             )
         )
     }
@@ -816,8 +798,10 @@ export default class FirebaseDataModel {
                 ),
                 {
                     ...result.val(),
-                    name: user.displayName,
-                    email: user.email
+                    ...RTDBSchema.User.makeUserData(
+                        user.displayName,
+                        user.email
+                    )
                 }
             );
         }

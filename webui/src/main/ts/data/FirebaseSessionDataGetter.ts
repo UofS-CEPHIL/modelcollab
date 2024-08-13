@@ -41,7 +41,6 @@ export default class FirebaseSessionDataGetter {
         onLoadedModelsUpdated: (models: LoadedStaticModel[]) => void,
         onScenariosUpdated: (scenarios: FirebaseScenario[]) => void,
         onSubstitutionsUpdated: (subs: FirebaseSubstitution[]) => void,
-        onOverridesUpdated: (overrides: FirebasePropertyOverrides) => void,
     ): () => void {
         // A stock flow model is treated the same in the DB as
         // a CLD but with sub-models and scenarios
@@ -65,18 +64,12 @@ export default class FirebaseSessionDataGetter {
                 modelUuid,
                 onSubstitutionsUpdated
             );
-        const unsubOverrides = this.firebaseDataModel
-            .subscribeToSessionOverrides(
-                modelUuid,
-                onOverridesUpdated
-            );
 
         return () => {
             unsubLoadedModels();
             unsubScenarios();
             unsubOtherComponents();
             unsubSubstitutions();
-            unsubOverrides();
         };
     }
 }
