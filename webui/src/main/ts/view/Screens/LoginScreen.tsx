@@ -28,6 +28,13 @@ export default class LoginScreen extends React.Component<Props> {
                     If your model has been deleted, or if you somehow put your
                     model into a state where it is unusable, contact Eric at
                     eric.redekopp@usask.ca to recover it.
+
+                    ModelCollab will collect your name and email address, and
+                    other users will be able to search for you by name or email
+                    when sharing models. By logging in to ModelCollab, you agree
+                    to have your name and email address publicly available to
+                    other users.
+
                     All authentication is handled through Google:
                     click the button below to log in!
 
