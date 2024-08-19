@@ -1,16 +1,14 @@
-import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update, query, orderByChild, equalTo, Query, startAt, endAt, startAfter } from "firebase/database";
+import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update, query, orderByChild } from "firebase/database";
 // @ts-ignore can't find types
 import { v4 as createUuid } from "uuid";
 import FirebaseComponent from "./components/FirebaseComponent";
 import { createFirebaseDataComponent } from "./components/FirebaseComponentBuilder";
 import FirebaseManager from "./FirebaseManager";
-import RTDBSchema, { Permission, Visibility } from "./RTDBSchema";
+import RTDBSchema, { Permission } from "./RTDBSchema";
 import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
 import FirebaseScenario from "./components/FirebaseScenario";
 import ComponentType from "./components/ComponentType";
 import FirebaseSubstitution from "./components/FirebaseSubstitution";
-import FirebasePropertyOverrides, { ComponentPropertyOverrides } from "./components/FirebasePropertyOverrides";
-import { User } from "firebase/auth";
 
 export enum ModelType {
     CausalLoop = "CL",
@@ -85,8 +83,8 @@ export default class FirebaseDataModel {
                 )
             ),
             {
-                type: component.getType().toString(),
-                data: component.getData()
+                "type": component.getType().toString(),
+                "data": component.getData()
             }
         );
     }
@@ -122,20 +120,14 @@ export default class FirebaseDataModel {
         );
     }
 
-    private makeOwnedModelsQuery(uid: string): Query {
-        return query(
-            ref(
-                this.firebaseManager.getDb(),
-                RTDBSchema.ModelMetadata.makePath()
-            ),
-            orderByChild(RTDBSchema.ModelMetadata.OWNER),
-            equalTo(uid),
-        );
-    }
-
     public async getOwnedModels(): Promise<ModelsList> {
         const myuid = this.getCurrentUserUid();
-        const result = await get(this.makeOwnedModelsQuery(myuid));
+        const result = await get(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.User.makeUserModelsPath(myuid)
+            )
+        );
 
         if (result.exists()) {
             return Object.fromEntries(
@@ -150,13 +142,100 @@ export default class FirebaseDataModel {
         }
     }
 
+    public subscribeToOwnedModel(
+        modelUuid: string,
+        callback: (m?: BasicModelInfo) => void
+    ): Unsubscribe {
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelMetadata.makeModelPath(modelUuid)
+            ),
+            s => callback(s.val()),
+            e => {
+                console.error(e);
+                callback(undefined);
+            }
+        );
+    }
+
     public subscribeToOwnedModels(
         callback: (m: ModelsList) => void
     ): Unsubscribe {
+
+        let unsubs: { [uuid: string]: Unsubscribe } = {};
+        let models: ModelsList = {};
+
+        const onModelUpdated = (id: string, s: DataSnapshot) => {
+            if (s.exists()) {
+                models[id] = s.val();
+            }
+            else {
+                unsubs = Object.fromEntries(
+                    Object.entries(unsubs).filter(([k, _]) => k !== id)
+                );
+                models = Object.fromEntries(
+                    Object.entries(models).filter(([k, _]) => k !== id)
+                );
+            }
+        };
+
+        const handleOwnedModelsListSnapshot = (s: DataSnapshot) => {
+            if (s.exists()) {
+                const oldUnsubIds = Object.keys(unsubs);
+                const oldModelIds = Object.keys(models);
+                if (oldUnsubIds.sort() !== oldModelIds.sort()) {
+                    console.error(
+                        `Found irregularity in 'unsubscribe' and 'models' ` +
+                        `lists. Models: ${oldModelIds}, ` +
+                        `Unsubscribes: ${oldUnsubIds}`
+                    );
+                }
+                const newIdsList = Object.keys(s.val());
+                const addedIds = newIdsList.filter(
+                    id => !oldUnsubIds.includes(id)
+                );
+                const removedIds = oldUnsubIds.filter(
+                    id => !newIdsList.includes(id)
+                );
+
+                addedIds.forEach(id => unsubs[id] = onValue(
+                    ref(
+                        this.firebaseManager.getDb(),
+                        RTDBSchema.ModelMetadata.makeModelPath(id)
+                    ),
+                    s => onModelUpdated(id, s)
+                ));
+
+                removedIds.forEach(id => {
+                    unsubs[id]
+                        ? unsubs[id]()
+                        : console.error(
+                            `Tried to unsubscribe from model with id ` +
+                            `${id} but funciton didn't exist`
+                        );
+                    unsubs = Object.fromEntries(
+                        Object.entries(unsubs).filter(([k, _]) => k !== id)
+                    );
+                    models = Object.fromEntries(
+                        Object.entries(models).filter(([k, _]) => k !== id)
+                    );
+                });
+
+                callback(models);
+            }
+            else {
+                callback({});
+            }
+        }
+
         const myuid = this.getCurrentUserUid();
         return onValue(
-            this.makeOwnedModelsQuery(myuid),
-            s => callback(s.val() ?? {}),
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.User.makeUserModelsPath(myuid)
+            ),
+            s => handleOwnedModelsListSnapshot(s),
             e => {
                 console.error(e);
                 callback({});
@@ -223,11 +302,8 @@ export default class FirebaseDataModel {
             query(
                 ref(
                     this.firebaseManager.getDb(),
-                    RTDBSchema.ModelMetadata.makePath()
-                ),
-                orderByChild(RTDBSchema.ModelMetadata.VISIBILITY),
-                startAfter("Private"),
-                endAt("~")
+                    RTDBSchema.ModelPermissions.makePublicModelsPath()
+                )
             ),
             s => {
                 if (s.exists()) {
@@ -369,21 +445,29 @@ export default class FirebaseDataModel {
     }
 
     private async addModel(name: string, modelType: ModelType): Promise<void> {
-        // Set the model metadata. The data itself will be populated when the
-        // user adds the first component to the model
+        // Set the model metadata and add it to the user's list of models. The
+        // data itself will be populated when the user adds the first component
+        // to the model
         const myuid = this.getCurrentUserUid();
+        const uuid = createUuid();
         await set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelMetadata.makeModelPath(createUuid()),
+                RTDBSchema.ModelMetadata.makeModelPath(uuid),
             ),
             RTDBSchema.ModelMetadata.makeMetadataObject(
                 myuid,
                 {},
                 name,
-                modelType,
-                Visibility.PRIVATE
+                modelType
             )
+        );
+        await set(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.User.makeUserModelPath(myuid, uuid)
+            ),
+            true
         );
     }
 
@@ -576,6 +660,15 @@ export default class FirebaseDataModel {
                 RTDBSchema.ModelMetadata.makeModelPath(modelUuid)
             )
         );
+        await remove(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.User.makeUserModelPath(
+                    this.getCurrentUserUid(),
+                    modelUuid
+                )
+            )
+        );
     }
 
     public async renameModel(
@@ -701,31 +794,31 @@ export default class FirebaseDataModel {
         )
     }
 
-    public subscribeToModelVisibility(
+    public subscribeToModelPublicPermissions(
         modelUuid: string,
-        callback: (v?: Visibility) => void
+        callback: (p?: Permission) => void
     ): Unsubscribe {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelMetadata.makeModelVisibilityPath(modelUuid)
+                RTDBSchema.ModelPermissions.makePublicModelPath(modelUuid)
             ),
             snap => callback(
-                snap.exists() ? snap.val() as Visibility : undefined
+                snap.exists() ? snap.val() as Permission : undefined
             )
         );
     }
 
-    public async setModelVisibility(
+    public async setModelPublicPermissions(
         modelUuid: string,
-        visibility: Visibility
+        permission?: Permission
     ): Promise<void> {
         await set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelMetadata.makeModelVisibilityPath(modelUuid)
+                RTDBSchema.ModelPermissions.makePublicModelPath(modelUuid)
             ),
-            visibility
+            permission
         );
     }
 

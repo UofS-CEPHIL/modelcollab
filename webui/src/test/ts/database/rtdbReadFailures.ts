@@ -1,6 +1,6 @@
-import RTDBSchema from "../../../../main/ts/data/RTDBSchema";
+import RTDBSchema from "../../../main/ts/data/RTDBSchema";
 import { v4 as uuid } from "uuid";
-import { UID_1, Database } from "./rtdbRules.test";
+import { UID_1, Database } from "./rtdb.test";
 import { assertFails } from "@firebase/rules-unit-testing";
 import { ref, get } from "firebase/database";
 
@@ -321,6 +321,7 @@ export async function cannotReadUserInfo(
 ): Promise<void> {
     await cannotReadUserName(db, uid);
     await cannotReadUserEmail(db, uid);
+    await cannotReadUserSharedModels(db, uid);
 }
 
 export async function cannotReadUserName(
@@ -346,6 +347,35 @@ export async function cannotReadUserEmail(
             ref(
                 db,
                 RTDBSchema.User.makeUserEmailPath(uid)
+            )
+        )
+    );
+}
+
+export async function cannotReadUserOwnedModels(
+    db: Database,
+    uid: string
+): Promise<void> {
+    await assertFails(
+        get(
+            ref(
+                db,
+                RTDBSchema.ModelPermissions.makeUserModelsPath(uid)
+            )
+        )
+    );
+}
+
+export async function cannotReadUserOwnedModel(
+    db: Database,
+    uid: string,
+    modelUuid: string
+): Promise<void> {
+    await assertFails(
+        get(
+            ref(
+                db,
+                RTDBSchema.ModelPermissions.makeUserModelPath(uid, modelUuid)
             )
         )
     );
@@ -412,7 +442,6 @@ export async function cannotReadAnything(
 ): Promise<void> {
     await cannotReadUnexpectedLocations(db);
     await cannotReadModelData(db, uuid());
-    await cannotReadModelMetadataNameExcl(db, uuid());
     await cannotReadUserInfo(db, UID_1);
     await cannotReadUserSharedModels(db, UID_1)
     await cannotReadUserSharedModel(db, UID_1, uuid())

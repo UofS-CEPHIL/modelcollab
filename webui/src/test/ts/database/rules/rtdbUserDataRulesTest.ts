@@ -1,17 +1,12 @@
-import { v4 as uuid } from "uuid";
-import { ref, get, set } from "firebase/database";
 import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
-import { cannotReadUserEmail, cannotReadUserInfo, cannotReadUserName, cannotReadUserSharedModel, cannotReadUserSharedModels } from "./rtdbReadFailures";
-import { canReadUserEmail, canReadUserInfo, canReadUserName, canReadUserSharedModel, canReadUserSharedModels } from "./rtdbReadSuccesses";
-import { EMAIL_1, EMAIL_2, EMAIL_3, MODELID_1, MODELNAME_1, NAME_1, NAME_2, NAME_3, UID_1, UID_2, UID_3, getDb, UID_UNAUTHENTICATED, env } from "./rtdbRules.test";
-import { cannotEditUserEmail, cannotEditUserName, cannotRemoveAllUserEntries, cannotRemoveUserEntry, cannotShareModelInPermissions, cannotWriteNewUser } from "./rtdbWriteFailures";
-import { canEditUserEmail, canEditUserName, canRemoveUserEntry, canShareModelInPermissions, canWriteModelMetadata, canWriteNewUser } from "./rtdbWriteSuccesses";
-import RTDBSchema from "../../../../main/ts/data/RTDBSchema";
-import { assertFails } from "@firebase/rules-unit-testing";
+import { cannotReadUserEmail, cannotReadUserName, cannotReadUserOwnedModel, cannotReadUserOwnedModels } from "../rtdbReadFailures";
+import { canReadUserEmail, canReadUserName, canReadUserOwnedModel, canReadUserOwnedModels, } from "../rtdbReadSuccesses";
+import { EMAIL_1, EMAIL_2, EMAIL_3, MODELID_1, MODELNAME_1, NAME_1, NAME_2, NAME_3, UID_1, UID_2, UID_3, getDb, UID_UNAUTHENTICATED, env, MODELID_2 } from "../rtdb.test";
+import { cannotAddUserOwnedModel, cannotEditUserEmail, cannotEditUserName, cannotRemoveAllUserEntries, cannotRemoveUserEntry, cannotRemoveUserOwnedModel, cannotWriteNewUser } from "../rtdbWriteFailures";
+import { canAddUserOwnedModel, canEditUserEmail, canEditUserName, canRemoveUserEntry, canRemoveUserOwnedModel, canWriteModelMetadata, canWriteNewUser } from "../rtdbWriteSuccesses";
 
 export default function describeUserDataRulesTests(): void {
     describe("User data", () => {
-
         beforeEach(async () => {
             await env!.withSecurityRulesDisabled(async ctx => {
                 const db = ctx.database();
@@ -33,6 +28,11 @@ export default function describeUserDataRulesTests(): void {
                     MODELNAME_1,
                     ModelType.StockFlow,
                     UID_1
+                );
+                await canAddUserOwnedModel(
+                    db,
+                    UID_1,
+                    MODELID_1
                 );
             });
         });
@@ -110,6 +110,78 @@ export default function describeUserDataRulesTests(): void {
             async () => await cannotEditUserName(
                 getDb(UID_2),
                 UID_1
+            )
+        );
+
+        test(
+            "User permitted to read their own owned models list",
+            async () => await canReadUserOwnedModels(
+                getDb(UID_1),
+                UID_1
+            )
+        );
+
+        test(
+            "User permitted to read their own owned model",
+            async () => await canReadUserOwnedModel(
+                getDb(UID_1),
+                UID_1,
+                MODELID_1
+            )
+        );
+
+        test(
+            "User permitted to add a model to their owned models list",
+            async () => await canAddUserOwnedModel(
+                getDb(UID_1),
+                UID_1,
+                MODELID_2
+            )
+        );
+
+        test(
+            "User permitted to remove a model from their owned models list",
+            async () => await canRemoveUserOwnedModel(
+                getDb(UID_1),
+                UID_1,
+                MODELID_1
+            )
+        );
+
+        test(
+            "User not permitted to read other user's owned models list",
+            async () => await cannotReadUserOwnedModels(
+                getDb(UID_2),
+                UID_1
+            )
+        );
+
+        test(
+            "User not permitted to read other user's owned model",
+            async () => await cannotReadUserOwnedModel(
+                getDb(UID_2),
+                UID_1,
+                MODELID_1
+            )
+        );
+
+        test(
+            "User not permitted to add a model to another user's owned " +
+            "models list",
+            async () => await cannotAddUserOwnedModel(
+                getDb(UID_2),
+                UID_1,
+                MODELID_2
+            )
+        );
+
+        test(
+            "User not permitted to remove a model from another user's owned " +
+            "models list",
+            async () => await cannotRemoveUserOwnedModel(
+                getDb(UID_2),
+                UID_1,
+                MODELID_1
             )
         );
 
@@ -198,6 +270,43 @@ export default function describeUserDataRulesTests(): void {
             async () => await cannotReadUserEmail(
                 getDb(UID_UNAUTHENTICATED),
                 UID_1
+            )
+        );
+
+        test(
+            "Unauthenticated user not permitted to read user's owned models",
+            async () => await cannotReadUserOwnedModels(
+                getDb(UID_UNAUTHENTICATED),
+                UID_1
+            )
+        );
+
+        test(
+            "Unauthenticated user not permitted to read user's owned model",
+            async () => await cannotReadUserOwnedModel(
+                getDb(UID_UNAUTHENTICATED),
+                UID_1,
+                MODELID_1
+            )
+        );
+
+        test(
+            "Unauthenticated user not permitted to add a model to a user's " +
+            "owned models list",
+            async () => await cannotAddUserOwnedModel(
+                getDb(UID_UNAUTHENTICATED),
+                UID_1,
+                MODELID_2
+            )
+        );
+
+        test(
+            "Unauthenticated user not permitted to remove a model from a " +
+            "user's owned models list",
+            async () => await cannotRemoveUserOwnedModel(
+                getDb(UID_UNAUTHENTICATED),
+                UID_1,
+                MODELID_1
             )
         );
     });

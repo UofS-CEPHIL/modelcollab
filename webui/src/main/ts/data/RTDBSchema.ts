@@ -6,6 +6,8 @@ class ModelDataSchema {
 
     static readonly SCENARIOS = "scenarios";
 
+    static readonly SCENARIO_OVERRIDES = "overrides";
+
     static readonly SUBSTITUTIONS = "substitutions";
 
     static readonly SAVED_MODELS = "loadedModels";
@@ -37,13 +39,21 @@ class ModelDataSchema {
         return this.makeScenariosPath(modelUuid) + `/${scenarioId}`;
     }
 
+    static makeScenarioComponentsPath(
+        modelUuid: string,
+        scenarioId: string
+    ): string {
+        return `${this.makeScenarioPath(modelUuid, scenarioId)}` +
+            `/${this.SCENARIO_OVERRIDES}`;
+    }
+
     static makeScenarioComponentPath(
         modelUuid: string,
         scenarioId: string,
         parameterName: string
     ): string {
-        const parent = this.makeScenarioPath(modelUuid, scenarioId);
-        return `${parent}/${parameterName}`;
+        return `${this.makeScenarioComponentsPath(modelUuid, scenarioId)}` +
+            `/${parameterName}`;
     }
 
     static makeScenarioStartTimePath(
@@ -180,16 +190,19 @@ class UserDataSchema {
         name: string,
         email: string
     ): Object {
-        return {
+        let data: { [fieldName: string]: any } = {
             [`${this.NAME}`]: name,
-            [`${this.EMAIL}`]: email
+            [`${this.EMAIL}`]: email,
         };
+        return data;
     }
 }
 
 class ModelPermissionsSchema {
 
     static readonly PUBLIC = "public";
+
+    static readonly OWNERS = "owners";
 
     static makePath(): string {
         return "/modelPermissions";
@@ -209,6 +222,18 @@ class ModelPermissionsSchema {
 
     static makeSharedModelPath(uid: string, modelId: string): string {
         return `${this.makeUserSharedModelsPath(uid)}/${modelId}`;
+    }
+
+    static makeModelOwnersPath(): string {
+        return `${this.makePath()}/${this.OWNERS}`;
+    }
+
+    static makeUserModelsPath(uid: string): string {
+        return `${this.makeModelOwnersPath()}/${uid}`;
+    }
+
+    static makeUserModelPath(uid: string, modelId: string): string {
+        return `${this.makeUserModelsPath(uid)}/${modelId}`;
     }
 }
 

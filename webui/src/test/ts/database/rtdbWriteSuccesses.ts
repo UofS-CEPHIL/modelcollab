@@ -1,17 +1,17 @@
 import { assertSucceeds } from "@firebase/rules-unit-testing";
 import { ref, remove, set } from "firebase/database";
 import { v4 as uuid } from "uuid";
-import FirebaseComponent from "../../../../main/ts/data/components/FirebaseComponent";
-import FirebaseScenario from "../../../../main/ts/data/components/FirebaseScenario";
-import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
-import RTDBSchema, { Permission, Visibility } from "../../../../main/ts/data/RTDBSchema";
-import { Database } from "./rtdbRules.test";
+import FirebaseComponent from "../../../main/ts/data/components/FirebaseComponent";
+import FirebaseScenario from "../../../main/ts/data/components/FirebaseScenario";
+import { ModelType } from "../../../main/ts/data/FirebaseDataModel";
+import RTDBSchema, { Permission } from "../../../main/ts/data/RTDBSchema";
+import { Database } from "./rtdb.test";
 
 export async function canWriteNewUser(
     db: Database,
     uid: string,
-    name: string,
-    email: string,
+    name: string = "John Smith",
+    email: string = "js@example.com",
 ): Promise<void> {
     await assertSucceeds(
         set(
@@ -23,6 +23,22 @@ export async function canWriteNewUser(
                 name,
                 email,
             )
+        )
+    );
+}
+
+export async function canWriteModelData(
+    db: Database,
+    modelId: string,
+    data: any
+): Promise<void> {
+    await assertSucceeds(
+        set(
+            ref(
+                db,
+                RTDBSchema.ModelData.makeModelPath(modelId)
+            ),
+            data
         )
     );
 }
@@ -55,6 +71,38 @@ export async function canEditUserEmail(
                 RTDBSchema.User.makeUserEmailPath(uid)
             ),
             newEmail
+        )
+    );
+}
+
+export async function canAddUserOwnedModel(
+    db: Database,
+    uid: string,
+    modelUuid: string,
+    val: any = true
+): Promise<void> {
+    await assertSucceeds(
+        set(
+            ref(
+                db,
+                RTDBSchema.ModelPermissions.makeUserModelPath(uid, modelUuid)
+            ),
+            val
+        )
+    );
+}
+
+export async function canRemoveUserOwnedModel(
+    db: Database,
+    uid: string,
+    modelUuid: string
+): Promise<void> {
+    await assertSucceeds(
+        remove(
+            ref(
+                db,
+                RTDBSchema.ModelPermissions.makeUserModelPath(uid, modelUuid)
+            )
         )
     );
 }
@@ -230,7 +278,7 @@ export async function canWriteComponent(
                     component.getId()
                 )
             ),
-            component.getData()
+            component.toFirebaseEntry()[1]
         )
     );
 }
@@ -281,14 +329,14 @@ export async function canAddValueToScenario(
     db: Database,
     modelId: string,
     scenarioId: string,
-    componentId: string,
+    componentName: string,
     componentValue: string
 ): Promise<void> {
     await canEditScenarioValue(
         db,
         modelId,
         scenarioId,
-        componentId,
+        componentName,
         componentValue
     );
 }
@@ -297,7 +345,7 @@ export async function canEditScenarioValue(
     db: Database,
     modelId: string,
     scenarioId: string,
-    componentId: string,
+    componentName: string,
     componentValue: string
 ): Promise<void> {
     await assertSucceeds(
@@ -307,7 +355,7 @@ export async function canEditScenarioValue(
                 RTDBSchema.ModelData.makeScenarioComponentPath(
                     modelId,
                     scenarioId,
-                    componentId
+                    componentName
                 )
             ),
             componentValue
@@ -319,7 +367,7 @@ export async function canDeleteScenarioValue(
     db: Database,
     modelId: string,
     scenarioId: string,
-    componentId: string
+    parameterName: string,
 ): Promise<void> {
     await assertSucceeds(
         remove(
@@ -328,7 +376,7 @@ export async function canDeleteScenarioValue(
                 RTDBSchema.ModelData.makeScenarioComponentPath(
                     modelId,
                     scenarioId,
-                    componentId
+                    parameterName
                 )
             )
         )

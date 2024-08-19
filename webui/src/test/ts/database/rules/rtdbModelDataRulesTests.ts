@@ -3,11 +3,11 @@ import FirebaseScenario from "../../../../main/ts/data/components/FirebaseScenar
 import FirebaseStock from "../../../../main/ts/data/components/FirebaseStock";
 import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
 import { Permission } from "../../../../main/ts/data/RTDBSchema";
-import { cannotReadComponent, cannotReadComponents, cannotReadScenario, cannotReadScenarioName, cannotReadScenarios, cannotReadScenarioStartTime, cannotReadScenarioStopTime, cannotReadScenarioValue, cannotReadStaticModel, cannotReadStaticModelComponent, cannotReadStaticModels, cannotReadSubstitution, cannotReadSubstitutions } from "./rtdbReadFailures";
-import { canReadComponent, canReadComponents, canReadScenario, canReadScenarioName, canReadScenarios, canReadScenarioStartTime, canReadScenarioStopTime, canReadScenarioValue, canReadStaticModel, canReadStaticModelComponent, canReadStaticModels, canReadSubstitution, canReadSubstitutions } from "./rtdbReadSuccesses";
-import { EMAIL_1, EMAIL_2, EMAIL_3, MODELID_1, MODELNAME_1, NAME_1, NAME_2, NAME_3, PARAM_1, STOCK_1, UID_1, UID_2, UID_3, Database, getDb, UID_UNAUTHENTICATED, COMPONENT_1, SUB_REPLACED_ID, SUB_REPLACEMENT_ID, SCENARIO, STATIC_MODEL_ID, COMPONENT_2, env } from "./rtdbRules.test";
-import { cannotAddScenario, cannotAddStaticModel, cannotAddSubstitution, cannotDeleteComponent, cannotDeleteScenario, cannotDeleteStaticModel, cannotDeleteSubstitution, cannotEditScenario, cannotWriteStaticModelComponent, cannotEditSubstitution, cannotWriteComponent, cannotDeleteStaticModelComponent, cannotDeleteEntireModelDataList, cannotDeleteModelData } from "./rtdbWriteFailures";
-import { canAddModelSharedUserToMetadata, canAddScenario, canAddStaticModel, canAddSubstitution, canAddValueToScenario, canDeleteModelData, canDeleteScenario, canDeleteScenarioValue, canDeleteStaticModel, canDeleteSubstitution, canEditModelSharedUserInMetadata, canEditScenario, canEditScenarioValue, canRemoveComponent, canWriteComponent, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "./rtdbWriteSuccesses";
+import { cannotReadComponent, cannotReadComponents, cannotReadScenario, cannotReadScenarioName, cannotReadScenarios, cannotReadScenarioStartTime, cannotReadScenarioStopTime, cannotReadScenarioValue, cannotReadStaticModel, cannotReadStaticModelComponent, cannotReadStaticModels, cannotReadSubstitution, cannotReadSubstitutions } from "../rtdbReadFailures";
+import { canReadComponent, canReadComponents, canReadScenario, canReadScenarioName, canReadScenarios, canReadScenarioStartTime, canReadScenarioStopTime, canReadScenarioValue, canReadStaticModel, canReadStaticModelComponent, canReadStaticModels, canReadSubstitution, canReadSubstitutions } from "../rtdbReadSuccesses";
+import { EMAIL_1, EMAIL_2, EMAIL_3, MODELID_1, MODELNAME_1, NAME_1, NAME_2, NAME_3, PARAM_1, STOCK_1, UID_1, UID_2, UID_3, Database, getDb, UID_UNAUTHENTICATED, COMPONENT_1, SUB_REPLACED_ID, SUB_REPLACEMENT_ID, SCENARIO, STATIC_MODEL_ID, COMPONENT_2, env } from "../rtdb.test";
+import { cannotAddScenario, cannotAddStaticModel, cannotAddSubstitution, cannotDeleteComponent, cannotDeleteScenario, cannotDeleteStaticModel, cannotDeleteSubstitution, cannotEditScenario, cannotWriteStaticModelComponent, cannotEditSubstitution, cannotWriteComponent, cannotDeleteStaticModelComponent, cannotDeleteEntireModelDataList, cannotDeleteModelData } from "../rtdbWriteFailures";
+import { canAddModelSharedUserToMetadata, canAddScenario, canAddStaticModel, canAddSubstitution, canAddValueToScenario, canDeleteModelData, canDeleteScenario, canDeleteScenarioValue, canDeleteStaticModel, canDeleteSubstitution, canEditModelSharedUserInMetadata, canEditScenario, canEditScenarioValue, canRemoveComponent, canWriteComponent, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "../rtdbWriteSuccesses";
 
 export async function setupModelComponents(
     db: Database,
@@ -410,7 +410,7 @@ export default function describeModelDataRulesTests(): void {
                         db!,
                         modelId,
                         SCENARIO.getId(),
-                        Object.keys(SCENARIO.getData().overrides)[0]
+                        Object.keys(SCENARIO.getData().overrides!)[0]
                     )
                 );
 
@@ -545,7 +545,7 @@ export default function describeModelDataRulesTests(): void {
                         db!,
                         modelId,
                         SCENARIO.getId(),
-                        Object.keys(SCENARIO.getData().overrides)[0]
+                        Object.keys(SCENARIO.getData().overrides!)[0]
                     )
                 );
 
@@ -632,7 +632,7 @@ export default function describeModelDataRulesTests(): void {
                         db!,
                         modelId,
                         SCENARIO.getId(),
-                        uuid(),
+                        "name",
                         "123"
                     )
                 );
@@ -851,22 +851,22 @@ export default function describeModelDataRulesTests(): void {
             }
         }
 
-        // describe("Model Metadata Doesn't Exist", () => {
-        //     describe(
-        //         "Authenticated User",
-        //         noPermissionTests(
-        //             UID_1,
-        //             MODELID_1
-        //         )
-        //     );
-        //     describe(
-        //         "Unauthenticated User",
-        //         noPermissionTests(
-        //             UID_UNAUTHENTICATED,
-        //             MODELID_1
-        //         )
-        //     );
-        // });
+        describe("Model Metadata Doesn't Exist", () => {
+            describe(
+                "Authenticated User",
+                noPermissionTests(
+                    UID_1,
+                    MODELID_1
+                )
+            );
+            describe(
+                "Unauthenticated User",
+                noPermissionTests(
+                    UID_UNAUTHENTICATED,
+                    MODELID_1
+                )
+            );
+        });
 
         describe("Model Metadata Exists", () => {
             beforeEach(async () =>

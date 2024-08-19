@@ -1,13 +1,13 @@
 import { v4 as uuid } from "uuid";
 import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
 import { Permission } from "../../../../main/ts/data/RTDBSchema";
-import { cannotReadModelName, cannotReadModelOwner, cannotReadModelSharedUser, cannotReadModelType } from "./rtdbReadFailures";
-import { canReadModelName, canReadModelOwner, canReadModelSharedUser, canReadModelSharedUsers, canReadModelType } from "./rtdbReadSuccesses";
+import { cannotReadModelName, cannotReadModelOwner, cannotReadModelSharedUser, cannotReadModelType } from "../rtdbReadFailures";
+import { canReadModelName, canReadModelOwner, canReadModelSharedUser, canReadModelSharedUsers, canReadModelType } from "../rtdbReadSuccesses";
 
-import { EMAIL_1, EMAIL_2, EMAIL_3, MODELID_1, MODELNAME_1, NAME_1, NAME_2, NAME_3, UID_1, UID_2, UID_3, getDb, UID_UNAUTHENTICATED, Database, env } from "./rtdbRules.test";
-import { cannotAddModelSharedUserToMetadata, cannotEditModelSharedUserInMetadata, cannotRemoveAllModelMetadata, cannotRemoveModelMetadata, cannotRemoveModelName, cannotRemoveModelOwner, cannotRemoveModelSharedUserFromMetadata, cannotRemoveModelSharedUsersFromMetadata, cannotRemoveModelType, cannotWriteModelName, cannotWriteModelOwner, cannotWriteModelType, cannotWriteNewModelMetadata } from "./rtdbWriteFailures";
-import { canAddModelSharedUserToMetadata, canEditModelSharedUserInMetadata, canRemoveModelMetadata, canRemoveModelSharedUserFromMetadata, canShareModelInPermissions, canWriteModelMetadata, canWriteModelName, canWritePublicModel } from "./rtdbWriteSuccesses";
-import { canWriteNewUser } from "./rtdbWriteSuccesses";
+import { EMAIL_1, EMAIL_2, EMAIL_3, MODELID_1, MODELNAME_1, NAME_1, NAME_2, NAME_3, UID_1, UID_2, UID_3, getDb, UID_UNAUTHENTICATED, Database, env } from "../rtdb.test";
+import { cannotAddModelSharedUserToMetadata, cannotEditModelSharedUserInMetadata, cannotRemoveAllModelMetadata, cannotRemoveModelMetadata, cannotRemoveModelName, cannotRemoveModelOwner, cannotRemoveModelSharedUserFromMetadata, cannotRemoveModelSharedUsersFromMetadata, cannotRemoveModelType, cannotWriteModelName, cannotWriteModelOwner, cannotWriteModelType, cannotWriteModelMetadata } from "../rtdbWriteFailures";
+import { canAddModelSharedUserToMetadata, canEditModelSharedUserInMetadata, canRemoveModelMetadata, canRemoveModelSharedUserFromMetadata, canShareModelInPermissions, canWriteModelMetadata, canWriteModelName, canWritePublicModel } from "../rtdbWriteSuccesses";
+import { canWriteNewUser } from "../rtdbWriteSuccesses";
 
 export default function describeModelMetadataRulesTests(): void {
 
@@ -53,7 +53,7 @@ export default function describeModelMetadataRulesTests(): void {
             test(
                 "User not permitted to create metadata for a new model " +
                 "for another user",
-                async () => await cannotWriteNewModelMetadata(
+                async () => await cannotWriteModelMetadata(
                     getDb(UID_1),
                     uuid(),
                     "mymodel2",
@@ -122,7 +122,7 @@ export default function describeModelMetadataRulesTests(): void {
 
             test(
                 "Unauthenticated user not permitted to create a model",
-                async () => await cannotWriteNewModelMetadata(
+                async () => await cannotWriteModelMetadata(
                     getDb(UID_UNAUTHENTICATED),
                     MODELID_1,
                     MODELNAME_1,
@@ -424,7 +424,7 @@ export default function describeModelMetadataRulesTests(): void {
 
             test(
                 "Not permitted to replace model with another one",
-                async () => await cannotWriteNewModelMetadata(
+                async () => await cannotWriteModelMetadata(
                     db!,
                     MODELID_1,
                     "new name",

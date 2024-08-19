@@ -1,19 +1,19 @@
-import RTDBSchema from "../../../../main/ts/data/RTDBSchema";
+import RTDBSchema from "../../../main/ts/data/RTDBSchema";
 import { v4 as uuid } from "uuid";
-import { EMAIL_1, NAME_1, UID_1, UUID_1, Database, STOCK_1, UID_3 } from "./rtdbRules.test";
+import { EMAIL_1, NAME_1, UID_1, UUID_1, Database, STOCK_1, UID_3 } from "./rtdb.test";
 import { assertFails } from "@firebase/rules-unit-testing";
 import { ref, remove, set } from "firebase/database";
-import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
-import FirebaseStock from "../../../../main/ts/data/components/FirebaseStock";
-import FirebaseScenario from "../../../../main/ts/data/components/FirebaseScenario";
-import FirebaseComponent from "../../../../main/ts/data/components/FirebaseComponent";
-import { Permission } from "../../../../main/ts/data/RTDBSchema";
+import { ModelType } from "../../../main/ts/data/FirebaseDataModel";
+import FirebaseStock from "../../../main/ts/data/components/FirebaseStock";
+import FirebaseScenario from "../../../main/ts/data/components/FirebaseScenario";
+import FirebaseComponent from "../../../main/ts/data/components/FirebaseComponent";
+import { Permission } from "../../../main/ts/data/RTDBSchema";
 
 export async function cannotWriteNewUser(
     db: Database,
     uid: string,
-    name: string,
-    email: string
+    name: string = "John Smith",
+    email: string = "js@example.com"
 ): Promise<void> {
     await assertFails(
         set(
@@ -22,6 +22,22 @@ export async function cannotWriteNewUser(
                 RTDBSchema.User.makeUserPath(uid)
             ),
             RTDBSchema.User.makeUserData(name, email)
+        )
+    );
+}
+
+export async function cannotWriteModelData(
+    db: Database,
+    modelId: string,
+    data: any
+): Promise<void> {
+    await assertFails(
+        set(
+            ref(
+                db,
+                RTDBSchema.ModelData.makeModelPath(modelId)
+            ),
+            data
         )
     );
 }
@@ -54,6 +70,52 @@ export async function cannotEditUserEmail(
                 RTDBSchema.User.makeUserEmailPath(uid)
             ),
             newEmail
+        )
+    );
+}
+
+export async function cannotAddUserOwnedModel(
+    db: Database,
+    uid: string,
+    modelUuid: string,
+    val: any = true
+): Promise<void> {
+    await assertFails(
+        set(
+            ref(
+                db,
+                RTDBSchema.ModelPermissions.makeUserModelPath(uid, modelUuid)
+            ),
+            val
+        )
+    );
+}
+
+export async function cannotRemoveUserOwnedModel(
+    db: Database,
+    uid: string,
+    modelUuid: string
+): Promise<void> {
+    await assertFails(
+        remove(
+            ref(
+                db,
+                RTDBSchema.ModelPermissions.makeUserModelPath(uid, modelUuid)
+            )
+        )
+    );
+}
+
+export async function cannotRemoveEntireOwnedModelsList(
+    db: Database,
+    uid: string
+): Promise<void> {
+    await assertFails(
+        remove(
+            ref(
+                db,
+                RTDBSchema.ModelPermissions.makeUserModelsPath(uid)
+            )
         )
     );
 }
@@ -149,7 +211,7 @@ export async function cannotRemoveSharedModelInPermissions(
     );
 }
 
-export async function cannotWriteNewModelMetadata(
+export async function cannotWriteModelMetadata(
     db: Database,
     modelId: string = uuid(),
     modelName: string = "model",
@@ -325,9 +387,29 @@ export async function cannotWriteComponent(
         set(
             ref(
                 db,
-                RTDBSchema.ModelData.makeComponentPath(modelId, component.getId())
+                RTDBSchema.ModelData.makeComponentPath(
+                    modelId,
+                    component.getId()
+                )
             ),
             component.toFirebaseEntry()[1]
+        )
+    );
+}
+
+export async function cannotWriteComponentAsData(
+    db: Database,
+    modelId: string,
+    componentId: string,
+    componentData: any
+): Promise<void> {
+    await assertFails(
+        set(
+            ref(
+                db,
+                RTDBSchema.ModelData.makeComponentPath(modelId, componentId)
+            ),
+            componentData
         )
     );
 }
@@ -400,6 +482,24 @@ export async function cannotAddScenario(
                 RTDBSchema.ModelData.makeScenarioPath(modelId, scenario.getId())
             ),
             scenario.getData()
+        )
+    );
+}
+
+export async function cannotAddScenarioAsData(
+    db: Database,
+    modelId: string,
+    scenarioId: string,
+    scenarioValue: any
+): Promise<void> {
+    await assertFails(
+        set(
+            ref(
+                db,
+                RTDBSchema.ModelData.makeScenariosPath(modelId)
+                + `/${scenarioId}`
+            ),
+            scenarioValue
         )
     );
 }
@@ -666,6 +766,6 @@ export async function cannotRemoveModelOwner(
 export async function cannotWriteAnything(db: Database): Promise<void> {
     await cannotWriteUnexpectedLocations(db);
     await cannotWriteNewUser(db, UID_1, NAME_1, EMAIL_1);
-    await cannotWriteNewModelMetadata(db);
+    await cannotWriteModelMetadata(db);
     await cannotWriteToModel(db, UUID_1);
 }

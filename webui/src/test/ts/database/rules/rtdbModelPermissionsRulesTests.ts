@@ -3,11 +3,11 @@ import { ref, remove } from "firebase/database";
 import { v4 as uuid } from "uuid";
 import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
 import RTDBSchema, { Permission } from "../../../../main/ts/data/RTDBSchema";
-import { cannotReadPublicModels, cannotReadUserSharedModel, cannotReadUserSharedModels } from "./rtdbReadFailures";
-import { canReadPublicModels, canReadUserSharedModel, canReadUserSharedModels } from "./rtdbReadSuccesses";
-import { getDb, UID_1, UID_2, UID_3, MODELID_1, UID_UNAUTHENTICATED, MODELNAME_1, NAME_1, NAME_2, NAME_3, EMAIL_1, EMAIL_2, EMAIL_3, MODELID_2, MODELNAME_2, env } from "./rtdbRules.test";
-import { cannotRemoveEntirePublicModelsList, cannotRemoveEntireSharedModelListInPermissions, cannotRemovePublicModel, cannotRemoveSharedModelInPermissions, cannotShareModelInPermissions, cannotWritePublicModel } from "./rtdbWriteFailures";
-import { canRemovePublicModel, canRemoveSharedModelInPermissions, canShareModelInPermissions, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "./rtdbWriteSuccesses";
+import { cannotReadPublicModels, cannotReadUserSharedModel, cannotReadUserSharedModels } from "../rtdbReadFailures";
+import { canReadPublicModels, canReadUserSharedModel, canReadUserSharedModels } from "../rtdbReadSuccesses";
+import { getDb, UID_1, UID_2, UID_3, MODELID_1, UID_UNAUTHENTICATED, MODELNAME_1, NAME_1, NAME_2, NAME_3, EMAIL_1, EMAIL_2, EMAIL_3, MODELID_2, MODELNAME_2, env } from "../rtdb.test";
+import { cannotRemoveEntirePublicModelsList, cannotRemoveEntireSharedModelListInPermissions, cannotRemovePublicModel, cannotRemoveSharedModelInPermissions, cannotShareModelInPermissions, cannotWritePublicModel } from "../rtdbWriteFailures";
+import { canRemovePublicModel, canRemoveSharedModelInPermissions, canShareModelInPermissions, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "../rtdbWriteSuccesses";
 
 export default function describeModelPermissionsRulesTests(): void {
     describe("Model permissions", () => {

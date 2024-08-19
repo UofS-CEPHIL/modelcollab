@@ -1,9 +1,9 @@
-import { getDb, UID_UNAUTHENTICATED, UID_1, env, NAME_1, EMAIL_1, UID_2, NAME_2, EMAIL_2, UID_3, NAME_3, EMAIL_3, MODELID_1, MODELNAME_1, MODELID_2, MODELNAME_2 } from "./rtdbRules.test";
-import { cannotReadUnexpectedLocations } from "./rtdbReadFailures";
-import { cannotWriteUnexpectedLocations } from "./rtdbWriteFailures";
+import { getDb, UID_UNAUTHENTICATED, UID_1, env, NAME_1, EMAIL_1, UID_2, NAME_2, EMAIL_2, UID_3, NAME_3, EMAIL_3, MODELID_1, MODELNAME_1, MODELID_2, MODELNAME_2 } from "../rtdb.test";
+import { cannotReadUnexpectedLocations } from "../rtdbReadFailures";
+import { cannotWriteUnexpectedLocations } from "../rtdbWriteFailures";
 import { assertFails } from "@firebase/rules-unit-testing";
 import { ref, remove } from "firebase/database";
-import { canShareModelInPermissions, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "./rtdbWriteSuccesses";
+import { canShareModelInPermissions, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "../rtdbWriteSuccesses";
 import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
 import { setupModelComponents } from "./rtdbModelDataRulesTests";
 

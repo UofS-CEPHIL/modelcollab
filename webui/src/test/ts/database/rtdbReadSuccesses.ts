@@ -1,10 +1,7 @@
 import { assertSucceeds } from "@firebase/rules-unit-testing";
 import { ref, get } from "firebase/database";
-import { v4 as uuid } from "uuid";
-import FirebaseComponent from "../../../../main/ts/data/components/FirebaseComponent";
-import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
-import RTDBSchema from "../../../../main/ts/data/RTDBSchema";
-import { Database } from "./rtdbRules.test";
+import RTDBSchema from "../../../main/ts/data/RTDBSchema";
+import { Database } from "./rtdb.test";
 
 export async function canReadUserInfo(
     db: Database,
@@ -37,6 +34,35 @@ export async function canReadUserEmail(
             ref(
                 db,
                 RTDBSchema.User.makeUserEmailPath(uid)
+            )
+        )
+    );
+}
+
+export async function canReadUserOwnedModels(
+    db: Database,
+    uid: string
+): Promise<void> {
+    await assertSucceeds(
+        get(
+            ref(
+                db,
+                RTDBSchema.ModelPermissions.makeUserModelsPath(uid)
+            )
+        )
+    );
+}
+
+export async function canReadUserOwnedModel(
+    db: Database,
+    uid: string,
+    modelUuid: string
+): Promise<void> {
+    await assertSucceeds(
+        get(
+            ref(
+                db,
+                RTDBSchema.ModelPermissions.makeUserModelPath(uid, modelUuid)
             )
         )
     );
