@@ -11,8 +11,14 @@ export default class FirebaseSumVariable
         return ComponentType.SUM_VARIABLE;
     }
 
-    public withData(d: FirebaseTextData): FirebaseSumVariable {
-        return new FirebaseSumVariable(this.getId(), d);
+    public withData(d: Partial<FirebaseTextData>): FirebaseSumVariable {
+        return new FirebaseSumVariable(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...d
+            }
+        );
     }
 
     public withId(id: string): FirebaseSumVariable {

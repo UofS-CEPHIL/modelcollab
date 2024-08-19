@@ -16,9 +16,15 @@ export default class FirebaseFlow
         return ComponentType.FLOW;
     }
 
-    public withData(d: FirebaseFlowData) {
+    public withData(d: Partial<FirebaseFlowData>) {
         FirebasePointerComponent.sanitizePointerData(d);
-        return new FirebaseFlow(this.getId(), d);
+        return new FirebaseFlow(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...d
+            }
+        );
     }
 
     public withId(id: string): FirebaseFlow {

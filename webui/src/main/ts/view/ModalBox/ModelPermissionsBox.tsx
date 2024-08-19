@@ -1,9 +1,9 @@
-import { faBan, faMagnifyingGlass, faPencil, faQuestion, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faBan, faMagnifyingGlass, faPencil, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Autocomplete, CircularProgress, FormControl, FormControlLabel, IconButton, Radio, RadioGroup, Stack, TextField, Chip, Fade, Paper, Grid, Divider, Typography, Tooltip } from "@mui/material";
+import { Autocomplete, CircularProgress, FormControl, FormControlLabel, IconButton, Radio, RadioGroup, Stack, TextField, Chip, Grid, Divider, Typography, Tooltip } from "@mui/material";
 import { Component, Fragment, ReactElement } from "react";
 import FirebaseDataModel, { UserPermissionInfo, UserPermissionInfoList, UsersList } from "../../data/FirebaseDataModel";
-import { Permission, Visibility } from "../../data/RTDBSchema";
+import { Permission } from "../../data/RTDBSchema";
 import { theme } from "../../Themes";
 import ButtonBox from "./ButtonBox";
 import ConfirmIconButton from "./ConfirmIconButton";
@@ -17,7 +17,7 @@ export interface Props {
 
 export interface State {
     unsubscribe?: () => void;
-    visibility?: Visibility;
+    visibility?: Permission;
     isUserSearchOpen: boolean;
     isLoadingUsers: boolean;
     userSearchText: string;
@@ -41,7 +41,7 @@ export default class ModelPermissionsBox extends Component<Props, State> {
     public componentDidMount(): void {
         if (!this.state.unsubscribe) {
             const unsubVisibility = this.props.firebaseDataModel
-                .subscribeToModelVisibility(
+                .subscribeToModelPublicPermissions(
                     this.props.modelUuid,
                     v => this.setState({ visibility: v ?? undefined })
                 );
@@ -318,9 +318,9 @@ export default class ModelPermissionsBox extends Component<Props, State> {
                     value={this.state.visibility}
                     onChange={e =>
                         this.props.firebaseDataModel
-                            .setModelVisibility(
+                            .setModelPublicPermissions(
                                 this.props.modelUuid,
-                                e.target.value as Visibility
+                                e.target.value as Permission
                             )
                     }
                     row
@@ -329,7 +329,7 @@ export default class ModelPermissionsBox extends Component<Props, State> {
                         title="Only people listed above can see this model"
                     >
                         <FormControlLabel
-                            value={Visibility.PRIVATE}
+                            value={null}
                             control={<Radio />}
                             label="Private"
                         />
@@ -341,7 +341,7 @@ export default class ModelPermissionsBox extends Component<Props, State> {
                         }
                     >
                         <FormControlLabel
-                            value={Visibility.READONLY}
+                            value={Permission.READ}
                             control={<Radio />}
                             label="Public (read-only)"
                         />
@@ -350,7 +350,7 @@ export default class ModelPermissionsBox extends Component<Props, State> {
                         title="Everyone can see and edit this model"
                     >
                         <FormControlLabel
-                            value={Visibility.PUBLIC}
+                            value={Permission.READWRITE}
                             control={<Radio />}
                             label="Public"
                         />

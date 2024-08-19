@@ -18,9 +18,15 @@ export default class FirebaseConnection
         return ComponentType.CONNECTION;
     }
 
-    public withData(d: FirebaseConnectionData): FirebaseConnection {
+    public withData(d: Partial<FirebaseConnectionData>): FirebaseConnection {
         FirebasePointerComponent.sanitizePointerData(d);
-        return new FirebaseConnection(this.getId(), d);
+        return new FirebaseConnection(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...d
+            }
+        );
     }
 
     public withId(id: string): FirebaseConnection {

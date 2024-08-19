@@ -10,8 +10,14 @@ export type FirebaseLoopIconData = FirebaseRectangleData
 export default class FirebaseLoopIcon extends
     FirebaseRectangleComponent<FirebaseLoopIconData>
 {
-    public withData(d: FirebaseLoopIconData): FirebaseLoopIcon {
-        return new FirebaseLoopIcon(this.getId(), d);
+    public withData(d: Partial<FirebaseLoopIconData>): FirebaseLoopIcon {
+        return new FirebaseLoopIcon(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...d
+            }
+        );
     }
 
     public getType(): ComponentType {

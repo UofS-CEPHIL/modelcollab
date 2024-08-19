@@ -1,10 +1,8 @@
 import ComponentType from "./ComponentType";
 import FirebaseComponent, { FirebaseComponentBase } from "./FirebaseComponent";
-import FirebaseFlow from "./FirebaseFlow";
 import FirebasePointComponent, {
     FirebasePointData
 } from "./FirebasePointComponent";
-import FirebasePointerComponent from "./FirebasePointerComponent";
 
 export interface FirebaseStaticModelData extends FirebasePointData {
     x: number,
@@ -24,9 +22,15 @@ export default class FirebaseStaticModel
     }
 
     public withData(
-        data: FirebaseStaticModelData
+        data: Partial<FirebaseStaticModelData>
     ): FirebaseStaticModel {
-        return new FirebaseStaticModel(this.getId(), data);
+        return new FirebaseStaticModel(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...data
+            }
+        );
     }
 
     public getReadableComponentName(): string {

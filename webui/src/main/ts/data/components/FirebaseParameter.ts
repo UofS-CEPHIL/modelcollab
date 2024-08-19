@@ -11,8 +11,14 @@ export default class FirebaseParameter
         return ComponentType.PARAMETER;
     }
 
-    public withData(d: FirebaseNameValueData): FirebaseParameter {
-        return new FirebaseParameter(this.getId(), d);
+    public withData(d: Partial<FirebaseNameValueData>): FirebaseParameter {
+        return new FirebaseParameter(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...d
+            }
+        );
     }
 
     public withId(id: string): FirebaseParameter {

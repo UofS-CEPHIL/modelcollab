@@ -12,8 +12,14 @@ export default class FirebaseDynamicVariable
         return ComponentType.VARIABLE;
     }
 
-    public withData(d: FirebaseNameValueData): FirebaseDynamicVariable {
-        return new FirebaseDynamicVariable(this.getId(), d);
+    public withData(d: Partial<FirebaseNameValueData>): FirebaseDynamicVariable {
+        return new FirebaseDynamicVariable(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...d
+            }
+        );
     }
 
     public withId(id: string): FirebaseDynamicVariable {

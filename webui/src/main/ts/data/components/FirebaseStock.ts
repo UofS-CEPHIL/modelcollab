@@ -13,8 +13,14 @@ export default class FirebaseStock
         return ComponentType.STOCK;
     }
 
-    public withData(d: FirebaseNameValueData): FirebaseStock {
-        return new FirebaseStock(this.getId(), d);
+    public withData(d: Partial<FirebaseNameValueData>): FirebaseStock {
+        return new FirebaseStock(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...d
+            }
+        );
     }
 
     public withId(id: string): FirebaseStock {

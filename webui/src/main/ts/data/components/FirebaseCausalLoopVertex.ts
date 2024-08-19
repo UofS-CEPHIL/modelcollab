@@ -12,8 +12,14 @@ export default class FirebaseCausalLoopVertex
         return ComponentType.CLD_VERTEX;
     }
 
-    public withData(d: FirebaseTextData): FirebaseCausalLoopVertex {
-        return new FirebaseCausalLoopVertex(this.getId(), d);
+    public withData(d: Partial<FirebaseTextData>): FirebaseCausalLoopVertex {
+        return new FirebaseCausalLoopVertex(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...d
+            }
+        );
     }
 
     public withId(id: string): FirebaseCausalLoopVertex {

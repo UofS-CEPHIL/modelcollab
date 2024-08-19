@@ -6,7 +6,7 @@ export interface FirebaseDataObject { }
 
 export abstract class FirebaseEntityBase<DataType extends FirebaseDataObject> {
     public abstract toFirebaseEntry(): [string, Object];
-    public abstract withData(d: DataType): FirebaseEntityBase<DataType>;
+    public abstract withData(d: Partial<DataType>): FirebaseEntityBase<DataType>;
 
     protected readonly id: string;
     protected readonly data: DataType;
@@ -48,7 +48,7 @@ export abstract class FirebaseComponentBase
     <DataType extends FirebaseDataObject>
     extends FirebaseEntityBase<DataType> {
 
-    public static readonly ID_DELIMITER = "-";
+    public static readonly ID_DELIMITER = "_";
 
     public getContainingModelId(): string | undefined {
         const idSplit = this.getId().split(FirebaseComponentBase.ID_DELIMITER);

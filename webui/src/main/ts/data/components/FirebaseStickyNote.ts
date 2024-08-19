@@ -11,9 +11,15 @@ export default class FirebaseStickyNote
     }
 
     public withData(
-        d: FirebaseTextData
+        d: Partial<FirebaseTextData>
     ): FirebaseTextComponent<FirebaseTextData> {
-        return new FirebaseStickyNote(this.getId(), d);
+        return new FirebaseStickyNote(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...d
+            }
+        );
     }
 
     public getReadableComponentName(): string {

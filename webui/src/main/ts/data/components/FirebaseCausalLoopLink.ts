@@ -56,9 +56,17 @@ export default class FirebaseCausalLoopLink
         return ComponentType.CLD_LINK;
     }
 
-    public withData(d: FirebaseCausalLoopLinkData): FirebaseCausalLoopLink {
+    public withData(
+        d: Partial<FirebaseCausalLoopLinkData>
+    ): FirebaseCausalLoopLink {
         FirebasePointerComponent.sanitizePointerData(d);
-        return new FirebaseCausalLoopLink(this.getId(), d);
+        return new FirebaseCausalLoopLink(
+            this.getId(),
+            {
+                ...this.getData(),
+                ...d
+            }
+        );
     }
 
     public withId(id: string): FirebaseCausalLoopLink {

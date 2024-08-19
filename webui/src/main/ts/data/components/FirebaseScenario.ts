@@ -6,17 +6,20 @@ export interface ScenarioComponentData extends FirebaseDataObject {
     name: string;
     startTime: string;
     stopTime: string;
-    overrides: ParameterOverrides;
+    overrides?: ParameterOverrides;
 }
 
 export default class FirebaseScenario
     extends FirebaseEntityBase<ScenarioComponentData>
 {
 
-    public withData(d: ScenarioComponentData): FirebaseScenario {
+    public withData(d: Partial<ScenarioComponentData>): FirebaseScenario {
         return new FirebaseScenario(
             this.getId(),
-            d
+            {
+                ...this.getData(),
+                ...d
+            }
         );
     }
 
@@ -46,7 +49,7 @@ export default class FirebaseScenario
                 name: data.name || "",
                 startTime: data.startTime || "",
                 stopTime: data.stopTime || "",
-                overrides: data.overrides || []
+                overrides: data.overrides || {}
             }
         );
     }
