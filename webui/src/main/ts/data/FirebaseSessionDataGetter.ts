@@ -19,11 +19,11 @@ export default class FirebaseSessionDataGetter {
         onComponentsUpdated: (cpts: FirebaseComponent[]) => void,
     ): () => void {
         // setup callbacks
-        const unsubCpts = this.firebaseDataModel.subscribeToSessionComponents(
+        const unsubCpts = this.firebaseDataModel.subscribeToModelComponents(
             modelUuid,
             onComponentsUpdated
         );
-        const unsubName = this.firebaseDataModel.subscribeToSessionModelName(
+        const unsubName = this.firebaseDataModel.subscribeToModelName(
             modelUuid,
             onNameUpdated
         );
@@ -50,17 +50,17 @@ export default class FirebaseSessionDataGetter {
             onComponentsUpdated,
         );
         const unsubLoadedModels = this.firebaseDataModel
-            .subscribeToSessionModels(
+            .subscribeToStaticModels(
                 modelUuid,
                 onLoadedModelsUpdated
             );
         const unsubScenarios = this.firebaseDataModel
-            .subscribeToSessionScenarios(
+            .subscribeToModelScenarios(
                 modelUuid,
                 onScenariosUpdated
             );
         const unsubSubstitutions = this.firebaseDataModel
-            .subscribeToSessionSubstitutions(
+            .subscribeToModelSubstitutions(
                 modelUuid,
                 onSubstitutionsUpdated
             );

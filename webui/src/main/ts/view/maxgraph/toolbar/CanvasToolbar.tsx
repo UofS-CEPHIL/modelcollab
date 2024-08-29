@@ -348,7 +348,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
     }
 
     protected getModelAsJson(): void {
-        this.props.firebaseDataModel.getDataForSession(
+        this.props.firebaseDataModel.getModelData(
             this.props.sessionId,
             (data: any) => this.downloadData(
                 new Blob([JSON.stringify(data)]),

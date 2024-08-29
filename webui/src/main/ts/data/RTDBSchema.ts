@@ -85,7 +85,7 @@ class ModelDataSchema {
         return this.makeSubstitutionsPath(modelUuid) + `/${replacedId}`;
     }
 
-    static makeSavedModelsPath(modelUuid: string): string {
+    static makeStaticModelsPath(modelUuid: string): string {
         return this.makeModelPath(modelUuid) + `/${this.SAVED_MODELS}`;
     }
 
@@ -93,7 +93,7 @@ class ModelDataSchema {
         modelUuid: string,
         loadedModelUuid: string
     ): string {
-        return this.makeSavedModelsPath(modelUuid) + `/${loadedModelUuid}`;
+        return this.makeStaticModelsPath(modelUuid) + `/${loadedModelUuid}`;
     }
 
     static makeSavedModelComponentPath(

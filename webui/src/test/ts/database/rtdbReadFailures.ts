@@ -232,7 +232,7 @@ export async function cannotReadStaticModels(
         get(
             ref(
                 db,
-                RTDBSchema.ModelData.makeSavedModelsPath(modelId)
+                RTDBSchema.ModelData.makeStaticModelsPath(modelId)
             )
         )
     );

@@ -349,7 +349,7 @@ export async function canReadStaticModels(
         get(
             ref(
                 db,
-                RTDBSchema.ModelData.makeSavedModelsPath(modelId)
+                RTDBSchema.ModelData.makeStaticModelsPath(modelId)
             )
         )
     );

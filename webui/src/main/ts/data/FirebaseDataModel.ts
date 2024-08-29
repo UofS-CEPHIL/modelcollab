@@ -1,4 +1,5 @@
 import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update, query, orderByChild } from "firebase/database";
+import { User } from "firebase/auth";
 // @ts-ignore can't find types
 import { v4 as createUuid } from "uuid";
 import FirebaseComponent from "./components/FirebaseComponent";
@@ -82,14 +83,11 @@ export default class FirebaseDataModel {
                     component.getId()
                 )
             ),
-            {
-                "type": component.getType().toString(),
-                "data": component.getData()
-            }
+            component.toFirebaseEntry()
         );
     }
 
-    public getDataForSession(
+    public getModelData(
         sessionId: string,
         callback: (data: DataSnapshot) => void
     ): void {
@@ -103,7 +101,7 @@ export default class FirebaseDataModel {
         );
     }
 
-    public subscribeToSessionComponents(
+    public subscribeToModelComponents(
         sessionId: string,
         callback: (snapshot: FirebaseComponent[]) => void
     ): Unsubscribe {
@@ -125,7 +123,7 @@ export default class FirebaseDataModel {
         const result = await get(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.User.makeUserModelsPath(myuid)
+                RTDBSchema.ModelPermissions.makeUserModelsPath(myuid)
             )
         );
 
@@ -142,7 +140,7 @@ export default class FirebaseDataModel {
         }
     }
 
-    public subscribeToOwnedModel(
+    public subscribeToModelMetadata(
         modelUuid: string,
         callback: (m?: BasicModelInfo) => void
     ): Unsubscribe {
@@ -159,73 +157,50 @@ export default class FirebaseDataModel {
         );
     }
 
-    public subscribeToOwnedModels(
-        callback: (m: ModelsList) => void
+    public subscribeToModelPermission(
+        modelUuid: string,
+        callback: (p?: Permission) => void
+    ): Unsubscribe {
+        const myUid = this.getCurrentUserUid();
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelMetadata.makeSharedWithUserPath(
+                    modelUuid,
+                    myUid
+                )
+            ),
+            s => callback(s.val())
+        );
+    }
+
+    public subscribeToUserData(
+        uid: string,
+        callback: (u?: BasicUserInfo) => void
+    ): Unsubscribe {
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.User.makeUserPath(uid)
+            ),
+            s => callback(s.val()),
+            e => {
+                console.error(e);
+                callback(undefined);
+            }
+        );
+    }
+
+    public subscribeToOwnedModelIds(
+        callback: (m: string[]) => void
     ): Unsubscribe {
 
-        let unsubs: { [uuid: string]: Unsubscribe } = {};
-        let models: ModelsList = {};
-
-        const onModelUpdated = (id: string, s: DataSnapshot) => {
+        function handleOwnedModelsListSnapshot(s: DataSnapshot): void {
             if (s.exists()) {
-                models[id] = s.val();
+                callback(Object.keys(s));
             }
             else {
-                unsubs = Object.fromEntries(
-                    Object.entries(unsubs).filter(([k, _]) => k !== id)
-                );
-                models = Object.fromEntries(
-                    Object.entries(models).filter(([k, _]) => k !== id)
-                );
-            }
-        };
-
-        const handleOwnedModelsListSnapshot = (s: DataSnapshot) => {
-            if (s.exists()) {
-                const oldUnsubIds = Object.keys(unsubs);
-                const oldModelIds = Object.keys(models);
-                if (oldUnsubIds.sort() !== oldModelIds.sort()) {
-                    console.error(
-                        `Found irregularity in 'unsubscribe' and 'models' ` +
-                        `lists. Models: ${oldModelIds}, ` +
-                        `Unsubscribes: ${oldUnsubIds}`
-                    );
-                }
-                const newIdsList = Object.keys(s.val());
-                const addedIds = newIdsList.filter(
-                    id => !oldUnsubIds.includes(id)
-                );
-                const removedIds = oldUnsubIds.filter(
-                    id => !newIdsList.includes(id)
-                );
-
-                addedIds.forEach(id => unsubs[id] = onValue(
-                    ref(
-                        this.firebaseManager.getDb(),
-                        RTDBSchema.ModelMetadata.makeModelPath(id)
-                    ),
-                    s => onModelUpdated(id, s)
-                ));
-
-                removedIds.forEach(id => {
-                    unsubs[id]
-                        ? unsubs[id]()
-                        : console.error(
-                            `Tried to unsubscribe from model with id ` +
-                            `${id} but funciton didn't exist`
-                        );
-                    unsubs = Object.fromEntries(
-                        Object.entries(unsubs).filter(([k, _]) => k !== id)
-                    );
-                    models = Object.fromEntries(
-                        Object.entries(models).filter(([k, _]) => k !== id)
-                    );
-                });
-
-                callback(models);
-            }
-            else {
-                callback({});
+                callback([]);
             }
         }
 
@@ -233,12 +208,12 @@ export default class FirebaseDataModel {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.User.makeUserModelsPath(myuid)
+                RTDBSchema.ModelPermissions.makeUserModelsPath(myuid)
             ),
             s => handleOwnedModelsListSnapshot(s),
             e => {
                 console.error(e);
-                callback({});
+                callback([]);
             }
         );
     }
@@ -258,8 +233,8 @@ export default class FirebaseDataModel {
         }
     }
 
-    public subscribeToSharedModels(
-        callback: (m: ModelsList) => void
+    public subscribeToSharedModelIds(
+        callback: (m: string[]) => void
     ): Unsubscribe {
         const myuid = this.getCurrentUserUid();
 
@@ -270,64 +245,50 @@ export default class FirebaseDataModel {
             ),
             s => {
                 if (s.exists()) {
-                    const uuids = Object.keys(s.val());
-                    Promise.all(
-                        uuids.map(uuid => this.getModelMetadata(uuid))
-                    ).then(models =>
-                        callback(
-                            Object.fromEntries(
-                                models.map((m, i) => [
-                                    uuids[i],
-                                    m
-                                ])
-                            )
-                        )
-                    )
+                    callback(Object.keys(s.val()));
                 }
                 else {
-                    callback({});
+                    callback([]);
                 }
             },
             e => {
                 console.error(e);
-                callback({});
+                callback([]);
             }
         );
     }
 
-    public subscribeToPublicModels(
-        callback: (m: ModelsList) => void
+    public subscribeToPublicModelIds(
+        callback: (m: string[]) => void
     ): Unsubscribe {
         return onValue(
-            query(
-                ref(
-                    this.firebaseManager.getDb(),
-                    RTDBSchema.ModelPermissions.makePublicModelsPath()
-                )
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelPermissions.makePublicModelsPath()
             ),
             s => {
                 if (s.exists()) {
-                    callback(s.val());
+                    callback(Object.keys(s.val()));
                 }
                 else {
-                    callback({});
+                    callback([]);
                 }
             }
         )
     }
 
-    public subscribeToAllAvailableModels(
-        myModelsCallback: (m: ModelsList) => void,
-        sharedModelsCallback: (m: ModelsList) => void,
-        publicModelsCallback: (m: ModelsList) => void,
+    public subscribeToAllAvailableModelIds(
+        myModelsCallback: (m: string[]) => void,
+        sharedModelsCallback: (m: string[]) => void,
+        publicModelsCallback: (m: string[]) => void,
     ): Unsubscribe {
-        const unsubMine = this.subscribeToOwnedModels(
+        const unsubMine = this.subscribeToOwnedModelIds(
             m => myModelsCallback(m)
         );
-        const unsubShared = this.subscribeToSharedModels(
+        const unsubShared = this.subscribeToSharedModelIds(
             m => sharedModelsCallback(m)
         );
-        const unsubPublic = this.subscribeToPublicModels(
+        const unsubPublic = this.subscribeToPublicModelIds(
             m => publicModelsCallback(m)
         );
         return () => {
@@ -337,7 +298,7 @@ export default class FirebaseDataModel {
         }
     }
 
-    public subscribeToSessionModelName(
+    public subscribeToModelName(
         modelUuid: string,
         callback: (name: string) => void
     ): Unsubscribe {
@@ -350,7 +311,7 @@ export default class FirebaseDataModel {
         );
     }
 
-    public subscribeToSessionScenarios(
+    public subscribeToModelScenarios(
         modelUuid: string,
         callback: (s: FirebaseScenario[]) => void
     ): Unsubscribe {
@@ -366,14 +327,14 @@ export default class FirebaseDataModel {
         );
     }
 
-    public subscribeToSessionModels(
+    public subscribeToStaticModels(
         modelUuid: string,
         callback: (models: LoadedStaticModel[]) => void
     ): Unsubscribe {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelData.makeSavedModelsPath(modelUuid)
+                RTDBSchema.ModelData.makeStaticModelsPath(modelUuid)
             ),
             s => callback(
                 !s.exists() ? [] : Object.entries(s.val()).map(modelEntry => {
@@ -465,7 +426,7 @@ export default class FirebaseDataModel {
         await set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.User.makeUserModelPath(myuid, uuid)
+                RTDBSchema.ModelPermissions.makeUserModelPath(myuid, uuid)
             ),
             true
         );
@@ -618,7 +579,7 @@ export default class FirebaseDataModel {
         }
     }
 
-    public subscribeToSessionSubstitutions(
+    public subscribeToModelSubstitutions(
         modelUuid: string,
         callback: (s: FirebaseSubstitution[]) => void
     ): Unsubscribe {
@@ -663,10 +624,16 @@ export default class FirebaseDataModel {
         await remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.User.makeUserModelPath(
+                RTDBSchema.ModelPermissions.makeUserModelPath(
                     this.getCurrentUserUid(),
                     modelUuid
                 )
+            )
+        );
+        await remove(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelPermissions.makePublicModelPath(modelUuid)
             )
         );
     }
@@ -733,10 +700,22 @@ export default class FirebaseDataModel {
         )
     }
 
-    public getCurrentUserUid(): string {
+    public getCurrentUser(): User {
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in!");
-        else return user.uid;
+        return user;
+    }
+
+    public getCurrentUserUid(): string {
+        return this.getCurrentUser().uid;
+    }
+
+    public getCurrentUserName(): string {
+        return this.getCurrentUser().displayName ?? "[Name Not Available]";
+    }
+
+    public getCurrentUserEmail(): string {
+        return this.getCurrentUser().email ?? "[Email Not Available]";
     }
 
     public async shareWithUser(
@@ -870,7 +849,7 @@ export default class FirebaseDataModel {
         }
     }
 
-    public async ensureUserInformationInDatabase(): Promise<void> {
+    public async ensureUserInfoInDatabase(): Promise<void> {
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in!");
         const userPath = RTDBSchema.User.makeUserPath(user.uid);

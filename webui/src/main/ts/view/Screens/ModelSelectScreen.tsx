@@ -13,12 +13,16 @@ export interface Props {
 }
 
 export interface State {
+    myModelIds: string[];
     myModels: ModelsList;
+    sharedModelIds: string[];
     sharedModels: ModelsList;
+    publicModelIds: string[];
     publicModels: ModelsList;
     newModelText: string;
     newModelType: ModelType;
-    unsubscribe?: () => void;
+    unsubscribeIds?: () => void;
+    unsubscribeModels?: () => void;
 }
 
 export default class ModelSelectScreen extends React.Component<Props, State> {
@@ -26,8 +30,11 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     public constructor(props: Props) {
         super(props);
         this.state = {
+            myModelIds: [],
             myModels: {},
+            sharedModelIds: [],
             sharedModels: {},
+            publicModelIds: [],
             publicModels: {},
             newModelText: "",
             newModelType: ModelType.StockFlow
@@ -35,7 +42,7 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     }
 
     public componentDidMount() {
-        this.props.firebaseDataModel.ensureUserInformationInDatabase()
+        this.props.firebaseDataModel.ensureUserInfoInDatabase()
             .then(() => this.subscribeToModels())
             .catch(e => {
                 alert("Error logging in");
@@ -44,9 +51,13 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     }
 
     public componentWillUnmount() {
-        if (this.state.unsubscribe) {
-            this.state.unsubscribe();
-            this.setState({ unsubscribe: undefined });
+        if (this.state.unsubscribeIds) {
+            this.state.unsubscribeIds();
+            this.setState({ unsubscribeIds: undefined });
+        }
+        if (this.state.unsubscribeModels) {
+            this.state.unsubscribeModels();
+            this.setState({ unsubscribeModels: undefined });
         }
     }
 
@@ -231,7 +242,6 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
             }
 
             this.setState({ newModelText: "" });
-            this.refreshModelList();
         }
     }
 
@@ -261,32 +271,26 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
 
     private subscribeToModels(): void {
 
-        const isAlreadyListed = (uuid: string) =>
-            this.state.myModels[uuid] !== undefined
-            || this.state.sharedModels[uuid] !== undefined;
+        const isAlreadyListed = (id: string) =>
+            this.state.myModelIds.includes(id)
+            || this.state.sharedModelIds.includes(id);
 
-        const unsubscribe = this.props.firebaseDataModel.subscribeToAllAvailableModels(
-            m => this.setState({ myModels: m }),
-            m => this.setState({ sharedModels: m }),
-            m => this.setState({
-                publicModels: Object.fromEntries(
-                    Object.entries(m).filter(
-                        ([uuid, _]) => !isAlreadyListed(uuid))
+        const removeDuplicateModels = () => this.setState(
+            {
+                publicModelIds: this.state.publicModelIds.filter(
+                    id => !isAlreadyListed(id)
                 )
-            }),
-        );
+            },
+            () => this.updateModelSubscriptions()
+        )
 
-        this.setState({ unsubscribe });
+        const unsubscribeIds = this.props.firebaseDataModel
+            .subscribeToAllAvailableModelIds(
+                m => this.setState({ myModelIds: m }, removeDuplicateModels),
+                m => this.setState({ sharedModelIds: m }, removeDuplicateModels),
+                m => this.setState({ publicModelIds: m }, removeDuplicateModels),
+            );
+
+        this.setState({ unsubscribeIds });
     }
-
-    private refreshModelList(): void {
-        this.props.firebaseDataModel.getOwnedModels().then(
-            m => this.setState({
-                myModels: m
-            })
-        ).catch(e =>
-            console.error("Error getting models: " + e)
-        );
-    }
-
 }
