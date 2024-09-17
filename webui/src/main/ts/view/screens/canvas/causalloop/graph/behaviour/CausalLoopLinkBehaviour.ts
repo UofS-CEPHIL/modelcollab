@@ -1,0 +1,31 @@
+import { Cell, CellStyle } from "@maxgraph/core";
+import { v4 as uuid } from "uuid";
+import ComponentType from "../../../../../../data/components/ComponentType";
+import FirebaseCausalLoopLink from "../../../../../../data/components/FirebaseCausalLoopLink";
+import FirebaseCausalLoopVertex from "../../../../../../data/components/FirebaseCausalLoopVertex";
+import AddArrowBehaviour from "../../../behaviour/AddArrowBehaviour";
+import CausalLoopLinkPresentation from "../presentation/CausalLoopLinkPresentation";
+
+export default class CausalLoopLinkBehaviour
+    extends AddArrowBehaviour {
+
+    public getArrowType(): ComponentType {
+        return ComponentType.CLD_LINK;
+    }
+
+    public isValidArrowSource(c: Cell): boolean {
+        return c.getValue() instanceof FirebaseCausalLoopVertex;
+    }
+
+    public getPreviewArrowStyle(): CellStyle {
+        return CausalLoopLinkPresentation.getEdgeStyle();
+    }
+
+    public makeLink(source: Cell, target: Cell): FirebaseCausalLoopLink {
+        return FirebaseCausalLoopLink.createNew(
+            uuid(),
+            source.getId()!,
+            target.getId()!
+        );
+    }
+}

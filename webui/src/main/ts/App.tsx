@@ -1,15 +1,15 @@
 import React, { ReactElement } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import LoginScreen from "./view/Screens/LoginScreen";
-import StockFlowScreen from "./view/Screens/StockFlowScreen";
+import LoginScreen from "./view/screens/LoginScreen";
+import StockFlowScreen from "./view/screens/canvas/stockflow/StockFlowScreen";
 import FirebaseManager from "./data/FirebaseManager";
 import FirebaseDataModel, { ModelType } from "./data/FirebaseDataModel";
 import RestClient from "./rest/RestClient";
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./Themes";
-import ModelSelectScreen from "./view/Screens/ModelSelectScreen";
-import CausalLoopScreen from "./view/Screens/CausalLoopScreen";
+import ModelSelectScreen from "./view/screens/ModelSelectScreen";
+import CausalLoopScreen from "./view/screens/canvas/causalloop/CausalLoopScreen";
 
 interface Props {
 

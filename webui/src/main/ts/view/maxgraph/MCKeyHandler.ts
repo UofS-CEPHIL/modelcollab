@@ -1,5 +1,4 @@
 import { Graph, InternalEvent, KeyHandler } from "@maxgraph/core";
-import MCCellEditorHandler from "./MCCellEditorHandler";
 
 // A MaxGraph KeyHandler but with a key-up listener too
 export default class MCKeyHandler extends KeyHandler {

@@ -1,6 +1,6 @@
 import { Cell } from "@maxgraph/core";
 import FirebaseComponent from "../../../data/components/FirebaseComponent";
-import { LoadedStaticModel } from "../../Screens/StockFlowScreen";
+import { LoadedStaticModel } from "../../screens/canvas/stockflow/StockFlowScreen";
 import MCGraph from "../MCGraph";
 
 // This class contains the logic for styling different component types for

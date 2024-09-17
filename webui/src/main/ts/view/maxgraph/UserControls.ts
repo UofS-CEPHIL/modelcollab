@@ -4,11 +4,11 @@ import {
     InternalEvent,
     Point,
 } from "@maxgraph/core";
-import { UiMode } from "../../UiMode";
+import { UiMode } from "../screens/canvas/UiMode";
 import ModeBehaviour from "./behaviours/ModeBehaviour";
 import BehaviourGetter from "./behaviours/BehaviourGetter";
 import DiagramActions from "./DiagramActions";
-import ModalBoxType from "../ModalBox/ModalBoxType";
+import ModalBoxType from "../modalbox/ModalBoxType";
 import FirebaseComponent from "../../data/components/FirebaseComponent";
 import MCGraph from "./MCGraph";
 import MCKeyHandler from "./MCKeyHandler";

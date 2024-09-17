@@ -10,8 +10,6 @@ import MCEdgeHandler from "./MCEdgeHandler";
 import FirebaseFlow from "../../data/components/FirebaseFlow";
 import FirebaseMovableLabelPointerComponent from "../../data/components/FirebaseMovableLabelPointerComponent";
 import FirebaseStaticModel from "../../data/components/FirebaseStaticModel";
-import ComponentType from "../../data/components/ComponentType";
-import { ComponentPropertyOverrides } from "../../data/components/FirebasePropertyOverrides";
 
 // This class contains the logic for making changes to the diagram, including
 // the positions of the components and their values. This happens either by

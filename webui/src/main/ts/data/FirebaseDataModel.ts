@@ -1,12 +1,12 @@
 import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update, query, orderByChild } from "firebase/database";
-import { User, fetchSignInMethodsForEmail } from "firebase/auth";
+import { User } from "firebase/auth";
 // @ts-ignore can't find types
 import { v4 as createUuid } from "uuid";
 import FirebaseComponent from "./components/FirebaseComponent";
 import { createFirebaseDataComponent } from "./components/FirebaseComponentBuilder";
 import FirebaseManager from "./FirebaseManager";
 import RTDBSchema, { Permission } from "./RTDBSchema";
-import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
+import { LoadedStaticModel } from "../view/screens/canvas/stockflow/StockFlowScreen";
 import FirebaseScenario from "./components/FirebaseScenario";
 import ComponentType from "./components/ComponentType";
 import FirebaseSubstitution from "./components/FirebaseSubstitution";
@@ -634,6 +634,30 @@ export default class FirebaseDataModel {
     }
 
     public async deleteModel(modelUuid: string): Promise<void> {
+
+        const sharedUsers: string[] = Object.keys(await (await
+            get(
+                ref(
+                    this.firebaseManager.getDb(),
+                    RTDBSchema.ModelPermissions.makeModelSharedUsersPath(
+                        modelUuid
+                    )
+                )
+            )
+        ).val());
+
+        for (let uid of sharedUsers) {
+            await remove(
+                ref(
+                    this.firebaseManager.getDb(),
+                    RTDBSchema.ModelPermissions.makeUserSharedModelPath(
+                        uid,
+                        modelUuid
+                    )
+                )
+            );
+        }
+
         await remove(
             ref(
                 this.firebaseManager.getDb(),
@@ -643,7 +667,7 @@ export default class FirebaseDataModel {
         await remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelMetadata.makeModelPath(modelUuid)
+                RTDBSchema.ModelPermissions.makeModelSharedUsersPath(modelUuid)
             )
         );
         await remove(
@@ -659,6 +683,12 @@ export default class FirebaseDataModel {
             ref(
                 this.firebaseManager.getDb(),
                 RTDBSchema.ModelPermissions.makePublicModelPath(modelUuid)
+            )
+        );
+        await remove(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelMetadata.makeModelPath(modelUuid)
             )
         );
     }

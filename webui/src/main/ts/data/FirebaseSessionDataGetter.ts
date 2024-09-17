@@ -1,6 +1,5 @@
-import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
+import { LoadedStaticModel } from "../view/screens/canvas/stockflow/StockFlowScreen";
 import FirebaseComponent from "./components/FirebaseComponent";
-import FirebasePropertyOverrides from "./components/FirebasePropertyOverrides";
 import FirebaseScenario from "./components/FirebaseScenario";
 import FirebaseSubstitution from "./components/FirebaseSubstitution";
 import FirebaseDataModel from "./FirebaseDataModel";

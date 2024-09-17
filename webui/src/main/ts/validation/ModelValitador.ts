@@ -5,7 +5,7 @@ import FirebaseFlow from "../data/components/FirebaseFlow";
 import FirebaseParameter from "../data/components/FirebaseParameter";
 import FirebaseStock from "../data/components/FirebaseStock";
 import FirebaseSumVariable from "../data/components/FirebaseSumVariable";
-import { LoadedStaticModel } from "../view/Screens/StockFlowScreen";
+import { LoadedStaticModel } from "../view/screens/canvas/stockflow/StockFlowScreen";
 
 export type ComponentErrors = { [cptId: string]: string[] };
 

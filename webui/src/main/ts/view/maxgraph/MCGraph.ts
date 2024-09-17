@@ -1,4 +1,4 @@
-import { Cell, CellRenderer, CellState, ConnectionHandler, EdgeHandler, EventObject, Graph, InternalEvent, InternalMouseEvent, PanningHandler, PopupMenuHandler, RubberBandHandler, SelectionCellsHandler, SelectionHandler, TooltipHandler, UndoManager, ValueChange } from "@maxgraph/core";
+import { Cell, CellState, ConnectionHandler, EdgeHandler, EventObject, Graph, InternalEvent, InternalMouseEvent, PanningHandler, PopupMenuHandler, RubberBandHandler, SelectionCellsHandler, SelectionHandler, TooltipHandler, UndoManager, ValueChange } from "@maxgraph/core";
 import ComponentType from "../../data/components/ComponentType";
 import FirebaseCausalLoopVertex from "../../data/components/FirebaseCausalLoopVertex";
 import FirebaseComponent, { FirebaseComponentBase } from "../../data/components/FirebaseComponent";
@@ -7,15 +7,12 @@ import FirebaseStaticModel from "../../data/components/FirebaseStaticModel";
 import FirebaseSubstitution from "../../data/components/FirebaseSubstitution";
 import FirebaseDataModel from "../../data/FirebaseDataModel";
 import { theme } from "../../Themes";
-import { UiMode } from "../../UiMode";
+import { UiMode } from "../screens/canvas/UiMode";
 import { ComponentErrors } from "../../validation/ModelValitador";
-import { LoadedStaticModel } from "../Screens/StockFlowScreen";
+import { LoadedStaticModel } from "../screens/canvas/stockflow/StockFlowScreen";
 import MCCellEditorHandler from "./MCCellEditorHandler";
 import MCEdgeHandler from "./MCEdgeHandler";
-import CausalLoopLinkShape from "./presentation/CausalLoopLinkShape";
 import ComponentPresentation from "./presentation/ComponentPresentation";
-import FlowShape from "./presentation/FlowShape";
-import LoopIconShape from "./presentation/LoopIconShape";
 import UndoHandler from "./UndoHandler";
 
 // Parent class for graphs in ModelCollab
@@ -47,6 +44,8 @@ export default abstract class MCGraph extends Graph {
     protected presentation: ComponentPresentation<FirebaseComponent>;
     protected firebaseDataModel: FirebaseDataModel;
     protected readonly modelUuid: string;
+
+    protected abstract registerCustomShapes(): void;
 
     public constructor(
         container: HTMLElement,
@@ -90,7 +89,7 @@ export default abstract class MCGraph extends Graph {
         this.setupUndoManager();
         this.setupSelectionHandler();
         this.setupRubberBandHandler();
-        this.setupCustomShapes();
+        this.registerCustomShapes();
         this.setupTooltips();
 
         // When we undo changes to labels, this listener makes sure that they
@@ -109,24 +108,6 @@ export default abstract class MCGraph extends Graph {
                     );
                 }
             }
-        );
-    }
-
-    private setupCustomShapes(): void {
-        CellRenderer.registerShape(
-            CausalLoopLinkShape.CLD_LINK_NAME,
-            //@ts-ignore
-            CausalLoopLinkShape
-        );
-        CellRenderer.registerShape(
-            LoopIconShape.LOOP_ICON_NAME,
-            //@ts-ignore
-            LoopIconShape
-        );
-        CellRenderer.registerShape(
-            FlowShape.FLOW_NAME,
-            //@ts-ignore
-            FlowShape
         );
     }
 

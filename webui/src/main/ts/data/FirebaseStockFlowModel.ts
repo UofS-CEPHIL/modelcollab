@@ -1,10 +1,9 @@
-import { LoadedStaticModel } from "../view/Screens/StockFlowScreen"
+import { LoadedStaticModel } from "../view/screens/canvas/stockflow/StockFlowScreen"
 import FirebaseComponent from "./components/FirebaseComponent"
 import FirebaseModel, { ComponentSchema } from "./components/FirebaseModel"
 import FirebasePropertyOverrides from "./components/FirebasePropertyOverrides"
-import FirebaseScenario from "./components/FirebaseScenario"
+import FirebaseScenario, { ScenarioComponentData } from "./components/FirebaseScenario"
 import FirebaseSubstitution from "./components/FirebaseSubstitution"
-import { ModelType } from "./FirebaseDataModel"
 
 
 export interface StockFlowSchema extends ComponentSchema {
@@ -23,13 +22,7 @@ export interface StockFlowSchema extends ComponentSchema {
         }
     }
     scenarios: {
-        [name: string]: {
-            startTime: string,
-            stopTime: string,
-            overrides: {
-                [paramId: string]: string
-            }
-        }
+        [id: string]: ScenarioComponentData
     },
     substitutions: {
         [replacedId: string]: string
