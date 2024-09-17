@@ -1,6 +1,6 @@
 import { EventObject } from "@maxgraph/core";
+import { v4 as uuid } from "uuid";
 import FirebasePointComponent from "../../../data/components/FirebasePointComponent";
-import IdGenerator from "../../../IdGenerator";
 import DefaultBehaviour from "./DefaultBehaviour";
 
 export default abstract class AddVertexOnClickBehaviour
@@ -13,8 +13,7 @@ export default abstract class AddVertexOnClickBehaviour
     ): FirebasePointComponent<any>;
 
     public canvasClicked(x: number, y: number, event: EventObject): void {
-        const newId = IdGenerator.generateUniqueId(this.getFirebaseState());
-        var newComponent = this.createComponent(x, y, newId);
+        var newComponent = this.createComponent(x, y, uuid());
         const width = newComponent.getData().width ?? 0;
         const height = newComponent.getData().height ?? 0;
         newComponent = newComponent.withUpdatedLocation(width / -2, height / -2);

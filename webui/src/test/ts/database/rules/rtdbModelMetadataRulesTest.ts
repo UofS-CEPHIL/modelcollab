@@ -1,12 +1,11 @@
 import { v4 as uuid } from "uuid";
 import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
 import { Permission } from "../../../../main/ts/data/RTDBSchema";
-import { cannotReadModelName, cannotReadModelOwner, cannotReadModelSharedUser, cannotReadModelType } from "../rtdbReadFailures";
-import { canReadModelName, canReadModelOwner, canReadModelSharedUser, canReadModelSharedUsers, canReadModelType } from "../rtdbReadSuccesses";
-
+import { cannotReadModelName, cannotReadModelOwner, cannotReadModelType, cannotReadModelMetadata } from "../rtdbReadFailures";
+import { canReadModelName, canReadModelOwner, canReadModelType, canReadModelMetadata } from "../rtdbReadSuccesses";
 import { EMAIL_1, EMAIL_2, EMAIL_3, MODELID_1, MODELNAME_1, NAME_1, NAME_2, NAME_3, UID_1, UID_2, UID_3, getDb, UID_UNAUTHENTICATED, Database, env } from "../rtdb.test";
-import { cannotAddModelSharedUserToMetadata, cannotEditModelSharedUserInMetadata, cannotRemoveAllModelMetadata, cannotRemoveModelMetadata, cannotRemoveModelName, cannotRemoveModelOwner, cannotRemoveModelSharedUserFromMetadata, cannotRemoveModelSharedUsersFromMetadata, cannotRemoveModelType, cannotWriteModelName, cannotWriteModelOwner, cannotWriteModelType, cannotWriteModelMetadata } from "../rtdbWriteFailures";
-import { canAddModelSharedUserToMetadata, canEditModelSharedUserInMetadata, canRemoveModelMetadata, canRemoveModelSharedUserFromMetadata, canShareModelInPermissions, canWriteModelMetadata, canWriteModelName, canWritePublicModel } from "../rtdbWriteSuccesses";
+import { cannotRemoveAllModelMetadata, cannotRemoveModelMetadata, cannotRemoveModelName, cannotRemoveModelOwner, cannotRemoveModelType, cannotWriteModelName, cannotWriteModelOwner, cannotWriteModelType, cannotWriteModelMetadata } from "../rtdbWriteFailures";
+import { canAddModelSharedUserToModelPermissions, canRemoveModelMetadata, canAddModelToUserSharedList, canWriteModelMetadata, canWriteModelName, canWritePublicModel } from "../rtdbWriteSuccesses";
 import { canWriteNewUser } from "../rtdbWriteSuccesses";
 
 export default function describeModelMetadataRulesTests(): void {
@@ -192,23 +191,6 @@ export default function describeModelMetadataRulesTests(): void {
                 )
             );
 
-            test(
-                "Permitted to add other users to shared list",
-                async () => await canAddModelSharedUserToMetadata(
-                    getDb(UID_1),
-                    MODELID_1,
-                    UID_2,
-                )
-            );
-
-            test(
-                "Not permitted to add self to shared list",
-                async () => await cannotAddModelSharedUserToMetadata(
-                    getDb(UID_1),
-                    MODELID_1,
-                    UID_1
-                )
-            );
 
             test(
                 "Permitted to delete model metadata",
@@ -249,51 +231,13 @@ export default function describeModelMetadataRulesTests(): void {
                 )
             );
 
-            describe("Interaction with other users", () => {
-
-                beforeEach(async () => await env!.withSecurityRulesDisabled(
-                    async ctx => canAddModelSharedUserToMetadata(
-                        ctx.database(),
-                        MODELID_1,
-                        UID_2
-                    )
-                ));
-
-                test(
-                    "Permitted to edit users permission levels",
-                    async () => await canEditModelSharedUserInMetadata(
-                        getDb(UID_1),
-                        MODELID_1,
-                        UID_2
-                    )
-                );
-
-                test(
-                    "Permitted to remove shared user",
-                    async () => await canRemoveModelSharedUserFromMetadata(
-                        getDb(UID_1),
-                        MODELID_1,
-                        UID_2
-                    )
-                );
-
-                test(
-                    "Permitted to read shared user",
-                    async () => await canReadModelSharedUser(
-                        getDb(UID_1),
-                        MODELID_1,
-                        UID_2
-                    )
-                );
-
-                test(
-                    "Permitted to read shared users",
-                    async () => await canReadModelSharedUsers(
-                        getDb(UID_1),
-                        MODELID_1
-                    )
-                );
-            });
+            test(
+                "Permitted to read entire model metadata object",
+                async () => await canReadModelMetadata(
+                    getDb(UID_1),
+                    MODELID_1
+                )
+            );
         });
 
         function noPrivilegedPermissionsTests(
@@ -317,12 +261,12 @@ export default function describeModelMetadataRulesTests(): void {
                         UID_1
                     );
                     if (userPermission) {
-                        await canShareModelInPermissions(
+                        await canAddModelToUserSharedList(
                             db,
                             MODELID_1,
                             userUid
                         );
-                        await canAddModelSharedUserToMetadata(
+                        await canAddModelSharedUserToModelPermissions(
                             db,
                             MODELID_1,
                             userUid,
@@ -388,33 +332,6 @@ export default function describeModelMetadataRulesTests(): void {
             );
 
             test(
-                "Not permitted to add model owner to shared list",
-                async () => await cannotAddModelSharedUserToMetadata(
-                    db!,
-                    MODELID_1,
-                    UID_1
-                )
-            );
-
-            test(
-                "Not permitted to add other user to shared list",
-                async () => await cannotAddModelSharedUserToMetadata(
-                    db!,
-                    MODELID_1,
-                    UID_3
-                )
-            );
-
-            test(
-                "Not permitted to add non-existent user to shared list",
-                async () => await cannotAddModelSharedUserToMetadata(
-                    db!,
-                    MODELID_1,
-                    uuid()
-                )
-            );
-
-            test(
                 "Not permitted to delete model",
                 async () => await cannotRemoveModelMetadata(
                     db!,
@@ -440,43 +357,17 @@ export default function describeModelMetadataRulesTests(): void {
                 )
             );
 
-            if (userPermission) {
-                test(
-                    "Not permitted to remove self from shared list",
-                    async () =>
-                        await cannotRemoveModelSharedUserFromMetadata(
-                            db!,
-                            MODELID_1,
-                            userUid
-                        )
-                );
-                test(
-                    "Not permitted to edit own permissions",
-                    async () => await cannotEditModelSharedUserInMetadata(
-                        db!,
-                        MODELID_1,
-                        userUid,
-                        userPermission === Permission.READ
-                            ? Permission.READWRITE
-                            : Permission.READ
-                    )
-                );
-            }
-            else {
-                test(
-                    "Not permitted to add self to shared list",
-                    async () => await cannotAddModelSharedUserToMetadata(
-                        db!,
-                        MODELID_1,
-                        userUid
-                    )
-                );
-            }
-
             if (
                 userPermission
                 || (modelVisibility && userUid !== UID_UNAUTHENTICATED)
             ) {
+                test(
+                    "Permitted to read whole metadata object",
+                    async () => await canReadModelMetadata(
+                        db!,
+                        MODELID_1
+                    )
+                );
                 test(
                     "Permitted to read model name",
                     async () => await canReadModelName(
@@ -501,6 +392,11 @@ export default function describeModelMetadataRulesTests(): void {
             }
             else {
                 test(
+                    "Not permitted to read whole model metadata object",
+                    async () => await cannotReadModelMetadata(db!, MODELID_1)
+                );
+
+                test(
                     "Not permitted to read model name",
                     async () => await cannotReadModelName(
                         db!,
@@ -522,66 +418,6 @@ export default function describeModelMetadataRulesTests(): void {
                     )
                 );
             }
-
-            describe("Interaction With Other Users", () => {
-
-                beforeEach(async () =>
-                    await env!.withSecurityRulesDisabled(async ctx =>
-                        await canAddModelSharedUserToMetadata(
-                            ctx.database(),
-                            MODELID_1,
-                            UID_3
-                        )
-                    )
-                );
-
-                test(
-                    "Not permitted to read user permissions",
-                    async () => await cannotReadModelSharedUser(
-                        db!,
-                        MODELID_1,
-                        UID_3
-                    )
-                );
-
-                test(
-                    "Not permitted to edit user permissions",
-                    async () => await cannotEditModelSharedUserInMetadata(
-                        db!,
-                        MODELID_1,
-                        UID_3,
-                        Permission.READ
-                    )
-                );
-
-                test(
-                    "Not permitted to remove other user from shared list",
-                    async () =>
-                        await cannotRemoveModelSharedUserFromMetadata(
-                            db!,
-                            MODELID_1,
-                            UID_3
-                        )
-                );
-
-                test(
-                    "Not permitted to remove entire shared list",
-                    async () => {
-                        await env!.withSecurityRulesDisabled(async ctx => {
-                            const db = ctx.database();
-                            await canAddModelSharedUserToMetadata(
-                                db,
-                                MODELID_1,
-                                uuid()
-                            );
-                        });
-                        await cannotRemoveModelSharedUsersFromMetadata(
-                            db!,
-                            MODELID_1
-                        );
-                    }
-                );
-            });
         }
 
         function testUserPermissionsWithAllModelVisibilities(

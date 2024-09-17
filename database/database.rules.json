@@ -4,12 +4,12 @@
         ".write": false,
         "models": {
             "$model_id": {
-                ".read": "auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).exists() || root.child('modelPermissions/public/' + $model_id).exists() )",
-                ".write": "(!data.exists() || !newData.exists()) && auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')",
+                ".read": "auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelPermissions/models/' + $model_id + '/' + auth.uid).exists() || root.child('modelPermissions/public/' + $model_id).exists() )",
+                ".write": "auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelPermissions/models/' + $model_id + '/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')",
                 "components": {
                     "$component_id": {
                         ".validate": "$component_id.matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/) && newData.hasChildren(['type', 'data'])",
-                        ".write": "auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')",
+                        ".write": "auth.uid !== null && ( root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelPermissions/models/' + $model_id + '/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')",
                         "type": {
                             ".validate": "newData.isString() && newData.val().matches(/^(stock|flow|parameter|variable|sum_variable|connection|static_model|sticky_note|cld_vertex|cld_link|loop_icon)$/)"
                         },
@@ -22,7 +22,7 @@
                     }
                 },
                 "scenarios": {
-                    ".write": "auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')",
+                    ".write": "auth.uid !== null && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelPermissions/models/' + $model_id + '/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')",
                     "$scenario_id": {
                         ".validate": "$scenario_id.matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/) && newData.hasChildren(['name', 'startTime', 'stopTime'])",
                         "name": {
@@ -47,13 +47,13 @@
                 "substitutions": {
                     "$replaced_id": {
                         ".validate": "$replaced_id.matches(/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})(_+[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})*$/) && newData.isString() && newData.val().matches(/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})(_+[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})*$/)",
-                        ".write": "auth.uid !== null && (!data.exists() || !newData.exists()) && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')"
+                        ".write": "auth.uid !== null && (!data.exists() || !newData.exists()) && ( root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelPermissions/models/' + $model_id + '/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')"
                     }
                 },
                 "loadedModels": {
                     "$saved_model_id": {
                         ".validate": "$saved_model_id.matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/)",
-                        ".write": "auth.uid !== null && (!data.exists() || !newData.exists()) && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelMeta/' + $model_id + '/sharedWith/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')",
+                        ".write": "auth.uid !== null && (!data.exists() || !newData.exists()) && (root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid || root.child('modelPermissions/models/' + $model_id + '/' + auth.uid).val() === 'rw' || root.child('modelPermissions/public/' + $model_id).val() === 'rw')",
                         "$component_id": {
                             ".validate": "$component_id.matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/) && newData.hasChildren(['type', 'data'])",
                             "type": {
@@ -78,35 +78,25 @@
             "$model_id": {
                 ".validate": "$model_id.matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/)",
                 ".write": "auth.uid !== null && ( ( !newData.exists() && data.child('ownerUid').val() === auth.uid ) || ( !data.exists() && newData.child('ownerUid').val() === auth.uid && newData.child('type').exists() ) )",
-                "sharedWith": {
-                    ".write": "auth.uid !== null && newData.parent().child('ownerUid').val() === auth.uid && !newData.child(auth.uid).exists()",
-                    ".read": "auth.uid !== null && data.parent().child('ownerUid').val() === auth.uid",
-                    "$uid": {
-                        ".read": "auth.uid !== null && $uid === auth.uid",
-                        ".validate": "$uid.matches(/^[a-zA-Z0-9]{28}$/) && newData.isString() && newData.val().matches(/^rw?$/)"
-                    }
-                },
+                ".read": "auth.uid !== null && ( data.child('ownerUid').val() === auth.uid || root.child('modelPermissions/models/' + $model_id + '/' + auth.uid).exists() || root.child('modelPermissions/public/' + $model_id).exists() )",
                 "name": {
                     ".write": "auth.uid !== null && newData.parent().child('ownerUid').val() === auth.uid && ( newData.exists() || !newData.parent().exists() )",
-                    ".read": "auth.uid !== null && ( data.parent().child('ownerUid').val() === auth.uid || data.parent().child('sharedWith/' + auth.uid).exists() || root.child('modelPermissions/public/' + $model_id).exists() )",
                     ".validate": "newData.isString()"
                 },
                 "ownerUid": {
                     ".validate": "newData.isString() && newData.val().matches(/^[a-zA-Z0-9]{28}$/)",
-                    ".write": "auth.uid !== null && !data.exists() && newData.val() === auth.uid",
-                    ".read": "auth.uid !== null && ( data.parent().child('ownerUid').val() === auth.uid || data.parent().child('sharedWith/' + auth.uid).exists() || root.child('modelPermissions/public/' + $model_id).exists() )"
+                    ".write": "auth.uid !== null && !data.exists() && newData.val() === auth.uid"
                 },
                 "type": {
                     ".validate": "newData.isString() && newData.val().matches(/^(CL|SF)$/)",
-                    ".write": "auth.uid !== null && ( (!data.exists() && newData.parent().child('ownerUid').exists()) || !newData.parent().exists() )",
-                    ".read": "auth.uid !== null && ( data.parent().child('ownerUid').val() === auth.uid || data.parent().child('sharedWith/' + auth.uid).exists() || root.child('modelPermissions/public/' + $model_id).exists() )"
+                    ".write": "auth.uid !== null && ( (!data.exists() && newData.parent().child('ownerUid').exists()) || !newData.parent().exists() )"
                 }
             }
         },
         "users": {
             ".indexOn": ["name"],
+            ".read": "auth.uid !== null",
             "$uid": {
-                ".read": "auth.uid !== null",
                 ".write": "auth.uid !== null && auth.uid === $uid",
                 ".validate": "$uid.matches(/^[a-zA-Z0-9]{28}$/)",
                 "name": {
@@ -135,12 +125,26 @@
                     }
                 }
             },
-            "$uid": {
-                ".validate": "$uid.matches(/^[a-zA-Z0-9]{28}$/)",
-                ".read": "auth.uid !== null && auth.uid === $uid",
+            "models": {
                 "$model_id": {
-                    ".write": "auth.uid !== null && auth.uid !== $uid && root.child('users/' + $uid).exists() && auth.uid === root.child('modelMeta/' + $model_id + '/ownerUid').val()",
-                    ".validate": "$model_id.matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/) && newData.isBoolean() && newData.val() === true"
+                    ".validate": "$model_id.matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/)",
+                    ".write": "auth.uid !== null && root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid && (!data.exists() || !newData.exists())",
+                    ".read": "auth.uid !== null && root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid",
+                    "$uid": {
+                        ".read": "auth.uid !== null && $uid === auth.uid",
+                        ".write": "auth.uid !== null && root.child('modelMeta/' + $model_id + '/ownerUid').val() === auth.uid && $uid !== auth.uid",
+                        ".validate": "$uid.matches(/^[a-zA-Z0-9]{28}$/) && newData.isString() && newData.val().matches(/^rw?$/)"
+                    }
+                }
+            },
+            "users": {
+                "$uid": {
+                    ".validate": "$uid.matches(/^[a-zA-Z0-9]{28}$/)",
+                    ".read": "auth.uid !== null && auth.uid === $uid",
+                    "$model_id": {
+                        ".write": "auth.uid !== null && auth.uid !== $uid && root.child('users/' + $uid).exists() && auth.uid === root.child('modelMeta/' + $model_id + '/ownerUid').val()",
+                        ".validate": "$model_id.matches(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/) && newData.isBoolean() && newData.val() === true"
+                    }
                 }
             }
         }

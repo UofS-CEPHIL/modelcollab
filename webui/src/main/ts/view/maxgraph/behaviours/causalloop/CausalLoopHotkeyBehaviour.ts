@@ -1,4 +1,5 @@
-import { Cell, EventSource, Geometry, GeometryChange, InternalMouseEvent, Point } from "@maxgraph/core";
+import { Cell, Geometry, GeometryChange, InternalMouseEvent, Point } from "@maxgraph/core";
+import { v4 as uuid } from "uuid";
 import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
@@ -7,7 +8,6 @@ import FirebasePointerComponent from "../../../../data/components/FirebasePointe
 import FirebaseRectangleComponent from "../../../../data/components/FirebaseRectangleComponent";
 import FirebaseStickyNote from "../../../../data/components/FirebaseStickyNote";
 import FirebaseTextComponent from "../../../../data/components/FirebaseTextComponent";
-import IdGenerator from "../../../../IdGenerator";
 import { theme } from "../../../../Themes";
 import { UiMode } from "../../../../UiMode";
 import CausalLoopLinkPresentation from "../../presentation/CausalLoopLinkPresentation";
@@ -112,7 +112,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         const pos = this.getCursorPosition();
         this.getActions().addComponent(
             FirebaseCausalLoopVertex.createNew(
-                IdGenerator.generateUniqueId(this.getFirebaseState()),
+                uuid(),
                 pos.x,
                 pos.y
             )
@@ -147,9 +147,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         ) {
             this.getActions().addComponent(
                 FirebaseCausalLoopLink.createNew(
-                    IdGenerator.generateUniqueId(
-                        this.getFirebaseState()
-                    ),
+                    uuid(),
                     source!.getId()!,
                     target!.getId()!,
                 )
@@ -192,7 +190,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
         const pos = this.getCursorPosition();
         this.getActions().addComponent(
             FirebaseStickyNote.createNew(
-                IdGenerator.generateUniqueId(this.getFirebaseState()),
+                uuid(),
                 pos.x,
                 pos.y
             )
@@ -211,7 +209,7 @@ export default class CausalLoopHotkeyBehaviour extends DefaultBehaviour {
     private doLoopIconKeyupAction(): void {
         const pos = this.getCursorPosition();
         this.getActions().addComponent(FirebaseLoopIcon.createNew(
-            IdGenerator.generateUniqueId(this.getFirebaseState()),
+            uuid(),
             pos.x,
             pos.y
         ));

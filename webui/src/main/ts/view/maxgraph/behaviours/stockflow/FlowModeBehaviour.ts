@@ -1,8 +1,8 @@
 import { Cell, CellStyle, EventObject } from "@maxgraph/core";
+import { v4 as uuid } from "uuid";
 import ComponentType from "../../../../data/components/ComponentType";
 import FirebaseFlow from "../../../../data/components/FirebaseFlow";
 import FirebaseStock from "../../../../data/components/FirebaseStock";
-import IdGenerator from "../../../../IdGenerator";
 import { theme } from "../../../../Themes";
 import FlowPresentation from "../../presentation/FlowPresentation";
 import AddArrowBehaviour from "../AddArrowBehaviour";
@@ -35,7 +35,7 @@ export default class FlowModeBehaviour extends AddArrowBehaviour {
         }
 
         return FirebaseFlow.createNew(
-            IdGenerator.generateUniqueId(this.getFirebaseState()),
+            uuid(),
             extractId(src),
             extractId(tgt),
         );

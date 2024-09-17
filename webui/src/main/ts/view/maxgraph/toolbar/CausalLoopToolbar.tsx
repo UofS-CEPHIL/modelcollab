@@ -69,17 +69,15 @@ export default class CausalLoopToolbar extends CanvasToolbar<Props, State> {
 
     protected makeInitialState(): State {
         return {
-            modelActionsMenuAnchor: null,
+            ...CanvasToolbar.DEFAULT_INITIAL_STATE,
             errorsMenuAnchor: null,
-            modelNameText: null,
         };
     }
 
     protected withMenusClosed(s: State): State {
         return {
             ...s,
-            modelActionsMenuAnchor: null,
-            errorsMenuAnchor: null,
+            modelActionsMenuAnchor: null
         };
     }
 }

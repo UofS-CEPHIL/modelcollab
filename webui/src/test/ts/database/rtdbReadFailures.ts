@@ -32,10 +32,24 @@ export async function cannotReadModelSharedUser(
         get(
             ref(
                 db,
-                RTDBSchema.ModelMetadata.makeSharedWithUserPath(
+                RTDBSchema.ModelPermissions.makeModelSharedUserPath(
                     modelId,
                     sharedUid
                 )
+            )
+        )
+    );
+}
+
+export async function cannotReadModelSharedUsers(
+    db: Database,
+    modelId: string
+): Promise<void> {
+    await assertFails(
+        get(
+            ref(
+                db,
+                RTDBSchema.ModelPermissions.makeModelSharedUsersPath(modelId)
             )
         )
     );
@@ -273,6 +287,20 @@ export async function cannotReadStaticModelComponent(
     );
 }
 
+export async function cannotReadModelMetadata(
+    db: Database,
+    modelId: string
+): Promise<void> {
+    await assertFails(
+        get(
+            ref(
+                db,
+                RTDBSchema.ModelMetadata.makeModelPath(modelId)
+            )
+        )
+    );
+}
+
 export async function cannotReadModelName(
     db: Database,
     modelId: string
@@ -360,7 +388,7 @@ export async function cannotReadUserOwnedModels(
         get(
             ref(
                 db,
-                RTDBSchema.ModelPermissions.makeUserModelsPath(uid)
+                RTDBSchema.ModelPermissions.makeUserOwnedModelsPath(uid)
             )
         )
     );
@@ -375,7 +403,7 @@ export async function cannotReadUserOwnedModel(
         get(
             ref(
                 db,
-                RTDBSchema.ModelPermissions.makeUserModelPath(uid, modelUuid)
+                RTDBSchema.ModelPermissions.makeUserOwnedModelPath(uid, modelUuid)
             )
         )
     );
@@ -404,7 +432,7 @@ export async function cannotReadUserSharedModel(
         get(
             ref(
                 db,
-                RTDBSchema.ModelPermissions.makeSharedModelPath(uid, modelId)
+                RTDBSchema.ModelPermissions.makeUserSharedModelPath(uid, modelId)
             )
         )
     );

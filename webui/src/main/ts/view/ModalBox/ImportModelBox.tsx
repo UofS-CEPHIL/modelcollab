@@ -1,6 +1,8 @@
 import { ListItem, ListItemText, ListItemButton, List } from '@mui/material';
 import { Component, ReactElement } from 'react';
-import FirebaseDataModel, { ModelsList, ModelType } from '../../data/FirebaseDataModel';
+import FirebaseDataModel, { ModelType } from '../../data/FirebaseDataModel';
+import FirebaseModelsList from '../../data/FirebaseModelsList';
+import FirebaseModelsManager from '../../data/FirebaseModelsManager';
 import ButtonBox from './ButtonBox';
 
 export interface Props {
@@ -11,40 +13,36 @@ export interface Props {
 }
 
 export interface State {
-    myModels: ModelsList;
-    sharedModels: ModelsList;
-    publicModels: ModelsList;
-    unsubscribe?: () => void;
+    models: FirebaseModelsList;
 }
 
 export default class ImportModelBox extends Component<Props, State> {
 
+    private modelsManager?: FirebaseModelsManager;
+
     public constructor(props: Props) {
         super(props);
         this.state = {
-            myModels: {},
-            sharedModels: {},
-            publicModels: {}
+            models: FirebaseModelsList.EMPTY
         };
     }
 
     public componentWillUnmount(): void {
-        if (this.state.unsubscribe) {
-            this.state.unsubscribe();
-            this.setState({ unsubscribe: undefined });
-        }
+        this.modelsManager?.unsubscribe();
+        this.modelsManager = undefined;
+        this.setState({ models: FirebaseModelsList.EMPTY });
     }
 
     public componentDidMount(): void {
-        if (!this.state.unsubscribe) {
-            const unsubscribe = this.props.firebaseDataModel
-                .subscribeToAllAvailableModels(
-                    m => this.setState({ myModels: m }),
-                    m => this.setState({ sharedModels: m }),
-                    m => this.setState({ publicModels: m }),
-                );
-            this.setState({ unsubscribe });
-        }
+        this.modelsManager = new FirebaseModelsManager(
+            this.props.firebaseDataModel,
+            () => this.state.models,
+            models => this.setState(
+                { models },
+                () => this.modelsManager?.notifyDataUpdated()
+            )
+        );
+        this.modelsManager.subscribe();
     }
 
     public render(): ReactElement {
@@ -66,19 +64,19 @@ export default class ImportModelBox extends Component<Props, State> {
     }
 
     protected makeListItems(): ReactElement[] {
-        const allModels = {
-            ...this.state.myModels,
-            ...this.state.sharedModels,
-            ...this.state.publicModels,
-        }
-        return Object.entries(allModels)
-            .filter(([_, t]) => t.type === ModelType.StockFlow)
-            .map(([uuid, nametype]) => (
-                <ListItem disablePadding key={uuid}>
+        const allModels = [
+            ...this.state.models.publicModels.values(),
+            ...this.state.models.sharedModels.values(),
+            ...this.state.models.publicModels.values(),
+        ];
+        return allModels
+            .filter(m => m.modelType === ModelType.StockFlow)
+            .map(m => (
+                <ListItem disablePadding key={m.modelId}>
                     <ListItemButton
-                        onClick={() => this.props.onModelSelected(uuid)}
+                        onClick={() => this.props.onModelSelected(m.modelId)}
                     >
-                        <ListItemText primary={nametype.name} />
+                        <ListItemText primary={m.modelName} />
                     </ListItemButton>
                 </ListItem>
             ));

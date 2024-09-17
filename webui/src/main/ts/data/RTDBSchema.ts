@@ -107,6 +107,7 @@ class ModelDataSchema {
 }
 
 export enum Permission {
+    NONE = "",
     READ = "r",
     READWRITE = "rw",
 }
@@ -119,8 +120,6 @@ class ModelMetadataSchema {
 
     static readonly TYPE = "type";
 
-    static readonly SHARED_WITH = "sharedWith";
-
     static makePath(): string {
         return "/modelMeta";
     }
@@ -131,15 +130,13 @@ class ModelMetadataSchema {
 
     static makeMetadataObject(
         ownerUid: string,
-        sharedWith: { [uid: string]: Permission },
         name: string,
         modelType: ModelType,
     ): any {
         return {
             [`${this.OWNER}`]: ownerUid,
             [`${this.NAME}`]: name,
-            [`${this.TYPE}`]: modelType,
-            [`${this.SHARED_WITH}`]: sharedWith
+            [`${this.TYPE}`]: modelType
         };
     }
 
@@ -153,14 +150,6 @@ class ModelMetadataSchema {
 
     static makeModelTypePath(modelUuid: string): string {
         return this.makeModelPath(modelUuid) + `/${this.TYPE}`;
-    }
-
-    static makeSharedWithUsersPath(modelUuid: string): string {
-        return this.makeModelPath(modelUuid) + `/${this.SHARED_WITH}`;
-    }
-
-    static makeSharedWithUserPath(modelUuid: string, sharedUid: string): string {
-        return this.makeSharedWithUsersPath(modelUuid) + `/${sharedUid}`;
     }
 }
 
@@ -204,6 +193,10 @@ class ModelPermissionsSchema {
 
     static readonly OWNERS = "owners";
 
+    static readonly MODELS = "models";
+
+    static readonly USERS = "users";
+
     static makePath(): string {
         return "/modelPermissions";
     }
@@ -216,11 +209,15 @@ class ModelPermissionsSchema {
         return `${this.makePublicModelsPath()}/${modelId}`;
     }
 
-    static makeUserSharedModelsPath(uid: string): string {
-        return `${this.makePath()}/${uid}`;
+    static makeUsersSharedModelsPath(): string {
+        return `${this.makePath()}/${this.USERS}`;
     }
 
-    static makeSharedModelPath(uid: string, modelId: string): string {
+    static makeUserSharedModelsPath(uid: string): string {
+        return `${this.makeUsersSharedModelsPath()}/${uid}`;
+    }
+
+    static makeUserSharedModelPath(uid: string, modelId: string): string {
         return `${this.makeUserSharedModelsPath(uid)}/${modelId}`;
     }
 
@@ -228,12 +225,24 @@ class ModelPermissionsSchema {
         return `${this.makePath()}/${this.OWNERS}`;
     }
 
-    static makeUserModelsPath(uid: string): string {
+    static makeUserOwnedModelsPath(uid: string): string {
         return `${this.makeModelOwnersPath()}/${uid}`;
     }
 
-    static makeUserModelPath(uid: string, modelId: string): string {
-        return `${this.makeUserModelsPath(uid)}/${modelId}`;
+    static makeUserOwnedModelPath(uid: string, modelId: string): string {
+        return `${this.makeUserOwnedModelsPath(uid)}/${modelId}`;
+    }
+
+    static makeModelsSharedUsersPath(): string {
+        return `${this.makePath()}/${this.MODELS}`;
+    }
+
+    static makeModelSharedUsersPath(modelId: string): string {
+        return `${this.makeModelsSharedUsersPath()}/${modelId}`;
+    }
+
+    static makeModelSharedUserPath(modelId: string, userUid: string): string {
+        return `${this.makeModelSharedUsersPath(modelId)}/${userUid}`;
     }
 }
 

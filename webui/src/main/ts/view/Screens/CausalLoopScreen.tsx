@@ -170,7 +170,7 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
                 changeMode={mode => this.setMode(mode)}
                 setOpenModalBox={m => this.setState({ displayedModalBox: m })}
                 modelName={this.state.modelName ?? ""}
-                sessionId={this.props.modelUuid!}
+                modelId={this.props.modelUuid!}
                 restClient={this.props.restClient}
                 firebaseDataModel={this.props.firebaseDataModel}
                 toggleSidebarOpen={() => this.toggleSidebarOpen()}

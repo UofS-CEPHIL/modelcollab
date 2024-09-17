@@ -70,8 +70,6 @@ export default abstract class CanvasScreen
     }
 
     public componentDidMount(): void {
-        // First make sure that the model editing session exists in RTDB
-        // and we've subscribed to it.
         if (!this.hasLoaded) {
             this.hasLoaded = true;
             this.unsubscribeFromDatabase = this.subscribeToFirebase();

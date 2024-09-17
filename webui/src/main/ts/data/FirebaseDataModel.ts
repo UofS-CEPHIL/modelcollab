@@ -1,5 +1,5 @@
 import { ref, set, onValue, remove, DataSnapshot, Unsubscribe, get, update, query, orderByChild } from "firebase/database";
-import { User } from "firebase/auth";
+import { User, fetchSignInMethodsForEmail } from "firebase/auth";
 // @ts-ignore can't find types
 import { v4 as createUuid } from "uuid";
 import FirebaseComponent from "./components/FirebaseComponent";
@@ -83,7 +83,7 @@ export default class FirebaseDataModel {
                     component.getId()
                 )
             ),
-            component.toFirebaseEntry()
+            component.toFirebaseEntry()[1]
         );
     }
 
@@ -123,7 +123,7 @@ export default class FirebaseDataModel {
         const result = await get(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelPermissions.makeUserModelsPath(myuid)
+                RTDBSchema.ModelPermissions.makeUserOwnedModelsPath(myuid)
             )
         );
 
@@ -165,7 +165,7 @@ export default class FirebaseDataModel {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelMetadata.makeSharedWithUserPath(
+                RTDBSchema.ModelPermissions.makeModelSharedUserPath(
                     modelUuid,
                     myUid
                 )
@@ -195,22 +195,20 @@ export default class FirebaseDataModel {
         callback: (m: string[]) => void
     ): Unsubscribe {
 
-        function handleOwnedModelsListSnapshot(s: DataSnapshot): void {
-            if (s.exists()) {
-                callback(Object.keys(s));
-            }
-            else {
-                callback([]);
-            }
-        }
-
         const myuid = this.getCurrentUserUid();
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelPermissions.makeUserModelsPath(myuid)
+                RTDBSchema.ModelPermissions.makeUserOwnedModelsPath(myuid)
             ),
-            s => handleOwnedModelsListSnapshot(s),
+            s => {
+                if (s.exists()) {
+                    callback(Object.keys(s.val()));
+                }
+                else {
+                    callback([]);
+                }
+            },
             e => {
                 console.error(e);
                 callback([]);
@@ -258,6 +256,34 @@ export default class FirebaseDataModel {
         );
     }
 
+    public async isModelOwnedByCurrentUser(modelId: string): Promise<boolean> {
+        const uid = this.getCurrentUserUid();
+        const dbResult = await get(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelPermissions.makeUserOwnedModelPath(uid, modelId)
+            )
+        );
+        return dbResult.exists();
+    }
+
+    public subscribeToPublicModelPermission(
+        modelId: string,
+        callback: (p?: Permission) => void
+    ): Unsubscribe {
+        return onValue(
+            ref(
+                this.firebaseManager.getDb(),
+                RTDBSchema.ModelPermissions.makePublicModelPath(modelId)
+            ),
+            s => callback(s.val()),
+            e => {
+                console.error(e);
+                callback(undefined);
+            }
+        );
+    }
+
     public subscribeToPublicModelIds(
         callback: (m: string[]) => void
     ): Unsubscribe {
@@ -273,6 +299,10 @@ export default class FirebaseDataModel {
                 else {
                     callback([]);
                 }
+            },
+            e => {
+                console.error(e);
+                callback([]);
             }
         )
     }
@@ -418,7 +448,6 @@ export default class FirebaseDataModel {
             ),
             RTDBSchema.ModelMetadata.makeMetadataObject(
                 myuid,
-                {},
                 name,
                 modelType
             )
@@ -426,7 +455,7 @@ export default class FirebaseDataModel {
         await set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelPermissions.makeUserModelPath(myuid, uuid)
+                RTDBSchema.ModelPermissions.makeUserOwnedModelPath(myuid, uuid)
             ),
             true
         );
@@ -463,15 +492,11 @@ export default class FirebaseDataModel {
                 this.firebaseManager.getDb(),
                 RTDBSchema.ModelData.makeComponentsPath(sessionId)
             ),
-            Object.fromEntries(updatedComponentsList.map(c => {
-                return [
-                    c.getId(),
-                    {
-                        type: c.getType().toString(),
-                        data: c.getData()
-                    }
-                ]
-            }))
+            Object.fromEntries(
+                updatedComponentsList.map(
+                    c => c.toFirebaseEntry()
+                )
+            )
         );
     }
 
@@ -624,7 +649,7 @@ export default class FirebaseDataModel {
         await remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelPermissions.makeUserModelPath(
+                RTDBSchema.ModelPermissions.makeUserOwnedModelPath(
                     this.getCurrentUserUid(),
                     modelUuid
                 )
@@ -687,6 +712,8 @@ export default class FirebaseDataModel {
         includeSelf: boolean = true,
     ): Promise<UsersList> {
         // TODO this is wasteful -- figure out how to do this with a query
+        //   Or better yet, create a Firebase Admin server and do this
+        //   through the aut
         const users = await this.getAllUsers();
         const myuid = this.getCurrentUserUid();
         return Object.fromEntries(
@@ -730,7 +757,7 @@ export default class FirebaseDataModel {
         await set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelMetadata.makeSharedWithUserPath(
+                RTDBSchema.ModelPermissions.makeModelSharedUserPath(
                     modelUuid,
                     userUid
                 )
@@ -740,7 +767,7 @@ export default class FirebaseDataModel {
         await set(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelPermissions.makeSharedModelPath(
+                RTDBSchema.ModelPermissions.makeUserSharedModelPath(
                     userUid,
                     modelUuid
                 )
@@ -756,7 +783,7 @@ export default class FirebaseDataModel {
         await remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelMetadata.makeSharedWithUserPath(
+                RTDBSchema.ModelPermissions.makeModelSharedUserPath(
                     modelUuid,
                     userUid
                 )
@@ -765,7 +792,7 @@ export default class FirebaseDataModel {
         await remove(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelPermissions.makeSharedModelPath(
+                RTDBSchema.ModelPermissions.makeUserSharedModelPath(
                     userUid,
                     modelUuid
                 )
@@ -783,7 +810,7 @@ export default class FirebaseDataModel {
                 RTDBSchema.ModelPermissions.makePublicModelPath(modelUuid)
             ),
             snap => callback(
-                snap.exists() ? snap.val() as Permission : undefined
+                snap.exists() ? snap.val() as Permission : Permission.NONE
             )
         );
     }
@@ -792,13 +819,19 @@ export default class FirebaseDataModel {
         modelUuid: string,
         permission?: Permission
     ): Promise<void> {
-        await set(
-            ref(
-                this.firebaseManager.getDb(),
-                RTDBSchema.ModelPermissions.makePublicModelPath(modelUuid)
-            ),
-            permission
+        const dbRef = ref(
+            this.firebaseManager.getDb(),
+            RTDBSchema.ModelPermissions.makePublicModelPath(modelUuid)
         );
+        if (permission) {
+            await set(
+                dbRef,
+                permission
+            );
+        }
+        else {
+            await remove(dbRef);
+        }
     }
 
     public subscribeToModelSharedUsers(
@@ -826,7 +859,7 @@ export default class FirebaseDataModel {
         return onValue(
             ref(
                 this.firebaseManager.getDb(),
-                RTDBSchema.ModelMetadata.makeSharedWithUsersPath(modelUuid)
+                RTDBSchema.ModelPermissions.makeModelSharedUsersPath(modelUuid)
             ),
             snap => retrieveUserInfo(
                 snap.exists() ? snap.val() : {}

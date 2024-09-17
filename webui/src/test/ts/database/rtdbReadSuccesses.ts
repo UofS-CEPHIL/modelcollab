@@ -47,7 +47,7 @@ export async function canReadUserOwnedModels(
         get(
             ref(
                 db,
-                RTDBSchema.ModelPermissions.makeUserModelsPath(uid)
+                RTDBSchema.ModelPermissions.makeUserOwnedModelsPath(uid)
             )
         )
     );
@@ -62,7 +62,7 @@ export async function canReadUserOwnedModel(
         get(
             ref(
                 db,
-                RTDBSchema.ModelPermissions.makeUserModelPath(uid, modelUuid)
+                RTDBSchema.ModelPermissions.makeUserOwnedModelPath(uid, modelUuid)
             )
         )
     );
@@ -91,7 +91,21 @@ export async function canReadUserSharedModel(
         get(
             ref(
                 db,
-                RTDBSchema.ModelPermissions.makeSharedModelPath(uid, modelId)
+                RTDBSchema.ModelPermissions.makeUserSharedModelPath(uid, modelId)
+            )
+        )
+    );
+}
+
+export async function canReadModelMetadata(
+    db: Database,
+    modelId: string
+): Promise<void> {
+    await assertSucceeds(
+        get(
+            ref(
+                db,
+                RTDBSchema.ModelMetadata.makeModelPath(modelId)
             )
         )
     );
@@ -148,7 +162,7 @@ export async function canReadModelSharedUser(
         get(
             ref(
                 db,
-                RTDBSchema.ModelMetadata.makeSharedWithUserPath(
+                RTDBSchema.ModelPermissions.makeModelSharedUserPath(
                     modelId,
                     sharedUid
                 )
@@ -165,7 +179,7 @@ export async function canReadModelSharedUsers(
         get(
             ref(
                 db,
-                RTDBSchema.ModelMetadata.makeSharedWithUsersPath(modelId)
+                RTDBSchema.ModelPermissions.makeModelSharedUsersPath(modelId)
             )
         )
     );

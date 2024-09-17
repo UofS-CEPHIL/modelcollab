@@ -43,7 +43,7 @@ export default class ModelPermissionsBox extends Component<Props, State> {
             const unsubVisibility = this.props.firebaseDataModel
                 .subscribeToModelPublicPermissions(
                     this.props.modelUuid,
-                    v => this.setState({ visibility: v ?? undefined })
+                    v => this.setState({ visibility: v })
                 );
             const unsubSharedWith = this.props.firebaseDataModel
                 .subscribeToModelSharedUsers(
@@ -138,7 +138,7 @@ export default class ModelPermissionsBox extends Component<Props, State> {
                         label="Find Users"
                         value={this.state.userSearchText}
                         onChange={e => this.setState({
-                            userSearchText: e.target.value
+                            userSearchText: e.target.value ?? ""
                         })}
                         InputProps={{
                             ...params.InputProps,
@@ -296,7 +296,8 @@ export default class ModelPermissionsBox extends Component<Props, State> {
         }
 
         const rw = canWrite ? "see and edit" : "only see";
-        const rwTooltipText = `${data.name} (${data.email}) can ${rw} this model`;
+        const rwTooltipText =
+            `${data.name} (${data.email}) can ${rw} this model`;
 
         return (
             <Tooltip title={rwTooltipText} key={uid}>
@@ -315,7 +316,7 @@ export default class ModelPermissionsBox extends Component<Props, State> {
         return (
             <FormControl>
                 <RadioGroup
-                    value={this.state.visibility}
+                    value={this.state.visibility ?? null}
                     onChange={e =>
                         this.props.firebaseDataModel
                             .setModelPublicPermissions(
@@ -329,7 +330,7 @@ export default class ModelPermissionsBox extends Component<Props, State> {
                         title="Only people listed above can see this model"
                     >
                         <FormControlLabel
-                            value={null}
+                            value={Permission.NONE}
                             control={<Radio />}
                             label="Private"
                         />

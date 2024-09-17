@@ -1,8 +1,8 @@
 import { Cell, CellStyle } from "@maxgraph/core";
+import { v4 as uuid } from "uuid";
 import ComponentType from "../../../../data/components/ComponentType";
 import { FirebaseComponentBase } from "../../../../data/components/FirebaseComponent";
 import FirebaseConnection from "../../../../data/components/FirebaseConnection";
-import IdGenerator from "../../../../IdGenerator";
 import ConnectionPresentation from "../../presentation/ConnectionPresentation";
 import AddArrowBehaviour from "../AddArrowBehaviour";
 
@@ -19,7 +19,7 @@ export class ConnectModeBehaviour extends AddArrowBehaviour {
 
     public makeLink(src: Cell, tgt: Cell): FirebaseConnection {
         return FirebaseConnection.createNew(
-            IdGenerator.generateUniqueId(this.getFirebaseState()),
+            uuid(),
             src.getId()!,
             tgt.getId()!,
         );

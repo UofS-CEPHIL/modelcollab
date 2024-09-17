@@ -6,7 +6,7 @@ import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
 import RTDBSchema, { Permission } from "../../../../main/ts/data/RTDBSchema";
 import { EMAIL_1, EMAIL_2, env, getDb, MODELID_1, MODELNAME_1, NAME_1, NAME_2, TestCase, UID_1, UID_2, INVALID_UUIDS } from "../rtdb.test";
 import { cannotShareModelInPermissions, cannotWritePublicModel } from "../rtdbWriteFailures";
-import { canShareModelInPermissions, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "../rtdbWriteSuccesses";
+import { canAddModelToUserSharedList, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "../rtdbWriteSuccesses";
 
 async function addModelWithId(id: string): Promise<void> {
     await env!.withSecurityRulesDisabled(
@@ -76,7 +76,7 @@ export default function describePermissionsValidationsTests(): void {
                         catch (e) {
                             fail();
                         }
-                        await canShareModelInPermissions(
+                        await canAddModelToUserSharedList(
                             getDb(UID_1),
                             val as string,
                             UID_2
@@ -185,7 +185,7 @@ export default function describePermissionsValidationsTests(): void {
                                 val as string
                             )
                         );
-                        await canShareModelInPermissions(
+                        await canAddModelToUserSharedList(
                             getDb(UID_1),
                             MODELID_1,
                             val as string
@@ -245,7 +245,7 @@ export default function describePermissionsValidationsTests(): void {
                         set(
                             ref(
                                 getDb(UID_1),
-                                RTDBSchema.ModelPermissions.makeSharedModelPath(
+                                RTDBSchema.ModelPermissions.makeUserSharedModelPath(
                                     UID_2,
                                     MODELID_1
                                 )
@@ -265,7 +265,7 @@ export default function describePermissionsValidationsTests(): void {
                                     ref(
                                         getDb(UID_1),
                                         RTDBSchema.ModelPermissions
-                                            .makeSharedModelPath(
+                                            .makeUserSharedModelPath(
                                                 UID_2,
                                                 MODELID_1
                                             )

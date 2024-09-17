@@ -1,4 +1,5 @@
 import { ReactElement } from 'react';
+import { v4 as uuid } from "uuid";
 import UserControls from '../maxgraph/UserControls';
 import { UiMode } from '../../UiMode';
 import CanvasScreen, { Props as CanvasScreenProps, State as CanvasScreenState } from "./CanvasScreen";
@@ -7,7 +8,6 @@ import FirebaseDataModel from "../../data/FirebaseDataModel";
 import ModalBoxType from "../ModalBox/ModalBoxType";
 import RestClient from "../../rest/RestClient";
 import ImportModelBox from "../ModalBox/ImportModelBox";
-import IdGenerator from "../../IdGenerator";
 import CanvasSidebar from "../maxgraph/toolbar/CanvasSidebar";
 import YesNoModalBox from "../ModalBox/YesNoModalBox";
 import FirebaseComponent, { FirebaseComponentBase } from '../../data/components/FirebaseComponent';
@@ -207,7 +207,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
                 setOpenModalBox={boxType => this.setState(
                     { ...this.state, displayedModalBox: boxType }
                 )}
-                sessionId={this.props.modelUuid!}
+                modelId={this.props.modelUuid!}
                 modelName={this.state.modelName || ""}
                 scenario={this.state.selectedScenarioId}
                 restClient={this.props.restClient}
@@ -312,10 +312,9 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
     }
 
     private importStaticModel(importedModelUuid: string): void {
-        const id = IdGenerator.generateUniqueId(this.state.components);
         const addComponent = () => this.actions!.addComponent(
             new FirebaseStaticModel(
-                id,
+                uuid(),
                 {
                     x: 100,
                     y: 100,

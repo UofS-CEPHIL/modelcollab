@@ -3,7 +3,7 @@ import { cannotReadUnexpectedLocations } from "../rtdbReadFailures";
 import { cannotWriteUnexpectedLocations } from "../rtdbWriteFailures";
 import { assertFails } from "@firebase/rules-unit-testing";
 import { ref, remove } from "firebase/database";
-import { canShareModelInPermissions, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "../rtdbWriteSuccesses";
+import { canAddModelToUserSharedList, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "../rtdbWriteSuccesses";
 import { ModelType } from "../../../../main/ts/data/FirebaseDataModel";
 import { setupModelComponents } from "./rtdbModelDataRulesTests";
 
@@ -73,7 +73,7 @@ export default function describeDegenerateRulesTests(): void {
                                 ModelType.StockFlow,
                                 UID_1
                             );
-                            await canShareModelInPermissions(
+                            await canAddModelToUserSharedList(
                                 db,
                                 MODELID_2,
                                 UID_2

@@ -3,9 +3,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import LogoutIcon from '@mui/icons-material/Logout';
 import React, { KeyboardEvent, ReactElement } from 'react';
-import FirebaseDataModel, { ModelsList, ModelType, modelTypeFromString } from '../../data/FirebaseDataModel';
+import FirebaseDataModel, { ModelType, modelTypeFromString } from '../../data/FirebaseDataModel';
 import { Link } from 'react-router-dom';
 import { theme } from '../../Themes';
+import FirebaseModelsList, { ModelMap } from "../../data/FirebaseModelsList";
+import ModelMetadata from '../../data/ModelMetadata';
+import { Permission } from '../../data/RTDBSchema';
+import FirebaseModelsManager from '../../data/FirebaseModelsManager';
 
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
@@ -13,37 +17,35 @@ export interface Props {
 }
 
 export interface State {
-    myModelIds: string[];
-    myModels: ModelsList;
-    sharedModelIds: string[];
-    sharedModels: ModelsList;
-    publicModelIds: string[];
-    publicModels: ModelsList;
     newModelText: string;
     newModelType: ModelType;
-    unsubscribeIds?: () => void;
-    unsubscribeModels?: () => void;
+    models: FirebaseModelsList;
 }
 
 export default class ModelSelectScreen extends React.Component<Props, State> {
 
+    private readonly modelsManager: FirebaseModelsManager;
+
     public constructor(props: Props) {
         super(props);
         this.state = {
-            myModelIds: [],
-            myModels: {},
-            sharedModelIds: [],
-            sharedModels: {},
-            publicModelIds: [],
-            publicModels: {},
+            models: FirebaseModelsList.EMPTY,
             newModelText: "",
             newModelType: ModelType.StockFlow
         };
+        this.modelsManager = new FirebaseModelsManager(
+            this.props.firebaseDataModel,
+            () => this.state.models,
+            models => this.setState(
+                { models },
+                () => this.modelsManager?.notifyDataUpdated()
+            )
+        );
     }
 
     public componentDidMount() {
+        this.modelsManager.subscribe();
         this.props.firebaseDataModel.ensureUserInfoInDatabase()
-            .then(() => this.subscribeToModels())
             .catch(e => {
                 alert("Error logging in");
                 console.error(e);
@@ -51,17 +53,15 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     }
 
     public componentWillUnmount() {
-        if (this.state.unsubscribeIds) {
-            this.state.unsubscribeIds();
-            this.setState({ unsubscribeIds: undefined });
-        }
-        if (this.state.unsubscribeModels) {
-            this.state.unsubscribeModels();
-            this.setState({ unsubscribeModels: undefined });
-        }
+        this.modelsManager.unsubscribe();
+        this.setState({ models: FirebaseModelsList.EMPTY });
     }
 
     public render(): ReactElement {
+        const models =
+            this.state.models?.withDuplicatesFiltered()
+            ?? FirebaseModelsList.EMPTY;
+
         return (
             <List>
                 <ListItem key={"welcome-listitem"}>
@@ -93,30 +93,34 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
                 <ListSubheader key={"your-models-header"}>
                     Your Models
                 </ListSubheader>
-                {this.makeModelsListItems(this.state.myModels, true)}
+                {
+                    this.makeModelsListItems(models.ownedModels, true)
+                }
                 <Divider />
                 <ListSubheader key={"shared-models-header"}>
                     Shared With You
                 </ListSubheader>
-                {this.makeModelsListItems(this.state.sharedModels)}
+                {this.makeModelsListItems(models.sharedModels)}
                 <Divider />
                 <ListSubheader key={"public-models-header"}>
                     Public Models
                 </ListSubheader>
-                {this.makeModelsListItems(this.state.publicModels)}
+                {this.makeModelsListItems(models.publicModels)}
             </List >
         );
     }
 
     private makeModelsListItems(
-        models: ModelsList,
-        canDelete: boolean = false
+        models?: ModelMap,
+        isOwnedModel: boolean = false
     ): ReactElement[] {
-        return Object.entries(models).map(
-            ([uuid, nametype]) => (
+
+        if (!models || models.isEmpty()) return [];
+        return [...models.values()].map(
+            model => (
                 <ListItem
                     style={{ color: theme.palette.text.primary }}
-                    key={uuid}
+                    key={model.modelId}
                 >
                     <Grid
                         container
@@ -127,18 +131,21 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
                         <Grid item xs={11}>
                             <ListItemButton
                                 component={Link}
-                                to={`${nametype.type}/${uuid}`}
+                                to={`${model.modelType}/${model.modelId}`}
                             >
                                 <ListItemText
-                                    primary={nametype.name}
-                                    secondary={this.getModelTypeDisplayText(
-                                        nametype.type
-                                    )}
+                                    primary={model.modelName}
+                                    secondary={
+                                        this.getModelTypeDisplayText(
+                                            model,
+                                            isOwnedModel
+                                        )
+                                    }
                                 />
                             </ListItemButton>
                         </Grid>
                         {
-                            canDelete && <Grid item xs={1}>
+                            isOwnedModel && <Grid item xs={1}>
                                 <IconButton
                                     sx={{
                                         ["&:hover"]: {
@@ -146,7 +153,10 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
                                         }
                                     }}
                                     onClick={() =>
-                                        this.deleteModel(uuid, nametype.name)
+                                        this.deleteModel(
+                                            model.modelId,
+                                            model.modelName ?? "[Not Found]"
+                                        )
                                     }
                                 >
                                     <FontAwesomeIcon icon={faTrash} />
@@ -214,14 +224,45 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
         );
     }
 
-    private getModelTypeDisplayText(dbText: string): string {
-        switch (dbText) {
-            case ModelType.StockFlow:
-                return "Stock & Flow Model";
-            case ModelType.CausalLoop:
-                return "Causal Loop Diagram";
-            default:
-                return "Error: Unknown model type " + dbText
+    private getModelTypeDisplayText(
+        model?: ModelMetadata,
+        isOwnedModel: boolean = false
+    ): string {
+
+        if (!model) return "";
+
+        let modelTypeText: string = "";
+        if (model.modelType) {
+            switch (model.modelType) {
+                case ModelType.StockFlow:
+                    modelTypeText = "Stock & Flow Model";
+                    break;
+                case ModelType.CausalLoop:
+                    modelTypeText = "Causal Loop Diagram";
+                    break;
+                default:
+                    throw new Error("Unknown model type " + model.modelType);
+            }
+        }
+
+        if (!isOwnedModel && model.userPermission) {
+            let permissionText: string = "";
+            switch (model.userPermission) {
+                case Permission.READ:
+                    permissionText = "Read-Only";
+                    break;
+                case Permission.READWRITE:
+                    permissionText = "Read & Write";
+                    break;
+                default:
+                    throw new Error(
+                        "Unknown model permission: " + model.userPermission
+                    );
+            }
+            return `${modelTypeText}  |  ${permissionText}`;
+        }
+        else {
+            return modelTypeText;
         }
     }
 
@@ -246,9 +287,14 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     }
 
     private isModelNameUsed(): boolean {
-        return Object.values(this.state.myModels).find(
-            m => m.name == this.state.newModelText
-        ) !== undefined;
+        if (this.state.models) {
+            return [...this.state.models.ownedModels.values()].find(
+                m => m.modelName == this.state.newModelText
+            ) !== undefined;
+        }
+        else {
+            return false;
+        }
     }
 
     private deleteModel(uuid: string, name: string): void {
@@ -266,31 +312,13 @@ export default class ModelSelectScreen extends React.Component<Props, State> {
     }
 
     private isModelNameEmpty(): boolean {
-        return this.state.newModelText === ""
+        return this.state.newModelText === "";
     }
 
     private subscribeToModels(): void {
-
-        const isAlreadyListed = (id: string) =>
-            this.state.myModelIds.includes(id)
-            || this.state.sharedModelIds.includes(id);
-
-        const removeDuplicateModels = () => this.setState(
-            {
-                publicModelIds: this.state.publicModelIds.filter(
-                    id => !isAlreadyListed(id)
-                )
-            },
-            () => this.updateModelSubscriptions()
-        )
-
-        const unsubscribeIds = this.props.firebaseDataModel
-            .subscribeToAllAvailableModelIds(
-                m => this.setState({ myModelIds: m }, removeDuplicateModels),
-                m => this.setState({ sharedModelIds: m }, removeDuplicateModels),
-                m => this.setState({ publicModelIds: m }, removeDuplicateModels),
-            );
-
-        this.setState({ unsubscribeIds });
+        if (!this.modelsManager) throw new Error(
+            "Attempted to subscribe to models but no manager was present"
+        );
+        this.modelsManager.subscribe();
     }
 }

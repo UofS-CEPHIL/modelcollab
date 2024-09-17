@@ -7,7 +7,7 @@ import { cannotReadComponent, cannotReadComponents, cannotReadScenario, cannotRe
 import { canReadComponent, canReadComponents, canReadScenario, canReadScenarioName, canReadScenarios, canReadScenarioStartTime, canReadScenarioStopTime, canReadScenarioValue, canReadStaticModel, canReadStaticModelComponent, canReadStaticModels, canReadSubstitution, canReadSubstitutions } from "../rtdbReadSuccesses";
 import { EMAIL_1, EMAIL_2, EMAIL_3, MODELID_1, MODELNAME_1, NAME_1, NAME_2, NAME_3, PARAM_1, STOCK_1, UID_1, UID_2, UID_3, Database, getDb, UID_UNAUTHENTICATED, COMPONENT_1, SUB_REPLACED_ID, SUB_REPLACEMENT_ID, SCENARIO, STATIC_MODEL_ID, COMPONENT_2, env } from "../rtdb.test";
 import { cannotAddScenario, cannotAddStaticModel, cannotAddSubstitution, cannotDeleteComponent, cannotDeleteScenario, cannotDeleteStaticModel, cannotDeleteSubstitution, cannotEditScenario, cannotWriteStaticModelComponent, cannotEditSubstitution, cannotWriteComponent, cannotDeleteStaticModelComponent, cannotDeleteEntireModelDataList, cannotDeleteModelData } from "../rtdbWriteFailures";
-import { canAddModelSharedUserToMetadata, canAddScenario, canAddStaticModel, canAddSubstitution, canAddValueToScenario, canDeleteModelData, canDeleteScenario, canDeleteScenarioValue, canDeleteStaticModel, canDeleteSubstitution, canEditModelSharedUserInMetadata, canEditScenario, canEditScenarioValue, canRemoveComponent, canWriteComponent, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "../rtdbWriteSuccesses";
+import { canAddModelSharedUserToModelPermissions, canAddScenario, canAddStaticModel, canAddSubstitution, canAddValueToScenario, canDeleteModelData, canDeleteScenario, canDeleteScenarioValue, canDeleteStaticModel, canDeleteSubstitution, canEditModelSharedUserInModelPermissions, canEditScenario, canEditScenarioValue, canRemoveComponent, canWriteComponent, canWriteModelMetadata, canWriteNewUser, canWritePublicModel } from "../rtdbWriteSuccesses";
 
 export async function setupModelComponents(
     db: Database,
@@ -880,7 +880,7 @@ export default function describeModelDataRulesTests(): void {
                             ModelType.StockFlow,
                             UID_1
                         );
-                        await canAddModelSharedUserToMetadata(
+                        await canAddModelSharedUserToModelPermissions(
                             db,
                             MODELID_1,
                             UID_2,
@@ -899,7 +899,7 @@ export default function describeModelDataRulesTests(): void {
                 describe("Read-Only Shared User", () => {
 
                     beforeEach(async () =>
-                        await canEditModelSharedUserInMetadata(
+                        await canEditModelSharedUserInModelPermissions(
                             getDb(UID_1),
                             MODELID_1,
                             UID_2,
@@ -946,7 +946,7 @@ export default function describeModelDataRulesTests(): void {
                 describe("Read-Only Shared User", () => {
 
                     beforeEach(async () =>
-                        await canEditModelSharedUserInMetadata(
+                        await canEditModelSharedUserInModelPermissions(
                             getDb(UID_1),
                             MODELID_1,
                             UID_2,
@@ -993,7 +993,7 @@ export default function describeModelDataRulesTests(): void {
                 describe("Read-Only Shared User", () => {
 
                     beforeEach(async () =>
-                        await canEditModelSharedUserInMetadata(
+                        await canEditModelSharedUserInModelPermissions(
                             getDb(UID_1),
                             MODELID_1,
                             UID_2,

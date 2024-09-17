@@ -85,7 +85,7 @@ export async function canAddUserOwnedModel(
         set(
             ref(
                 db,
-                RTDBSchema.ModelPermissions.makeUserModelPath(uid, modelUuid)
+                RTDBSchema.ModelPermissions.makeUserOwnedModelPath(uid, modelUuid)
             ),
             val
         )
@@ -101,7 +101,7 @@ export async function canRemoveUserOwnedModel(
         remove(
             ref(
                 db,
-                RTDBSchema.ModelPermissions.makeUserModelPath(uid, modelUuid)
+                RTDBSchema.ModelPermissions.makeUserOwnedModelPath(uid, modelUuid)
             )
         )
     );
@@ -121,7 +121,7 @@ export async function canRemoveUserEntry(
     );
 }
 
-export async function canShareModelInPermissions(
+export async function canAddModelToUserSharedList(
     db: Database,
     modelId: string,
     sharedUid: string
@@ -130,7 +130,7 @@ export async function canShareModelInPermissions(
         set(
             ref(
                 db,
-                RTDBSchema.ModelPermissions.makeSharedModelPath(
+                RTDBSchema.ModelPermissions.makeUserSharedModelPath(
                     sharedUid,
                     modelId
                 )
@@ -149,7 +149,7 @@ export async function canRemoveSharedModelInPermissions(
         remove(
             ref(
                 db,
-                RTDBSchema.ModelPermissions.makeSharedModelPath(
+                RTDBSchema.ModelPermissions.makeUserSharedModelPath(
                     sharedUid,
                     modelId
                 )
@@ -164,7 +164,6 @@ export async function canWriteModelMetadata(
     modelName: string,
     modelType: ModelType,
     ownerUid: string,
-    sharedWith: { [uid: string]: Permission } = {}
 ): Promise<void> {
     await assertSucceeds(
         set(
@@ -174,7 +173,6 @@ export async function canWriteModelMetadata(
             ),
             RTDBSchema.ModelMetadata.makeMetadataObject(
                 ownerUid,
-                sharedWith,
                 modelName,
                 modelType,
             )
@@ -212,13 +210,13 @@ export async function canWriteModelName(
     );
 }
 
-export async function canAddModelSharedUserToMetadata(
+export async function canAddModelSharedUserToModelPermissions(
     db: Database,
     modelId: string,
     sharedUid: string,
     permission: Permission = Permission.READWRITE
 ): Promise<void> {
-    await canEditModelSharedUserInMetadata(
+    await canEditModelSharedUserInModelPermissions(
         db,
         modelId,
         sharedUid,
@@ -226,7 +224,7 @@ export async function canAddModelSharedUserToMetadata(
     );
 }
 
-export async function canEditModelSharedUserInMetadata(
+export async function canEditModelSharedUserInModelPermissions(
     db: Database,
     modelId: string,
     sharedUid: string,
@@ -236,7 +234,7 @@ export async function canEditModelSharedUserInMetadata(
         set(
             ref(
                 db,
-                RTDBSchema.ModelMetadata.makeSharedWithUserPath(
+                RTDBSchema.ModelPermissions.makeModelSharedUserPath(
                     modelId,
                     sharedUid
                 )
@@ -246,7 +244,7 @@ export async function canEditModelSharedUserInMetadata(
     );
 }
 
-export async function canRemoveModelSharedUserFromMetadata(
+export async function canRemoveModelSharedUserFromModelPermissions(
     db: Database,
     modelId: string,
     sharedUid: string
@@ -255,7 +253,7 @@ export async function canRemoveModelSharedUserFromMetadata(
         remove(
             ref(
                 db,
-                RTDBSchema.ModelMetadata.makeSharedWithUserPath(
+                RTDBSchema.ModelPermissions.makeModelSharedUserPath(
                     modelId,
                     sharedUid
                 )

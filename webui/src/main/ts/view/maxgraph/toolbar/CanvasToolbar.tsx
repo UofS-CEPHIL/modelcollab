@@ -1,7 +1,7 @@
 import React, { Fragment, KeyboardEvent, ReactElement } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
-import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, ListItem, Tooltip, TextField, Grid } from '@mui/material';
+import { Toolbar, Typography, AppBar, Stack, IconButton, Menu, ListItem, Tooltip, TextField, Grid, MenuItem } from '@mui/material';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
@@ -18,7 +18,7 @@ export interface Props {
     uiMode: UiMode;
     setOpenModalBox: (boxType: ModalBoxType) => void;
     modelName: string;
-    sessionId: string;
+    modelId: string;
     restClient: RestClient;
     firebaseDataModel: FirebaseDataModel;
     toggleSidebarOpen: () => void;
@@ -30,9 +30,20 @@ export interface State {
     modelActionsMenuAnchor: HTMLElement | null;
     errorsMenuAnchor: HTMLElement | null;
     modelNameText: string | null;
+    isModelOwner: boolean;
 }
 
-export default abstract class CanvasToolbar<P extends Props, S extends State> extends React.Component<P, S> {
+export default abstract class CanvasToolbar
+    <P extends Props, S extends State>
+    extends React.Component<P, S>
+{
+
+    public static readonly DEFAULT_INITIAL_STATE: State = {
+        modelActionsMenuAnchor: null,
+        errorsMenuAnchor: null,
+        modelNameText: null,
+        isModelOwner: false
+    };
 
     public static readonly DRAWER_WIDTH_PX = 240;
     public static readonly POLLING_TIME_MS = 1000;
@@ -69,6 +80,12 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                 </Toolbar>
             </AppBar >
         );
+    }
+
+    public componentDidMount(): void {
+        this.props.firebaseDataModel
+            .isModelOwnedByCurrentUser(this.props.modelId)
+            .then(b => this.setState({ isModelOwner: b }));
     }
 
     private makeAppBarButtons(errors: ComponentErrors): ReactElement {
@@ -179,11 +196,28 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     }}
                     onClose={() => this.closeAllMenus()}
                 >
+                    {this.makeDefaultModelActionsOptions()}
                     {this.makeModelActionsOptions()}
                 </Menu>
                 {this.makeDropdownsForCustomMenus()}
             </Fragment>
         );
+    }
+
+    private makeDefaultModelActionsOptions(): ReactElement[] {
+        if (this.state.isModelOwner)
+            return [
+                <MenuItem
+                    key={"permissions"}
+                    onClick={() =>
+                        this.props.setOpenModalBox(ModalBoxType.PERMISSIONS)
+                    }
+                >
+                    Model Permissions
+                </MenuItem>
+            ];
+        else
+            return [];
     }
 
     private makeModelName(): ReactElement {
@@ -211,17 +245,20 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                             {this.props.modelName}
                         </Typography>
                     </Grid>
-                    <Grid item>
-                        <Tooltip title="Edit Model Name">
-                            <IconButton
-                                onClick={() => this.startEditingModelName()}
-                                color="inherit"
-                                size="small"
-                            >
-                                <FontAwesomeIcon icon={faPenToSquare} />
-                            </IconButton>
-                        </Tooltip>
-                    </Grid>
+                    {
+                        this.state.isModelOwner &&
+                        <Grid item>
+                            <Tooltip title="Edit Model Name">
+                                <IconButton
+                                    onClick={() => this.startEditingModelName()}
+                                    color="inherit"
+                                    size="small"
+                                >
+                                    <FontAwesomeIcon icon={faPenToSquare} />
+                                </IconButton>
+                            </Tooltip>
+                        </Grid>
+                    }
                 </Grid>
             );
         }
@@ -239,7 +276,7 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
                     && this.state.modelNameText !== this.props.modelName
                 ) {
                     this.props.firebaseDataModel.renameModel(
-                        this.props.sessionId,
+                        this.props.modelId,
                         this.state.modelNameText
                     ).catch(err => {
                         alert(err);
@@ -349,10 +386,10 @@ export default abstract class CanvasToolbar<P extends Props, S extends State> ex
 
     protected getModelAsJson(): void {
         this.props.firebaseDataModel.getModelData(
-            this.props.sessionId,
+            this.props.modelId,
             (data: any) => this.downloadData(
                 new Blob([JSON.stringify(data)]),
-                `${this.props.sessionId}.json`
+                `${this.props.modelId}.json`
             )
         );
     }

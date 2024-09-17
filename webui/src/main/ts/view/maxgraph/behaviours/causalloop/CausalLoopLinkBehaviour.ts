@@ -1,8 +1,8 @@
 import { Cell, CellStyle } from "@maxgraph/core";
+import { v4 as uuid } from "uuid";
 import ComponentType from "../../../../data/components/ComponentType";
 import FirebaseCausalLoopLink from "../../../../data/components/FirebaseCausalLoopLink";
 import FirebaseCausalLoopVertex from "../../../../data/components/FirebaseCausalLoopVertex";
-import IdGenerator from "../../../../IdGenerator";
 import CausalLoopLinkPresentation from "../../presentation/CausalLoopLinkPresentation";
 import AddArrowBehaviour from "../AddArrowBehaviour";
 
@@ -23,9 +23,7 @@ export default class CausalLoopLinkBehaviour
 
     public makeLink(source: Cell, target: Cell): FirebaseCausalLoopLink {
         return FirebaseCausalLoopLink.createNew(
-            IdGenerator.generateUniqueId(
-                this.getFirebaseState()
-            ),
+            uuid(),
             source.getId()!,
             target.getId()!
         );

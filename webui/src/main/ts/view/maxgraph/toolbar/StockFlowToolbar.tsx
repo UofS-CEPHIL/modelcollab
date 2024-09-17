@@ -14,7 +14,7 @@ import FirebaseScenario from '../../../data/components/FirebaseScenario';
 export interface Props extends CanvasToolbarProps {
     setOpenModalBox: (boxType: ModalBoxType) => void;
     modelName: string;
-    sessionId: string;
+    modelId: string;
     scenario: string;
     restClient: RestClient;
     firebaseDataModel: FirebaseDataModel;
@@ -37,12 +37,11 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
 
     protected makeInitialState(): State {
         return {
+            ...CanvasToolbar.DEFAULT_INITIAL_STATE,
             uiMode: CanvasToolbar.DEFAULT_MODE,
             waitingForResults: false,
             interpretMenuAnchor: null,
-            modelActionsMenuAnchor: null,
             errorsMenuAnchor: null,
-            modelNameText: null,
         };
     }
 
@@ -51,7 +50,6 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
             ...s,
             interpretMenuAnchor: null,
             modelActionsMenuAnchor: null,
-            errorsMenuAnchor: null,
         };
     }
 
@@ -142,20 +140,12 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
             >
                 Import Model
             </MenuItem>,
-            <MenuItem
-                key={"permissions"}
-                onClick={() =>
-                    this.props.setOpenModalBox(ModalBoxType.PERMISSIONS)
-                }
-            >
-                Model Permissions
-            </MenuItem>,
         ];
     }
 
     protected getCode(): void {
         this.props.restClient.getCode(
-            this.props.sessionId,
+            this.props.modelId,
             (result: string, success: boolean) => {
                 if (success) {
                     this.downloadData(new Blob([result]), "Model.jl");
@@ -206,7 +196,7 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
 
         if (!this.state.waitingForResults) {
             this.props.restClient.computeModel(
-                this.props.sessionId,
+                this.props.modelId,
                 this.props.scenario,
                 (res, success) => {
                     if (success) {

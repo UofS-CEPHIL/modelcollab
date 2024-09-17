@@ -49,7 +49,7 @@ export const NON_STRING_VALUES: TestCase[] = [
 ];
 
 export const UID_UNAUTHENTICATED = "unauthenticated";
-export const UID_1 = "4HUFe6Cj3nYSVeZh9f28pvGRPRhg";
+export const UID_1 = "8lJpOxMiWwhO0h1hkfnpoUjZCTnt";
 export const NAME_1 = "Cletus Jones";
 export const EMAIL_1 = "yee.haw@texas.gov";
 export const UID_2 = "zdlk2R35KC0WlSBvjqWroHtUYgoq";

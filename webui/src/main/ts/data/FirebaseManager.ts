@@ -47,6 +47,10 @@ export default class FirebaseManager {
         return this.user;
     }
 
+    public getAuth(): Auth {
+        return this.auth;
+    }
+
     public login(): void {
         const provider = new GoogleAuthProvider();
         signInWithPopup(this.auth, provider)

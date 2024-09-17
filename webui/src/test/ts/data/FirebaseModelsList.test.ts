@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
 import FirebaseDataModel, { BasicModelInfo, ModelType, BasicUserInfo } from "../../../main/ts/data/FirebaseDataModel";
 import FirebaseDataModelMock from "./mocks/FirebaseDataModel";
-import FirebaseModelsList, { ModelListType } from "../../../main/ts/data/FirebaseModelsList";
+import FirebaseModelsList, { ModelUserType } from "../../../main/ts/data/FirebaseModelsList";
 import { Permission } from "../../../main/ts/data/RTDBSchema";
 
 const ids = [uuid(), uuid(), uuid(), uuid()];
@@ -64,7 +64,7 @@ const getCurrentData = jest.fn();
 
 function doSubscribeToModelsTests(
     modelId: string,
-    t: ModelListType,
+    t: ModelUserType,
     subToIdsFn: (callback: (ids: string[]) => void) => (() => void)
 ): void {
 
@@ -132,7 +132,7 @@ function doSubscribeToModelsTests(
             expect(model!.unsubscribeFromUserPermission).toBeDefined();
             expect(model!.unsubscribeFromModelOwnerData).not.toBeDefined();
 
-            if (t === ModelListType.OWNED) {
+            if (t === ModelUserType.OWNER) {
                 expect(model!.userPermission).toBe(Permission.READWRITE);
                 expect(model!.ownerUid).toBe(UID_1);
                 expect(model!.ownerName).toBe(USER_1.name);
@@ -189,7 +189,7 @@ function doSubscribeToModelsTests(
                 expect(model!.unsubscribeFromModelMetadata).toBeDefined();
                 expect(model!.unsubscribeFromUserPermission).toBeDefined();
                 expect(model!.unsubscribeFromModelOwnerData).toBeDefined();
-                if (t === ModelListType.OWNED) {
+                if (t === ModelUserType.OWNER) {
                     expect(model!.userPermission).toBe(Permission.READWRITE);
                 }
                 else {
@@ -199,7 +199,7 @@ function doSubscribeToModelsTests(
                 expect(model!.modelName).toBe(METAS[modelId].name);
                 expect(model!.ownerUid).toBe(METAS[modelId].ownerUid);
 
-                if (t === ModelListType.OWNED) {
+                if (t === ModelUserType.OWNER) {
                     expect(model!.ownerName).toBe(USER_1.name);
                     expect(model!.ownerEmail).toBe(USER_1.email);
                 }
@@ -210,7 +210,7 @@ function doSubscribeToModelsTests(
             }
         );
 
-        if (t === ModelListType.OWNED) {
+        if (t === ModelUserType.OWNER) {
             test(
                 "Does not call subscribeToUserData when model metadata " +
                 "is invoked for the first time",
@@ -269,7 +269,7 @@ function doSubscribeToModelsTests(
                 expect(
                     model!.unsubscribeFromUserPermission
                 ).toBeDefined();
-                if (t === ModelListType.OWNED) {
+                if (t === ModelUserType.OWNER) {
                     expect(model!.userPermission).toBe(Permission.READWRITE);
                     expect(model!.ownerName).toBe(USER_1.name);
                     expect(model!.ownerEmail).toBe(USER_1.email);
@@ -326,7 +326,7 @@ function doSubscribeToModelsTests(
                 expect(
                     model!.unsubscribeFromModelOwnerData
                 ).toBeDefined();
-                if (t == ModelListType.OWNED) {
+                if (t == ModelUserType.OWNER) {
                     expect(
                         model!.userPermission
                     ).toBe(
@@ -388,7 +388,7 @@ function doSubscribeToModelsTests(
                 expect(model).toBeDefined();
                 expect(model?.modelId).toBe(modelId);
                 expect(model?.isEmpty()).toBe(true);
-                if (t === ModelListType.OWNED) {
+                if (t === ModelUserType.OWNER) {
                     expect(model?.userPermission).toBe(Permission.READWRITE);
                     expect(model?.ownerName).toBe(USER_1.name);
                     expect(model?.ownerEmail).toBe(USER_1.email);
@@ -419,7 +419,7 @@ function doSubscribeToModelsTests(
             }
         );
 
-        if (t !== ModelListType.OWNED) {
+        if (t !== ModelUserType.OWNER) {
             test(
                 "Re-subscribes to model permission if added after deleting",
                 async () => {
@@ -473,7 +473,7 @@ function doSubscribeToModelsTests(
         }
     });
 
-    if (t !== ModelListType.OWNED) {
+    if (t !== ModelUserType.OWNER) {
         describe("User Permission Callback", () => {
 
             const PERMISSION_1 = Permission.READWRITE;
@@ -696,6 +696,18 @@ describe("FirebaseModelsList", () => {
         );
     });
 
+
+    test(
+        "TODO: test pending updates, fix any broken tests",
+        async () => fail()
+    );
+
+    test(
+        "TODO: test public model subscribes to public model permission " +
+        "instead of regular user permission",
+        async () => fail()
+    );
+
     test(
         "Calls onDataChanged with empty list on subscribe",
         async () => {
@@ -709,15 +721,15 @@ describe("FirebaseModelsList", () => {
         const { t, fn }
         of [
             {
-                t: ModelListType.OWNED,
+                t: ModelUserType.OWNER,
                 fn: mockDataModel.subscribeToOwnedModelIds
             },
             {
-                t: ModelListType.SHARED,
+                t: ModelUserType.SHARED,
                 fn: mockDataModel.subscribeToSharedModelIds
             },
             {
-                t: ModelListType.PUBLIC,
+                t: ModelUserType.PUBLIC,
                 fn: mockDataModel.subscribeToPublicModelIds
             },
         ]
@@ -736,7 +748,7 @@ describe("FirebaseModelsList", () => {
                 onIdsUpdated(ids);
             });
 
-            if (t === ModelListType.OWNED) {
+            if (t === ModelUserType.OWNER) {
                 test(
                     "Does not call subscribeToModelPermission when " +
                     "model IDs updated",
