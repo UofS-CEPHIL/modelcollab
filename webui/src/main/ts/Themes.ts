@@ -129,6 +129,8 @@ declare module '@mui/material/styles' {
                     arrowHeadWidth: number,
                     arrowHeadHeight: number,
                     defaultWidthPx: number,
+                    defaultPointsUp: boolean,
+                    defaultClockwise: boolean
                 },
                 staticModel: {
                     strokeColor: string,

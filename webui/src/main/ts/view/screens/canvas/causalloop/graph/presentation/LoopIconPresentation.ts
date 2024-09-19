@@ -12,6 +12,22 @@ export default class LoopIconPresentation
         return LoopIconPresentation.getVertexStyle(isInner);
     }
 
+    protected getStyle(
+        component: FirebaseLoopIcon,
+        isInner: boolean = false
+    ): CellStyle {
+        const style = super.getStyle(component, isInner);
+        const up = component.getData().up;
+        const down = !up;
+        const cwise = component.getData().clockwise;
+        const ccwise = !cwise;
+
+        style.flipH = (cwise && down) || (ccwise && up);
+        style.flipV = (cwise && down) || (ccwise && down);
+
+        return style;
+    }
+
     public static getVertexStyle(isInner: boolean = false): CellStyle {
         return {
             shape: LoopIconShape.LOOP_ICON_NAME,
@@ -23,6 +39,8 @@ export default class LoopIconPresentation
             resizable: !isInner,
             movable: !isInner,
             editable: !isInner,
+            flipH: false,
+            flipV: true
         };
     }
 }

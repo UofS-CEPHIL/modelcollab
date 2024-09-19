@@ -86,15 +86,10 @@ export default abstract class TextComponentPresentation
         graph: MCGraph,
     ): void {
         super.updateCell(component, cell, graph);
-        const style = { ...cell.getStyle() };
-        style.fontSize = component.getData().fontSize;
-        style.fontStyle = TextComponentPresentation.encodeFontStyle(
-            component.getData().bold,
-            component.getData().italic,
-            component.getData().underline
-        );
-        style.fontColor = component.getData().color;
-        style.strokeColor = this.getStrokeColor(component);
+        const style = {
+            ...cell.getStyle(),
+            ...this.getStyle(component)
+        };
         graph.batchUpdate(() =>
             graph.getDataModel().setStyle(cell, style)
         );

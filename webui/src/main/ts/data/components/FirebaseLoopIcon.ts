@@ -6,6 +6,7 @@ import FirebaseRectangleComponent, { FirebaseRectangleData } from "./FirebaseRec
 export type FirebaseLoopIconData = FirebaseRectangleData
     & FirebaseColorProperties
     & FirebaseTextProperties
+    & { clockwise: boolean, up: boolean }
 
 export default class FirebaseLoopIcon extends
     FirebaseRectangleComponent<FirebaseLoopIconData>
@@ -59,6 +60,8 @@ export default class FirebaseLoopIcon extends
                 bold: false,
                 italic: false,
                 underline: false,
+                clockwise: theme.custom.maxgraph.loopIcon.defaultClockwise,
+                up: theme.custom.maxgraph.loopIcon.defaultPointsUp
             }
         );
     }
@@ -84,6 +87,14 @@ export default class FirebaseLoopIcon extends
             bold: Boolean(data.bold ?? false),
             italic: Boolean(data.italic ?? false),
             underline: Boolean(data.underline ?? false),
+            clockwise: Boolean(
+                data.clockwise
+                ?? theme.custom.maxgraph.loopIcon.defaultClockwise
+            ),
+            up: Boolean(
+                data.up
+                ?? theme.custom.maxgraph.loopIcon.defaultPointsUp
+            )
         };
     }
 }

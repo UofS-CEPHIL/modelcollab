@@ -7,6 +7,7 @@ import FirebaseDataModel from '../../../../data/FirebaseDataModel';
 import EditTextListItem from './EditTextListItem';
 import TypographyListItem from './TypographyListItem';
 import EditColorListItem from './EditColorListItem';
+import LoopDirectionListItem from './LoopDirectionListItem';
 
 export interface Props {
     component: FirebaseComponent | null;
@@ -90,7 +91,6 @@ export default class EditComponentsSidebarContent
                     ];
                 case ComponentType.SUM_VARIABLE:
                 case ComponentType.CLD_VERTEX:
-                case ComponentType.LOOP_ICON:
                     return [
                         this.makeUnapplySubstitutionsButton(),
                         this.makeFontEditListItem(),
@@ -99,6 +99,20 @@ export default class EditComponentsSidebarContent
                             "text",
                             isInner,
                             "Name",
+                            this.state.currentComponent.getType()
+                            !== ComponentType.CLD_VERTEX
+                        ),
+                    ];
+                case ComponentType.LOOP_ICON:
+                    return [
+                        this.makeUnapplySubstitutionsButton(),
+                        this.makeFontEditListItem(),
+                        this.makeColorEditListItem(),
+                        this.makeLoopDirectionListItem(),
+                        this.makeTextBoxListItem(
+                            "text",
+                            isInner,
+                            "Text",
                             this.state.currentComponent.getType()
                             !== ComponentType.CLD_VERTEX
                         ),
@@ -139,6 +153,22 @@ export default class EditComponentsSidebarContent
                 />
             ];
         }
+    }
+
+    private makeLoopDirectionListItem(): ReactElement {
+        return (
+            <LoopDirectionListItem
+                key="loopdirection"
+                up={this.state.currentComponent?.getData().up}
+                clockwise={this.state.currentComponent?.getData().clockwise}
+                onChange={(up, clockwise) =>
+                    this.props.firebaseDataModel.updateComponent(
+                        this.props.sessionId,
+                        this.state.currentComponent!.withData({ up, clockwise })
+                    )
+                }
+            />
+        );
     }
 
     private makeFontEditListItem(): ReactElement {
