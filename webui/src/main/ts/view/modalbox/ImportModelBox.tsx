@@ -1,8 +1,9 @@
-import { ListItem, ListItemText, ListItemButton, List } from '@mui/material';
+import { ListItem, ListItemText, ListItemButton, List, ListSubheader, Divider } from '@mui/material';
 import { Component, ReactElement } from 'react';
 import FirebaseDataModel, { ModelType } from '../../data/FirebaseDataModel';
 import FirebaseModelsList from '../../data/FirebaseModelsList';
 import FirebaseModelsManager from '../../data/FirebaseModelsManager';
+import ModelMetadata from '../../data/ModelMetadata';
 import ButtonBox from './ButtonBox';
 
 export interface Props {
@@ -64,21 +65,46 @@ export default class ImportModelBox extends Component<Props, State> {
     }
 
     protected makeListItems(): ReactElement[] {
-        const allModels = [
-            ...this.state.models.publicModels.values(),
-            ...this.state.models.sharedModels.values(),
-            ...this.state.models.publicModels.values(),
+
+        let i: number = 0;
+
+        const makeListItem = (m: ModelMetadata, keyPrefix: string) => (
+            <ListItem disablePadding key={`${keyPrefix}::${m.modelId}`} >
+                <ListItemButton
+                    onClick={() => this.props.onModelSelected(m.modelId)}
+                >
+                    <ListItemText primary={m.modelName} />
+                </ListItemButton>
+            </ListItem >
+        );
+
+        return [
+            (
+                <ListSubheader key={"your-models-header"}>
+                    Your Models
+                </ListSubheader>
+            ),
+            ...[...this.state.models.ownedModels.values()].map(
+                m => makeListItem(m, "owned")
+            ),
+            (<Divider key={"d1"} />),
+            (
+                <ListSubheader key={"shared-models-header"}>
+                    Shared Models
+                </ListSubheader>
+            ),
+            ...[...this.state.models.sharedModels.values()].map(
+                m => makeListItem(m, "shared")
+            ),
+            (<Divider key={"d2"} />),
+            (
+                <ListSubheader key={"public-models-header"}>
+                    Public Models
+                </ListSubheader>
+            ),
+            ...[...this.state.models.publicModels.values()].map(
+                m => makeListItem(m, "public")
+            ),
         ];
-        return allModels
-            .filter(m => m.modelType === ModelType.StockFlow)
-            .map(m => (
-                <ListItem disablePadding key={m.modelId}>
-                    <ListItemButton
-                        onClick={() => this.props.onModelSelected(m.modelId)}
-                    >
-                        <ListItemText primary={m.modelName} />
-                    </ListItemButton>
-                </ListItem>
-            ));
     }
 }
