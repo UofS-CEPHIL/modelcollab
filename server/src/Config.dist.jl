@@ -6,7 +6,8 @@ export SERVER_PORT, SERVER_IP, SERVER_URL, CERT_PATH, CHAIN_PATH, PRIVKEY_PATH,
     REQUIRE_SSL
 export FIREBASE_URL, EMULATOR_PROJECT_ID, MODELS_PATH_PREFIX,
     INNER_MODELS_PATH_SUFFIX, COMPONENTS_PATH_SUFFIX, SUBSTITUTIONS_PATH_SUFFIX,
-    SCENARIOS_PATH_SUFFIX
+    SCENARIOS_PATH_SUFFIX, MODEL_METADATA_PATH_PREFIX, MODEL_TYPE_KEY,
+    SERVICE_ACCOUNT_PATH
 
 ## Server config
 const SERVER_PORT = 0
@@ -20,6 +21,8 @@ const REQUIRE_SSL = true # Always leave this true in production
 const FIREBASE_URL = ""
 # 'nothing' if we aren't using the emulator
 const EMULATOR_PROJECT_ID = nothing
+const SERVICE_ACCOUNT_PATH = "/path/to/firebase/service/account.json"
+
 # Paths in the database
 const MODELS_PATH_PREFIX = "models"
 const INNER_MODELS_PATH_SUFFIX = "loadedModels"

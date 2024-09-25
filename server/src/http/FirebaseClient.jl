@@ -3,6 +3,7 @@ module FirebaseClient
 using ..FirebaseComponents
 using ..RTDB
 using ..Config
+using ..Types
 
 ##################################### Init #####################################
 
@@ -10,6 +11,25 @@ function initialize()::Nothing
     RTDB.realdb_init(FIREBASE_URL, EMULATOR_PROJECT_ID)
 end
 export initialize
+
+################################ Get Model Type ################################
+
+function get_model_type(model_id::String, access_token::String)::ModelType
+    result = RTDB.realdb_get(
+        "/$(MODEL_METADATA_PATH_PREFIX)/$(model_id)/$(MODEL_TYPE_KEY)",
+        access_token
+    )
+    if (result == nothing)
+        throw(ArgumentError("No model metadata found: " * model_id))
+    elseif (result == "SF")
+        return STOCK_FLOW
+    elseif (result == "CL")
+        return CAUSAL_LOOP
+    else
+        throw(ErrorException("Found unexpected model type: " * result))
+    end
+end
+export get_model_type
 
 ################################ Get Components ################################
 
@@ -20,13 +40,20 @@ function make_firebase_objects(
     for (k, v) in firebase_result
         push!(objects, firebase_create_object(k, v))
     end
-    return objects
+    return filter(
+        o -> !firebase_isignored(o),
+        objects
+    )
 end
 
 
-function get_outer_components(model_id::String)::Vector{FirebaseDataObject}
+function get_outer_components(
+    model_id::String,
+    access_token::String
+)::Vector{FirebaseDataObject}
     result = RTDB.realdb_get(
-        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(COMPONENTS_PATH_SUFFIX)"
+        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(COMPONENTS_PATH_SUFFIX)",
+        access_token
     )
     if (result == nothing) return [] end
     return make_firebase_objects(result)
@@ -34,11 +61,13 @@ end
 
 function get_inner_models(
     model_id::String,
-    outers::Vector{FirebaseDataObject}
+    outers::Vector{FirebaseDataObject},
+    access_token::String
 )::Dict{String, Vector{FirebaseDataObject}}
     # Get saved models from database
     saved_components = RTDB.realdb_get(
-        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(INNER_MODELS_PATH_SUFFIX)"
+        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(INNER_MODELS_PATH_SUFFIX)",
+        access_token
     )
     if (saved_components == nothing)
         return Dict()
@@ -79,9 +108,13 @@ function qualify_component_ids!(
     end
 end
 
-function get_substitutions(model_id::String)::Vector{FirebaseSubstitution}
+function get_substitutions(
+    model_id::String,
+    access_token::String
+)::Vector{FirebaseSubstitution}
     result = RTDB.realdb_get(
-        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(SUBSTITUTIONS_PATH_SUFFIX)"
+        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(SUBSTITUTIONS_PATH_SUFFIX)",
+        access_token
     )
     if (result == nothing)
         return []
@@ -97,7 +130,10 @@ function get_substitutions(model_id::String)::Vector{FirebaseSubstitution}
     ]
 end
 
-function get_scenarios(model_id::String)::Vector{FirebaseScenario}
+function get_scenarios(
+    model_id::String,
+    access_token::String
+)::Vector{FirebaseScenario}
 
     function makeScenario(key::String, val::Dict{String, Any})::FirebaseScenario
         valkeys = keys(val)
@@ -124,8 +160,8 @@ function get_scenarios(model_id::String)::Vector{FirebaseScenario}
             stop_time = "0.0"
         end
 
-        if ("paramOverrides" in valkeys)
-            overrides = val["paramOverrides"]
+        if ("overrides" in valkeys)
+            overrides = val["overrides"]
         else
             overrides = Dict{String, String}()
         end
@@ -140,7 +176,8 @@ function get_scenarios(model_id::String)::Vector{FirebaseScenario}
     end
 
     result = RTDB.realdb_get(
-        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(SCENARIOS_PATH_SUFFIX)"
+        "/$(MODELS_PATH_PREFIX)/$(model_id)/$(SCENARIOS_PATH_SUFFIX)",
+        access_token
     )
     if (result == nothing)
         return []
@@ -157,11 +194,14 @@ struct InitialFirebaseResult
 end
 export InitialFirebaseResult
 
-function get_components(model_id::String)::InitialFirebaseResult
-    outers = get_outer_components(model_id)
-    inners = get_inner_models(model_id, outers)
-    subs = get_substitutions(model_id)
-    scenarios = get_scenarios(model_id)
+function get_components(
+    model_id::String,
+    access_token::String
+)::InitialFirebaseResult
+    outers = get_outer_components(model_id, access_token)
+    inners = get_inner_models(model_id, outers, access_token)
+    subs = get_substitutions(model_id, access_token)
+    scenarios = get_scenarios(model_id, access_token)
     return InitialFirebaseResult(outers, inners, subs, scenarios)
 end
 export get_components

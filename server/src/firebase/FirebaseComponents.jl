@@ -17,36 +17,20 @@ export FirebaseDataObject
     VARIABLE
     SUM_VARIABLE
     CONNECTION
-    CLOUD
     STATIC_MODEL
     SUBSTITUTION
     SCENARIO
+    CLD_VERTEX
+    CLD_EDGE
+    LOOP_ICON
+    STICKY_NOTE
 end
-export ComponentType
-
+export ComponentType, STOCK, FLOW, PARAMETER, VARIABLE, SUM_VARIABLE, CONNECTION, STATIC_MODEL, SUBSTITUTION, SCENARIO, CLD_VERTEX, CLD_EDGE, LOOP_ICON, STICKY_NOTE, FirebaseFlow, newsource, newdest, newvalue, newid
 function firebase_gettype(o::FirebaseDataObject)::Union{ComponentType, Nothing}
-    if typeof(o) == FirebaseStock
-        return STOCK
-    elseif typeof(o) == FirebaseFlow
-        return FLOW
-    elseif typeof(o) == FirebaseParameter
-        return PARAMETER
-    elseif typeof(o) == FirebaseDynamicVariable
-        return VARIABLE
-    elseif typeof(o) == FirebaseSumVariable
-        return SUM_VARIABLE
-    elseif typeof(o) == FirebaseConnection
-        return CONNECTION
-    elseif typeof(o) == FirebaseCloud
-        return CLOUD
-    elseif typeof(o) == FirebaseStaticModel
-        return STATIC_MODEL
-    elseif typeof(o) == FirebaseSubstitution
-        return SUBSTITUTION
-    elseif typeof(o) == FirebaseScenario
-        return SCENARIO
-    else
+    if (o.type in [LOOP_ICON, STICKY_NOTE])
         return nothing
+    else
+        return o.type
     end
 end
 
@@ -71,6 +55,14 @@ function firebase_gettype(s::String)::Union{ComponentType, Nothing}
         return SUBSTITUTION
     elseif s == "scenario"
         return SCENARIO
+    elseif s == "cld_vertex"
+        return CLD_VERTEX
+    elseif s == "cld_link"
+        return CLD_EDGE
+    elseif s == "loop_icon"
+        return LOOP_ICON
+    elseif s == "sticky_note"
+        return STICKY_NOTE
     else
         return nothing
     end
@@ -127,6 +119,16 @@ function firebase_isscenario(c::FirebaseDataObject)::Bool
 end
 export firebase_isscenario
 
+function firebase_iscldvertex(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == CLD_VERTEX
+end
+export firebase_iscldvertex
+
+function firebase_isignored(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == nothing
+end
+export firebase_isignored
+
 ## Some basic objects that we can compose into the actual ones
 struct FirebasePointer
     from::Union{String, Nothing}
@@ -150,91 +152,52 @@ struct FirebaseValue
 end
 export FirebaseValue
 
-
-################################# Var / Param ##################################
-
-struct FirebaseSumVariable <: FirebaseDataObject
-    id::String
-    location::FirebasePoint
-    text::FirebaseText
-end
-export FirebaseSumVariable
-function newid(id::String, o::FirebaseSumVariable)::FirebaseSumVariable
-    return FirebaseSumVariable(id, o.location, o.text)
-end
-export newid
-
-struct FirebaseParameter <: FirebaseDataObject
-    id::String
-    location::FirebasePoint
-    text::FirebaseText
-    value::FirebaseValue
-end
-export FirebaseParameter
-function newid(id::String, o::FirebaseParameter)::FirebaseParameter
-    return FirebaseParameter(id, o.location, o.text, o.value)
-end
-function newvalue(val::FirebaseValue, o::FirebaseParameter)::FirebaseParameter
-    return FirebaseParameter(o.id, o.location, o.text, val)
-end
-export newvalue
-
-struct FirebaseDynamicVariable <: FirebaseDataObject
-    id::String
-    location::FirebasePoint
-    text::FirebaseText
-    value::FirebaseValue
-end
-export FirebaseDynamicVariable
-function newid(id::String, o::FirebaseDynamicVariable)::FirebaseDynamicVariable
-    return FirebaseDynamicVariable(id, o.location, o.text, o.value)
-end
-function newvalue(val::FirebaseValue, o::FirebaseDynamicVariable)::FirebaseDynamicVariable
-    return FirebaseDynamicVariable(o.id, o.location, o.text, val)
-end
-
-
 ############################## Flow / Connection ###############################
 
-struct FirebaseConnection <: FirebaseDataObject
+struct FirebaseArrow <: FirebaseDataObject
     id::String
     pointer::FirebasePointer
+    type::ComponentType
 end
-export FirebaseConnection
-function newid(id::String, o::FirebaseConnection)::FirebaseConnection
-    return FirebaseConnection(id, o.pointer)
+function newid(id::String, o::FirebaseArrow)::FirebaseArrow
+    return FirebaseArrow(id, o.pointer, o.type)
 end
-function newsource(sourceid::String, o::FirebaseConnection)::FirebaseConnection
-    return FirebaseConnection(
+function newsource(sourceid::String, o::FirebaseArrow)::FirebaseArrow
+    return FirebaseArrow(
         o.id,
-        FirebasePointer(sourceid, o.pointer.to)
+        FirebaseArrow(sourceid, o.pointer.to, o.type)
     )
 end
-export newsource
-function newdest(destid::String, o::FirebaseConnection)::FirebaseConnection
-    return FirebaseConnection(
+function newdest(destid::String, o::FirebaseArrow)::FirebaseArrow
+    return FirebaseArrow(
         o.id,
-        FirebasePointer(o.pointer.from, destid)
+        FirebaseArrow(o.pointer.from, destid, o.type)
     )
 end
-export newdest
+
+const FirebaseConnection = FirebaseArrow
+const FirebaseCausalLoopEdge = FirebaseArrow
+export FirebaseConnection, FirebaseCausalLoopEdge, FirebaseArrow
+
 
 struct FirebaseFlow <: FirebaseDataObject
     id::String
     pointer::FirebasePointer
     value::FirebaseValue
     text::FirebaseText
+    type::ComponentType
 end
 export FirebaseFlow
 function newid(id::String, o::FirebaseFlow)::FirebaseFlow
-    return FirebaseFlow(id, o.pointer, o.value, o.text)
+    return FirebaseFlow(id, o.pointer, o.value, o.text, o.type)
 end
 function newsource(sourceid::String, o::FirebaseFlow)::FirebaseFlow
     return FirebaseFlow(
         o.id,
         FirebasePointer(sourceid, o.pointer.to),
         o.value,
-        o.text
+        o.text,
+        o.type
     )
 end
 function newdest(destid::String, o::FirebaseFlow)::FirebaseFlow
@@ -242,7 +205,8 @@ function newdest(destid::String, o::FirebaseFlow)::FirebaseFlow
         o.id,
         FirebasePointer(o.pointer.from, destid),
         o.value,
-        o.text
+        o.text,
+        o.type
     )
 end
 function newvalue(val::FirebaseValue, o::FirebaseFlow)::FirebaseFlow
@@ -250,34 +214,59 @@ function newvalue(val::FirebaseValue, o::FirebaseFlow)::FirebaseFlow
         o.id,
         o.pointer,
         val,
-        o.text
+        o.text,
+        o.type
     )
 end
 
-#################################### Stock #####################################
+################################### Vertices ###################################
 
-struct FirebaseStock <: FirebaseDataObject
+
+struct FirebaseTextOnlyComponent <: FirebaseDataObject
+    id::String
+    location::FirebasePoint
+    text::FirebaseText
+    type::ComponentType
+end
+
+function newid(
+    id::String,
+    o::FirebaseTextOnlyComponent
+)::FirebaseTextOnlyComponent
+    return FirebaseTextOnlyComponent(id, o.location, o.text, o.type)
+end
+
+const FirebaseSumVariable = FirebaseTextOnlyComponent
+const FirebaseCausalLoopVertex = FirebaseTextOnlyComponent
+
+export FirebaseSumVariable, FirebaseCausalLoopVertex, FirebaseTextOnlyComponent
+
+struct FirebaseTextValueComponent <: FirebaseDataObject
     id::String
     location::FirebasePoint
     text::FirebaseText
     value::FirebaseValue
+    type::ComponentType
 end
-export FirebaseStock
-function newid(id::String, o::FirebaseStock)::FirebaseStock
-    return FirebaseStock(id, o.location, o.text, o.value)
+function newid(
+    id::String,
+    o::FirebaseTextValueComponent
+)::FirebaseTextValueComponent
+    return FirebaseTextValueComponent(id, o.location, o.text, o.value, o.type)
 end
-function newvalue(val::FirebaseValue, o::FirebaseStock)::FirebaseStock
-    return FirebaseStock(o.id, o.location, o.text, val)
+function newvalue(
+    val::FirebaseValue,
+    o::FirebaseTextValueComponent
+)::FirebaseTextValueComponent
+    return FirebaseTextValueComponent(o.id, o.location, o.text, val, o.type)
 end
 
-struct FirebaseCloud <: FirebaseDataObject
-    id::String
-    location::FirebasePoint
-end
-export FirebaseCloud
-function newid(id::String, o::FirebaseCloud)::FirebaseCloud
-    return FirebaseCloud(id, o.location)
-end
+const FirebaseStock = FirebaseTextValueComponent
+const FirebaseParameter = FirebaseTextValueComponent
+const FirebaseDynamicVariable = FirebaseTextValueComponent
+
+export FirebaseStock, FirebaseParameter, FirebaseDynamicVariable, FirebaseTextValueComponent
+
 
 ################################# Static Model #################################
 
@@ -286,13 +275,18 @@ struct FirebaseStaticModel <: FirebaseDataObject
     modelid::String
     color::String
     location::FirebasePoint
+    type::ComponentType
 end
 export FirebaseStaticModel
 function newid(id::String, o::FirebaseStaticModel)::FirebaseStaticModel
-    return FirebaseStaticModel(id, o.modelid, o.color, o.location)
+    return FirebaseStaticModel(id, o.modelid, o.color, o.location, o.type)
 end
 
 ############################# Invisible Components #############################
+
+struct FirebaseIgnoredComponent <: FirebaseDataObject
+    id::String
+end
 
 struct FirebaseSubstitution <: FirebaseDataObject
     replacedid::String
@@ -303,7 +297,7 @@ export FirebaseSubstitution
 struct FirebaseScenario <: FirebaseDataObject
     id::String
     name::String
-    param_overrides::Dict{String, String}
+    overrides::Dict{String, String}
     starttime::String
     stoptime::String
 end
@@ -325,7 +319,8 @@ function firebase_create_object(
     data::Dict{String, Any}
 )::FirebaseDataObject
 
-    type = firebase_gettype(data["type"])
+    type_string = data["type"]
+    type = firebase_gettype(type_string)
     data = data["data"]
 
     if (type == STOCK)
@@ -333,69 +328,86 @@ function firebase_create_object(
             id,
             FirebasePoint(data["x"], data["y"]),
             FirebaseText(data["text"]),
-            FirebaseValue(data["value"])
+            FirebaseValue(data["value"]),
+            STOCK
         )
     elseif (type == FLOW)
         return FirebaseFlow(
             id,
             FirebasePointer(data["from"], data["to"]),
             FirebaseValue(data["equation"]),
-            FirebaseText(data["text"])
+            FirebaseText(data["text"]),
+            FLOW
         )
     elseif (type == PARAMETER)
         return FirebaseParameter(
             id,
             FirebasePoint(data["x"], data["y"]),
             FirebaseText(data["text"]),
-            FirebaseValue(data["value"])
+            FirebaseValue(data["value"]),
+            PARAMETER
         )
     elseif (type == VARIABLE)
         return FirebaseDynamicVariable(
             id,
             FirebasePoint(data["x"], data["y"]),
             FirebaseText(data["text"]),
-            FirebaseValue(data["value"])
+            FirebaseValue(data["value"]),
+            VARIABLE
         )
     elseif (type == SUM_VARIABLE)
         return FirebaseSumVariable(
             id,
             FirebasePoint(data["x"], data["y"]),
-            FirebaseText(data["text"])
+            FirebaseText(data["text"]),
+            SUM_VARIABLE
         )
     elseif (type == CONNECTION)
         return FirebaseConnection(
             id,
             FirebasePointer(data["from"], data["to"]),
-        )
-    elseif (type == CLOUD)
-        return FirebaseCloud(
-            id,
-            FirebasePoint(data["x"], data["y"])
+            CONNECTION
         )
     elseif (type == STATIC_MODEL)
         return FirebaseStaticModel(
             id,
             data["modelId"],
             data["color"],
-            FirebasePoint(data["x"], data["y"])
+            FirebasePoint(data["x"], data["y"]),
+            STATIC_MODEL
         )
     elseif (type == SUBSTITUTION)
         return FirebaseSubstitution(
             id,
             data["replacementId"],
-            data["replacedId"]
+            data["replacedId"],
         )
     elseif (type == SCENARIO)
-        if (!in("paramOverrides", keys(data)))
-            data["paramOverrides"] = Dict{String, String}()
+        if (!in("overrides", keys(data)))
+            data["overrides"] = Dict{String, String}()
         end
         return FirebaseScenario(
             id,
             data["name"],
-            data["paramOverrides"]
+            data["overrides"]
         )
+    elseif (type == CLD_VERTEX)
+        return FirebaseCausalLoopVertex(
+            id,
+            FirebasePoint(data["x"], data["y"]),
+            FirebaseText(data["text"]),
+            CLD_VERTEX
+        )
+    elseif (type == CLD_EDGE)
+        return FirebaseCausalLoopEdge(
+            id,
+            FirebasePointer(data["from"], data["to"]),
+            CLD_EDGE
+        )
+    elseif (type in [LOOP_ICON, STICKY_NOTE])
+        return FirebaseIgnoredComponent(id)
     else
-        throw(ArgumentError("Unknown type: $type"))
+        throw(ArgumentError("Unknown type: $(type_string)"))
     end
 end
 export firebase_create_object

@@ -251,13 +251,16 @@ function apply_scenario!(
     scenario::FirebaseScenario,
     model::Vector{FirebaseDataObject}
 )::Nothing
-    override_names = keys(scenario.param_overrides)
+    override_names = keys(scenario.overrides)
     for i in 1:length(model)
         c = model[i]
         if (firebase_isparam(c))
             text = c.text.text
             if (text in override_names)
-                model[i].value.value = scenario.param_overrides[text]
+                model[i] = newvalue(
+                    FirebaseValue(scenario.overrides[text]),
+                    model[i]
+                )
             end
         end
     end

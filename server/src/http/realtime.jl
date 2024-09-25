@@ -6,10 +6,25 @@
 module RTDB
 
 using HTTP
+using HTTP.URIs
 using JSON
 
 BASE_URL = nothing
 EMULATOR_PROJECT_ID = nothing
+
+function get_headers(access_token::Union{String, Nothing})::Dict{String, String}
+    return Dict(
+        "Content-Type" => "application/x-www-form-urlencoded",
+        "Authorization" => "Bearer " * access_token
+    )
+end
+
+function get_urlargs()::String
+    args = Dict(
+        "ns" => EMULATOR_PROJECT_ID
+    )
+    return escapeuri(args)
+end
 
 """
 In the examples on this page,
@@ -27,7 +42,7 @@ Initialize the realtimedb with baseurl to make things easier
 realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
 ```
 """
-function realdb_init(base_url, emulator_project_id = nothing)
+function realdb_init(base_url, emulator_project_id=nothing)
     global BASE_URL = base_url
     println("BASE_URL set:", BASE_URL)
     if (emulator_project_id != nothing)
@@ -48,13 +63,15 @@ realdb_get("/users/jack/name")
 ```
 
 """
-function realdb_get(url, authheader = "")
-    final_url = "$(BASE_URL)$(url).json"
-    if (EMULATOR_PROJECT_ID != nothing)
-        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
-    end
-    println("FINAL URL:", final_url)
-    res = HTTP.get(final_url)
+function realdb_get(url, access_token=nothing)
+    headers = get_headers(access_token)
+    args = get_urlargs()
+    final_url = "$(BASE_URL)$(url).json?$(args)"
+
+    res = HTTP.get(
+        final_url;
+        headers=headers
+    )
     if res.status == 200
         println("GET successful")
     else
@@ -64,169 +81,164 @@ function realdb_get(url, authheader = "")
 end
 
 
-"""
-realdb_post(url, body = "{"name": "real_db_test"}"; query = Dict())
+# """
+# realdb_post(url, body = "{"name": "real_db_test"}"; query = Dict())
 
-POST request to an endpoint.
+# POST request to an endpoint.
 
-# Example
-```julia
-realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
-# realdb_post("/message_list")
-body =Dict("user_id" => "jack", "text" => "Ahoy!")
-realdb_post("/message_list",body)
-```
+# # Example
+# ```julia
+# realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
+# # realdb_post("/message_list")
+# body =Dict("user_id" => "jack", "text" => "Ahoy!")
+# realdb_post("/message_list",body)
+# ```
 
-## Notes:
+# ## Notes:
 
-According to the REST API documentation for Realtime Database,
-a POST is the equivalent of a "push" operation when using the client SDKs.
-This push operation always involves adding data under a random ID.
-There is no avoiding that for a push.
+# According to the REST API documentation for Realtime Database,
+# a POST is the equivalent of a "push" operation when using the client SDKs.
+# This push operation always involves adding data under a random ID.
+# There is no avoiding that for a push.
 
-If you know the name of the node where you want to add data,
-you should use a PUT instead. This is the equivalent of using "set"
-operation with the client SDKs.
+# If you know the name of the node where you want to add data,
+# you should use a PUT instead. This is the equivalent of using "set"
+# operation with the client SDKs.
 
-"""
-function realdb_post(url, authheader = "", body = Dict("name" => "real_db_test"))
-    pagesize = 300
-    pagetoken = ""
-    final_url = "$BASE_URL$url.json"
-    if (EMULATOR_PROJECT_ID != nothing)
-        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
-    end
-    println("FINAL URL:", final_url)
-    body = JSON.json(body)
-    println("Body:", body)
-    query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
-    res = HTTP.post(final_url, authheader, body; query = query)
-    if res.status == 200
-        println("POST successful")
-    else
-        println("POST errored")
-    end
-    JSON.parse(String(res.body))
-end
+# """
+# function realdb_post(url, authheader = "", body = Dict("name" => "real_db_test"))
+#     pagesize = 300
+#     pagetoken = ""
+#     final_url = "$BASE_URL$url.json"
+#     body = JSON.json(body)
+#     query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
+#     res = HTTP.post(final_url, authheader, body; query = query)
+#     if res.status == 200
+#         println("POST successful")
+#     else
+#         println("POST errored")
+#     end
+#     JSON.parse(String(res.body))
+# end
 
 
-"""
-realdb_patch(url, body = Dict("name"=> "real_db_test"); query = Dict())
+# """
+# realdb_patch(url, body = Dict("name"=> "real_db_test"); query = Dict())
 
-`PATCH` request to an endpoint.
+# `PATCH` request to an endpoint.
 
-# Example
-```julia
-realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
-body =Dict("last"=>"Jones")
-realdb_patch("/users/jack/name/",body)
-```
-"""
-function realdb_patch(url, authheader = "", body = Dict("name" => "real_db_test"))
-    pagesize = 300
-    pagetoken = ""
-    final_url = "$BASE_URL$url.json"
-    if (EMULATOR_PROJECT_ID != nothing)
-        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
-    end
-    println("FINAL URL:", final_url)
-    query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
-    body = JSON.json(body)
-    println("Body:", body)
-    res = HTTP.patch(final_url, authheader, body; query = query)
-    if res.status == 200
-        println("PATCH successful")
-    else
-        println("PATCH errored")
-    end
-    JSON.parse(String(res.body))
-end
+# # Example
+# ```julia
+# realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
+# body =Dict("last"=>"Jones")
+# realdb_patch("/users/jack/name/",body)
+# ```
+# """
+# function realdb_patch(url, authheader = "", body = Dict("name" => "real_db_test"))
+#     pagesize = 300
+#     pagetoken = ""
+#     final_url = "$BASE_URL$url.json"
+#     if (EMULATOR_PROJECT_ID != nothing)
+#         final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
+#     end
+#     println("FINAL URL:", final_url)
+#     query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
+#     body = JSON.json(body)
+#     println("Body:", body)
+#     res = HTTP.patch(final_url, authheader, body; query = query)
+#     if res.status == 200
+#         println("PATCH successful")
+#     else
+#         println("PATCH errored")
+#     end
+#     JSON.parse(String(res.body))
+# end
 
-"""
-realdb_delete(url, body = Dict("name"=> "real_db_test"); query = Dict())
+# """
+# realdb_delete(url, body = Dict("name"=> "real_db_test"); query = Dict())
 
-`DELETE` request to an endpoint
+# `DELETE` request to an endpoint
 
-# Example
-```julia
-realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
-realdb_delete("/users/jack/name/last")
-```
-"""
-function realdb_delete(url, authheader = "", body = Dict("name" => "real_db_test"))
-    pagesize = 300
-    pagetoken = ""
-    final_url = "$BASE_URL$url.json"
-    if (EMULATOR_PROJECT_ID != nothing)
-        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
-    end
-    println("FINAL URL:", final_url)
-    query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
-    body = JSON.json(body)
-    println("Body:", body)
-    res = HTTP.delete(final_url, authheader, body; query = query)
-    if res.status == 200
-        println("DELETE successful")
-    else
-        println("DELETE errored")
-    end
-    JSON.parse(String(res.body))
-end
+# # Example
+# ```julia
+# realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
+# realdb_delete("/users/jack/name/last")
+# ```
+# """
+# function realdb_delete(url, authheader = "", body = Dict("name" => "real_db_test"))
+#     pagesize = 300
+#     pagetoken = ""
+#     final_url = "$BASE_URL$url.json"
+#     if (EMULATOR_PROJECT_ID != nothing)
+#         final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
+#     end
+#     println("FINAL URL:", final_url)
+#     query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
+#     body = JSON.json(body)
+#     println("Body:", body)
+#     res = HTTP.delete(final_url, authheader, body; query = query)
+#     if res.status == 200
+#         println("DELETE successful")
+#     else
+#         println("DELETE errored")
+#     end
+#     JSON.parse(String(res.body))
+# end
 
-"""
-realdb_put(url, body = Dict("name"=> "real_db_test"); query = Dict())
+# """
+# realdb_put(url, body = Dict("name"=> "real_db_test"); query = Dict())
 
-`PUT` request to a endpoint.
+# `PUT` request to a endpoint.
 
-# Example
+# # Example
 
-```julia
-realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
-body = Dict("first"=>"Ash", "last"=>"Sparrow")
-realdb_put("/users/jack/name",body)
-```
-"""
-function realdb_put(url, authheader = "", body = Dict("name" => "real_db_test"))
-    pagesize = 300
-    pagetoken = ""
-    if (EMULATOR_PROJECT_ID != nothing)
-        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
-    end
-    final_url = "$BASE_URL$url.json"
-    println("FINAL URL:", final_url)
-    query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
-    body = JSON.json(body)
-    println("Body:", body)
-    res = HTTP.put(final_url, authheader, body; query = query)
-    if res.status == 200
-        println("PUT successful")
-    else
-        println("PUT errored")
-    end
-    JSON.parse(String(res.body))
-end
+# ```julia
+# realdb_init("https://[PROJECT_ID].asia-southeast1.firebasedatabase.app")
+# body = Dict("first"=>"Ash", "last"=>"Sparrow")
+# realdb_put("/users/jack/name",body)
+# ```
+# """
+# function realdb_put(url, authheader = "", body = Dict("name" => "real_db_test"))
+#     pagesize = 300
+#     pagetoken = ""
+#     if (EMULATOR_PROJECT_ID != nothing)
+#         final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
+#     end
+#     final_url = "$BASE_URL$url.json"
+#     println("FINAL URL:", final_url)
+#     query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
+#     body = JSON.json(body)
+#     println("Body:", body)
+#     res = HTTP.put(final_url, authheader, body; query = query)
+#     if res.status == 200
+#         println("PUT successful")
+#     else
+#         println("PUT errored")
+#     end
+#     JSON.parse(String(res.body))
+# end
 
-"""
-readdb_download(url, filename = "test"; query = Dict())
+# """
+# readdb_download(url, filename = "test"; query = Dict())
 
-Download request
-"""
-function realdb_download(url, authheader = "", filename = "test")
-    pagesize = 300
-    pagetoken = ""
-    if (EMULATOR_PROJECT_ID != nothing)
-        final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
-    end
-    final_url = "$BASE_URL$url.json?download=$filename.txt"
-    println("FINAL URL:", final_url)
-    query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
-    res = HTTP.get(final_url, authheader; query = query)
-    if res.status == 200
-        println("GET successful")
-    else
-        println("GET errored")
-    end
-    JSON.parse(String(res.body))
-end
+# Download request
+# """
+# function realdb_download(url, authheader = "", filename = "test")
+#     pagesize = 300
+#     pagetoken = ""
+#     if (EMULATOR_PROJECT_ID != nothing)
+#         final_url *= "?ns=$(EMULATOR_PROJECT_ID)"
+#     end
+#     final_url = "$BASE_URL$url.json?download=$filename.txt"
+#     println("FINAL URL:", final_url)
+#     query = Dict{String,Any}("pageSize" => pagesize, "pageToken" => pagetoken)
+#     res = HTTP.get(final_url, authheader; query = query)
+#     if res.status == 200
+#         println("GET successful")
+#     else
+#         println("GET errored")
+#     end
+#     JSON.parse(String(res.body))
+# end
 
 end # namespace RTDB
