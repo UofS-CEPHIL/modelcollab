@@ -154,7 +154,7 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
                     alert("Can't get code: " + result);
                 }
             }
-        ).catch(e => alert("Can't get code: " + e.message));
+        ).catch(e => alert(`Can't get code: ${Object.entries(e.toJSON())}`));
     }
 
     private computeModel(): void {

@@ -11,7 +11,6 @@ export type FirebaseFlowData = FirebaseMovableLabelPointerData
 export default class FirebaseFlow
     extends FirebaseMovableLabelPointerComponent<FirebaseFlowData>
 {
-
     public getType(): ComponentType {
         return ComponentType.FLOW;
     }
@@ -65,7 +64,6 @@ export default class FirebaseFlow
     }
 
     public static toFlowComponentData(data: any): FirebaseFlowData {
-        const ul = FirebaseMovableLabelPointerComponent.UNINITIALIZED_LABEL_POS;
         const d: FirebaseFlowData = {
             from: String(data.from),
             to: String(data.to),
@@ -80,10 +78,13 @@ export default class FirebaseFlow
                 ?? theme.custom.maxgraph.textComponent.defaultFontSize
             ),
             color: String(data.color ?? theme.palette.canvas.contrastText),
-            labelX: Number(data.labelX ?? ul),
-            labelY: Number(data.labelY ?? ul),
+            entryX: Number(data.entryX),
+            entryY: Number(data.entryY),
+            labelX: Number(data.labelX),
+            labelY: Number(data.labelY),
         };
         FirebasePointerComponent.sanitizePointerData(d);
+        FirebaseMovableLabelPointerComponent.sanitizeLabelData(d);
         return d;
     }
 
@@ -92,7 +93,6 @@ export default class FirebaseFlow
         from: string,
         to: string
     ): FirebaseFlow {
-        const ul = FirebaseMovableLabelPointerComponent.UNINITIALIZED_LABEL_POS;
         return new FirebaseFlow(
             id,
             {
@@ -105,9 +105,7 @@ export default class FirebaseFlow
                 bold: false,
                 underline: false,
                 italic: false,
-                color: theme.palette.canvas.contrastText,
-                labelX: ul,
-                labelY: ul,
+                color: theme.palette.canvas.contrastText
             }
         );
     }

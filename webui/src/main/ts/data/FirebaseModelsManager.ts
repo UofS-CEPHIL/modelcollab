@@ -76,6 +76,8 @@ export default class FirebaseModelsManager {
                     )
                 )
             );
+
+        this.onDataChanged(FirebaseModelsList.EMPTY);
     }
 
     private createNewModel(id: string, t: ModelUserType) {

@@ -11,11 +11,13 @@ export default abstract class FirebaseMovableLabelPointerComponent
     extends FirebasePointerComponent<DataType>
 {
 
-    public static readonly UNINITIALIZED_LABEL_POS = -100;
-
     public isUninitializedLabelPosition(): boolean {
-        const u = FirebaseMovableLabelPointerComponent.UNINITIALIZED_LABEL_POS;
-        return this.getData().labelX === u || this.getData().labelY === u;
+        return !this.getData().labelX && !this.getData().labelY;
+    }
+
+    public static sanitizeLabelData(d: any): void {
+        if (!d.labelX) delete d.labelX;
+        if (!d.labelY) delete d.labelY;
     }
 
     public labelPositionEqual(otherX: number, otherY: number): boolean {
@@ -46,10 +48,15 @@ export default abstract class FirebaseMovableLabelPointerComponent
             dx,
             dy
         ) as FirebaseMovableLabelPointerComponent<DataType>;
-        return child.withLabelPosition(
-            child.getData().labelX - dx + parent.getData().x,
-            child.getData().labelY - dy + parent.getData().y,
-        );
+        if (child.isUninitializedLabelPosition()) {
+            return child;
+        }
+        else {
+            return child.withLabelPosition(
+                child.getData().labelX! - dx + parent.getData().x,
+                child.getData().labelY! - dy + parent.getData().y,
+            );
+        }
     }
 
 }

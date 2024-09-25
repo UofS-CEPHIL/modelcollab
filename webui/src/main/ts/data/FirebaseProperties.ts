@@ -3,8 +3,8 @@ export interface FirebaseColorProperties {
 }
 
 export interface FirebaseMovableLabelProperties {
-    labelX: number;
-    labelY: number;
+    labelX?: number;
+    labelY?: number;
 }
 
 export interface FirebasePointerProperties {

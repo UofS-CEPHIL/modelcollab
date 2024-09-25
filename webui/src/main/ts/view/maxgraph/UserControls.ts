@@ -5,21 +5,21 @@ import {
     Point,
 } from "@maxgraph/core";
 import { UiMode } from "../screens/canvas/UiMode";
-import ModeBehaviour from "./behaviours/ModeBehaviour";
-import BehaviourGetter from "./behaviours/BehaviourGetter";
 import DiagramActions from "./DiagramActions";
 import ModalBoxType from "../modalbox/ModalBoxType";
 import FirebaseComponent from "../../data/components/FirebaseComponent";
 import MCGraph from "./MCGraph";
 import MCKeyHandler from "./MCKeyHandler";
 import UserActionLogger from "../../logging/UserActionLogger";
+import ModeManager from "../screens/canvas/ModeManager";
+import ModeBehaviour from "../screens/canvas/behaviour/ModeBehaviour";
 
 export default class UserControls {
 
     private graph: MCGraph;
     private keyHandler: MCKeyHandler;
     private diagramActions: DiagramActions<any>;
-    private behaviourGetter: BehaviourGetter;
+    private behaviourGetter: ModeManager;
     private actionLogger?: UserActionLogger;
 
     private copyCells: (c: FirebaseComponent[]) => void;
@@ -37,7 +37,7 @@ export default class UserControls {
     public constructor(
         graph: MCGraph,
         actions: DiagramActions<any>,
-        behaviourGetter: BehaviourGetter,
+        behaviourGetter: ModeManager,
         copyCells: (c: FirebaseComponent[]) => void,
         pasteCells: () => FirebaseComponent[],
         getCurrentComponents: () => FirebaseComponent[],
@@ -125,7 +125,6 @@ export default class UserControls {
     }
 
     private setupModeBehaviours(): void {
-        // Canvas click
         this.graph.addListener(
             InternalEvent.CLICK,
             (_: EventTarget, event: EventObject) => {

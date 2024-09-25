@@ -86,11 +86,13 @@ export default class FlowPresentation
         // Need to wait before doing this so that the cell state has a chance to
         // be generated.
         // TODO is there a better way to do this?
-        setTimeout(() => graph.updateCellLabelPosition(
-            (newCell as Cell[])[0],
-            component.getData().labelX,
-            component.getData().labelY)
-        );
+        if (!component.isUninitializedLabelPosition()) {
+            setTimeout(() => graph.updateCellLabelPosition(
+                (newCell as Cell[])[0],
+                component.getData().labelX!,
+                component.getData().labelY!
+            ));
+        }
 
         newComponents.push(...newCell);
         return newComponents;
@@ -147,8 +149,8 @@ export default class FlowPresentation
             if (!flow.isUninitializedLabelPosition()) {
                 graph.updateCellLabelPosition(
                     cell,
-                    flow.getData().labelX,
-                    flow.getData().labelY
+                    flow.getData().labelX!,
+                    flow.getData().labelY!
                 );
             }
 

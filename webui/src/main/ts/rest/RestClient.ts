@@ -1,5 +1,7 @@
 import Axios, { AxiosResponse } from "axios";
 
+import applicationConfig from "../config/applicationConfig"
+
 export default class RestClient {
 
     // TODO this would be great to handle through codegen so it
@@ -12,12 +14,14 @@ export default class RestClient {
         modelId: string,
         onCodeReceived: (result: string, success: boolean) => void,
     ): Promise<void> {
+        const baseurl = applicationConfig.serverAddress;
         return Axios.get(
-            `/api/${RestClient.GET_CODE_PATH}/${modelId}`,
+            `${baseurl}/${RestClient.GET_CODE_PATH}/${modelId}`,
             {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                validateStatus: () => true
             }
         ).then(res => onCodeReceived(res.data, !this.isError(res)));
     }
@@ -38,13 +42,15 @@ export default class RestClient {
             return new Promise(() => { });
         }
         else {
+            const baseurl = applicationConfig.serverAddress;
             return Axios.post(
-                `/api/${RestClient.COMPUTE_MODEL_PATH}`
+                `${baseurl}/${RestClient.COMPUTE_MODEL_PATH}`
                 + `/${sessionId}/${scenarioName}`,
                 {
                     headers: {
                         "Content-Type": "application/x-www-urlencoded"
-                    }
+                    },
+                    validateStatus: () => true
                 }
             ).then(res => onResponseReceived(res.data, !this.isError(res)));
         }
@@ -54,13 +60,15 @@ export default class RestClient {
         resultId: string,
         onResultsReceived: (success: boolean, result?: Blob | string) => void
     ): Promise<void> {
+        const baseurl = applicationConfig.serverAddress;
         return Axios.get(
-            `/api/${RestClient.GET_RESULTS_PATH}/${resultId}`,
+            `${baseurl}/${RestClient.GET_RESULTS_PATH}/${resultId}`,
             {
                 method: 'get',
                 headers: {
                     "Content-Type": "application/x-www-urlencoded"
                 },
+                validateStatus: () => true,
                 responseType: "arraybuffer"
             }
         ).then(res => {
