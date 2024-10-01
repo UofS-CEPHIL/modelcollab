@@ -1,6 +1,9 @@
 import Axios, { AxiosResponse } from "axios";
 
 import applicationConfig from "../config/applicationConfig"
+import FirebaseDataModel from "../data/FirebaseDataModel";
+
+export type ResponseHandler<T> = (result: T, success: boolean) => void;
 
 export default class RestClient {
 
@@ -10,25 +13,54 @@ export default class RestClient {
     public static readonly COMPUTE_MODEL_PATH = "computeModel";
     public static readonly GET_RESULTS_PATH = "getModelResults";
 
+    private readonly firebaseDataModel: FirebaseDataModel;
+
+    public constructor(firebaseDataModel: FirebaseDataModel) {
+        this.firebaseDataModel = firebaseDataModel;
+    }
+
     public async getCode(
         modelId: string,
-        onCodeReceived: (result: string, success: boolean) => void,
+        onCodeReceived: ResponseHandler<string>,
     ): Promise<void> {
+        await this.getString(
+            "get",
+            `${RestClient.GET_CODE_PATH}/${modelId}`,
+            onCodeReceived
+        );
+    }
+
+    private async request(
+        method: "get" | "post",
+        url: string,
+    ): Promise<AxiosResponse> {
         const baseurl = applicationConfig.serverAddress;
-        return Axios.get(
-            `${baseurl}/${RestClient.GET_CODE_PATH}/${modelId}`,
+        const token = await this.firebaseDataModel.getCurrentUserIdToken();
+        return await Axios.request(
             {
+                method,
+                url: `${baseurl}/${url}`,
                 headers: {
-                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
                 },
                 validateStatus: () => true
-            }
-        ).then(res => onCodeReceived(res.data, !this.isError(res)));
+            });
     }
 
     private isError(r: AxiosResponse): boolean {
-        return r.status >= 300 || (
-            String(r.data).startsWith("Error")
+        return r.status >= 300 || String(r.data).startsWith("Error");
+    }
+
+    private async getString(
+        method: "get" | "post",
+        url: string,
+        onResponse: ResponseHandler<string>
+    ): Promise<void> {
+        this.request(method, url).then(res =>
+            onResponse(
+                res.data,
+                !this.isError(res)
+            )
         );
     }
 
@@ -42,17 +74,11 @@ export default class RestClient {
             return new Promise(() => { });
         }
         else {
-            const baseurl = applicationConfig.serverAddress;
-            return Axios.post(
-                `${baseurl}/${RestClient.COMPUTE_MODEL_PATH}`
-                + `/${sessionId}/${scenarioName}`,
-                {
-                    headers: {
-                        "Content-Type": "application/x-www-urlencoded"
-                    },
-                    validateStatus: () => true
-                }
-            ).then(res => onResponseReceived(res.data, !this.isError(res)));
+            await this.getString(
+                "post",
+                `${RestClient.COMPUTE_MODEL_PATH}/${sessionId}/${scenarioName}`,
+                onResponseReceived
+            );
         }
     }
 
@@ -61,16 +87,9 @@ export default class RestClient {
         onResultsReceived: (success: boolean, result?: Blob | string) => void
     ): Promise<void> {
         const baseurl = applicationConfig.serverAddress;
-        return Axios.get(
-            `${baseurl}/${RestClient.GET_RESULTS_PATH}/${resultId}`,
-            {
-                method: 'get',
-                headers: {
-                    "Content-Type": "application/x-www-urlencoded"
-                },
-                validateStatus: () => true,
-                responseType: "arraybuffer"
-            }
+        await this.request(
+            "get",
+            `${baseurl} / ${RestClient.GET_RESULTS_PATH} / ${resultId}`
         ).then(res => {
             if (res.status === 204) onResultsReceived(true, undefined);
             else if (res.status === 200) onResultsReceived(

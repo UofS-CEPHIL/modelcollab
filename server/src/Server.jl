@@ -32,12 +32,17 @@ const CORS_OPT_HEADERS = [
 ]
 
 
-mutable struct ServerState
-    token::OAuthToken;
-    result_paths::Dict{String, Union{String, Nothing}};
-    lock::ReentrantLock
+mutable struct ModelExecution
+    modelid::String;
+    complete::Bool;
+    error::Bool;
+    message::Union{String, Nothing};
 end
 
+mutable struct ServerState
+    results::Dict{String, ModelExecution};
+    lock::ReentrantLock
+end
 
 function is_valid_uuid(uuid::String)::Bool
     regex = r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
@@ -59,7 +64,16 @@ function CorsMiddleware(handler)
     end
 end
 
-function make_bad_request_error(error::String)
+function make_unauthorized_error(error::String)::HTTP.Response
+    println("Unauthorized: " * error)
+    return HTTP.Response(
+        ResponseCode.UNAUTHORIZED,
+        CORS_RES_HEADERS,
+        error
+    )
+end
+
+function make_bad_request_error(error::String)::HTTP.Response
     println("Bad request: " * error)
     return HTTP.Response(
         ResponseCode.BAD_REQUEST,
@@ -68,7 +82,7 @@ function make_bad_request_error(error::String)
     )
 end
 
-function make_server_error(error::String)
+function make_server_error(error::String)::HTTP.Response
     println("Request encountered server error: " * error)
     return HTTP.Response(
         ResponseCode.ERROR,
@@ -77,7 +91,7 @@ function make_server_error(error::String)
     )
 end
 
-function make_model_error(error::String)
+function make_model_error(error::String)::HTTP.Response
     println("Request encountered model error: " * error)
     return HTTP.Response(
         ResponseCode.OK,
@@ -86,17 +100,34 @@ function make_model_error(error::String)
     )
 end
 
+function get_firebase_token(req::HTTP.Request)::Union{String, Nothing}
+    token = HTTP.header(req, "Authorization")
+    println(token)
+    if (token == nothing)
+        return nothing
+    else
+        return as_bearer_token(token)
+    end
+end
+
 function handle_causalloop(state::ServerState, req::HTTP.Request)
     try
-        lock(state.lock)
         model_id = HTTP.getparams(req)["model_id"]
+        token = get_firebase_token(req)
+
         if (!is_valid_uuid(model_id))
-            return makebad_request_error("Invalid model id: " * model_id)
+            return make_bad_request_error(
+                "Invalid model id: " * model_id
+            )
+        elseif (token == nothing)
+            return make_unauthorized_error(
+                "No Firebase authentication token provided"
+            )
         end
 
         model_type = get_model_type(
             model_id,
-            value(state.token)
+            token
         )
         if (model_type != CAUSAL_LOOP)
             return make_server_error(
@@ -116,21 +147,21 @@ function handle_causalloop(state::ServerState, req::HTTP.Request)
         )
     catch e
         return make_server_error(sprint(showerror, e))
-    finally
-        unlock(state.lock)
     end
 end
 
 function handle_getcode(state::ServerState, req::HTTP.Request)
     try
-        lock(state.lock)
         model_id = HTTP.getparams(req)["model_id"]
+        token = get_firebase_token(req)
         if (!is_valid_uuid(model_id))
             return make_bad_request_error("Invalid model id: " * model_id)
+        elseif (token == nothing)
+            return make_unauthorized_error("No Firebase token provided")
         end
         model_type = get_model_type(
             model_id,
-            value(state.token)
+            token
         )
         if (model_type != STOCK_FLOW)
             return make_server_error(
@@ -141,7 +172,7 @@ function handle_getcode(state::ServerState, req::HTTP.Request)
         println("getcode: model=$(model_id)")
         fb_components = FirebaseClient.get_components(
             model_id,
-            value(state.token)
+            token
         )
         models = ModelBuilder.make_stockflow_models(
             fb_components.outers,
@@ -152,8 +183,6 @@ function handle_getcode(state::ServerState, req::HTTP.Request)
         feet = FootBuilder.make_feet(models)
         errors = ModelValidator.validate_models(models, feet)
         if (length(errors) > 0)
-            err_string = join(errors, "\n")
-            print("Error: " * err_string)
             return make_model_error(join(errors, "\n"))
         end
         code = CodeGenerator.generate_code(models, feet)
@@ -166,16 +195,10 @@ function handle_getcode(state::ServerState, req::HTTP.Request)
     catch e
         showerror(stdout, e)
         if (e isa InvalidModelException)
-            return HTTP.Response(
-                ResponseCode.ERROR,
-                CORS_RES_HEADERS,
-                "Invalid Model: $(sprint(showerror, e))"
-            )
+            return make_model_error(sprint(showerror, e))
         else
             return make_server_error(sprint(showerror, e))
         end
-    finally
-        unlock(state.lock)
     end
 end
 
@@ -188,6 +211,7 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
     function start_computing_model(
         code::String,
         runid::String,
+        modelid::String,
         path::String
     )::Nothing
         try
@@ -197,32 +221,75 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
                     "Computing model on thread pool "
                     * "$(threadpool()) and on thread $(threadid())"
                 )
+                try
+                lock(state.lock)
+                state.results[runid] = ModelExecution(
+                    modelid,
+                    false,
+                    false,
+                    nothing
+                )
+                finally
+                unlock(state.lock)
+                end
+
                 eval(Meta.parse(code))
                 end
             )
         catch e
-            println(e)
-            lock(state.lock)
-            state.result_paths[runid] = "error"
-            unlock(state.lock)
-        finally
-            if (state.result_paths[runid] == nothing)
+            errmsg = sprint(showerror, e)
+            println(errmsg)
+            try
                 lock(state.lock)
-                state.result_paths[runid] = path
+                execution = state.results[runid]
+                if (execution == nothing)
+                    state.results[runid] = ModelExecution(
+                        modelid,
+                        true,
+                        true,
+                        errmsg * " and no matching ModelExecution was found"
+                    )
+                else
+                    execution.complete = true
+                    execution.error = true
+                    execution.message = errmsg
+                end
+            finally
+                unlock(state.lock)
+            end
+        finally
+            try
+                lock(state.lock)
+                execution = state.results[runid]
+                if (execution == nothing)
+                    state.results[runid] = ModelExecution(
+                        modelid,
+                        true,
+                        true,
+                        "Completed execution but found no ModelExecution"
+                    )
+                else
+                    execution.complete = true
+                    execution.error = false
+                    execution.message = path
+                end
+            finally
                 unlock(state.lock)
             end
         end
         return nothing
     end
 
-    model_id = HTTP.getparams(req)["model_id"]
-    scenario_id = HTTP.getparams(req)["scenario"]
-
     try
+        model_id = HTTP.getparams(req)["model_id"]
+        scenario_id = HTTP.getparams(req)["scenario"]
+        token = get_firebase_token(req)
         if (!is_valid_uuid(model_id))
             return make_bad_request_error("Invalid model id: " * model_id)
         elseif (!is_valid_uuid(scenario_id))
             return make_bad_request_error("Invalid scenario id: " * scenario_id)
+        elseif (token == nothing)
+            return make_unauthorized_error("No Firebase token provided")
         end
         model_type = get_model_type(
             model_id,
@@ -240,7 +307,6 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
     println("computemodel: model=$(model_id), scenario=$(scenario_id)")
 
     try
-        lock(state.lock)
         runid::String = get_randid()
         while runid in keys(state.result_paths)
             runid = get_randid()
@@ -294,36 +360,82 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
     catch e
         showerror(stdout, e)
         return make_server_error(sprint(showerror, e))
-    finally
-        unlock(state.lock)
     end
 end
 
 function handle_getmodelresults(state::ServerState, req::HTTP.Request)
+
+    resultid::Union{String, Nothing} = nothing
+    token::Union{String, Nothing} = nothing
+    modeluuid::Union{ModelExecution, Nothing} = nothing
+
     try
-        lock(state.lock)
         resultid = HTTP.getparams(req)["resultid"]
-        println("getmodelresults: id=$(resultid)")
+        token = get_firebase_token(req)
 
         if (!is_valid_result_id(resultid))
             return make_bad_request_error("Invalid result id: " + resultid)
+        elseif (token == nothing)
+            return make_unauthorized_error("No Firebase token provided")
         end
+    catch e
+        return make_server_error(sprint(showerror, e))
+    end
 
-        if resultid in keys(state.result_paths)
-            actual = state.result_paths[resultid]
-            if actual === nothing
+    try
+        lock(state.lock)
+        println("getmodelresults: id=$(resultid)")
+        if resultid in keys(state.results)
+            result = state.results[resultid]
+            if (result == nothing)
                 return HTTP.Response(
-                    ResponseCode.NO_CONTENT,
+                    ResponseCode.NOT_FOUND,
                     CORS_RES_HEADERS
                 )
             else
-                if (state.result_paths[resultid] == "error")
-                    return HTTP.Response(
-                        ResponseCode.ERROR,
-                        CORS_RES_HEADERS
-                    )
-                end
-                data = read(state.result_paths[resultid])
+                modeluuid = result.modelid
+            end
+        end
+    catch e
+        return make_server_error(sprint(showerror, e))
+    finally
+        unlock(state.lock)
+    end
+
+    try
+        if (modeluuid == nothing)
+            return make_server_error(
+                "No model ID found corresponding to run ID " * resultid
+            )
+        elseif (!has_read_permission(token, modeluuid))
+            return make_unauthorized_error(
+                "The provided Firebase token is not " *
+                "authorized to read model $(modeluuid)"
+            )
+        end
+    catch e
+        return make_server_error(sprint(showerror, e))
+    end
+
+    try
+        lock(state.lock)
+        result = state.results[resultid]
+        if (result == nothing)
+            make_server_error("Result deleted while checking permissions")
+        elseif (!result.complete)
+            return HTTP.Response(
+                ResponseCode.NO_CONTENT,
+                CORS_RES_HEADERS
+            )
+        else
+            if (result.error)
+                return HTTP.Response(
+                    ResponseCode.ERROR,
+                    CORS_RES_HEADERS,
+                    "Error executing model: " * result.message
+                )
+            else
+                data = read(result.message)
                 delete!(state.result_paths, resultid)
                 return HTTP.Response(
                     ResponseCode.OK,
@@ -331,17 +443,9 @@ function handle_getmodelresults(state::ServerState, req::HTTP.Request)
                     data
                 )
             end
-        else
-            return HTTP.Response(
-                ResponseCode.NOT_FOUND,
-                CORS_RES_HEADERS
-            )
         end
     catch e
-        return HTTP.Response(
-            ResponseCode.ERROR,
-            CORS_RES_HEADERS
-        )
+        return make_server_error(sprint(showerror, e))
     finally
         unlock(state.lock)
     end
@@ -355,7 +459,6 @@ function create_and_start()::HTTP.Server
     end
 
     state = ServerState(
-        init_token_management(),
         Dict{String, Union{Nothing, String}}(),
         ReentrantLock()
     )
@@ -394,7 +497,7 @@ function create_and_start()::HTTP.Server
         SERVER_IP,
         SERVER_PORT;
         sslconfig=sslconf,
-        on_shutdown=() -> end_token_management(state.token)
+        on_shutdown=() -> println("Exiting Server!")
     )
 end
 

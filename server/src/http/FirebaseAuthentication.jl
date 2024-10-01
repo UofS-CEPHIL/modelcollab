@@ -1,6 +1,6 @@
 module FirebaseAuthentication
 
-export OAuthToken, init_token_management, end_token_management, value, is_valid
+export OAuthToken, init_token_management, end_token_management, value, is_valid, as_bearer_token, has_read_permission
 
 using Dates
 using Base.Threads
@@ -12,6 +12,7 @@ using Base64
 
 using ..Config
 using ..HTTPResponseCode
+using ..FirebaseClient
 
 const TOKEN_EXPIRY_TIME = Hour(1)
 const TOKEN_VALIDITY_POLL_TIME = Minute(1)
@@ -22,6 +23,21 @@ mutable struct OAuthToken
     time_expires::Union{DateTime, Nothing};
     cancelled::Bool;
     lock::ReentrantLock;
+end
+
+function as_bearer_token(token::AbstractString)::String
+    if (startswith(token, "Bearer ")) return token
+    else return "Bearer " * token
+    end
+end
+
+function has_read_permission(token::String, modeluuid::String)::Bool
+    try
+        t = get_model_type(modeluuid, token)
+        return true
+    catch e
+        return false
+    end
 end
 
 function value(token::OAuthToken)::Union{String, Nothing}

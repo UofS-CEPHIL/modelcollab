@@ -12,7 +12,7 @@ end
 export InvalidModelException
 Base.showerror(io::IO, e::InvalidModelException) = print(
     io,
-    "Invalid Model: " + e.reason
+    "Invalid Model: " * e.reason
 )
 
 end

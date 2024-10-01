@@ -757,6 +757,15 @@ export default class FirebaseDataModel {
         )
     }
 
+    public async getCurrentUserIdToken(): Promise<string> {
+        const token = await this.firebaseManager
+            .getAuth()
+            .currentUser
+            ?.getIdToken(true);
+        if (!token) throw new Error("Unable to acquire user ID token");
+        else return token;
+    }
+
     public getCurrentUser(): User {
         const user = this.firebaseManager.getUser();
         if (!user) throw new Error("Not logged in!");

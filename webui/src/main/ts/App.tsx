@@ -30,9 +30,9 @@ export default class App extends React.Component<Props, State> {
         this.state = {
             isSignedIn: false,
         };
-        this.restClient = new RestClient();
         this.firebaseManager = new FirebaseManager();
         this.firebaseDataModel = new FirebaseDataModel(this.firebaseManager);
+        this.restClient = new RestClient(this.firebaseDataModel);
     }
 
     public componentDidMount(): void {
