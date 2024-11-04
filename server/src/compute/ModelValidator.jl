@@ -12,7 +12,7 @@ function validate_models(
 
     errors = Vector{String}()
     if (length(models) == 0)
-        push!(errors, "No valid stockflow models found")
+        push!(errors, "No valid stock & flow models found")
     end
 
     if (length(feet) == 0)
@@ -29,5 +29,22 @@ function validate_models(
     return errors
 end
 export validate_models
+
+function validate_models(
+    models::Vector{CausalLoopModel}
+)::Vector{String}
+
+    errors = Vector{String}()
+    if (length(models) == 0)
+        push!(errors, "No valid causal loop models found")
+    end
+
+    allvtxs = reduce(vcat, map(m -> m.vtxs, models); init=[])
+    if (length(allvtxs) == 0)
+        push!(errors, "No vertices found")
+    end
+
+    return errors
+end
 
 end # ModelValidator namespace

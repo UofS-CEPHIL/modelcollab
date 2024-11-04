@@ -95,8 +95,7 @@ function qualify_component_ids!(
     modelid::String,
     components::Vector{FirebaseDataObject}
 )::Nothing
-    # TODO use the same delimiter as webui
-    qualify_component_id(id::String) = "$(modelid)/$(id)"
+    qualify_component_id(id::String) = "$(modelid)_$(id)"
     for i in 1:length(components)
         old = components[i]
         new = newid(qualify_component_id(old.id), old)

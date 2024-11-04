@@ -2,8 +2,8 @@
 module ParsingUtils
 
 using Test
-using ..ModelComponents
 
+using ..ModelComponents
 
 function make_flow_var_name(flowname::String)::String
     return "var_$(flowname)"
@@ -128,42 +128,63 @@ function get_num_invocations(funcname::String, code::String)::Int
 end
 export get_num_invocations
 
-struct StockflowArgs
-    stock::String
-    flow::String
-    dynvar::String
-    sumvar::String
-    varname::String
+function get_num_occurrences(searchstring::String, code::String)::Int
+    re = Regex(searchstring)
+    matches = collect(eachmatch(re, code))
+    return length(matches)
 end
-export StockflowArgs
+export get_num_occurrences
 
-function get_stockflow_args(code::String)::Vector{StockflowArgs}
-    re = r"(?<varname>\w+) *= *StockAndFlow *\("
-    matches = eachmatch(re, code)
-    if (matches === nothing)
-        throw(ErrorException("No StockAndFlow invocations found"))
+struct StockFlowArgs
+    stocks::Vector{String}
+    flows::Vector{String}
+    dynvars::Vector{String}
+    sumvars::Vector{String}
+    params::Vector{String}
+    model_varname::String
+end
+export StockFlowArgs
+
+function get_stockflow_args(code::String)::Vector{StockFlowArgs}
+
+    function get_nonempty_lines(text::AbstractString)::Vector{String}
+        return filter(
+            l -> length(l) > 0,
+            map(
+                l -> strip(l),
+                split(text, "\n")
+            )
+        )
     end
 
-    out::Vector{StockflowArgs} = []
+    # Gross regex splits the @stock_and_flow invocation into variables called
+    # varname, stocks, parameters, sums, dynvars, and flows
+    re = r"(?<varname>\w+) *= *@stock_and_flow +begin\n\s+:stocks\n(?<stocks>(.|\s)+?)\s+:parameters\n(?<parameters>(.|\s)+?)\n\s+:sums\n(?<sums>(.|\s)+?)\n\s+:dynamic_variables\n(?<dynvars>(.|\s)+?)\n\s+:flows\n(?<flows>(.|\n)+?)\nend"
+    matches = collect(eachmatch(re, code))
+    if (length(matches) == 0)
+        throw(ErrorException("No stock_and_flow invocations found"))
+    end
+
+    out::Vector{StockFlowArgs} = []
     for m in matches
-        start = m.offset
-        args = get_string_between_parens(code[start:end]).result
+        varname = m["varname"]
+        stocks = get_nonempty_lines(m["stocks"])
+        flows = get_nonempty_lines(m["flows"])
+        dynvars = get_nonempty_lines(m["dynvars"])
+        sumvars = get_nonempty_lines(m["sums"])
+        params = get_nonempty_lines(m["parameters"])
 
-        stocks_arg = get_string_between_parens(args)
-        args = args[stocks_arg.endidx+2:end]
-        flows_arg = get_string_between_parens(args)
-        args = args[flows_arg.endidx+2:end]
-        vars_arg = get_string_between_parens(args)
-        args = args[vars_arg.endidx+2:end]
-        sumvars_arg = get_string_between_parens(args)
-
-        push!(out, StockflowArgs(
-            stocks_arg.result,
-            flows_arg.result,
-            vars_arg.result,
-            sumvars_arg.result,
-            m["varname"]
-        ))
+        push!(
+            out,
+            StockFlowArgs(
+                stocks,
+                flows,
+                dynvars,
+                sumvars,
+                params,
+                varname,
+            )
+        )
     end
     return out
 end
@@ -198,15 +219,21 @@ function get_stockflow_varnames(code::String)::Vector{String}
 end
 export get_stockflow_varnames
 
+function get_composed_stockflow_varname(code::String)::Union{String, Nothing}
+    re = r"(?<varname>\w+) *= *@compose"
+    rematch = match(re, code)
+    if (rematch == nothing)
+        return nothing
+    else
+        return rematch["varname"]
+    end
+end
+export get_composed_stockflow_varname
+
 function get_open_varname(code::String)::Union{String, Nothing}
     return get_varname_for_func_call("Open", code)
 end
 export get_open_varname
-
-function get_oapply_varname(code::String)::Union{String, Nothing}
-    return get_varname_for_func_call("oapply", code)
-end
-export get_oapply_varname
 
 function get_apex_varname(code::String)::Union{String, Nothing}
     return get_varname_for_func_call("apex", code)
@@ -222,11 +249,6 @@ function get_solve_varname(code::String)::Union{String, Nothing}
     return get_varname_for_func_call("solve", code)
 end
 export get_solve_varname
-
-function get_relation_varname(code::String)::Union{String, Nothing}
-    return get_varname_for_func_call("@relation", code)
-end
-export get_relation_varname
 
 function get_lvector_varnames(code::String)::Vector{String}
     return get_varnames_for_func_call("LVector", code)
@@ -267,70 +289,6 @@ function get_foot_args(code::String)::Vector{Any}
 end
 export get_foot_args
 
-function get_relation_foot_names(code::String)::Union{Vector{String}, Nothing}
-    raw = get_relation_foot_names_raw(code)
-    return filter(s -> length(s) > 0, split(raw, ","))
-end
-export get_relation_foot_names
-
-function get_relation_foot_names_raw(code::String)::Union{String, Nothing}
-    re = r"\w+ *= *@relation *\( *(?<footnames>[ ,\w]*) *\) * begin\s+(?<models>[\s;(),\w]+)\s+end"
-    m = match(re, code)
-    if (m === nothing)
-        return nothing
-    else
-        return remove_whitespace(m["footnames"])
-    end
-end
-export get_relation_foot_names_raw
-
-function get_relation_model_entries(
-    code::String
-)::Union{Dict{String, Vector{String}}, Nothing}
-    models = split(get_relation_models_raw(code), ";")
-    re = r"[\t ]*(?<model>\w+) *\( *(?<footnames>[ ,\w]+) *\)\s*"
-    matches = map(l -> match(re, l), models)
-    return Dict(
-        match["model"] => split(match["footnames"], ",")
-        for match in  matches
-    )
-end
-export get_relation_model_entries
-
-function get_relation_model_names(code::String)::Union{Vector{String}, Nothing}
-    models = split(get_relation_models_raw(code), ";")
-    if (models === nothing)
-        return nothing
-    end
-    re = r"[\t ]*(?<model>\w+) *\( *(?<footnames>[ ,\w]+) *\)\s*"
-    return map(l -> match(re, l)["model"], models)
-end
-export get_relation_model_names
-
-function get_relation_models_raw(code::String)::Union{String, Nothing}
-    re = r"\w+ *= *@relation *\( *(?<footnames>[ ,\w]*) *\) * begin\s+(?<models>[\s;(),\w]+)\s+end"
-    m = match(re, code)
-    if (m === nothing)
-        return nothing
-    else
-        return m["models"]
-    end
-end
-export get_relation_models_raw
-
-function get_oapply_args(code::String)
-    re = r"\w+ *= *oapply *\( *(?<relation>\w+) *, *\[ *(?<models>[ ,\w]+) *\] *\)"
-    m = match(re, code)
-    @test m !== nothing
-    if (m === nothing)
-        return nothing
-    end
-
-    return (relation=m["relation"], modelnames=split(m["models"], ","))
-
-end
-export get_oapply_args
-
 function get_stocks_and_params_lvectors(code::String)
     function split_lvector(lv::AbstractString)::Dict{String, String}
         function split_pair(p::AbstractString)::Pair{String, String}
@@ -362,8 +320,8 @@ function get_stocks_and_params_lvectors(code::String)
     # Find the one that has "startTime" in it and call it params
     lv1 = split_lvector(matches[1]["args"])
     lv2 = split_lvector(matches[2]["args"])
-    lv1matches = in("startTime", collect(keys(lv1)))
-    lv2matches = in("startTime", collect(keys(lv2)))
+    lv1matches = in("start_time", collect(keys(lv1)))
+    lv2matches = in("start_time", collect(keys(lv2)))
     if (lv1matches == lv2matches)
         verb = lv1matches ? "matched" : "didn't match"
         throw(ErrorException(

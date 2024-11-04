@@ -1,5 +1,7 @@
 module CodeGenerator
 
+using StockFlow
+
 using ..ModelBuilder
 using ..FootBuilder
 using ..ModelComponents
@@ -24,6 +26,29 @@ const IMPORT_LIST = [
     "Catlab.WiringDiagrams"
 ]
 
+const START_TIME_NAME = "start_time"
+export START_TIME_NAME
+const STOP_TIME_NAME = "stop_time"
+export STOP_TIME_NAME
+
+function generate_code(
+    models::Vector{CausalLoopModel}
+)::String
+
+    errors = ModelValidator.validate_models(models)
+    if (length(errors) > 0)
+        throw(InvalidModelException(format_errors(errors)))
+    end
+
+    lines = [
+        make_import_lines();
+        "";
+        make_causalloop_line.(models);
+    ]
+
+    return join(lines, "\n")
+end
+
 function generate_code(
     models::Vector{StockFlowModel},
     feet::Vector{Foot},
@@ -33,13 +58,7 @@ function generate_code(
 
     errors = ModelValidator.validate_models(models, feet)
     if (length(errors) > 0)
-        n = length(errors)
-        pl = n > 1 ? "s" : ""
-        errormsg = "$n error$(pl) found: \n"
-        for e in errors
-            errormsg *= "  $e\n"
-        end
-        throw(InvalidModelException(errormsg))
+        throw(InvalidModelException(format_errors(errors)))
     end
 
     lines = [
@@ -55,12 +74,45 @@ function generate_code(
 end
 export generate_code
 
+function format_errors(errors::Vector{String})::String
+    n = length(errors)
+    pl = n > 1 ? "s" : ""
+    errormsg = "$n error$(pl) found: \n"
+    for e in errors
+        errormsg *= "  $e\n"
+    end
+    return errormsg
+end
+
+function make_causalloop_line(model::CausalLoopModel)::String
+
+    function make_edge_line(edge::CLDEdge)::String
+        p = edge.polarity == POL_POSITIVE ? "+" : "-"
+        src = edge.src
+        tgt = edge.tgt
+        return "    $(src) => $(p)$(tgt)"
+    end
+
+    return join(
+        [
+            "@causal_loop begin";
+            "    :nodes";
+            map(v -> "    $(v.name)", model.vtxs);
+            "\n";
+            "    :edges";
+            make_edge_line.(model.edges);
+            "end"
+        ],
+        "\n"
+    )
+end
+
 function make_import_lines()::Vector{String}
     return map(i -> "using $i", IMPORT_LIST)
 end
 
 function make_model_name(modelid::String)::String
-    return "model_" * modelid
+    return "model_" * replace(modelid, r"[- \t\n]" => "_")
 end
 
 function make_var_list(names::Vector{String}, addcolon::Bool=false)
@@ -288,8 +340,8 @@ function make_params_line(
         end
     end
 
-    push!(all_params, Parameter("start_time", "00", scenario.starttime))
-    push!(all_params, Parameter("stop_time", "00", scenario.stoptime))
+    push!(all_params, Parameter(START_TIME_NAME, "n/a", scenario.starttime))
+    push!(all_params, Parameter(STOP_TIME_NAME, "n/a", scenario.stoptime))
     paramnames_commasep = join(make_single_param_entry.(all_params), ",")
     return "params = LVector($paramnames_commasep)"
 end
@@ -297,10 +349,21 @@ end
 
 function make_initial_stocks_line(models::Vector{StockFlowModel})::String
     function get_translated_init_value(stock::Stock)::String
-        return replace_symbols(
-            stock.value,
-            s::AbstractString -> "params.$s"
-        )
+        try
+            return replace_symbols(
+                stock.value,
+                s::AbstractString -> "params.$s"
+            )
+        catch e
+            if (e isa InvalidModelException)
+                throw(InvalidModelException(
+                    "Error making initial value for stock: $(stock.name). " *
+                    e.reason
+                ))
+            else
+                throw(e)
+            end
+        end
     end
 
     function make_single_stock_entry(stock::Stock)::String

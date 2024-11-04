@@ -54,11 +54,8 @@ export default abstract class CanvasToolbar
     private static readonly MODEL_ACTIONS_BUTTON_ID = "model-actions-button";
     private static readonly MODEL_ACTIONS_MENU_ID = "model-actions-menu";
 
-    protected abstract makeCustomMenus(): ReactElement | null;
-    protected abstract makeDropdownsForCustomMenus(): ReactElement | null;
-    protected abstract makeModelActionsOptions(): ReactElement[];
     protected abstract makeInitialState(): S;
-    protected abstract withMenusClosed(s: State): State;
+    protected abstract withMenusClosed(s: S): S;
 
     public constructor(props: P) {
         super(props);
@@ -153,7 +150,7 @@ export default abstract class CanvasToolbar
                     </IconButton>
                 </Tooltip>
 
-                {this.makeCustomMenus()}
+                {this.makeCustomButtons()}
 
                 {/*Open / Close Sidebar*/}
                 <Tooltip title="Toggle sidebar">
@@ -195,28 +192,11 @@ export default abstract class CanvasToolbar
                     }}
                     onClose={() => this.closeAllMenus()}
                 >
-                    {this.makeDefaultModelActionsOptions()}
                     {this.makeModelActionsOptions()}
                 </Menu>
-                {this.makeDropdownsForCustomMenus()}
+                {this.makeDropdownsForCustomButtons()}
             </Fragment>
         );
-    }
-
-    private makeDefaultModelActionsOptions(): ReactElement[] {
-        if (this.state.isModelOwner)
-            return [
-                <MenuItem
-                    key={"permissions"}
-                    onClick={() =>
-                        this.props.setOpenModalBox(ModalBoxType.PERMISSIONS)
-                    }
-                >
-                    Model Permissions
-                </MenuItem>
-            ];
-        else
-            return [];
     }
 
     private makeModelName(): ReactElement {
@@ -322,7 +302,9 @@ export default abstract class CanvasToolbar
     }
 
     private startEditingModelName(): void {
-        this.setState({ modelNameText: this.props.modelName })
+        if (this.state.isModelOwner) {
+            this.setState({ modelNameText: this.props.modelName });
+        }
     }
 
     private stopEditingModelName(): void {
@@ -393,6 +375,20 @@ export default abstract class CanvasToolbar
         );
     }
 
+    protected getCode(): void {
+        this.props.restClient.getCode(
+            this.props.modelId,
+            (result: string, success: boolean) => {
+                if (success) {
+                    this.downloadData(new Blob([result]), "Model.jl");
+                }
+                else {
+                    alert("Can't get code: " + result);
+                }
+            }
+        ).catch(e => alert(`Can't get code: ${Object.entries(e.toJSON())}`));
+    }
+
     protected downloadData(blob: Blob, filename: string): void {
         let a = document.createElement('a');
         a.href = window.URL.createObjectURL(blob);
@@ -401,5 +397,57 @@ export default abstract class CanvasToolbar
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+    }
+
+    /**
+     * Override this to add one or more custom buttons to the toolbar
+     */
+    protected makeCustomButtons(): ReactElement | null {
+        return null;
+    }
+
+    /**
+     * Override this to add a dropdown corresponding to a custom button
+     * added in `makeCustomButtons`
+     */
+    protected makeDropdownsForCustomButtons(): ReactElement | null {
+        return null;
+    }
+
+    /**
+     * Override this to add extra options to the Model Actions menu
+     */
+    protected makeModelActionsOptions(): ReactElement[] {
+        if (this.state.isModelOwner)
+            return [
+                (
+                    <MenuItem
+                        key={"permissions"}
+                        onClick={() =>
+                            this.props.setOpenModalBox(ModalBoxType.PERMISSIONS)
+                        }
+                    >
+                        Model Permissions
+                    </MenuItem>
+                ),
+                (
+                    <MenuItem
+                        key={"getcode"}
+                        onClick={() => this.getCode()}
+                    >
+                        Get Code
+                    </MenuItem>
+                ),
+                (
+                    <MenuItem
+                        key={"getjson"}
+                        onClick={() => this.getModelAsJson()}
+                    >
+                        Get JSON
+                    </MenuItem>
+                ),
+            ];
+        else
+            return [];
     }
 }

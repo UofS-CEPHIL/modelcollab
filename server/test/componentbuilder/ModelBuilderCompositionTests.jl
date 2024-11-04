@@ -13,22 +13,21 @@ using ..ModelBuilderTestingUtils
     result = ModelBuilder.make_stockflow_models(
         vcat(OUTER_CONNECTIONS, [
             FB_S1_OUTER, FB_S2_OUTER, FB_S3, FB_S2S3, FB_S3S1,
-            FB_SUMVAR_OUTER, FB_STARTTIME, FB_STOPTIME,
-            S1_SUB, S2_SUB, SUMVAR_SUB
-
+            FB_SUMVAR_OUTER
         ]),
         Dict(
             INNER_MODEL_ID => vcat(INNER_CONNECTIONS, [
                 FB_S1_INNER, FB_S2_INNER, FB_S1S2, FB_SUMVAR_INNER, FB_PARAM
             ])
-        )
+        ),
+        [S1_SUB, S2_SUB, SUMVAR_SUB]
     )
     @test length(result) == 2
 
     inner_idx = findfirst(m -> length(m.stocks) == 2, result)
     outer_idx = findfirst(m -> length(m.stocks) == 3, result)
-    @test inner_idx !== nothing
-    @test outer_idx !== nothing
+    @test inner_idx != nothing
+    @test outer_idx != nothing
     @test inner_idx != outer_idx
     inner_model = result[inner_idx]
     outer_model = result[outer_idx]
@@ -80,7 +79,7 @@ using ..ModelBuilderTestingUtils
                         PARAM_VALUE
                     )
                 ],
-                Vector{DynamicVariable}(),
+                [],
                 [
                     SumVariable(
                         SUM_VAR_NAME,
@@ -152,7 +151,7 @@ using ..ModelBuilderTestingUtils
                         []
                     )
                 ],
-                [START_TIME, STOP_TIME],
+                [],
                 [],
                 [
                     SumVariable(

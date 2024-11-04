@@ -189,7 +189,6 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
     protected makeToolbar(): ReactElement {
         return (
             <CausalLoopToolbar
-                changeMode={mode => this.setMode(mode)}
                 setOpenModalBox={m => this.setState({ displayedModalBox: m })}
                 modelName={this.state.modelName ?? ""}
                 modelId={this.props.modelUuid!}
@@ -199,7 +198,6 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
                 components={this.state.components}
                 errors={this.state.errors}
                 uiMode={this.state.mode}
-                actionLogger={this.actionLogger}
             />
         );
     }
@@ -215,10 +213,6 @@ class CausalLoopScreen extends CanvasScreen<Props, State, CausalLoopGraph> {
                 selectedComponent={this.state.selectedComponent}
             />
         );
-    }
-
-    protected makeModalBoxIfNecessary(): ReactElement | null {
-        return null;
     }
 }
 

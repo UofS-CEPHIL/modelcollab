@@ -26,5 +26,4 @@ export default class CausalLoopSidebar extends CanvasSidebar<Props, State> {
             />
         );
     }
-
 }

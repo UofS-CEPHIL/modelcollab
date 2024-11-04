@@ -3,9 +3,13 @@ module TestingUtils
 using Test
 using ..ModelComponents
 using ..ParsingUtils
+using ..CodeGenerator
 
 EXPECTED_INCLUDES = [
     "StockFlow",
+    "StockFlow.Syntax",
+    "StockFlow.Syntax.Stratification",
+    "StockFlow.Syntax.Composition",
     "Catlab",
     "Catlab.CategoricalAlgebra",
     "LabelledArrays",
@@ -40,7 +44,8 @@ function check_line_order(code::String)::Nothing
 
     # Now make sure that the function calls
     # happen in the expected order
-    stockflow_idx = findfirst("StockAndFlow(", code)
+    stockflow_idx = findfirst("@stock_and_flow", code)
+    compose_idx = findfirst("@compose", code)
     open_idx = findfirst("Open(", code)
     apex_idx = findfirst("apex(", code)
     u0_idx = findfirst("u0 =", code)
@@ -50,15 +55,8 @@ function check_line_order(code::String)::Nothing
     plot_idx = findfirst("plot(", code)
     savefig_idx = findfirst("savefig(", code)
 
-    # Finding the indices of each "foot()" call requires a little extra work
-    foot_idxs = collect(eachmatch(r"foot\(", code))
-    @test length(foot_idxs) > 0
-    foot_idxs = map(m -> m.offset, foot_idxs)
-    first_foot_idx = UnitRange{Int64}(foot_idxs[begin], foot_idxs[begin]+1)
-    last_foot_idx = UnitRange{Int64}(foot_idxs[end], foot_idxs[end]+1)
-
-    @test stockflow_idx < first_foot_idx
-    @test last_foot_idx < open_idx
+    @test stockflow_idx < compose_idx
+    @test compose_idx < open_idx
     @test open_idx < apex_idx
     @test apex_idx < params_idx
     @test params_idx < u0_idx
@@ -96,283 +94,187 @@ function check_list_matches_expected(
     return nothing
 end
 
-function test_foot_invocation(
-    result::String,
-    stock_name::String,
-    contributing_sumvar_names::Vector{String}
+function test_compose_invocation(
+    code::String,
+    expected_model_names::Vector{String},
+    expected_feet::Dict{String, Vector{String}}
 )::Nothing
-    footregex = Regex("(?<footname>\\w+) *= *foot\\(:$(stock_name)")
-    m = match(footregex, result)
-    if (m === nothing)
-        @test m !== nothing
-        return nothing
-    end
+    # Find the @compose invocation and extract the variable name, the model list
+    # (first argument to the macro), the model aliases (first line of the
+    # block), and the feet (subsequent lines)
+    re = r"(?<varname>\w+) *= *@compose *(?<modelnames>[\w ]+) *begin\s*\n\s*\((?<modelaliases>[\s\w,]+),\s*\)\n(?<feet>[\w\s\n\(\)\^=>,]+)\nend"
+    rematch = match(re, code)
+    @test rematch != nothing
 
-    args = remove_whitespace(
-        get_string_between_parens(
-            result[m.offset:end]
-        ).result
+    varname = rematch["varname"]
+    modelnames = filter(
+        n -> length(n) > 0,
+        split(rematch["modelnames"], r"\s+")
     )
-    firstarg = get_string_until_first_comma_not_between_parens(args)
-    @test firstarg == ":$(stock_name)"
-    secondarg = get_string_until_first_comma_not_between_parens(
-        args[length(firstarg)+2:end]
+    modelaliases = filter(
+        a -> length(a) > 0,
+        split(rematch["modelaliases"], r" *, *")
+    )
+    # God I wish Julia had function chaining
+    footlines = map(
+        f -> replace(f, r"\s*" => ""),
+        filter(
+            f -> length(f) > 0,
+            split(rematch["feet"], "\n")
+        )
     )
 
-    check_list_matches_expected(contributing_sumvar_names, secondarg, "()")
-    thirdarg = args[length(firstarg)+length(secondarg)+3:end]
-    check_list_matches_expected(
-        map(sv -> "$(stock_name)=>:$(sv)", contributing_sumvar_names),
-        remove_whitespace(thirdarg),
-        "()"
-    )
+    @test sort(expected_model_names) == sort(modelnames)
+    @test (modelaliases == modelnames)
+
+    # TODO test feet
+
+    return nothing
 end
-export test_foot_invocation
 
 function test_open_invocation(
-    result::String,
-    model_stock_names::Vector{String}
+    code::String,
+    expected_feet::Dict{String, Vector{String}}
 )::Nothing
+    expected_modelname = get_composed_stockflow_varname(code)
+    re = r"(?<varname>\w+) *= *Open\((?<modelname>\w+) *, *\((?<feet>[\w@ =>\(\),]+)\) *\)"
+    rematch = match(re, code)
 
-    function get_footname_for_stock(
-        stockname::String,
-        footnames::Vector{String}
-    )::String
-        matching_footnames = findall(
-            fn -> startswith(fn, "$(stockname)_"),
-            footnames
-        )
-        @test length(matching_footnames) == 1
-        return footnames[matching_footnames[1]]
-    end
+    @test rematch != nothing
+    @test rematch["modelname"] == expected_modelname
 
-    function get_stockflow_varname_from_stocks(
-        expected_stocknames::Vector{String}
-    )::Union{String, Nothing}
-        sf_args = get_stockflow_args(result)
-        stocks = map(s -> s.stock, sf_args)
-        stock_splits = map(split_by_arrows_for_list, stocks)
-        actual_stocknames = map(s -> collect(keys(s)), stock_splits)
+    # TODO test feet
 
-        match_idx = findfirst(
-            names -> sort(names) == sort(expected_stocknames),
-            actual_stocknames
-        )
-        if (match_idx === nothing)
-            throw(ErrorException(
-                "Unable to find matching stockflow invocation "
-                * "for stocks: $(expected_stocknames)"
-            ))
-        end
-
-        return sf_args[match_idx].varname
-    end
-
-    function get_open_foot_args(modelname::String)::Vector{String}
-        re = Regex("\\w+ *= *Open\\( *$(modelname), *(?<args>[ ,\\w]+)? *\\)")
-        m = match(re, result)
-        if (m == nothing)
-            throw(ErrorException(
-                "Can't find open invocation for stockflow name $(modelname)"
-            ))
-        elseif(m["args"] == nothing)
-            return Vector{String}()
-        else
-            return filter(
-                s -> length(s) > 0,
-                split(remove_whitespace(m["args"]), ",")
-            )
-        end
-    end
-
-    footnames = get_varnames_for_func_call("foot", result)
-    relevant_footnames = map(
-        sn -> get_footname_for_stock(sn, footnames),
-        model_stock_names
-    )
-    stockflow_name = get_stockflow_varname_from_stocks(model_stock_names)
-    foot_args = get_open_foot_args(stockflow_name)
-    @test sort(foot_args) == sort(relevant_footnames)
     return nothing
 end
 export test_open_invocation
 
 
 function test_stockflow_dynvar_arg(
-    result_after_arrow::String,
-    expected_translated_equation::String
+    expected_name::String,
+    expected_equation::String,
+    actual_dynvars::Vector{String}
 )::Nothing
-    result_after_arrow = remove_whitespace(result_after_arrow)
-    arrowsplit = split(result_after_arrow, "->")
-    equation = arrowsplit[2]
-    expected_translated_equation = remove_whitespace(expected_translated_equation)
-    @test equation == expected_translated_equation
+
+    re = r"^\s*(?<dynvarname>\w+) *= *(?<equation>.+)\s*$"
+    match_list = map(
+        d -> match(re, d),
+        actual_dynvars
+    )
+    dvidx = findfirst(
+        m -> m != nothing && m["dynvarname"] == expected_name,
+        match_list
+    )
+
+    @test dvidx != nothing
+    @test match_list[dvidx]["equation"] == expected_equation
+
     return nothing
 end
 export test_stockflow_dynvar_arg
 
 function test_stockflow_sumvar_arg(
-    result_after_arrow::String,
-    expected_names::Vector{String}
+    svname::String,
+    expected_contributing_sumvars::Vector{String},
+    actual_sumvars::Vector{String}
 )::Nothing
-    check_list_matches_expected(
-        expected_names,
-        result_after_arrow,
-        ":SVV_NONE"
+
+    re = Regex("$(svname) = \\[(?<svlist>[\\w, ]+)\\]")
+    svidxs = findall(
+        sv -> occursin(re, sv),
+        actual_sumvars
     )
+    @test length(svidxs) == 1
+
+    rematch = match(re, actual_sumvars[svidxs[1]])
+    svlist_commasep = replace(rematch["svlist"], r"\s" => "")
+    svs = split(svlist_commasep, ",")
+    @test sort(svs) == sort(expected_contributing_sumvars)
+
+    return nothing
 end
 export test_stockflow_sumvar_arg
 
 function test_stockflow_stock_arg(
     stock::Stock,
-    result_after_arrow::String,
-    model::StockFlowModel
+    actual_stocks::Vector{String},
 )::Nothing
-    function get_names(components)::Vector{String}
-        return map(c -> c.name, components)
-    end
 
-    function check_flow_list(expected::Vector{Flow}, result::String)::Nothing
-        check_list_matches_expected(
-            get_names(expected),
-            result,
-            ":F_NONE"
-        )
-    end
+    stocklineidxs = findall(
+        s -> s == stock.name,
+        actual_stocks
+    )
+    @test length(stocklineidxs) == 1
 
-    function check_dynvar_list(
-        expected_vars::Vector{DynamicVariable},
-        expected_flow_names::Vector{String},
-        result::String
-    )::Nothing
-        varnames = get_names(expected_vars)
-        flownames = map(make_flow_var_name, expected_flow_names)
-        allnames::Vector{String} = vcat(varnames, flownames)
-        check_list_matches_expected(
-            allnames,
-            result,
-            ":V_NONE"
-        )
-    end
-
-    function check_sumvar_list(
-        expected::Vector{SumVariable},
-        result::String
-    )
-        check_list_matches_expected(get_names(expected), result, ":SV_NONE")
-    end
-
-    result_after_arrow = get_string_between_parens(result_after_arrow).result
-
-    expected_inflows = filter(f -> f.to == stock.name, model.flows)
-    expected_outflows = filter(f -> f.from == stock.name, model.flows)
-    expected_variables = filter(
-        c -> in(stock.name, c.depended_stock_names),
-        model.dynvars
-    )
-    expected_sumvars = filter(
-        sv -> in(stock.name, sv.depended_stock_names),
-        model.sumvars
-    )
-
-    inflows_str = get_string_until_first_comma_not_between_parens(
-        result_after_arrow
-    )
-    outflows_str = get_string_until_first_comma_not_between_parens(
-        result_after_arrow[length(inflows_str)+2:end]
-    )
-    dynvars_str = get_string_until_first_comma_not_between_parens(
-        result_after_arrow[length(inflows_str) + length(outflows_str) + 3:end]
-    )
-    sumvars_str = get_string_until_first_comma_not_between_parens(
-        result_after_arrow[length(inflows_str) + length(outflows_str) +  length(dynvars_str) + 4:end]
-    )
-
-    check_flow_list(expected_inflows, inflows_str)
-    check_flow_list(expected_outflows, outflows_str)
-    check_dynvar_list(expected_variables, stock.contributing_flow_names, dynvars_str)
-    check_sumvar_list(expected_sumvars, sumvars_str)
     return nothing
 end
 export test_stockflow_stock_arg
 
-function test_stockflow_flow_arg(flow::Flow, result_after_arrow::String)::Nothing
-    varname = ":$(make_flow_var_name(flow.name))"
-    @test result_after_arrow == varname
+function test_stockflow_param_arg(
+    param::Parameter,
+    actual_params::Vector{String}
+)::Nothing
+
+    paramlineidx = findfirst(
+        p -> p == param.name,
+        actual_params
+    )
+    @test paramlineidx != nothing
+
+    return nothing
+end
+
+function test_stockflow_flow_arg(flow::Flow, actual_flows::Vector{String})::Nothing
+    re = Regex("^\\s*(?<src>\\w+) *=> *$(flow.name) *\\((?<equation>.+) *\\) *=> *(?<tgt>\\w+)")
+    flowlineidx = findfirst(
+        l -> occursin(re, l),
+        actual_flows
+    )
+
+    @test flowlineidx != nothing
+    flowline = actual_flows[flowlineidx]
+    rematch = match(re, flowline)
+    @test rematch != nothing
+    src = rematch["src"]
+    tgt = rematch["tgt"]
+    equation = rematch["equation"]
+
+    if (flow.from != nothing)
+        @test src == flow.from
+    else
+        @test src == "CLOUD"
+    end
+
+    if (flow.to != nothing)
+        @test tgt == flow.to
+    else
+        @test tgt == "CLOUD"
+    end
+
+    @test equation == flow.equation
+
     return nothing
 end
 export test_stockflow_flow_arg
 
-function test_relation_invocation(
-    code::String,
-    all_footnames::Vector{String},
-    expected_footname_lists::Dict{String, Vector{String}} # model -> exp. feet
-)::Nothing
-
-    # Make sure all the feet are in the first list
-    relation_footnames = get_relation_foot_names(code)
-    @test sort(relation_footnames) == sort(all_footnames)
-    if (length(all_footnames) == 1)
-        @test endswith(get_relation_foot_names_raw(code), ",")
-    end
-
-    # Make sure each model has the correct feet
-    modelargs = split(get_relation_models_raw(code), ";")
-    re = r"[\t ]*(?<model>\w+) *\( *(?<footnames>[ ,\w]+) *\)\s*"
-    @test length(modelargs) == length(keys(expected_footname_lists))
-    modelnames = Vector{String}()
-    expected_modelnames = map(
-        make_model_varname,
-        collect(keys(expected_footname_lists))
-    )
-    for modelarg in modelargs
-        m = match(re, modelarg)
-        @test m !== nothing
-        if (m === nothing)
-            return nothing
-        end
-        modelname = m["model"]
-        @test modelname !== nothing
-        if (modelname === nothing)
-            return nothing
-        end
-        push!(modelnames, modelname)
-        footnames = split(remove_whitespace(m["footnames"]), ",")
-        @test in(modelname, expected_modelnames)
-        m = match(r"model_(?<id>[\d\w]+)", modelname)
-        if (m === nothing)
-            throw(ErrorException("Couldn't parse model name $(modelname)"))
-        end
-        modelid = m["id"]
-        expected_footnames = expected_footname_lists[modelid]
-        @test sort(footnames) == sort(expected_footnames)
-    end
-    @test !contains_duplicates(modelnames)
-    return nothing
-end
-export test_relation_invocation
-
-function test_oapply_invocation(
-    code::String,
-    expected_model_ids::Vector{String}
-)::Nothing
-    expected_model_names = map(make_openmodel_varname, expected_model_ids)
-    relation_varname = get_relation_varname(code)
-    args = get_oapply_args(code)
-
-    @test args.relation == relation_varname
-    @test sort(args.modelnames) == sort(expected_model_names)
-
-    return nothing
-end
-export test_oapply_invocation
-
 function test_params(
     code::String,
-    expected_params::Dict{String, String}
+    expected_params::Dict{String, String},
+    expected_starttime::String,
+    expected_stoptime::String
 )::Nothing
+    expected_params[START_TIME_NAME] = expected_starttime
+    expected_params[STOP_TIME_NAME] = expected_stoptime
     actual_params = get_stocks_and_params_lvectors(code).params
-    @test sort(actual_params) == sort(expected_params)
+
+    @test length(actual_params) == length(expected_params)
+    for paramname in keys(expected_params)
+        actual_val = actual_params[paramname]
+        expected_val = expected_params[paramname]
+        @test actual_val != nothing
+        @test actual_val == expected_val
+    end
+
     return nothing
 end
 export test_params
@@ -382,18 +284,21 @@ function test_starting_values(
     expected_starting_values::Dict{String, String}
 )::Nothing
     actual_starting_values = get_stocks_and_params_lvectors(code).initvalues
-    @test sort(actual_starting_values) == sort(expected_starting_values)
+    @test length(actual_starting_values) == length(expected_starting_values)
+    for stockname in keys(expected_starting_values)
+        actual_val = actual_starting_values[stockname]
+        expected_val = expected_starting_values[stockname]
+        @test actual_val != nothing
+        @test actual_val == expected_val
+    end
     return nothing
 end
 export test_starting_values
 
 function test_apex_invocation(code::String)::Nothing
-    oapply_varname = get_oapply_varname(code)
-    @test oapply_varname !== nothing
-    if (oapply_varname === nothing)
-        return nothing
-    end
-    regex = Regex("\\w+ *= *apex *\\( *$(oapply_varname) *\\)")
+    open_varname = get_open_varname(code)
+    @test open_varname !== nothing
+    regex = Regex("\\w+ *= *apex *\\( *$(open_varname) *\\)")
     @test occursin(regex, code)
     return nothing
 end
@@ -407,11 +312,13 @@ function test_odeproblem_invocation(code::String)::Nothing
 
     regex = Regex(
         "\\w+ *= *ODEProblem\\( *vectorfield *\\( *$(apexname)" *
-        " *\\) *, *($(lvector_names[1])|$(lvector_names[2])) *," *
-        " *\\( *params.startTime, *params.stopTime *\\) *, *" *
-        "($(lvector_names[1])|$(lvector_names[2]))\\)"
+        " *\\) *, *(?<u0>$(lvector_names[1])|$(lvector_names[2])) *," *
+        " *\\( *params.start_time, *params.stop_time *\\) *, *" *
+        "(?<params>$(lvector_names[1])|$(lvector_names[2]))\\)"
     )
-    @test occursin(regex, code)
+    rematch = match(regex, code)
+    @test rematch != nothing
+    @test rematch["u0"] != rematch["params"]
     return nothing
 end
 export test_odeproblem_invocation
@@ -451,11 +358,12 @@ export test_has_no_extra_lines
 
 struct StockflowTestArgs
     model::StockFlowModel
-    actual::StockflowArgs
+    actual::StockFlowArgs
     expected_stocks::Vector{Stock}
+    expected_params::Vector{Parameter}
     expected_flows::Dict{Flow, String} # Flow -> exp. equation
     expected_dynvars::Dict{String, String} # varname -> exp. equation
-    expected_sumvars::Dict{String, Vector{String}} # svname -> exp. contrib. varnames (NOT stocks)
+    expected_sumvars::Dict{String, Vector{String}} # svname -> exp. contrib. stocks
 end
 export StockflowTestArgs
 
@@ -464,66 +372,71 @@ export StockflowTestArgs
 function test_model_stockflow_args(args::StockflowTestArgs)::Nothing
 
     @testset "Model $(args.model.firebaseid) StockAndFlow invocation" begin
-        stocksplit = split_by_arrows_for_list(args.actual.stock)
-        flowsplit = split_by_arrows_for_list(args.actual.flow)
-        dynvarsplit = split_by_arrows_for_list(args.actual.dynvar)
-        sumvarsplit = split_by_arrows_for_list(args.actual.sumvar)
 
         # stocks
         numstocks = length(args.expected_stocks)
+        @testset "Has exactly $(numstocks) stocks" begin
+            @test length(args.actual.stocks) == numstocks
+        end
         for stock in args.expected_stocks
             @testset "Stock $(stock.name) is defined correctly" begin
                 test_stockflow_stock_arg(
                     stock,
-                    stocksplit[stock.name],
-                    args.model
+                    args.actual.stocks
                 )
             end
         end
-        @testset "Has exactly $(numstocks) stocks" begin
-            @test length(collect(keys(stocksplit))) == numstocks
+
+        # parameters
+        numparams = length(args.expected_params)
+        @testset "Has exactly $(numparams) parameters" begin
+            @test length(args.actual.params) == numparams
+        end
+        for param in args.expected_params
+            @testset "Parameter $(param.name) is defined correctly" begin
+                test_stockflow_param_arg(param, args.actual.params)
+            end
         end
 
         # flows
-        numflows = length(collect(keys(args.expected_flows)))
+        numflows = length(args.expected_flows)
+        @testset "Has exactly $(numflows) flows" begin
+            @test length(args.actual.flows) == numflows
+        end
         for (flow, exp_equation) in args.expected_flows
             @testset "Flow $(flow.name) is defined correctly" begin
-                test_stockflow_flow_arg(flow, flowsplit[flow.name])
+                test_stockflow_flow_arg(flow, args.actual.flows)
             end
-            @testset "Flow $(flow.name)'s related var is defined correctly" begin
-                varname = make_flow_var_name(flow.name)
+        end
+
+        # Dynamic variables
+        numdynvars = length(args.expected_dynvars)
+        @testset "Has exactly $(numdynvars) dynamic variables" begin
+            @test length(args.actual.dynvars) == numdynvars
+        end
+        for (dvname, exp_equation) in args.expected_dynvars
+            @testset "Dynamic Variable $(dvname) is defined correctly" begin
                 test_stockflow_dynvar_arg(
-                    dynvarsplit[varname],
-                    exp_equation
+                    dvname,
+                    exp_equation,
+                    args.actual.dynvars
                 )
             end
         end
-        @testset "Has exactly $(numflows) flows in the outer model" begin
-            @test length(collect(keys(flowsplit))) == numflows
-        end
-
-        # Dynamic variables (except flows, which are done above)
-        numdynvars = numflows + length(collect(keys(args.expected_dynvars)))
-        for (dvname, exp_equation) in args.expected_dynvars
-            @testset "Dynamic Variable $(dvname) is defined correctly" begin
-                actual = dynvarsplit[dvname]
-                test_stockflow_dynvar_arg(actual, exp_equation)
-            end
-        end
-        @testset "Has exactly $(numdynvars) dynamic variables" begin
-            @test length(collect(keys(dynvarsplit))) == numdynvars
-        end
 
         # sum variables
-        numsumvars = length(collect(keys(args.expected_sumvars)))
+        numsumvars = length(args.expected_sumvars)
+        @testset "Has exactly $(numsumvars) sum variables" begin
+            @test length(args.actual.sumvars) == numsumvars
+        end
         for (svname, exp_contrib_var_names) in args.expected_sumvars
             @testset "Sum Variable $(svname) is defined correctly" begin
-                actual = sumvarsplit[svname]
-                test_stockflow_sumvar_arg(actual, exp_contrib_var_names)
+                test_stockflow_sumvar_arg(
+                    svname,
+                    exp_contrib_var_names,
+                    args.actual.sumvars
+                )
             end
-        end
-        @testset "Has exactly $(numsumvars) sum variables" begin
-            @test length(collect(keys(sumvarsplit))) == numsumvars
         end
     end
     return nothing
@@ -539,7 +452,9 @@ function test_whole_code(
     model_stocks::Dict{String, Vector{String}}, #  modelname -> stocknames
     expected_params::Dict{String, String}, # name -> exp. value
     expected_stocks::Dict{String, String}, # name -> exp. starting value
-    path::String
+    expected_path::String,
+    expected_starttime::String,
+    expected_stoptime::String
 )::Nothing
     # Separate out some data here for convenience
     model_names = collect(keys(model_stocks))
@@ -564,55 +479,18 @@ function test_whole_code(
     # StockAndFlow invocations
     exp_num_sf_calls = length(stockflow_tests)
     @testset "Has exactly $(exp_num_sf_calls) invocations of StockAndFlow" begin
-        @test get_num_invocations("StockAndFlow", result) == exp_num_sf_calls
+        @test get_num_occurrences("@stock_and_flow", result) == exp_num_sf_calls
     end
     foreach(test_model_stockflow_args, stockflow_tests)
 
-    # Feet
-    exp_num_feet = length(expected_feet)
-    for (stockname, svnames) in expected_feet
-        @testset "Creates a correct foot for $(stockname)" begin
-            test_foot_invocation(result, stockname, svnames)
-        end
-    end
-    @testset "Creates exactly $(exp_num_feet) feet" begin
-        @test get_num_invocations("foot", result) == exp_num_feet
-    end
-
-    # Open
-    exp_num_open_models = exp_num_sf_calls
-    for (modelname, stocknames) in model_stocks
-        test_open_invocation(result, stocknames)
-    end
-    @testset "Opens exactly $(exp_num_open_models) models" begin
-        @test get_num_invocations("Open", result) == exp_num_open_models
-    end
-
-    # Relation
-    @testset "Creates a correct relation" begin
-        test_relation_invocation(result, all_footnames, model_feet)
-    end
-    @testset "Creates exactly one relation" begin
-        @test get_num_invocations("@relation", result) == 1
-    end
-
-    # Oapply
-    @testset "Calls oapply correctly on the relation and models" begin
-        test_oapply_invocation(result, model_names)
-    end
-    @testset "oapply and relation list the models in the same order" begin
-        relation_modelnames = map(
-            n -> n * "_open",
-            get_relation_model_names(result)
+    # Composition
+    @testset "Composes the models correctly" begin
+        @test get_num_occurrences("@compose", result) == 1
+        test_compose_invocation(
+            result,
+            map(m -> make_model_varname(m.model.firebaseid), stockflow_tests),
+            expected_feet
         )
-        oapply_args = get_oapply_args(result)
-        @test relation_modelnames !== nothing
-        @test oapply_args !== nothing
-        oapply_modelnames = oapply_args.modelnames
-        @test relation_modelnames == oapply_modelnames
-    end
-    @testset "Invokes oapply exactly one time" begin
-        @test get_num_invocations("oapply", result) == 1
     end
 
     # Params and initial values
@@ -620,14 +498,22 @@ function test_whole_code(
         @test get_num_invocations("LVector", result) == 2
     end
     @testset "Has correct parameter values" begin
-        test_params(result, expected_params)
+        test_params(
+            result,
+            expected_params,
+            expected_starttime,
+            expected_stoptime
+        )
     end
     @testset "Has correct stock initial values" begin
         test_starting_values(result, expected_stocks)
     end
 
     # Remaining lines
-    @testset "Has a line calling 'apex' on the result of the 'oapply' call" begin
+    @testset "Invokes 'Open' on the composed model" begin
+        test_open_invocation(result, expected_feet)
+    end
+    @testset "Has a line calling 'apex' on the result of the 'Open' call" begin
         test_apex_invocation(result)
     end
     @testset "Invokes 'apex' exactly one time" begin
@@ -659,7 +545,7 @@ function test_whole_code(
     end
 
     @testset "Saves the figure to the same path we provided" begin
-        test_savefig_invocation(result, path)
+        test_savefig_invocation(result, expected_path)
     end
 
     @testset "Saves the figure exactly one time" begin

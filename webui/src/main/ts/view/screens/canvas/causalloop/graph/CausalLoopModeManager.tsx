@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowPointer, faSquare, faRotateLeft, faNoteSticky, faFont } from "@fortawesome/free-solid-svg-icons";
+import { faArrowPointer, faSquare, faRotateLeft, faNoteSticky, faFont, faPencil } from "@fortawesome/free-solid-svg-icons";
 import RedoIcon from '@mui/icons-material/Redo';
 import { UiMode } from "../../UiMode";
 import StickyNoteBehaviour from "./behaviour/StickyNoteBehaviour";
@@ -10,6 +10,7 @@ import ModeManager from "../../ModeManager";
 import { ReactElement } from "react";
 import { ModeBehaviourConstructor } from "../../behaviour/ModeBehaviour";
 import ChangeModeOnButtonPressBehaviour from '../../behaviour/ChangeModeOnButtonPressBehaviour';
+import EditBehaviour from './behaviour/EditBehaviour';
 
 export default class CausalLoopModeManager extends ModeManager {
 
@@ -19,7 +20,8 @@ export default class CausalLoopModeManager extends ModeManager {
             UiMode.STOCK,
             UiMode.CONNECT,
             UiMode.LOOP_ICON,
-            UiMode.STICKY_NOTE
+            UiMode.STICKY_NOTE,
+            UiMode.EDIT
         ];
     }
 
@@ -47,16 +49,21 @@ export default class CausalLoopModeManager extends ModeManager {
                 () => (<FontAwesomeIcon icon={faRotateLeft} />),
             [`${UiMode.MOVE}`]:
                 () => (<FontAwesomeIcon icon={faArrowPointer} />),
+            [`${UiMode.EDIT}`]:
+                () => (<FontAwesomeIcon icon={faPencil} />),
         };
     }
 
     protected getHotkeys(): { [key: string]: UiMode } {
         return {
-            "q": UiMode.MOVE,
-            "w": UiMode.STOCK,
-            "e": UiMode.CONNECT,
-            "r": UiMode.LOOP_ICON,
-            "a": UiMode.STICKY_NOTE,
+            "e": UiMode.MOVE,
+            "r": UiMode.EDIT,
+            "v": UiMode.STOCK,
+            "s": UiMode.STOCK,
+            "c": UiMode.CONNECT,
+            "l": UiMode.LOOP_ICON,
+            "i": UiMode.LOOP_ICON,
+            "n": UiMode.STICKY_NOTE,
         }
     }
 
@@ -67,6 +74,7 @@ export default class CausalLoopModeManager extends ModeManager {
             [`${UiMode.CONNECT}`]: CausalLoopLinkBehaviour,
             [`${UiMode.STICKY_NOTE}`]: StickyNoteBehaviour,
             [`${UiMode.LOOP_ICON}`]: LoopIconBehaviour,
+            [`${UiMode.EDIT}`]: EditBehaviour
         };
     }
 }

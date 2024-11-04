@@ -1,22 +1,35 @@
 module ComponentBuilder
 
 using ..ModelComponents
-using ..FirebaseComponents
+using ..FirebaseComponents;
 
-function make_julia_components(
+function make_julia_causalloop_components(
     name::String,
     model_components::Vector{FirebaseDataObject}
-)::StockFlowModel
-    fbcomponents = organize_components(model_components)
-    println(fbcomponents)
+)::CausalLoopModel
+    fbcomponents = organize_causalloop_components(model_components)
     julia_components = filter(is_julia_component, model_components)
     nativecomponents::Vector{Component} = map(
         c -> make_julia_component(c, fbcomponents),
         julia_components
     )
-    return organize_components(name, nativecomponents)
+    return organize_causalloop_components(name, nativecomponents)
 end
-export make_julia_components
+export make_julia_causalloop_components
+
+function make_julia_stockflow_components(
+    name::String,
+    model_components::Vector{FirebaseDataObject}
+)::StockFlowModel
+    fbcomponents = organize_stockflow_components(model_components)
+    julia_components = filter(is_julia_component, model_components)
+    nativecomponents::Vector{Component} = map(
+        c -> make_julia_component(c, fbcomponents),
+        julia_components
+    )
+    return organize_stockflow_components(name, nativecomponents)
+end
+export make_julia_stockflow_components
 
 function is_julia_component(
     component::FirebaseDataObject
@@ -35,7 +48,39 @@ function is_julia_component(
     )
 end
 
-struct FirebaseComponentsCollection
+struct FirebaseCausalLoopComponents
+    all::Vector{FirebaseDataObject}
+    vtxs::Vector{FirebaseCausalLoopVertex}
+    edges::Vector{FirebaseCausalLoopEdge}
+end
+
+function organize_causalloop_components(
+    name::String,
+    model_components::Vector{Component}
+)::CausalLoopModel
+
+    function filter_type(t::Type{T})::Vector{T} where T<:Component
+        return filter(c -> c isa t, model_components)
+    end
+
+    return CausalLoopModel(
+        name,
+        filter_type(CLDVertex),
+        filter_type(CLDEdge)
+    )
+end
+
+function organize_causalloop_components(
+    model_components::Vector{FirebaseDataObject}
+)::FirebaseCausalLoopComponents
+    return FirebaseCausalLoopComponents(
+        model_components,
+        filter(firebase_iscldvertex, model_components),
+        filter(firebase_iscldedge, model_components)
+    )
+end
+
+struct FirebaseStockFlowComponents
     all::Vector{FirebaseDataObject}
     stocks::Vector{FirebaseStock}
     flows::Vector{FirebaseFlow}
@@ -45,7 +90,7 @@ struct FirebaseComponentsCollection
     connections::Vector{FirebaseConnection}
 end
 
-function organize_components(
+function organize_stockflow_components(
     name::String,
     model_components::Vector{Component}
 )::StockFlowModel
@@ -64,10 +109,10 @@ function organize_components(
     )
 end
 
-function organize_components(
+function organize_stockflow_components(
     model_components::Vector{FirebaseDataObject}
-)::FirebaseComponentsCollection
-    return FirebaseComponentsCollection(
+)::FirebaseStockFlowComponents
+    return FirebaseStockFlowComponents(
         model_components,
         filter(firebase_isstock, model_components),
         filter(firebase_isflow, model_components),
@@ -100,7 +145,7 @@ end
 
 function get_depended_ids(
     component::FirebaseDataObject,
-    components::FirebaseComponentsCollection
+    components::FirebaseStockFlowComponents
 )::Vector{String}
     return map(
         c -> c.pointer.from,
@@ -111,10 +156,63 @@ end
 
 ########################### Specific Implementations ###########################
 
+function make_julia_component(
+    object::FirebaseDataObject,
+    components::FirebaseCausalLoopComponents
+)::Component
+    type = object.type
+    if (type == CLD_VERTEX && object isa FirebaseCausalLoopVertex)
+        make_julia_cld_vertex(object, components)
+    elseif (type == CLD_EDGE && object isa FirebaseCausalLoopEdge)
+        make_julia_cld_edge(object, components)
+    else
+        throw(ErrorException(
+            "Invalid type: $(type) for object type $(typeof(object))"
+        ))
+    end
+end
+
+function make_julia_cld_vertex(
+    vtx::FirebaseCausalLoopVertex,
+    components::FirebaseCausalLoopComponents
+)::CLDVertex
+    return CLDVertex(vtx.text.text)
+end
+
+function make_julia_cld_edge(
+    edge::FirebaseCausalLoopEdge,
+    components::FirebaseCausalLoopComponents
+)::CLDEdge
+    srcs = filter(
+        c -> c.id == edge.pointer.from,
+        components.vtxs
+    )
+    tgts = filter(
+        c -> c.id == edge.pointer.to,
+        components.vtxs
+    )
+    if (length(srcs) != 1)
+        throw(ErrorException(
+            "Found $(length(srcs)) components matching " *
+            "source id $(edge.pointer.from)"
+        ))
+    elseif (length(tgts) != 1)
+        throw(ErrorException(
+            "Found $(length(tgts)) components matching target " *
+            "id $(edge.pointer.to)"
+        ))
+    end
+    return CLDEdge(
+        srcs[1].text.text,
+        tgts[1].text.text,
+        edge.polarity
+    )
+end
+
 
 function make_julia_component(
     object::FirebaseDataObject,
-    components::FirebaseComponentsCollection
+    components::FirebaseStockFlowComponents
 )::Component
     type = object.type
     if (type == STOCK && object isa FirebaseStock)
@@ -127,12 +225,16 @@ function make_julia_component(
         return make_julia_sum_variable(object, components)
     elseif (type == PARAMETER && object isa FirebaseParameter)
         return make_julia_parameter(object, components)
+    else
+        throw(ErrorException(
+            "Invalid type: $(type) for object type $(typeof(object))"
+        ))
     end
 end
 
 function make_julia_stock(
     stock::FirebaseStock,
-    components::FirebaseComponentsCollection
+    components::FirebaseStockFlowComponents
 )::Stock
     inflow_names = map(
         f -> f.text.text,
@@ -193,7 +295,7 @@ end
 
 function make_julia_flow(
     flow::FirebaseFlow,
-    components::FirebaseComponentsCollection
+    components::FirebaseStockFlowComponents
 )::Flow
 
     fromstockidx = findfirst(s -> s.id == flow.pointer.from, components.stocks)
@@ -226,7 +328,7 @@ end
 
 function make_julia_dynamic_variable(
     dynvar::FirebaseDynamicVariable,
-    components::FirebaseComponentsCollection
+    components::FirebaseStockFlowComponents
 )::DynamicVariable
     depended_ids = get_depended_ids(dynvar, components)
 
@@ -250,7 +352,7 @@ end
 
 function make_julia_sum_variable(
     sumvar::FirebaseSumVariable,
-    components::FirebaseComponentsCollection
+    components::FirebaseStockFlowComponents
 )::SumVariable
     depended_ids = get_depended_ids(sumvar, components)
     depended_stock_names = get_names_of_components_in_idlist(
@@ -267,7 +369,7 @@ end
 
 function make_julia_parameter(
     param::FirebaseParameter,
-    components::FirebaseComponentsCollection
+    components::FirebaseStockFlowComponents
 )::Parameter
     return Parameter(
         param.text.text,

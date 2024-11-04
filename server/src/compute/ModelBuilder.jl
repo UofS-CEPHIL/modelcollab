@@ -10,10 +10,10 @@ using ..Types
 OUTER_MODEL_NAME = "_outer"
 
 function make_stockflow_models(
-    outers::Vector{FirebaseDataObject},
-    inners::Dict{String, Vector{FirebaseDataObject}},
-    substitutions::Vector{FirebaseSubstitution},
-    scenario::FirebaseScenario
+    outers::Vector{<:FirebaseDataObject},
+    inners::Dict{String, <:Vector{<:FirebaseDataObject}} = Dict{String, Vector{FirebaseDataObject}}(),
+    substitutions::Vector{FirebaseSubstitution} = Vector{FirebaseSubstitution}(),
+    scenario::FirebaseScenario = DEFAULT_SCENARIO
 )::Vector{StockFlowModel}
 
     apply_substitutions!(outers, inners, substitutions)
@@ -23,7 +23,7 @@ function make_stockflow_models(
     apply_scenario!(scenario, all_models)
 
     return map(
-        pair -> make_julia_components(pair.first, pair.second),
+        pair -> make_julia_stockflow_components(pair.first, pair.second),
         collect(pairs(all_models))
     )
 end
@@ -134,11 +134,11 @@ function filter_irrelevant_params!(
 end
 
 function add_outers_to_models_dict!(
-    outers::Vector{FirebaseDataObject},
-    dict::Dict{String, Vector{FirebaseDataObject}}
+    outers::Vector{<:FirebaseDataObject},
+    dict::Dict{String, <:Vector{<:FirebaseDataObject}}
 )::Nothing
 
-    function has_relevant_components(v::Vector{FirebaseDataObject})::Bool
+    function has_relevant_components(v::Vector{<:FirebaseDataObject})::Bool
         irrelevant_types = (
             FirebaseComponents.PARAMETER,
             FirebaseComponents.SUBSTITUTION,
@@ -165,7 +165,10 @@ function add_outers_to_models_dict!(
                 )
             )
         end
-        outers = filter(c -> firebase_gettype(c) != FirebaseComponents.STATIC_MODEL, outers)
+        outers = filter(
+            c -> firebase_gettype(c) != FirebaseComponents.STATIC_MODEL,
+            outers
+        )
         key = collect(keys(dict))[1]
         dict[key] = vcat(dict[key], outers)
     end
@@ -173,23 +176,38 @@ function add_outers_to_models_dict!(
 end
 
 function apply_substitutions!(
-    outers::Vector{FirebaseDataObject},
-    inners::Dict{String, Vector{FirebaseDataObject}},
+    outers::Vector{<:FirebaseDataObject},
+    inners::Dict{String, <:Vector{<:FirebaseDataObject}},
     substitutions::Vector{FirebaseSubstitution}
 )::Nothing
-    if (length(inners) == 0)
+    if (length(inners) == 0 || length(substitutions) == 0)
         return
     end
-    all_components = [outers; reduce(vcat, values(inners))]
+
+    lists = collect(values(inners))
+    push!(lists, outers)
+    all_components = reduce(vcat, lists; init=[])
 
     for sub in substitutions
-        lists = collect(values(inners))
-        push!(lists, outers)
+        replacement_idx = findfirst(
+            c -> c.id == sub.replacementid,
+            all_components
+        )
+        if (replacement_idx == nothing)
+            throw(InvalidModelException(
+                "Unable to make substitution: did not find replacement " *
+                "component with ID $(sub.replacementid)"
+            ))
+        end
+        replacement_cpt = all_components[replacement_idx]
+
+        did_replace::Bool = false
         for list in lists
             for i in 1:length(list)
                 c = list[i]
                 if (c.id == sub.replacedid)
-                    list[i] = newid(sub.replacementid, c)
+                    did_replace = true
+                    list[i] = replacement_cpt
                 end
                 if (firebase_isflow(c) || firebase_isconnection(c))
                     if (c.pointer.from == sub.replacedid)
@@ -200,6 +218,13 @@ function apply_substitutions!(
                     end
                 end
             end
+        end
+
+        if (!did_replace)
+            throw(InvalidModelException(
+                "Unable to make substitution: did not find replaced component " *
+                "with ID $(sub.replacedid)"
+            ))
         end
     end
 end
@@ -233,14 +258,25 @@ function convert_constants_to_parameters!(
         for i in 1:length(cptlist)
             cpt = cptlist[i]
             if (firebase_isflow(cpt) || firebase_isdynvar(cpt))
-                cptlist[i] = newvalue(
-                    FirebaseValue(SymbolReplacer.replace_symbols(
-                        cpt.value.value,
-                        (s::AbstractString) -> s,
-                        replace_const
-                    )),
-                    cpt
-                )
+                try
+                    cptlist[i] = newvalue(
+                        FirebaseValue(SymbolReplacer.replace_symbols(
+                            cpt.value.value,
+                            (s::AbstractString) -> s,
+                            replace_const
+                        )),
+                        cpt
+                    )
+                catch e
+                    if (e isa InvalidModelException)
+                        throw(InvalidModelException(
+                            "Error making replacing constants in component: " *
+                            "$(cpt.id). $(sprint(showerror(e)))"
+                        ))
+                    else
+                        throw(e)
+                    end
+                end
             end
         end
     end
@@ -273,6 +309,14 @@ function apply_scenario!(
     for model=values(models)
         apply_scenario!(scenario, model)
     end
+end
+
+
+function make_causalloop_models(
+    outers::Vector{FirebaseDataObject}
+)::Vector{CausalLoopModel}
+    model = make_julia_causalloop_components("outer", outers)
+    return [model,]
 end
 
 end # ModelBuilder module

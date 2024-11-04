@@ -262,6 +262,8 @@ declare module '@mui/material/styles' {
                     arrowHeadWidth?: number,
                     arrowHeadHeight?: number,
                     defaultWidthPx?: number,
+                    defaultPointsUp?: boolean,
+                    defaultClockwise?: boolean,
                 },
                 icons: {
                     sizePx?: number,
@@ -453,6 +455,8 @@ export const theme = createTheme({
                 arrowHeadWidth: 10,
                 arrowHeadHeight: 10,
                 defaultWidthPx: 50,
+                defaultClockwise: true,
+                defaultPointsUp: true,
             },
             icons: {
                 sizePx: 20,

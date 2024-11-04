@@ -3,6 +3,8 @@
 
 module ModelComponents
 
+using StockFlow
+
 using ..FirebaseComponents
 
 abstract type Component end
@@ -87,5 +89,24 @@ struct StockFlowModel
     sumvars::Vector{SumVariable}
 end
 export StockFlowModel
+
+struct CLDVertex <: Component
+    name::String
+end
+export CLDVertex
+
+struct CLDEdge <: Component
+    src::String
+    tgt::String
+    polarity::Polarity
+end
+export CLDEdge
+
+struct CausalLoopModel
+    firebaseid::String
+    vtxs::Vector{CLDVertex}
+    edges::Vector{CLDEdge}
+end
+export CausalLoopModel
 
 end # ModelComponents namespace
