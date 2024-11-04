@@ -93,7 +93,8 @@ function test_model(actual::StockFlowModel, expected::StockFlowModel)::Nothing
 
     function test_components(
         actual::Vector{T},
-        expected::Vector{T}
+        expected::Vector{T},
+        testlabel::String,
     )::Nothing where T <: Component
 
         function find_component(
@@ -101,25 +102,29 @@ function test_model(actual::StockFlowModel, expected::StockFlowModel)::Nothing
             expected::T
         )::T
             idx = findfirst(c -> c.name == expected.name, actual)
-            if (idx === nothing)
-                throw(ErrorException("Can't find component: $(expected)"))
-            end
+            @test idx != nothing
             return actual[idx]
         end
 
-        @test length(actual) == length(expected)
-        for e in expected
-            a = find_component(actual, e)
-            test_component(a, e)
+        @testset "Has correct $(testlabel)" begin
+            @test length(actual) == length(expected)
+            for e in expected
+                a = find_component(actual, e)
+                test_component(a, e)
+            end
         end
+        return nothing
     end
 
-    @test actual.firebaseid == expected.firebaseid
-    test_components(actual.stocks, expected.stocks)
-    test_components(actual.flows, expected.flows)
-    test_components(actual.parameters, expected.parameters)
-    test_components(actual.dynvars, expected.dynvars)
-    test_components(actual.sumvars, expected.sumvars)
+    @testset "Has correct ID" begin
+        @test actual.firebaseid == expected.firebaseid
+    end
+
+    test_components(actual.stocks, expected.stocks, "Stocks")
+    test_components(actual.flows, expected.flows, "Flows")
+    test_components(actual.parameters, expected.parameters, "Parameters")
+    test_components(actual.dynvars, expected.dynvars, "Dynamic Variables")
+    test_components(actual.sumvars, expected.sumvars, "Sum Variables")
 end
 export test_model
 

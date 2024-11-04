@@ -39,7 +39,7 @@ export default class ImportModelBox extends Component<Props, State> {
             this.props.firebaseDataModel,
             () => this.state.models,
             models => this.setState(
-                { models },
+                { models: models.withDuplicatesFiltered() },
                 () => this.modelsManager?.notifyDataUpdated()
             )
         );
@@ -65,8 +65,6 @@ export default class ImportModelBox extends Component<Props, State> {
     }
 
     protected makeListItems(): ReactElement[] {
-
-        let i: number = 0;
 
         const makeListItem = (m: ModelMetadata, keyPrefix: string) => (
             <ListItem disablePadding key={`${keyPrefix}::${m.modelId}`} >

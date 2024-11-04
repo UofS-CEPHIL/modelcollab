@@ -66,7 +66,7 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
         };
     }
 
-    protected makeCustomMenus(): ReactElement {
+    protected makeCustomButtons(): ReactElement {
         // "Interpret" menu for stock & flow diagrams
         return (
             <Tooltip title="Interpret model">
@@ -97,7 +97,7 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
         );
     }
 
-    protected makeDropdownsForCustomMenus(): ReactElement {
+    protected makeDropdownsForCustomButtons(): ReactElement {
         return (
             <Menu
                 id={StockFlowToolbar.INTERPRET_MENU_ID}
@@ -126,12 +126,7 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
 
     protected makeModelActionsOptions(): ReactElement[] {
         return [
-            <MenuItem key={"getcode"} onClick={() => this.getCode()} >
-                Get Code
-            </MenuItem>,
-            <MenuItem key={"getjson"} onClick={() => this.getModelAsJson()} >
-                Get JSON
-            </MenuItem>,
+            ...super.makeModelActionsOptions(),
             <MenuItem
                 key={"importmodel"}
                 onClick={() =>
@@ -143,26 +138,12 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
         ];
     }
 
-    protected getCode(): void {
-        this.props.restClient.getCode(
-            this.props.modelId,
-            (result: string, success: boolean) => {
-                if (success) {
-                    this.downloadData(new Blob([result]), "Model.jl");
-                }
-                else {
-                    alert("Can't get code: " + result);
-                }
-            }
-        ).catch(e => alert(`Can't get code: ${Object.entries(e.toJSON())}`));
-    }
-
     private computeModel(): void {
         console.log("Computing model. Scenario = " + this.props.scenario);
         const pollOnce = (id: string) => {
             this.props.restClient.getResults(
                 id,
-                (success, result) => {
+                (result, success) => {
                     if (success && result instanceof Blob) {
                         try {
                             this.downloadData(result, "ModelResults.png");
@@ -198,15 +179,15 @@ export default class StockFlowToolbar extends CanvasToolbar<Props, State> {
             this.props.restClient.computeModel(
                 this.props.modelId,
                 this.props.scenario,
-                (res, success) => {
+                (result, success) => {
                     if (success) {
                         this.setState({ waitingForResults: true });
-                        startPolling(res);
+                        startPolling(result);
                     }
                     else {
                         console.error("Received bad response from server");
-                        console.error(res);
-                        alert("Can't compute model: " + res);
+                        console.error(result);
+                        alert("Can't compute model: " + result);
                     }
                 }).catch(e => alert("Can't compute model: " + e.message));
         }

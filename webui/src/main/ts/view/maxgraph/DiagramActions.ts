@@ -75,10 +75,10 @@ export default abstract class DiagramActions<G extends MCGraph> {
         );
     }
 
-    public addComponent(
+    public async addComponent(
         component: FirebaseComponent,
         startEditing: boolean = true
-    ): void {
+    ): Promise<void> {
         // "update" and "add" are the same thing in Firebase
         this.updateComponent(component);
         setTimeout(() => {
@@ -99,7 +99,9 @@ export default abstract class DiagramActions<G extends MCGraph> {
      * Update the component in Firebase to match the given component. If a
      * cell is given, update Firebase to match the cell.
      */
-    public updateComponent(component: FirebaseComponent | Cell): void {
+    public async updateComponent(
+        component: FirebaseComponent | Cell
+    ): Promise<void> {
         if (component instanceof Cell) {
             if (component.getValue() instanceof FirebaseComponentBase) {
                 component = this.presentation.updateComponent(
@@ -116,10 +118,13 @@ export default abstract class DiagramActions<G extends MCGraph> {
         }
 
         if (FirebaseStaticModel.isStaticModelChildId(component.getId())) {
-            this.updateInnerComponent(component);
+            await this.updateInnerComponent(component);
         }
         else {
-            this.firebaseDataModel.updateComponent(this.modelUuid, component);
+            await this.firebaseDataModel.updateComponent(
+                this.modelUuid,
+                component
+            );
         }
 
         if (this.actionLogger) {
@@ -130,7 +135,7 @@ export default abstract class DiagramActions<G extends MCGraph> {
         }
     }
 
-    protected updateInnerComponent(cpt: FirebaseComponent): void {
+    protected async updateInnerComponent(cpt: FirebaseComponent): Promise<void> {
 
         // TODO implement this properly
 

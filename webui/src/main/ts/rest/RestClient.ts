@@ -12,6 +12,7 @@ export default class RestClient {
     public static readonly GET_CODE_PATH = "getCode";
     public static readonly COMPUTE_MODEL_PATH = "computeModel";
     public static readonly GET_RESULTS_PATH = "getModelResults";
+    public static readonly CLD_PATH = "cld";
 
     private readonly firebaseDataModel: FirebaseDataModel;
 
@@ -33,6 +34,8 @@ export default class RestClient {
     private async request(
         method: "get" | "post",
         url: string,
+        params: object = {},
+        headers: object = {}
     ): Promise<AxiosResponse> {
         const baseurl = applicationConfig.serverAddress;
         const token = await this.firebaseDataModel.getCurrentUserIdToken();
@@ -41,9 +44,11 @@ export default class RestClient {
                 method,
                 url: `${baseurl}/${url}`,
                 headers: {
-                    "Authorization": "Bearer " + token
+                    "Authorization": "Bearer " + token,
+                    ...headers
                 },
-                validateStatus: () => true
+                validateStatus: () => true,
+                ...params
             });
     }
 
@@ -67,7 +72,7 @@ export default class RestClient {
     public async computeModel(
         sessionId: string,
         scenarioName: string | null,
-        onResponseReceived: (response: string, wasSuccess: boolean) => void
+        onResponseReceived: ResponseHandler<string>
     ): Promise<void> {
         if (!scenarioName) {
             onResponseReceived("Please select a scenario!", false);
@@ -84,19 +89,28 @@ export default class RestClient {
 
     public async getResults(
         resultId: string,
-        onResultsReceived: (success: boolean, result?: Blob | string) => void
+        onResultsReceived: ResponseHandler<Blob | string | undefined>
     ): Promise<void> {
-        const baseurl = applicationConfig.serverAddress;
+        await new Promise(resolve => setTimeout(resolve, 1000))
         await this.request(
             "get",
-            `${baseurl} / ${RestClient.GET_RESULTS_PATH} / ${resultId}`
+            `${RestClient.GET_RESULTS_PATH}/${resultId}`,
+            { responseType: "arraybuffer", responseEncoding: "binary" }
         ).then(res => {
-            if (res.status === 204) onResultsReceived(true, undefined);
-            else if (res.status === 200) onResultsReceived(
-                true,
-                new Blob([res.data], { type: res.headers["content-type"] })
-            );
-            else onResultsReceived(false, res.data);
+            if (res.status === 204) {
+                onResultsReceived(undefined, true);
+            }
+            else if (res.status === 200) {
+                const blob = new Blob(
+                    [res.data],
+                    { type: res.headers["content-type"] }
+                );
+                onResultsReceived(blob, true);
+            }
+            else {
+                onResultsReceived(res.data, false);
+            }
         });
     }
+
 }

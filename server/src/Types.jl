@@ -10,9 +10,12 @@ struct InvalidModelException <: Exception
     reason::String
 end
 export InvalidModelException
-Base.showerror(io::IO, e::InvalidModelException) = print(
+Base.showerror(io::IO, e::InvalidModelException) = println(
     io,
-    "Invalid Model: " * e.reason
+    "Invalid Model: $(e.reason)"
+)
+Base.showerror(e::InvalidModelException) = println(
+    "Invalid Model: $(e.reason)"
 )
 
 end

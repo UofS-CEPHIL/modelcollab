@@ -252,7 +252,11 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
     }
 
     protected makeModalBoxIfNecessary(): ReactElement | null {
-        if (!this.graph || this.state.displayedModalBox == null) {
+        const defaultResult = super.makeModalBoxIfNecessary();
+        if (defaultResult) {
+            return defaultResult;
+        }
+        else if (this.state.displayedModalBox == null) {
             return null;
         }
         else if (this.state.displayedModalBox === ModalBoxType.IMPORT_MODEL) {
@@ -288,15 +292,6 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
                 />
             );
         }
-        else if (this.state.displayedModalBox === ModalBoxType.PERMISSIONS) {
-            return (
-                <ModelPermissionsBox
-                    onClose={() => this.closeModalBox()}
-                    firebaseDataModel={this.props.firebaseDataModel}
-                    modelUuid={this.props.modelUuid!}
-                />
-            );
-        }
         else {
             console.error(
                 "Unknown modal box type: " + this.state.displayedModalBox
@@ -317,7 +312,7 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
     }
 
     private importStaticModel(importedModelUuid: string): void {
-        const addComponent = () => this.actions!.addComponent(
+        const addComponent = async () => await this.actions!.addComponent(
             new FirebaseStaticModel(
                 uuid(),
                 {
@@ -330,23 +325,22 @@ class StockFlowScreen extends CanvasScreen<Props, State, StockFlowGraph> {
         );
 
         // Only load the static model data if it doesn't already exist
+        let importModel: Promise<void> = new Promise(res => res());
         if (!this.state.components.find(c =>
             c.getType() === ComponentType.STATIC_MODEL
             && c.getData().modelId === importedModelUuid
         )) {
-            this.props.firebaseDataModel.importStaticModel(
+            importModel = this.props.firebaseDataModel.importStaticModel(
                 this.props.modelUuid!,
                 importedModelUuid
             )
-                .then(addComponent)
-                .catch(() => {
-                    alert("Unable to load model");
-                });
         }
-        else {
-            addComponent();
-            this.graph!.refreshLoadedModels(this.state.loadedModels);
-        }
+
+        importModel
+            .then(addComponent)
+            .then(() =>
+                this.graph!.refreshLoadedModels(this.state.loadedModels)
+            )
     }
 
     protected closeModalBox(): void {

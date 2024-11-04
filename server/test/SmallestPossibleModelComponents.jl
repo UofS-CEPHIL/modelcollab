@@ -8,14 +8,10 @@ S1_NAME = "s1"
 S1_ID = "1"
 S1_VAL = "1000"
 S1_EXPECTED_VAL = "1000.0"
-START_TIME_NAME = "startTime"
-START_TIME_ID = "5"
-START_TIME_VAL = "0"
+PARAM_NAME = "startTime"
+PARAM_ID = "5"
+PARAM_VAL = "0"
 START_TIME_EXPECTED_VAL = "0.0"
-STOP_TIME_NAME = "stopTime"
-STOP_TIME_ID = "6"
-STOP_TIME_VAL = "100"
-STOP_TIME_EXPECTED_VAL = "100.0"
 MODEL_ID = "7"
 PATH = "/my/path"
 
@@ -25,21 +21,16 @@ FB_S1::FirebaseStock = FirebaseStock(
     S1_ID,
     FirebasePoint(100.3, 201.1), # arbitrary
     FirebaseText(S1_NAME),
-    FirebaseValue(S1_VAL)
+    FirebaseValue(S1_VAL),
+    STOCK
 )
 
-FB_STARTTIME::FirebaseParameter = FirebaseParameter(
-    START_TIME_ID,
-    FirebasePoint(300.222, 111.222),
-    FirebaseText(START_TIME_NAME),
-    FirebaseValue(START_TIME_VAL)
-)
-
-FB_STOPTIME::FirebaseParameter = FirebaseParameter(
-    STOP_TIME_ID,
-    FirebasePoint(300.222, 111.222),
-    FirebaseText(STOP_TIME_NAME),
-    FirebaseValue(STOP_TIME_VAL)
+FB_PARAM::FirebaseParameter = FirebaseParameter(
+    PARAM_ID,
+    FirebasePoint(0, 0),
+    FirebaseText(PARAM_NAME),
+    FirebaseValue(PARAM_VAL),
+    PARAMETER
 )
 
 ############################### Julia Components ###############################
@@ -55,21 +46,11 @@ S1::Stock = Stock(
     [],
     []
 )
-START_TIME::Parameter = Parameter(
-    START_TIME_NAME,
-    START_TIME_ID,
-    START_TIME_VAL
-)
-STOP_TIME::Parameter = Parameter(
-    STOP_TIME_NAME,
-    STOP_TIME_ID,
-    STOP_TIME_VAL
-)
 MODEL::StockFlowModel = StockFlowModel(
     MODEL_ID,
     [S1],
     [],
-    [START_TIME, STOP_TIME],
+    [],
     [],
     []
 )

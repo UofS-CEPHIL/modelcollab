@@ -52,14 +52,15 @@ export default class StockFlowModeManager extends ModeManager {
 
     protected getHotkeys(): { [key: string]: UiMode; } {
         return {
-            "q": UiMode.STOCK,
-            "w": UiMode.PARAM,
-            "e": UiMode.DYN_VARIABLE,
-            "r": UiMode.SUM_VARIABLE,
-            "a": UiMode.MOVE,
-            "s": UiMode.FLOW,
-            "d": UiMode.CONNECT,
-            "f": UiMode.IDENTIFY,
+            "v": UiMode.STOCK,
+            "s": UiMode.STOCK,
+            "p": UiMode.PARAM,
+            "d": UiMode.DYN_VARIABLE,
+            "x": UiMode.SUM_VARIABLE,
+            "e": UiMode.MOVE,
+            "f": UiMode.FLOW,
+            "c": UiMode.CONNECT,
+            "i": UiMode.IDENTIFY,
         };
     }
 

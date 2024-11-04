@@ -1,6 +1,6 @@
 module FirebaseAuthentication
 
-export OAuthToken, init_token_management, end_token_management, value, is_valid, as_bearer_token, has_read_permission
+export OAuthToken, init_token_management, end_token_management, value, is_valid, as_bearer_token, as_raw_token, has_read_permission
 
 using Dates
 using Base.Threads
@@ -28,6 +28,12 @@ end
 function as_bearer_token(token::AbstractString)::String
     if (startswith(token, "Bearer ")) return token
     else return "Bearer " * token
+    end
+end
+
+function as_raw_token(token::AbstractString)::String
+    if (startswith(token, "Bearer ")) return replace(token, "Bearer "=>"")
+    else return token
     end
 end
 

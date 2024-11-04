@@ -9,31 +9,32 @@ using ..ModelComponents
 
 include("../SimpleCompositionComponents.jl")
 
+START_TIME = "100.0"
+STOP_TIME = "1000.0"
+SCENARIO = FirebaseScenario(
+    "n/a",
+    "test",
+    Dict{String, String}(),
+    START_TIME,
+    STOP_TIME
+)
+
 result = CodeGenerator.generate_code(
     [INNER_MODEL, OUTER_MODEL],
     [S1_FOOT, S2_FOOT, S3_FOOT],
+    SCENARIO,
     PATH
 )
-# println(result)
 stockflow_args = get_stockflow_args(result)
 
 # Before we start the tests, figure out which StockAndFlow invocation is which
-if (length(stockflow_args) != 2)
-    throw(ErrorException(
-        "Expected 2 stockflow invocations but found $(length(stockflow_args))"
-    ))
-end
-re = r":\w+ *=> *\("
-matches1 = split_by_arrows_for_list(stockflow_args[1].stock)
-matches2 = split_by_arrows_for_list(stockflow_args[2].stock)
-matchlens = [length(collect(matches1)), length(collect(matches2))]
-if (sort(matchlens) != [2, 3])
-    throw(ErrorException(
-        "Expected stockflow invocations to have 2 and 3 stocks, but "
-        * "found $(matchlens[1]) and $(matchlens[2])"
-    ))
-end
-if (length(matches1) == 2)
+@test length(stockflow_args) == 2
+matchlens = [
+    length(stockflow_args[1].stocks),
+    length(stockflow_args[2].stocks)
+]
+@test sort(matchlens) == [2, 3]
+if (matchlens[1] == 2)
     inner = stockflow_args[1]
     outer = stockflow_args[2]
 else
@@ -86,12 +87,13 @@ outer_stockflow_test = StockflowTestArgs(
             [S2S3_NAME, S3S1_NAME]
         )
     ],
+    [],
     Dict(
         S2S3 => S2S3_EXPECTED_EQUATION,
         S3S1 => S3S1_EXPECTED_EQUATION
     ),
     Dict{String, String}(),
-    Dict(SUM_VAR_NAME => [make_flow_var_name(S2S3_NAME)])
+    Dict(SUM_VAR_NAME => [S2_NAME, S3_NAME])
 )
 inner_stockflow_test = StockflowTestArgs(
     INNER_MODEL,
@@ -120,9 +122,10 @@ inner_stockflow_test = StockflowTestArgs(
             [S1S2_NAME]
         )
     ],
+    [PARAM],
     Dict(S1S2 => S1S2_EXPECTED_EQUATION),
     Dict{String, String}(),
-    Dict(SUM_VAR_NAME => Vector{String}())
+    Dict(SUM_VAR_NAME => [S2_NAME])
 )
 
 test_whole_code(
@@ -138,8 +141,6 @@ test_whole_code(
         OUTER_MODEL_ID => [S1_NAME, S2_NAME, S3_NAME]
     ),
     Dict(
-        START_TIME_NAME=>START_TIME_EXPECTED_VALUE,
-        STOP_TIME_NAME=>STOP_TIME_EXPECTED_VALUE,
         PARAM_NAME=>PARAM_EXPECTED_VALUE
     ),
     Dict(
@@ -147,7 +148,9 @@ test_whole_code(
         S2_NAME=>S2_EXPECTED_VALUE,
         S3_NAME=>S3_EXPECTED_VALUE
     ),
-    PATH
+    PATH,
+    START_TIME,
+    STOP_TIME,
 )
 
 end # SimpleCompositionCodegenTest namespace

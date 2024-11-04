@@ -7,8 +7,6 @@ import FirebasePointerComponent, { FirebasePointerData } from "./FirebasePointer
 export enum Polarity {
     POSITIVE = "+",
     NEGATIVE = "-",
-    UNKNOWN = "?",
-    ZERO = "0",
 }
 
 export function toPolarity(s: string): Polarity {
@@ -17,10 +15,6 @@ export function toPolarity(s: string): Polarity {
             return Polarity.POSITIVE;
         case Polarity.NEGATIVE:
             return Polarity.NEGATIVE;
-        case Polarity.UNKNOWN:
-            return Polarity.UNKNOWN;
-        case Polarity.ZERO:
-            return Polarity.ZERO;
         default:
             throw new Error("Unrecognized polarity: " + s);
     }

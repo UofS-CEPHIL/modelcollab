@@ -32,6 +32,7 @@ export default class StaticModelPresentation
         graph: StockFlowGraph,
         loadedModel?: LoadedStaticModel
     ): void {
+
         super.updateCell(staticModel, cell, graph);
         // Load the inner components only if they haven't been loaded yet
         if (cell.getChildCount() === 0 && loadedModel) {

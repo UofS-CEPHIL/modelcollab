@@ -1,6 +1,7 @@
 module SVIRCompositionCodegenTest
 
 using Test
+using ..FirebaseComponents
 using ..ModelComponents
 using ..CodeGenerator
 using ..ParsingUtils
@@ -9,10 +10,20 @@ using ..TestingUtils
 include("../SVIRComposedComponents.jl")
 
 PATH = "/my/path"
+START_TIME = "1.0"
+STOP_TIME = "100.0"
+SCENARIO = FirebaseScenario(
+    "n/a",
+    "test",
+    Dict{String, String}(),
+    START_TIME,
+    STOP_TIME
+)
 
 result = CodeGenerator.generate_code(
     [SIR_MODEL, SVI_MODEL],
     [S_FOOT, I_FOOT, R_FOOT, V_FOOT],
+    SCENARIO,
     PATH
 )
 
@@ -25,12 +36,10 @@ if (length(stockflow_args) != 2)
     ))
 end
 re = r":\w+ *=> *\("
-matches1 = split_by_arrows_for_list(stockflow_args[1].stock)
-matches2 = split_by_arrows_for_list(stockflow_args[2].stock)
 
-is_svimodel(d) = in(V_STOCK_NAME, keys(d))
-m1_issvi = is_svimodel(matches1)
-m2_issvi = is_svimodel(matches2)
+is_svimodel(m) = in(V_STOCK_NAME, m.stocks)
+m1_issvi = is_svimodel(stockflow_args[1])
+m2_issvi = is_svimodel(stockflow_args[2])
 if (m1_issvi == m2_issvi)
     num = m1_issvi ? "both" : "neither"
     throw(ErrorException(
@@ -84,23 +93,29 @@ svi_stockflow_test = StockflowTestArgs(
             [VAXINFECTION_NAME]
         )
     ],
+    [
+        VAX_RATE_PARAM,
+        VAX_EFFECTIVENESS_PARAM
+    ],
     Dict(
         VACCINATION_FLOW => VACCINATION_EXPECTED_EQUATION,
         VAXINFECTION_FLOW => VAXINFECTION_EXPECTED_EQUATION
     ),
     Dict(PCT_VAXED_VAR_NAME => PCT_VAXED_EXPECTED_EQUATION),
     Dict(
-        TOTAL_POP_NAME => [
-            PCT_VAXED_VAR_NAME,
-            make_flow_var_name(VAXINFECTION_NAME)
-        ],
-        NON_INFECTED_NAME => []
+        TOTAL_POP_NAME => [S_STOCK_NAME, V_STOCK_NAME, I_STOCK_NAME],
+        NON_INFECTED_NAME => [S_STOCK_NAME, V_STOCK_NAME]
     )
 )
 sir_stockflow_test = StockflowTestArgs(
     SIR_MODEL,
     sir,
-    [S_STOCK, I_STOCK, R_STOCK], # Use the original stocks from SIRModel
+    [S_STOCK, I_STOCK, R_STOCK], # Use the original stocks & params from SIRModel
+    [
+        DAYS_W_IMM_PARAM,
+        DAYS_INFECTED_PARAM,
+        INITIAL_POP_PARAM
+    ],
     Dict(
         BIRTH_FLOW => BIRTH_EXPECTED_EQUATION,
         INF_FLOW => INF_EXPECTED_EQUATION,
@@ -109,11 +124,8 @@ sir_stockflow_test = StockflowTestArgs(
     ),
     Dict(INFECTION_RATE_VAR_NAME => INFECTION_RATE_EXPECTED_EQUATION),
     Dict(
-        TOTAL_POP_NAME => [
-            INFECTION_RATE_VAR_NAME,
-            make_flow_var_name(INF_NAME)
-        ],
-        NON_INFECTED_NAME => []
+        TOTAL_POP_NAME => [S_STOCK_NAME, I_STOCK_NAME, R_STOCK_NAME],
+        NON_INFECTED_NAME => [S_STOCK_NAME, R_STOCK_NAME]
     )
 )
 
@@ -131,8 +143,6 @@ test_whole_code(
         SVI_MODEL_ID => [S_STOCK_NAME, V_STOCK_NAME, I_STOCK_NAME]
     ),
     Dict(
-        START_TIME_NAME => START_TIME_EXPECTED_VALUE,
-        STOP_TIME_NAME => STOP_TIME_EXPECTED_VALUE,
         DAYS_W_IMM_NAME => DAYS_W_IMM_EXPECTED_VALUE,
         DAYS_INFECTED_NAME => DAYS_INFECTED_EXPECTED_VALUE,
         INITIAL_POP_NAME => INITIAL_POP_EXPECTED_VALUE,
@@ -145,7 +155,9 @@ test_whole_code(
         R_STOCK_NAME => R_EXPECTED_VALUE,
         V_STOCK_NAME => V_EXPECTED_VALUE
     ),
-    PATH
+    PATH,
+    START_TIME,
+    STOP_TIME
 )
 
 end # SVIRCompositionCodegenTest namespace

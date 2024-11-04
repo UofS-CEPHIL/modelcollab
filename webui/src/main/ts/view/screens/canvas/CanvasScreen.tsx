@@ -12,6 +12,7 @@ import FirebaseComponent, { FirebaseComponentBase } from '../../../data/componen
 import { ComponentErrors } from '../../../validation/ModelValitador';
 import MCGraph from '../../maxgraph/MCGraph';
 import ModeManager from './ModeManager';
+import ModelPermissionsBox from '../../modalbox/ModelPermissionsBox';
 
 export interface Props {
     firebaseDataModel: FirebaseDataModel;
@@ -63,7 +64,6 @@ export default abstract class CanvasScreen
     protected abstract onComponentsUpdated(cpts: FirebaseComponent[]): void;
     protected abstract makeToolbar(): ReactElement;
     protected abstract makeSidebar(): ReactElement;
-    protected abstract makeModalBoxIfNecessary(): ReactElement | null;
     protected abstract makeModeManager(): ModeManager;
     protected abstract makeModeSelector(): ReactElement | null;
 
@@ -82,6 +82,18 @@ export default abstract class CanvasScreen
                 { once: true }
             );
             if (!this.graph) this.setupGraph();
+        }
+    }
+
+    public componentWillUnmount(): void {
+        if (this.hasLoaded) {
+            if (this.unsubscribeFromDatabase) {
+                this.unsubscribeFromDatabase();
+            }
+            else {
+                console.error("Attempting to unmount with no unsubscribe hook");
+            }
+            this.hasLoaded = false;
         }
     }
 
@@ -164,18 +176,6 @@ export default abstract class CanvasScreen
         return cell;
     }
 
-    public componentWillUnmount(): void {
-        if (this.hasLoaded) {
-            if (this.unsubscribeFromDatabase) {
-                this.unsubscribeFromDatabase();
-            }
-            else {
-                console.error("Attempting to unmount with no unsubscribe hook");
-            }
-            this.hasLoaded = false;
-        }
-    }
-
     protected pasteComponents(): FirebaseComponent[] {
         const components = this.state.clipboard;
         // TODO assign new IDs
@@ -252,5 +252,23 @@ export default abstract class CanvasScreen
     protected setMode(mode: UiMode): void {
         this.controls?.onModeChanged(mode);
         this.setState({ mode });
+    }
+
+    protected makeModalBoxIfNecessary(): ReactElement | null {
+        if (!this.graph || this.state.displayedModalBox == null) {
+            return null;
+        }
+        else if (this.state.displayedModalBox === ModalBoxType.PERMISSIONS) {
+            return (
+                <ModelPermissionsBox
+                    onClose={() => this.closeModalBox()}
+                    firebaseDataModel={this.props.firebaseDataModel}
+                    modelUuid={this.props.modelUuid!}
+                />
+            );
+        }
+        else {
+            return null;
+        }
     }
 }

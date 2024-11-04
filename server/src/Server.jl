@@ -102,51 +102,10 @@ end
 
 function get_firebase_token(req::HTTP.Request)::Union{String, Nothing}
     token = HTTP.header(req, "Authorization")
-    println(token)
     if (token == nothing)
         return nothing
     else
-        return as_bearer_token(token)
-    end
-end
-
-function handle_causalloop(state::ServerState, req::HTTP.Request)
-    try
-        model_id = HTTP.getparams(req)["model_id"]
-        token = get_firebase_token(req)
-
-        if (!is_valid_uuid(model_id))
-            return make_bad_request_error(
-                "Invalid model id: " * model_id
-            )
-        elseif (token == nothing)
-            return make_unauthorized_error(
-                "No Firebase authentication token provided"
-            )
-        end
-
-        model_type = get_model_type(
-            model_id,
-            token
-        )
-        if (model_type != CAUSAL_LOOP)
-            return make_server_error(
-                "Invalid model type in database: " * model_type
-            )
-        end
-
-        println("causalloop: model=$(model_id)")
-        fb_components = FirebaseClient.get_components(
-            model_id,
-            value(state.token)
-        )
-
-        return HTTP.Response(
-            ResponseCode.OK,
-            CORS_RES_HEADERS
-        )
-    catch e
-        return make_server_error(sprint(showerror, e))
+        return as_raw_token(token)
     end
 end
 
@@ -163,29 +122,36 @@ function handle_getcode(state::ServerState, req::HTTP.Request)
             model_id,
             token
         )
-        if (model_type != STOCK_FLOW)
-            return make_server_error(
-                "Invalid model type in database: " * model_type
-            )
-        end
 
         println("getcode: model=$(model_id)")
         fb_components = FirebaseClient.get_components(
             model_id,
             token
         )
-        models = ModelBuilder.make_stockflow_models(
-            fb_components.outers,
-            fb_components.inners,
-            fb_components.substitutions,
-            FirebaseComponents.DEFAULT_SCENARIO
-        )
-        feet = FootBuilder.make_feet(models)
-        errors = ModelValidator.validate_models(models, feet)
-        if (length(errors) > 0)
-            return make_model_error(join(errors, "\n"))
+        code::Union{String, Nothing} = nothing
+
+        if (model_type == STOCK_FLOW)
+            models = ModelBuilder.make_stockflow_models(
+                fb_components.outers,
+                fb_components.inners,
+                fb_components.substitutions,
+                FirebaseComponents.DEFAULT_SCENARIO
+            )
+            ms = [values(models);]
+            feet = FootBuilder.make_feet(models)
+            code = CodeGenerator.generate_code(models, feet)
+        elseif (model_type == CAUSAL_LOOP)
+            models = ModelBuilder.make_causalloop_models(
+                fb_components.outers
+            )
+            code = CodeGenerator.generate_code(models)
+        else
+            return make_model_error("Unknown model type: " * model_type)
         end
-        code = CodeGenerator.generate_code(models, feet)
+
+        if (code == nothing)
+            return make_server_error("Unable to generate model code.")
+        end
 
         return HTTP.Response(
             ResponseCode.OK,
@@ -193,7 +159,6 @@ function handle_getcode(state::ServerState, req::HTTP.Request)
             code
         )
     catch e
-        showerror(stdout, e)
         if (e isa InvalidModelException)
             return make_model_error(sprint(showerror, e))
         else
@@ -214,6 +179,19 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
         modelid::String,
         path::String
     )::Nothing
+
+        try
+            lock(state.lock)
+            state.results[runid] = ModelExecution(
+                modelid,
+                false,
+                false,
+                nothing
+            )
+        finally
+            unlock(state.lock)
+        end
+
         try
             wait(
                 @spawn begin
@@ -221,17 +199,6 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
                     "Computing model on thread pool "
                     * "$(threadpool()) and on thread $(threadid())"
                 )
-                try
-                lock(state.lock)
-                state.results[runid] = ModelExecution(
-                    modelid,
-                    false,
-                    false,
-                    nothing
-                )
-                finally
-                unlock(state.lock)
-                end
 
                 eval(Meta.parse(code))
                 end
@@ -280,6 +247,10 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
         return nothing
     end
 
+    model_id::Union{String, Nothing} = nothing
+    scenario_id::Union{String, Nothing} = nothing
+    token::Union{String, Nothing} = nothing
+
     try
         model_id = HTTP.getparams(req)["model_id"]
         scenario_id = HTTP.getparams(req)["scenario"]
@@ -293,7 +264,7 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
         end
         model_type = get_model_type(
             model_id,
-            value(state.token)
+            token
         )
         if (model_type != STOCK_FLOW)
             return make_server_error(
@@ -304,16 +275,24 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
         return make_server_error(sprint(showerror, e))
     end
 
+    if (model_id == nothing)
+        return make_server_error("Unable to find model ID")
+    elseif (scenario_id == nothing)
+        return make_server_error("Unable to find scenario ID")
+    elseif (token == nothing)
+        return make_server_error("Unable to find token")
+    end
+
     println("computemodel: model=$(model_id), scenario=$(scenario_id)")
 
     try
         runid::String = get_randid()
-        while runid in keys(state.result_paths)
+        while runid in keys(state.results)
             runid = get_randid()
         end
         fb_components = FirebaseClient.get_components(
             model_id,
-            value(state.token)
+            token
         )
         scenarios = fb_components.scenarios
 
@@ -345,12 +324,11 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
             scenario,
             path
         )
-        state.result_paths[runid] = nothing
 
         #println(code)
         println("Spawning model computation thread for run $(runid)")
         code = replace(code, "\n"=>";")
-        @async start_computing_model(code, runid, path)
+        @async start_computing_model(code, runid, model_id, path)
 
         return HTTP.Response(
             ResponseCode.ACCEPTED,
@@ -358,7 +336,6 @@ function handle_computemodel(state::ServerState, req::HTTP.Request)
             runid
         )
     catch e
-        showerror(stdout, e)
         return make_server_error(sprint(showerror, e))
     end
 end
@@ -367,7 +344,7 @@ function handle_getmodelresults(state::ServerState, req::HTTP.Request)
 
     resultid::Union{String, Nothing} = nothing
     token::Union{String, Nothing} = nothing
-    modeluuid::Union{ModelExecution, Nothing} = nothing
+    modeluuid::Union{String, Nothing} = nothing
 
     try
         resultid = HTTP.getparams(req)["resultid"]
@@ -382,9 +359,10 @@ function handle_getmodelresults(state::ServerState, req::HTTP.Request)
         return make_server_error(sprint(showerror, e))
     end
 
+    println("getmodelresults: id=$(resultid)")
+
     try
         lock(state.lock)
-        println("getmodelresults: id=$(resultid)")
         if resultid in keys(state.results)
             result = state.results[resultid]
             if (result == nothing)
@@ -435,11 +413,14 @@ function handle_getmodelresults(state::ServerState, req::HTTP.Request)
                     "Error executing model: " * result.message
                 )
             else
-                data = read(result.message)
-                delete!(state.result_paths, resultid)
+                data::Array{UInt8} = read(result.message)
+                delete!(state.results, resultid)
                 return HTTP.Response(
                     ResponseCode.OK,
-                    CORS_RES_HEADERS,
+                    [
+                        CORS_RES_HEADERS;
+                        "Content-Type" => "image/png";
+                    ],
                     data
                 )
             end
@@ -486,12 +467,6 @@ function create_and_start()::HTTP.Server
         req -> handle_getmodelresults(state, req)
     )
 
-    HTTP.register!(
-        router,
-        "GET",
-        "/testCLD/{model_id}",
-        req -> handle_causalloop(state, req)
-    )
     return HTTP.serve(
         router |> CorsMiddleware,
         SERVER_IP,

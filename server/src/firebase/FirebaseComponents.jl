@@ -2,6 +2,8 @@
 
 module FirebaseComponents
 
+using StockFlow
+
 #################################### Basics ####################################
 
 # FirebaseDataObject is an empty superclass that represents all of the different
@@ -124,6 +126,11 @@ function firebase_iscldvertex(c::FirebaseDataObject)::Bool
 end
 export firebase_iscldvertex
 
+function firebase_iscldedge(c::FirebaseDataObject)::Bool
+    return firebase_gettype(c) == CLD_EDGE
+end
+export firebase_iscldedge
+
 function firebase_isignored(c::FirebaseDataObject)::Bool
     return firebase_gettype(c) == nothing
 end
@@ -165,20 +172,37 @@ end
 function newsource(sourceid::String, o::FirebaseArrow)::FirebaseArrow
     return FirebaseArrow(
         o.id,
-        FirebaseArrow(sourceid, o.pointer.to, o.type)
+        FirebasePointer(sourceid, o.pointer.to),
+        o.type
     )
 end
 function newdest(destid::String, o::FirebaseArrow)::FirebaseArrow
     return FirebaseArrow(
         o.id,
-        FirebaseArrow(o.pointer.from, destid, o.type)
+        FirebasePointer(o.pointer.from, destid),
+        o.type
     )
 end
 
 const FirebaseConnection = FirebaseArrow
-const FirebaseCausalLoopEdge = FirebaseArrow
-export FirebaseConnection, FirebaseCausalLoopEdge, FirebaseArrow
+export FirebaseConnection, FirebaseArrow
 
+
+struct FirebaseCausalLoopEdge <: FirebaseDataObject
+    id::String
+    pointer::FirebasePointer
+    polarity::Polarity
+    type::ComponentType
+end
+export FirebaseCausalLoopEdge
+function newid(id::String, o::FirebaseCausalLoopEdge)
+    return FirebaseCausalLoopEdge(
+        id,
+        o.pointer,
+        o.polarity,
+        o.type
+    )
+end
 
 struct FirebaseFlow <: FirebaseDataObject
     id::String
@@ -310,9 +334,20 @@ const DEFAULT_SCENARIO = FirebaseScenario(
     "0.0",
     "0.0"
 )
+export DEFAULT_SCENARIO
 
 
 ################################### Creation ###################################
+
+function topolarity(p::String)::Polarity
+    if (p == "+")
+        return POL_POSITIVE
+    elseif (p == "-")
+        return POL_NEGATIVE
+    else
+        throw(ErrorException("Unknown polarity: " * p))
+    end
+end
 
 function firebase_create_object(
     id::String,
@@ -402,6 +437,7 @@ function firebase_create_object(
         return FirebaseCausalLoopEdge(
             id,
             FirebasePointer(data["from"], data["to"]),
+            topolarity(data["polarity"]),
             CLD_EDGE
         )
     elseif (type in [LOOP_ICON, STICKY_NOTE])

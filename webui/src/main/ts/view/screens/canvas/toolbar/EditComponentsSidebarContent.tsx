@@ -8,6 +8,7 @@ import EditTextListItem from './EditTextListItem';
 import TypographyListItem from './TypographyListItem';
 import EditColorListItem from './EditColorListItem';
 import LoopDirectionListItem from './LoopDirectionListItem';
+import PolarityListItem from './PolarityListItem';
 
 export interface Props {
     component: FirebaseComponent | null;
@@ -90,9 +91,20 @@ export default class EditComponentsSidebarContent
                         this.makeTextBoxListItem("value", isInner, "Value"),
                     ];
                 case ComponentType.SUM_VARIABLE:
-                case ComponentType.CLD_VERTEX:
                     return [
                         this.makeUnapplySubstitutionsButton(),
+                        this.makeFontEditListItem(),
+                        this.makeColorEditListItem(),
+                        this.makeTextBoxListItem(
+                            "text",
+                            isInner,
+                            "Name",
+                            this.state.currentComponent.getType()
+                            !== ComponentType.CLD_VERTEX
+                        ),
+                    ];
+                case ComponentType.CLD_VERTEX:
+                    return [
                         this.makeFontEditListItem(),
                         this.makeColorEditListItem(),
                         this.makeTextBoxListItem(
@@ -130,9 +142,13 @@ export default class EditComponentsSidebarContent
                         ),
                     ];
                 case ComponentType.CONNECTION:
+                    return [
+                        this.makeColorEditListItem(),
+                    ];
                 case ComponentType.CLD_LINK:
                     return [
                         this.makeColorEditListItem(),
+                        this.makePolarityListItem()
                     ];
                 default:
                     return [
@@ -167,6 +183,21 @@ export default class EditComponentsSidebarContent
                         this.state.currentComponent!.withData({ up, clockwise })
                     )
                 }
+            />
+        );
+    }
+
+    private makePolarityListItem(): ReactElement {
+        return (
+            <PolarityListItem
+                key={"polarity"}
+                onChange={
+                    p => this.props.firebaseDataModel.updateComponent(
+                        this.props.sessionId,
+                        this.state.currentComponent!.withData({ polarity: p })
+                    )
+                }
+                polarity={this.state.currentComponent?.getData().polarity}
             />
         );
     }
